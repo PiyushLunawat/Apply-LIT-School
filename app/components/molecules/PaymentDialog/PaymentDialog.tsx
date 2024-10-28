@@ -6,9 +6,11 @@ import { Button } from '~/components/ui/button';
 interface DialogProps {
     open: boolean;
     setOpen: (open: boolean) => void;
+    type: string;
+    mail: string;
   }
 
-const PaymentSuccessDialog: React.FC<DialogProps> = ({ open, setOpen }) => (
+const PaymentSuccessDialog: React.FC<DialogProps> = ({ open, setOpen, type, mail }) => (
   <Dialog open={open} onOpenChange={setOpen}>
     <DialogContent className="max-w-[480px] mx-4 bg-[#09090b] text-white rounded-lg px-8 py-16 text-center shadow-[0px_4px_32px_0px_rgba(0,0,0,0.75)]
 ">
@@ -16,7 +18,9 @@ const PaymentSuccessDialog: React.FC<DialogProps> = ({ open, setOpen }) => (
       <div>
         <div className="text-3xl font-bold ">Payment Successful!</div>
         <div className='text-base font-normal py-8'>
-          Your payment of INR 500.00 was successful. A payment receipt has been emailed to johndoe@gmail.com
+          {type === 'step1' ?
+           `Your payment of INR 500.00 was successful. A payment receipt has been emailed to ${mail}` :
+           `Your seat reservation fee payment of INR 25,00.00 was successful. A payment receipt has been emailed to ${mail}`}
         </div>
       </div>
       <div className="flex flex-col gap-3">
@@ -26,7 +30,7 @@ const PaymentSuccessDialog: React.FC<DialogProps> = ({ open, setOpen }) => (
   </Dialog>
 );
 
-const PaymentFailedDialog: React.FC<DialogProps> = ({ open, setOpen }) => (
+const PaymentFailedDialog: React.FC<DialogProps> = ({ open, setOpen, type, mail }) => (
   <Dialog open={open} onOpenChange={setOpen}>
     <DialogContent className="max-w-[480px] mx-4 bg-[#09090b] text-white rounded-lg px-8 py-16 text-center shadow-[0px_4px_32px_0px_rgba(0,0,0,0.75)]
 ">
@@ -37,7 +41,9 @@ const PaymentFailedDialog: React.FC<DialogProps> = ({ open, setOpen }) => (
           Looks like your payment did not go through.
         </div>
         <div className='text-base font-normal py-8'>
-          Your payment of INR 500.00 was unsuccessful.
+          {type === 'step1' ?
+           `Your payment of INR 500.00 was unsuccessful.` :
+           `Your seat reservation fee payment of INR 25,000.00 was unsuccessful.`}
         </div>
       </div>
       <div className="flex flex-col gap-3">

@@ -11,7 +11,7 @@ const Task01: React.FC = () => {
       </Badge>
 
       <div className="space-y-6">
-        <div>
+        <div className='space-y-1'>
           <Label htmlFor="story" className="text-base font-normal text-[#FA69E5] pl-3">
             Share an embarrassing or adventurous story from your life in 500 words. How did this experience influence your perspective?
           </Label>

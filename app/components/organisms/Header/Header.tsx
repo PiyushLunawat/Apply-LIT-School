@@ -2,7 +2,11 @@ import { useNavigate } from '@remix-run/react';
 import React from 'react';
 import { Button } from '~/components/ui/button';
 
-export const Header: React.FC = () => {
+interface HeaderProps {
+  subtitle?: boolean;  // Optional subtitle prop
+}
+
+export const Header: React.FC<HeaderProps> = ({ subtitle }) => {
     const navigate = useNavigate();
     
   return (
@@ -19,12 +23,12 @@ export const Header: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex flex-col gap-2 sm:gap-4 text-center px-4 ">
+      {subtitle && <div className="flex flex-col gap-2 sm:gap-4 text-center px-4 ">
         <div className="text-xl sm:text-3xl font-semibold">
           Hey John <span role="img" aria-label="waving-hand">👋</span> Welcome to LIT
         </div>
         <div className="text-xs sm:text-base">Get started with your application process</div>
-      </div>
+      </div>}
     </header>
   );
 };

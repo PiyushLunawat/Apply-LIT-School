@@ -11,7 +11,7 @@ const CourseDive: React.FC = () => {
       </Badge>
 
       <div className="space-y-6">
-        <div>
+        <div className='space-y-1'>
           <Label htmlFor="interest" className="text-base font-normal text-[#00A0E9] pl-3">
             Why are you interested in joining The LIT School?
           </Label>
@@ -23,7 +23,7 @@ const CourseDive: React.FC = () => {
           />
         </div>
 
-        <div>
+        <div className='space-y-1'>
           <Label htmlFor="goals" className="text-base font-normal text-[#00A0E9] pl-3">
             What are your career goals or aspirations?
           </Label>

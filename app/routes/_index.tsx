@@ -1,5 +1,5 @@
 import type { MetaFunction } from "@remix-run/node";
-import ApplicationDashboard from "~/components/pages/application";
+import ApplicationDashboard from "~/components/pages/application-1";
 
 export const meta: MetaFunction = () => {
   return [
@@ -10,6 +10,6 @@ export const meta: MetaFunction = () => {
 
 export default function Index() {
   return (
-    <ApplicationDashboard />   
+    <div>HOME</div>
   );
 }

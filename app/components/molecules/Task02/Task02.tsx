@@ -3,7 +3,7 @@ import { Label } from '~/components/ui/label';
 import { Input } from '~/components/ui/input';
 import { Button } from '~/components/ui/button';
 import { Badge } from '~/components/ui/badge';
-import { FileTextIcon, RefreshCcwIcon, XIcon } from 'lucide-react';
+import { FileTextIcon, RefreshCw, XIcon } from 'lucide-react';
 
 const Task02: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -26,16 +26,29 @@ const Task02: React.FC = () => {
 
       <div className="space-y-6">
         <div>
-          <Label htmlFor="strategy" className="text-base text-[#FFFF00]">
+          <Label htmlFor="strategy" className="text-base text-[#FFFF00] pl-3">
             Influencer Marketing Strategy
           </Label>
-          <div className="text-2xl text-white mt-2">
+          <div className="text-2xl text-white mt-2 pl-3">
             For Rapido (a bike taxi service), identify five influencers you believe would be a good fit for their social media campaigns. For each influencer, explain why you chose them and how they align with Rapido's brand perception and community goals.
           </div>
         </div>
 
-        <div className="flex items-center justify-between w-full border border-dashed border-gray-600 rounded-lg p-4">
-        <label className="text-gray-500 w-full">
+      
+
+      {file ? (
+        <div className="flex items-center bg-[#007AFF] h-[52px] text-white p-1.5 rounded-xl w-full">
+          <Button size="icon" className='bg-[#3698FB] rounded-xl mr-2'><FileTextIcon className="w-5" /></Button>
+          <span className="flex-1">{file.name}</span>
+          <div className="flex items-center space-x-2">
+
+          <Button size="icon" className='bg-[#3698FB] rounded-xl'><RefreshCw className="w-4" /></Button>
+          <Button size="icon" className='bg-[#3698FB] rounded-xl' onClick={removeFile}><XIcon className="w-5" /></Button>
+          </div>
+        </div>
+      ) : (
+      <div className="flex items-center justify-between w-full h-16 border-2 border-dashed rounded-xl p-1.5">
+        <label className="w-full pl-3 text-muted-foreground">
           {!file && (
             <>
               Upload a pdf file of up to 20mb
@@ -43,36 +56,11 @@ const Task02: React.FC = () => {
             </>
           )}
         </label>
-        <Button
-          className="bg-[#7E22CE] text-white px-4 py-2 rounded-md border border-transparent hover:bg-[#6b21a8] transition duration-300"
-        >
+        <Button className="text-white px-6 py-[18px] rounded-xl">
           Upload File
         </Button>
       </div>
-
-      {file && (
-        <div className="flex items-center bg-[#007AFF] text-white p-3 rounded-lg w-full">
-          <FileTextIcon className="mr-2" />
-          <span className="flex-1">{file.name}</span>
-          <div className="flex items-center space-x-2">
-            <button onClick={removeFile} className="p-2 bg-white rounded-full">
-              <XIcon className="text-[#007AFF]" />
-            </button>
-          </div>
-        </div>
       )}
-
-        <div className="flex items-center justify-between w-full border border-dashed border-gray-600 rounded-xl p-1.5">
-      <label className="text-gray-500">
-        Upload a pdf file of up to 20mb
-        <input type="file" className="hidden" />
-      </label>
-      <Button
-        className="bg-[#7E22CE] text-white px-4 py-2 rounded-xl border border-transparent hover:bg-[#6b21a8] transition duration-300"
-      >
-        Upload File
-      </Button>
-    </div>
 
       </div>
     </div>
