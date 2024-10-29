@@ -1,5 +1,5 @@
-import { AlertCircle } from 'lucide-react';
-import React from 'react';
+import { AlertCircle, CheckCircle } from 'lucide-react';
+import React, { useState } from 'react';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
@@ -9,6 +9,8 @@ import { Badge } from '~/components/ui/badge';
 import { Mail, Phone, Linkedin, Instagram, Calendar, Camera } from 'lucide-react';
 
 const PersonalDetails: React.FC = () => {
+  const [selectedCourse, setSelectedCourse] = useState<string>("creatorpreneur");
+  
   return (
     <div className="flex flex-col gap-6 mt-8">
       <Badge size="xl" className='flex-1 bg-[#00A3FF]/[0.2] text-[#00A3FF] text-center '>Personal Details</Badge>
@@ -29,53 +31,79 @@ const PersonalDetails: React.FC = () => {
           </div>
 
           {/* Email and Contact */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div  className='flex-1 space-y-1 relative'>
+              <CheckCircle className="text-[#00CC92] absolute left-3 top-[52px] w-5 h-5 " />
               <Label htmlFor="email" className="text-base font-normal pl-3">Email</Label>
-              <Input id="email" type="email" placeholder="johndoe@gmail.com" />
-              <Mail className="absolute right-3 top-10 w-5 h-5 " />
+              <Input id="email" type="email" placeholder="johndoe@gmail.com" className='pl-10' />
+              <Mail className="absolute right-3 top-12 w-5 h-5 " />
             </div>
             <div className="flex-1 space-y-1 relative">
+              <Phone className="absolute left-3 top-[52px] w-5 h-5 " />
               <Label htmlFor="contact" className="text-base font-normal pl-3">Contact No.</Label>
-              <Input id="contact" type="tel" placeholder="+91 95568 97688" />
-              <Phone className="absolute right-3 top-10 w-5 h-5 " />
+              <Input id="contact" type="tel" placeholder="+91 95568 97688" className='pl-10'/>
+              <Button size='sm' className='absolute right-3 top-10 rounded-full px-4 bg-[#00CC92] '>Verify</Button>
             </div>
           </div>
 
           {/* Date of Birth and Course of Interest */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div className="flex-1 space-y-1 relative">
               <Label htmlFor="dob" className="text-base font-normal pl-3">Date of Birth</Label>
               <Input id="dob" type="text" placeholder="08 March, 2000" />
-              <Calendar className="absolute right-3 top-10 w-5 h-5" />
+              <Calendar className="absolute right-3 top-12 w-5 h-5" />
             </div>
             <div className='flex-1 space-y-1'>
-              <Label htmlFor="course" className="text-base font-normal pl-3">Course of Interest</Label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Creator Marketer" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="creator-marketer">Creator Marketer</SelectItem>
-                  <SelectItem value="creatorpreneur">Creatorpreneur</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="course" className="text-base font-normal pl-3">You are Currently a</Label>
+              <Input id="dob" type="text" placeholder="College Student" />
             </div>
           </div>
         </div>
       </div>
 
+      {/* Course of Interest */}
+      <div className="flex flex-col sm:flex-row gap-2 ">
+        <div className='flex-1 space-y-1'>
+          <Label htmlFor="course" className='text-sm font-normal pl-3'>Course of Interest</Label>
+          <Select onValueChange={(value) => setSelectedCourse(value)}>
+            <SelectTrigger className="">
+              <SelectValue placeholder="Select" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="creatorpreneur">Creatorpreneur</SelectItem>
+              <SelectItem value="creatormarketer">Creator Marketer</SelectItem>
+            </SelectContent>
+          </Select>
+          <Label htmlFor="form-alert" className='flex gap-1 items-center text-sm text-[#00A3FF] font-normal pl-3 mt-1'>
+            Your application form will be in line with the course of your choice.
+          </Label>
+        </div>
+
+        <div className='flex-1 space-y-1'>
+          <Label htmlFor="course" className='text-sm font-normal pl-3'>Select Cohort</Label>
+          <Select >
+            <SelectTrigger defaultValue='Apr' className="">
+              <SelectValue placeholder="Select" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Apr">Apr, 2025 (Evening: 4:30 AM - 8:00 PM), Bangalore</SelectItem>
+              <SelectItem value="Feb">Feb, 2025 (Morning: 10:30 AM - 1:00 PM), Bangalore</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
       {/* LinkedIn and Instagram IDs */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <div className="flex-1 space-y-1 relative">
           <Label htmlFor="linkedin" className="text-base font-normal pl-3">Your LinkedIn ID (Not Compulsory)</Label>
           <Input id="linkedin" placeholder="John Doe" />
-          <Linkedin className="absolute right-3 top-10 w-5 h-5" />
+          <Linkedin className="absolute right-3 top-12 w-5 h-5" />
         </div>
         <div className="flex-1 space-y-1 relative">
           <Label htmlFor="instagram" className="text-base font-normal pl-3">Your Instagram ID (Not Compulsory)</Label>
           <Input id="instagram" placeholder="@JohnDoe" />
-          <Instagram className="absolute right-3 top-10 w-5 h-5" />
+          <Instagram className="absolute right-3 top-12 w-5 h-5" />
         </div>
       </div>
 
@@ -103,7 +131,7 @@ const PersonalDetails: React.FC = () => {
         <Input id="address" placeholder="Street Address" />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <div className='flex-1 space-y-1'>
           <Label htmlFor="city" className="text-base font-normal pl-3">City, State</Label>
           <Input id="city" placeholder="City, State" />

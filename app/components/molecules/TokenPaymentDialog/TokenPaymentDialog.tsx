@@ -5,6 +5,7 @@ import { Button } from '~/components/ui/button';
 import { Label } from '~/components/ui/label';
 import { ArrowLeft } from 'lucide-react';
 import ImageUpload from '~/components/ui/ImageUpload';
+import { useNavigate } from '@remix-run/react';
 
 interface TokenPaymentDialogProps {
   open: boolean;
@@ -12,11 +13,16 @@ interface TokenPaymentDialogProps {
 }
 
 const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({ open, setOpen }) => {
+  const navigate = useNavigate();
   const [selectedPayment, setSelectedPayment] = React.useState<'cash' | 'bank'>('cash');
   const [secondDialogOpen, setSecondDialogOpen] = React.useState(false);
 
   const handleNextClick = () => {
     setSecondDialogOpen(true); // Open the second dialog when "Next" is clicked
+  };
+
+  const handleSubmit = () => {
+    navigate('../dashboard/application-step-3');
   };
 
   return (
@@ -112,7 +118,7 @@ const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({ open, setOpen }
           <ImageUpload />
 
           {/* Submit Button */}
-          <Button size="xl" variant="outline" className="mt-8 w-fit border-[#00CC92] text-[#00CC92] mx-auto">Submit</Button>
+          <Button size="xl" variant="outline" className="mt-8 w-fit border-[#00CC92] text-[#00CC92] mx-auto" onClick={handleSubmit}>Submit</Button>
         </DialogContent>
       </Dialog>
   </>

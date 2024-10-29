@@ -19,13 +19,13 @@ const LITMUSTest: React.FC = () => {
     <div className="flex flex-col items-start px-6 py-12 bg-[#1B1B1C] border border-[#2C2C2C] text-white rounded-3xl shadow-md w-[1152px] mx-auto space-y-6">
       {/* Title and Guidelines */}
       <div>
-        <h2 className="text-2xl font-semibold mb-2">
+        <h2 className="text-3xl font-semibold mb-2">
           Take the LITMUS test to avail scholarship opportunities.
         </h2>
-        <p className="text-sm mb-4">
+        <p className="text-xl mb-4">
           Here are a few guidelines to adhere to while you work on your LITMUS Challenge:
         </p>
-        <ul className="text-sm list-disc ml-5 space-y-1 px-6">
+        <ul className="text-base list-disc ml-5 space-y-1 px-6">
           <li>Utilize a LIT Learning Methodology</li>
           <li>Propose unique and innovative ideas</li>
           <li>Ensure your submission aligns with the norms of accepting the LITMUS challenge</li>
@@ -47,25 +47,12 @@ const LITMUSTest: React.FC = () => {
       </div>
 
       {/* Challenge Image with Text Overlay */}
-      <div className="relative w-full h-48 bg-gray-700 rounded-lg overflow-hidden">
+      <div className=" w-full rounded-xl overflow-hidden">
         <img
           src="/assets/images/challenge-placeholder.svg"
           alt="Challenge Placeholder"
-          className="object-cover w-full h-full opacity-40"
+          className="w-full object-cover h-full "
         />
-        <div className="absolute inset-0 flex items-center justify-center text-center px-4">
-          <div className="text-white space-y-2">
-            <h3 className="text-xl font-semibold">
-              Pitch Your <span className="text-yellow-400">Business</span> Idea!
-            </h3>
-            <p className="text-sm">
-              We would like you to pitch an innovative product/service business idea to be considered for our in-house LITMUS Scholarship.
-            </p>
-            <p className="text-xs text-gray-300">
-              Showcase your brilliance & business acumen, keeping the feasibility and potential impact of your idea in mind.
-            </p>
-          </div>
-        </div>
       </div>
 
       {/* Countdown Timer */}

@@ -25,9 +25,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({ setShowOtp }) => {
   return (
     <div className="flex flex-col gap-4 mt-8">
               <div className='flex-1 space-y-1'>
-                <Label htmlFor="contact" className='text-sm font-normal pl-3'>Enter your Contact No.</Label>
-                <Input id="contact" type="tel" placeholder="+91 00000 00000" />
-                <Label htmlFor="contact-error" className='flex gap-1 items-center text-sm text-[#FF503D] font-normal pl-3'><AlertCircle className='w-3 h-3'/>This Contact no. has not been registered with us. Kindly register to access your application dashboard.</Label>
+                <Label htmlFor="contact" className='text-sm font-normal pl-3'>Enter your Email</Label>
+                <Input id="contact" type="tel" placeholder="johndoe@gmail.com" />
+                <Label htmlFor="contact-error" className='flex gap-1 items-center text-sm text-[#FF503D] font-normal pl-3'><AlertCircle className='w-3 h-3'/>This Email has not been registered with us. Kindly register to access your application dashboard.</Label>
               </div>
 
               <div className="flex gap-2 justify-between items-center mt-6">

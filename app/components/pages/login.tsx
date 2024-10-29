@@ -19,6 +19,10 @@ export const SignUp: React.FC = () => {
       navigate('../sign-up');
     };
 
+    const handleLoginClick = () => {
+      navigate('../dashboard/application-step-1');
+    };
+
   return (
     <div className="w-full">
       <div className="relative">

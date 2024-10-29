@@ -3,7 +3,7 @@ import { Label } from '~/components/ui/label';
 import { Input } from '~/components/ui/input';
 import { Button } from '~/components/ui/button';
 import { Badge } from '~/components/ui/badge';
-import { FileTextIcon, RefreshCw, XIcon } from 'lucide-react';
+import { FileTextIcon, HandMetal, RefreshCw, XIcon } from 'lucide-react';
 
 const Task02: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -34,6 +34,20 @@ const Task02: React.FC = () => {
           </div>
         </div>
 
+        <div>
+          <Label htmlFor="criteria" className="text-base text-[#FFFF00] pl-3">
+            Judgement Criteria
+          </Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2 mb-8">
+            {/* Strengths */}
+            <div className="p-6 rounded-xl border border-[#2C2C2C] ">
+              <div className="flex gap-2 items-center text-lg font-semibold ml-1 mb-2"><HandMetal className='rotate-90 w-4'/> Criteria</div>
+              <ul className="space-y-2 pl-6 list-disc">
+                  <li >Criteria Description Lorem ipsum dolor sit amet. Sit nihil consequatur qui soluta excepturi vel blanditiis libero At aspernatur</li>
+              </ul>
+            </div>
+           </div>
+        </div>
       
 
       {file ? (

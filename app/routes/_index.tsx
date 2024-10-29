@@ -1,5 +1,5 @@
-import type { MetaFunction } from "@remix-run/node";
-import ApplicationDashboard from "~/components/pages/application-1";
+import type { MetaFunction, LoaderFunction } from "@remix-run/node";
+import { redirect } from "@remix-run/node";
 
 export const meta: MetaFunction = () => {
   return [
@@ -8,8 +8,11 @@ export const meta: MetaFunction = () => {
   ];
 };
 
+// Loader function to redirect to /login
+export const loader: LoaderFunction = async () => {
+  return redirect("/login");
+};
+
 export default function Index() {
-  return (
-    <div>HOME</div>
-  );
+  return null; // Since we're redirecting, there's no need to render anything
 }

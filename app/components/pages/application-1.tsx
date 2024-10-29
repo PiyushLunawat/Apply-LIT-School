@@ -14,9 +14,11 @@ import { PaymentFailedDialog, PaymentSuccessDialog } from '../molecules/PaymentD
 import CourseDive from '../molecules/CourseDive/CourseDive';
 import Task01 from '../molecules/Task01/Task01';
 import Task02 from '../molecules/Task02/Task02';
+import { useNavigate } from '@remix-run/react';
 
 
 export const ApplicationStep1: React.FC = () => {
+  const navigate = useNavigate();
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
   const [failedDialogOpen, setFailedDialogOpen] = useState(false);
   const [part2, setPart2] = useState(false);
@@ -30,6 +32,10 @@ export const ApplicationStep1: React.FC = () => {
     } else {
       setFailedDialogOpen(true);
     }
+  };
+
+  const handleSubmit = () => {
+    navigate('../dashboard/application-step-2');
   };
 
   return (
@@ -59,7 +65,7 @@ export const ApplicationStep1: React.FC = () => {
               
               <div className="flex justify-between items-center mt-6">
                 <Button variant="link" className=''>Back</Button>
-                <Button size="xl" className='space-y-1' >Submit Application</Button>
+                <Button size="xl" className='space-y-1' onClick={handleSubmit}>Submit Application</Button>
               </div>
           </div>
           )}

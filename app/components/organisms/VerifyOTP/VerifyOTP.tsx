@@ -3,6 +3,7 @@ import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '../../
 import { Button } from '~/components/ui/button';
 import { AlertCircle } from 'lucide-react';
 import { Label } from '~/components/ui/label';
+import { useNavigate } from '@remix-run/react';
 
 interface VerifyOTPProps {
   verificationType: 'contact' | 'email'; // Contact or Email
@@ -19,7 +20,8 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
   onResend,
   errorMessage
 }) => {
-  const [otp, setOtp] = useState('');
+    const navigate = useNavigate();
+    const [otp, setOtp] = useState('');
   const [timer, setTimer] = useState(59);
 
   useEffect(() => {
@@ -38,6 +40,9 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
     if (otp.length === 6) {
       onSubmit(otp);
     }
+  
+    navigate('../dashboard/application-step-1');
+    
   };
 
   onResend = () => {
