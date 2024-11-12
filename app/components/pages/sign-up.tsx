@@ -14,7 +14,7 @@ import VerifyOTP from '../organisms/VerifyOTP/VerifyOTP';
 export const SignUp: React.FC = () => {
     const navigate = useNavigate();
   const [showotp, setShowOtp] = useState(false);
-
+  const [email, setEmail] = useState<string>('');
 
     const handleLoginClick = () => {
       navigate('../login');
@@ -34,17 +34,15 @@ export const SignUp: React.FC = () => {
               <div className=" text-xl sm:text-3xl font-semibold ">Join the Education Revolution!</div>
               <div className=" text-sm sm:text-base font-semibold ">Register with us to begin your application process</div>
             </div>
-            <SignUpForm setShowOtp={setShowOtp} />
+            <SignUpForm setShowOtp={setShowOtp} setEmail={setEmail} />
             </div>
           </div>
           <ApplicationQNA />
           <Footer />
         </>) :
         (<VerifyOTP
-          verificationType="email" // or "email"
-          contactInfo="johndoe@gmail.com" // or an email address
-          onSubmit={(otp) => console.log("OTP submitted:", otp)}
-          onResend={() => console.log("OTP resend requested")}
+          verificationType="email"
+          contactInfo={email}
           errorMessage="Oops! Looks like you got the OTP wrong, Please Retry."
         />)}
 

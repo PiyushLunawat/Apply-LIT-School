@@ -1,28 +1,59 @@
 import React, { useState, useEffect } from 'react';
+import { verifyOtp, resendOtp } from '~/utils/api';
 import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '../../ui/input-otp';
 import { Button } from '~/components/ui/button';
 import { AlertCircle } from 'lucide-react';
 import { Label } from '~/components/ui/label';
 import { useNavigate } from '@remix-run/react';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "~/components/ui/form"
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 
+const formSchema = z.object({
+  otp: z
+    .string()
+    .length(6, { message: "OTP must be 6 digits" })
+    .regex(/^\d+$/, { message: "OTP must contain only numbers" }),
+});
+
+type FormValues = z.infer<typeof formSchema>;
 interface VerifyOTPProps {
   verificationType: 'contact' | 'email'; // Contact or Email
   contactInfo: string; // The phone number or email to display
-  onSubmit: (otp: string) => void; // Function to handle OTP submission
-  onResend: () => void; // Function to handle OTP resend
   errorMessage?: string; // Optional error message
 }
 
 export const VerifyOTP: React.FC<VerifyOTPProps> = ({
   verificationType,
   contactInfo,
-  onSubmit,
-  onResend,
   errorMessage
 }) => {
     const navigate = useNavigate();
-    const [otp, setOtp] = useState('');
-  const [timer, setTimer] = useState(59);
+    const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
+    const [timer, setTimer] = useState(59);
+    const [resendError, setResendError] = useState<string | null>(null);
+    const [verifyError, setVerifyError] = useState<string | null>(null);
+
+    const form = useForm<FormValues>({
+      resolver: zodResolver(formSchema),
+      defaultValues: {
+        otp: '',
+      },
+      });
+
+    const { register, handleSubmit, formState: { errors } } = useForm({
+      resolver: zodResolver(formSchema),
+      defaultValues: { otp: '' },
+    });
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -32,21 +63,27 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  const handleOtpChange = (value: string) => {
-    setOtp(value);
-  };
-
-  const handleSubmit = () => {
-    if (otp.length === 6) {
-      onSubmit(otp);
+  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+    try {
+      console.log("otpp", data.otp);
+      const res = await verifyOtp({ email: contactInfo, otp: data.otp });
+      console.log("response",res)
+      navigate('../dashboard/application-step-1');
+    } catch (error) {
+      console.error('OTP verification failed:', error);
+      setVerifyError('OTP verification failed. Please check your OTP and try again.');
     }
-  
-    navigate('../dashboard/application-step-1');
-    
   };
 
-  onResend = () => {
-    setTimer(60);
+  const handleResendOtp = async () => {
+    try {
+      await resendOtp({ email: contactInfo });
+      setTimer(60);
+      setResendError(null);
+    } catch (error) {
+      console.error('Resend OTP failed:', error);
+      setResendError('Failed to resend OTP. Please try again later.');
+    }
   }
 
   return (
@@ -65,36 +102,52 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
               : `An OTP was sent to your email 📧 ${contactInfo}`}
           </div>
         </div>
+        <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col items-center">
+        <FormField
+          control={form.control}
+          name="otp"
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <InputOTP maxLength={6} {...field}>
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                      <InputOTPSeparator />
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
+                  </InputOTPGroup>
+                </InputOTP>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-        <div className="flex flex-col justify-center items-center">
-        <InputOTP maxLength={6}>
-      <InputOTPGroup>
-        <InputOTPSlot index={0} />
-        <InputOTPSlot index={1} />
-        <InputOTPSlot index={2} />
-      </InputOTPGroup>
-      <InputOTPSeparator />
-      <InputOTPGroup>
-        <InputOTPSlot index={3} />
-        <InputOTPSlot index={4} />
-        <InputOTPSlot index={5} />
-      </InputOTPGroup>
-    </InputOTP>
+          {(resendError || verifyError) && (
+            <Label htmlFor="contact-error" className='flex gap-1 items-center text-sm justify-start text-[#FF503D] font-normal pl-3 mt-2'>
+              <AlertCircle className='w-3 h-3'/>{resendError  || verifyError}
+            </Label>
+          )}
 
-        {errorMessage && (
-          <Label htmlFor="contact-error" className='flex gap-1 items-center text-sm text-[#FF503D] font-normal pl-3 mt-2'>
-            <AlertCircle className='w-3 h-3'/>{errorMessage}</Label>
-        )}
-        </div>
+          {errors.otp && (
+            <Label className="text-sm text-red-500 mt-2">{errors.otp.message}</Label>
+          )}
+          
+          <div className="text-center mt-4">
+            <Button size="xl" type="submit">
+              {verificationType === 'contact' ? 'Confirm and Login' : 'Confirm and Proceed'}
+            </Button>
+          </div>
+      </form>
+    </Form>
 
-        <div className="text-center">
-          <Button size="xl" className="" onClick={handleSubmit}>
-            {verificationType === 'contact' ? 'Confirm and Login' : 'Confirm and Proceed'}
-          </Button>
-        </div>
 
-        <div className="flex text-center items-center text-base mx-auto">
-          <Button variant="link" onClick={onResend} disabled={timer>0}>
+        <div className="flex gap-2 text-center items-center text-base mx-auto">
+          <Button variant="link" onClick={handleResendOtp} disabled={timer>0}>
             Resend OTP
           </Button>
           {timer > 0 ? `in 00:${timer < 10 ? `0${timer}` : timer}` : ""}

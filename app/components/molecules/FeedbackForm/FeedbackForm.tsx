@@ -20,7 +20,7 @@ const FeedbackForm: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col gap-6 mt-8 items-center max-w-[1000px] mx-auto text-white">
+    <div className="flex flex-col gap-6 mt-8 items-center w-full text-white">
       <Badge size="xl" className='flex-1 w-full px-auto bg-[#00A3FF]/[0.2] text-[#00A3FF] text-center '>
         Feedback Form
       </Badge>
