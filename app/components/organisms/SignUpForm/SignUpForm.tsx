@@ -38,6 +38,7 @@ interface Cohort {
   endDate: string;
   schedule: string;
   totalSeats: number;
+  timeSlot: string;
   filled: number;
   status: string;
   baseFee: string;
@@ -118,6 +119,11 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
       form.setValue("dateOfBirth", format(date, 'dd/MM/yyyy'));
     }
   };
+
+  function formatDateToMonthYear(dateString: string): string {
+    const date = new Date(dateString);
+    return format(date, "MMMM, yyyy");
+  }
 
   return (
     <Form {...form}>
@@ -272,7 +278,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
                 </SelectTrigger>
                 <SelectContent>
                   {cohorts.map((cohort) => (
-                    <SelectItem key={cohort._id} value={cohort._id}>{cohort.cohortId}</SelectItem>
+                    <SelectItem key={cohort._id} value={cohort._id}>{formatDateToMonthYear(cohort.startDate)} ({cohort.timeSlot})</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

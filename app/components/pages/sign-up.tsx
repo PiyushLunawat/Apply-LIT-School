@@ -27,7 +27,7 @@ export const SignUp: React.FC = () => {
         <img src="/assets/images/lit-logo.svg" alt="LIT" className="absolute top-7 left-7 w-8 sm:w-16" />
       </div>
       {!showotp ? (
-        <>
+        <div className='space-y-24'>
           <div className="w-full px-6 mt-8 sm:mt-14 justify-center items-center">
           <div className='max-w-[840px] mx-auto'>
             <div className="gap-4 sm:gap-6 flex flex-col text-center">
@@ -39,7 +39,7 @@ export const SignUp: React.FC = () => {
           </div>
           <ApplicationQNA />
           <Footer />
-        </>) :
+        </div>) :
         (<VerifyOTP
           verificationType="email"
           contactInfo={email}

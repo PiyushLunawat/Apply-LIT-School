@@ -1,4 +1,4 @@
-const CONST_API = "http://3.111.55.54:4000";
+const CONST_API = "https://myfashionfind.shop";
 
 // Fetch all cohorts
 export async function getCohorts() {
