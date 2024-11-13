@@ -165,7 +165,24 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
             render={({ field }) => (
               <FormItem>
                 <Label>Contact No.</Label>
-                <Input type="tel" placeholder="+91 00000 00000" {...field} />
+                <Input  type="tel" maxLength={14}
+        placeholder="+91 00000 00000"
+        {...field}
+        onFocus={(e) => {
+          if (!field.value) {
+            field.onChange('+91 ');
+          }
+        }}
+        onChange={(e) => {
+          let value = e.target.value;
+          // Remove all non-numeric characters, but allow "+91" at the beginning
+          if (value.startsWith('+91 ')) {
+            value = '+91 ' + value.slice(4).replace(/\D/g, ''); // Retain only digits after +91
+          } else {
+            value = value.replace(/[^0-9+\s]/g, ''); // For any other input, retain only digits
+          }
+          field.onChange(value);
+        }}/>
                 <FormMessage />
               </FormItem>
             )}
