@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getCohorts, getPrograms, signUp } from '~/utils/api';
-import { AlertCircle, CalendarIcon } from 'lucide-react';
+import { AlertCircle, CalendarIcon, Mail, Phone } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { Label } from '~/components/ui/label';
 import { Input } from '~/components/ui/input';
@@ -50,7 +50,7 @@ const formSchema = z.object({
   lastName: z.string().nonempty("Last name is required"),
   email: z.string().email("Invalid email address"),
   mobileNumber: z.string().min(10, "Contact No. should be 10 digits"),
-  dateOfBirth: z.string().nonempty("Date of birth is required"),
+  dateOfBirth: z.date({ required_error: "Date of birth is required" }),
   qualification: z.string().nonempty("Qualification is required"),
   program: z.string().nonempty("Please select a program"),
   cohort: z.string().nonempty("Please select a cohort"),
@@ -68,6 +68,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
   const navigate = useNavigate();
   const [date, setDate] = useState<Date>();
   const [programs, setPrograms] = useState<Program[]>([]);  
+  const [interest, setInterest] = useState<Cohort[]>([]);  
   const [cohorts, setCohorts] = useState<Cohort[]>([]);
   const [selectedProgram, setSelectedProgram] = useState<string | null>(null);
   const [selectedCentre, setSelectedCentre] = useState<string | null>(null);
@@ -80,7 +81,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
       lastName: '',
       email: '',
       mobileNumber: '',
-      dateOfBirth: '',
+      dateOfBirth: undefined,
       qualification: '',
       program: '',
       cohort: '',
@@ -91,9 +92,11 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
   useEffect(() => {
     async function fetchData() {
       try {
+        const cohortsData = await getCohorts();
         const programsData = await getPrograms();
         setPrograms(programsData.data);
-        const cohortsData = await getCohorts();
+        const openCohorts = cohortsData.data.filter((cohort:Cohort) => cohort.status === "Open");
+        setInterest(openCohorts);
         setCohorts(cohortsData.data);
       } catch (error) {
         console.error("Error fetching programs:", error);
@@ -102,24 +105,48 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
     fetchData();
   }, []);
 
+  useEffect(() => {
+    // Filter cohorts by selected program
+    if (form.watch("program")) {
+      const filteredCohorts = interest.filter(
+        (cohort) => cohort.programDetail === form.watch("program")
+      );
+      setCohorts(filteredCohorts);
+    }
+  }, [form.watch("program"), interest]);
+
+  const getProgramName = (programId: string) => {
+    const program = programs.find((p) => p._id === programId);
+    return program ? program.name : "Unknown Program";
+  };
+
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     try {
-      console.log("dataa", data)
-      await signUp(data);
+      // Convert `dateOfBirth` to ISO format
+      const transformedData = {
+        ...data,
+        dateOfBirth: data.dateOfBirth.toISOString().split("T")[0], // ISO format (YYYY-MM-DD)
+      };
+
+      console.log("Transformed Data:", transformedData);
+
+      const response = await signUp(transformedData);
+      console.log("Response from Sign-Up:", response);
+
       setEmail(data.email);
       setShowOtp(true);
     } catch (error) {
-      setError('Sign-up failed. Please try again.');
+      setError("Sign-up failed. Please try again.");
     }
   };
 
-  const handleDateSelect = (date: Date | undefined) => {
-    if (date) {
-      setDate(date);
-      form.setValue("dateOfBirth", format(date, 'dd/MM/yyyy'));
+  const handleDateSelect = (selectedDate: Date | undefined) => {
+    if (selectedDate) {
+      setDate(selectedDate);
+      form.setValue("dateOfBirth", selectedDate); // Store Date object
     }
   };
-
+  
   function formatDateToMonthYear(dateString: string): string {
     const date = new Date(dateString);
     return format(date, "MMMM, yyyy");
@@ -127,13 +154,13 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
-        <div className="grid grid-cols-2 gap-2">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4 px-4">
+        <div className="grid sm:grid-cols-2 gap-2">
           <FormField
             control={form.control}
             name="firstName"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="flex-1 space-y-1 relative">
                 <Label>First Name</Label>
                 <Input placeholder="John" {...field} />
                 <FormMessage />
@@ -144,7 +171,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
             control={form.control}
             name="lastName"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="flex-1 space-y-1 relative">
                 <Label>Last Name</Label>
                 <Input placeholder="Doe" {...field} />
                 <FormMessage />
@@ -153,14 +180,15 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid sm:grid-cols-2 gap-2">
           <FormField
             control={form.control}
             name="email"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="flex-1 space-y-1 relative">
                 <Label>Email</Label>
                 <Input type="email" placeholder="johndoe@gmail.com" {...field} />
+                <Mail className="absolute right-3 top-[46px] w-5 h-5" />
                 <FormMessage />
               </FormItem>
             )}
@@ -169,7 +197,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
             control={form.control}
             name="mobileNumber"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="flex-1 space-y-1 relative">
                 <Label>Contact No.</Label>
                 <Input  type="tel" maxLength={14}
         placeholder="+91 00000 00000"
@@ -189,40 +217,56 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
           }
           field.onChange(value);
         }}/>
+                <Phone className="absolute right-3 top-[46px] w-5 h-5" />
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
-          <FormField
-            control={form.control}
-            name="dateOfBirth"
-            render={({ field }) => (
-              <FormItem>
-                <Label>Date of Birth</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" size="xl" className="w-full text-left !h-[64px] items-center justify-start h-12">
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {date ? format(date, "dd/MM/yyyy") : <span className='text-muted-foreground'>DD/MM/YYYY</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent align="start">
-                    <Calendar mode="single" selected={date} onSelect={handleDateSelect} />
-                  </PopoverContent>
-                </Popover>
-                <FormMessage />
-              </FormItem>
-            )}
+        <div className="grid sm:grid-cols-2 gap-2">
+        <FormField
+  control={form.control}
+  name="dateOfBirth"
+  render={({ field }) => (
+    <FormItem className="flex-1 space-y-1 relative">
+      <Label>Date of Birth</Label>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            size="xl"
+            className="w-full text-left !h-[64px] items-center justify-start h-12"
+          >
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            {field.value
+              ? format(new Date(field.value), 'dd/MM/yyyy') // Format only for display
+              : <span className="text-muted-foreground">DD/MM/YYYY</span>}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="start">
+          <Calendar
+            mode="single"
+            selected={field.value}
+            onSelect={(selectedDate) => {
+              if (selectedDate) {
+                field.onChange(selectedDate); // Store as Date object
+                setDate(selectedDate); // Update local state
+              }
+            }}
           />
+        </PopoverContent>
+      </Popover>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
 
           <FormField
             control={form.control}
             name="qualification"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="flex-1 space-y-1 relative">
                 <Label>Qualification</Label>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <SelectTrigger>
@@ -234,6 +278,8 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
                     <SelectItem value="WorkingProfessional">Working Professional</SelectItem>
                     <SelectItem value="Freelancer">Freelancer</SelectItem>
                     <SelectItem value="BusinessOwner">Business Owner</SelectItem>
+                    <SelectItem value="Consultant">Consultant</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -242,21 +288,23 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid sm:grid-cols-2 gap-2">
         <FormField
           control={form.control}
           name="program"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="flex-1 space-y-1 relative">
               <Label>Course of Interest</Label>
               <Select onValueChange={(value) => { field.onChange(value); (value); }} defaultValue={field.value} >
                 <SelectTrigger>
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent>
-                  {programs.map((program) => (
-                    <SelectItem key={program._id} value={program._id}>{program.name}</SelectItem>
-                  ))}
+                {Array.from(new Map(interest.map((int) => [int.programDetail, int])).values()).map((int) => (
+                  <SelectItem key={int.programDetail} value={int.programDetail}>
+                    {getProgramName(int.programDetail)}
+                  </SelectItem>
+                ))}
                 </SelectContent>
               </Select>
               <Label htmlFor="form-alert" className='flex gap-1 items-center text-sm text-[#00A3FF] font-normal mt-1'>
@@ -270,7 +318,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
           control={form.control}
           name="cohort"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="flex-1 space-y-1 relative">
               <Label>Select Cohort</Label>
               <Select onValueChange={(value) => { field.onChange(value); (value); }} defaultValue={field.value} disabled={!form.watch("program")}>
                 <SelectTrigger>

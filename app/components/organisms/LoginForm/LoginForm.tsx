@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Mail } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { Label } from '../../ui/label';
 import { Input } from '../../ui/input';
@@ -56,11 +56,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({ setShowOtp, setEmail }) =>
           control={control}
           name="email"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="flex-1 space-y-1 relative">
               <Label htmlFor="email" className="text-sm font-normal pl-3">Enter your Email</Label>
               <FormControl>
                 <Input id="email" type="email" placeholder="johndoe@gmail.com" {...field} />
               </FormControl>
+              <Mail className="absolute right-3 top-[46px] w-5 h-5" />
               {errors.email && (
                 <Label className="flex gap-1 items-center text-sm text-[#FF503D] font-normal pl-3">
                   <AlertCircle className="w-3 h-3" /> {errors.email.message}
@@ -71,7 +72,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ setShowOtp, setEmail }) =>
         />
 
         <div className="flex gap-2 justify-between items-center mt-6">
-          <Button onClick={handleRegisterClick} size="xl" variant="ghost">Register</Button>
+          <Button onClick={handleRegisterClick} type="button" size="xl" variant="ghost">Register</Button>
           <Button type="submit" className="flex-1 space-y-1" size="xl">Send OTP</Button>
         </div>
       </form>

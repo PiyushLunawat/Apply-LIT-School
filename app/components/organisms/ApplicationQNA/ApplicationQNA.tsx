@@ -41,24 +41,34 @@ const ApplicationQNA: React.FC = () => {
   ];
 
   return (
-    <div className="w-full text-white">
-      <div className="text-center text-3xl font-semibold my-14">Your Application Process</div>
-      <img src="/assets/images/application-process-banner.svg" alt="BANNER" className="w-screen" />
-      <div className="text-center text-3xl font-semibold my-14">Have Questions?</div>
-      <div className="space-y-4 max-w-[840px] mx-auto px-6">
-        {questions.map((q, index) => (
-          <div
-            key={index} onClick={() => toggleQuestion(index)}
-            className={`text-white text-base font-semibold transition-all duration-300 space-y-1.5 cursor-pointer ${activeQuestion === index ? '' : ''}`}>
-            <div className="flex justify-between items-center h-[100px] px-10 rounded-3xl bg-[#1F1F1F] w-full ">
-              <span>{q.question}</span>
-              {activeQuestion === index ? <ArrowUp className='h-6'/>: <ArrowDown className='h-6'/>}
-            </div>
-              <div className={`flex justify-between items-center h-[100px] px-10 rounded-3xl bg-[#FF791F] transition-all duration-300 ${activeQuestion === index ? '' : 'hidden'}`}>
-                <p className="text-gray-100">{q.answer}</p>
+    <div className="w-full text-white space-y-[72px] sm:space-y-24">
+      <div className=''>
+        <div className="text-center text-3xl font-semibold my-10 sm:my-14">Your Application Process</div>
+
+        <img src="/assets/images/application-process-banner.svg" alt="BANNER" className="w-screen hidden sm:block" />
+        <div className='sm:hidden mx-10'>
+          <img src="/assets/images/application-step-01.svg" alt="BANNER" className="w-full" />
+          <img src="/assets/images/application-step-02.svg" alt="BANNER" className="w-full" />
+          <img src="/assets/images/application-step-03.svg" alt="BANNER" className="w-full" />
+        </div>
+      </div>
+      <div className=''>
+        <div className="text-center text-3xl font-semibold my-10 sm:my-14">Have Questions?</div>
+        <div className="space-y-4 max-w-[840px] mx-auto px-6">
+          {questions.map((q, index) => (
+            <div
+              key={index} onClick={() => toggleQuestion(index)}
+              className={`text-white text-base font-semibold transition-all duration-300 space-y-1.5 cursor-pointer ${activeQuestion === index ? '' : ''}`}>
+              <div className="flex justify-between items-center h-[100px] px-4 sm:px-10 rounded-3xl bg-[#1F1F1F] w-full ">
+                <span>{q.question}</span>
+                {activeQuestion === index ? <ArrowUp className='h-4 sm:h-6'/>: <ArrowDown className='h-4 sm:h-6'/>}
               </div>
-          </div>
-        ))}
+                <div className={`flex justify-between items-center h-[100px] px-10 rounded-3xl bg-[#FF791F] transition-all duration-300 ${activeQuestion === index ? '' : 'hidden'}`}>
+                  <p className="text-gray-100">{q.answer}</p>
+                </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -1,6 +1,8 @@
 import { useNavigate } from '@remix-run/react';
-import React from 'react';
+import Cookies from 'js-cookie';
+import React, { useContext } from 'react';
 import { Button } from '~/components/ui/button';
+import { UserContext } from '~/context/UserContext';
 
 interface HeaderProps {
   subtitle?: boolean;  // Optional subtitle prop
@@ -8,6 +10,16 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ subtitle }) => {
     const navigate = useNavigate();
+
+    const { studentData, setStudentData } = useContext(UserContext);
+
+    const handleLogout = () => {
+      Cookies.remove('user-token');
+      localStorage.removeItem('studentData');
+      setStudentData(null); // Reset student data in the context
+      navigate('../login');
+    };
+    // console.log("svs",studentData)
     
   return (
     <header className="flex flex-col gap-3 sm:gap-5 py-8">
@@ -17,7 +29,7 @@ export const Header: React.FC<HeaderProps> = ({ subtitle }) => {
         </div>
 
         <div className="flex items-center">
-          <Button variant="link" onClick={() => navigate('../login')} className="text-sm sm:text-base underline">
+          <Button variant="link" onClick={handleLogout} className="text-sm sm:text-base underline">
             Logout
           </Button>
         </div>
@@ -25,7 +37,7 @@ export const Header: React.FC<HeaderProps> = ({ subtitle }) => {
 
       {subtitle && <div className="flex flex-col gap-2 sm:gap-4 text-center px-4 ">
         <div className="text-xl sm:text-3xl font-semibold">
-          Hey John <span role="img" aria-label="waving-hand">👋</span> Welcome to LIT
+          Hey {studentData?.firstName} <span role="img" aria-label="waving-hand">👋</span> Welcome to LIT
         </div>
         <div className="text-xs sm:text-base">Get started with your application process</div>
       </div>}

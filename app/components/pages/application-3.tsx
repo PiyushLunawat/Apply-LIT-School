@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '~/components/ui/button';
 import Header from '../organisms/Header/Header';
-import PersonalDetails from '../molecules/PersonalDetailsForm/PersonalDetailsForm';
-import PreviousEducation from '../molecules/PreviousEducation/PreviousEducation';
+import PersonalDetails from '../molecules/AccountDetailsForm/AccountDetailsForm';
+import PreviousEducation from '../molecules/ApplicationDetailsForm/ApplicationDetailsForm';
 import EmergencyContactDetails from '../molecules/EmergencyContactDetails/EmergencyContactDetails';
 import ParentalInformation from '../molecules/ParentalInformation/ParentalInformation';
 import Footer from '../organisms/Footer/Footer';
 import { PaymentFailedDialog, PaymentSuccessDialog } from '../molecules/PaymentDialog/PaymentDialog';
-import CourseDive from '../molecules/CourseDive/CourseDive';
+import CourseDive from '../molecules/ApplicationTaskForm/ApplicationTaskForm';
 import Task01 from '../molecules/Task01/Task01';
 import Task02 from '../molecules/Task02/Task02';
 import LITMUSTest from '../organisms/LITMUSTest/LITMUSTest';

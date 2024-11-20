@@ -27,16 +27,16 @@ export const SignUp: React.FC = () => {
         <img src="/assets/images/lit-logo.svg" alt="LIT" className="absolute top-7 left-7 w-8 sm:w-16" />
       </div>
       {!showotp ? (
-        <div className='space-y-24'>
-          <div className="w-full px-6 mt-8 sm:mt-14 justify-center items-center">
-          <div className='max-w-[840px] mx-auto'>
-            <div className="gap-4 sm:gap-6 flex flex-col text-center">
+        <div className='space-y-[72px] sm:space-y-24'>
+         <div className="w-full px-6 mt-8 sm:mt-14 justify-center items-center">
+          <div className='max-w-[840px] mx-auto space-y-4 sm:space-y-8'>
+            <div className="gap-2 sm:gap-6 flex flex-col text-center">
               <div className=" text-xl sm:text-3xl font-semibold ">Join the Education Revolution!</div>
               <div className=" text-sm sm:text-base font-semibold ">Register with us to begin your application process</div>
             </div>
             <SignUpForm setShowOtp={setShowOtp} setEmail={setEmail} />
-            </div>
           </div>
+         </div>
           <ApplicationQNA />
           <Footer />
         </div>) :

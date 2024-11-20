@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { verifyOtp, resendOtp } from '~/utils/api';
+import React, { useState, useEffect, useContext } from 'react';
+import { verifyOtp, resendOtp, verifyMobileOTP } from '~/utils/api';
+import Cookies from 'js-cookie';
 import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '../../ui/input-otp';
 import { Button } from '~/components/ui/button';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, MailIcon, Phone, PhoneCallIcon } from 'lucide-react';
 import { Label } from '~/components/ui/label';
 import { useNavigate } from '@remix-run/react';
 import {
@@ -17,6 +18,7 @@ import {
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { UserContext } from '~/context/UserContext';
 
 const formSchema = z.object({
   otp: z
@@ -42,6 +44,7 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
     const [timer, setTimer] = useState(59);
     const [resendError, setResendError] = useState<string | null>(null);
     const [verifyError, setVerifyError] = useState<string | null>(null);
+    const { studentData, setStudentData } = useContext(UserContext);
 
     const form = useForm<FormValues>({
       resolver: zodResolver(formSchema),
@@ -66,9 +69,25 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
       console.log("otpp", data.otp);
-      const res = await verifyOtp({ email: contactInfo, otp: data.otp });
-      console.log("response",res)
-      navigate('../dashboard/application-step-1');
+      if(verificationType === 'email'){
+        const res = await verifyOtp({ email: contactInfo, otp: data.otp });
+        Cookies.set('user-token', res.token);
+        // Store studentData in localStorage
+        if (res.studentData) {
+          localStorage.setItem('studentData', JSON.stringify(res.studentData));
+          const storedData = localStorage.getItem('studentData');
+          if (storedData) {
+            setStudentData(JSON.parse(storedData));
+          }
+        }
+        navigate('../dashboard/application-step-1');
+      }
+
+      if(verificationType === 'contact'){
+        const res = await verifyMobileOTP({ mobileNumber: contactInfo, otp: data.otp });
+        localStorage.setItem('studentData', JSON.stringify(res.data));
+      }
+      
     } catch (error) {
       console.error('OTP verification failed:', error);
       setVerifyError('OTP verification failed. Please check your OTP and try again.');
@@ -98,8 +117,9 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
           {verificationType === 'contact' ? 'Verify Your Contact No.' : 'Verify Your Account'}
           <div className="text-center text-base">
             {verificationType === 'contact'
-              ? `An OTP was sent to your contact no. 📱 ${contactInfo}`
-              : `An OTP was sent to your email 📧 ${contactInfo}`}
+              ? <div className='w-fit flex items-center text-center mx-auto'>An OTP was sent to your contact no. <Phone className='w-3 h-3 mx-1'/> {contactInfo}</div>
+              : <div className='w-fit flex items-center text-center mx-auto'>An OTP was sent to your email <MailIcon className='w-3 h-3 mx-1'/> {contactInfo}</div>
+            }
           </div>
         </div>
         <Form {...form}>
