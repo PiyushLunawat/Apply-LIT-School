@@ -12,8 +12,8 @@ import { PaymentFailedDialog, PaymentSuccessDialog } from '../molecules/PaymentD
 import ApplicationTaskForm from '../molecules/ApplicationTaskForm/ApplicationTaskForm';
 import Task01 from '../molecules/Task01/Task01';
 import Task02 from '../molecules/Task02/Task02';
-import { useNavigate } from '@remix-run/react';
-import { getCurrentStudents, getStudents } from '~/utils/studentAPI';
+import { redirect, useNavigate } from '@remix-run/react';
+import { getCurrentStudent, getStudents } from '~/utils/studentAPI';
 import { UserContext } from '~/context/UserContext';
 
 // Extend the global Window interface to include Razorpay
@@ -24,38 +24,46 @@ declare global {
 }
 
 export const ApplicationStep1: React.FC = () => {
+  const [studentData, setStudentData] = useState<any>(null);
+
+  // Initialize from localStorage when the component mounts
+  useEffect(() => {
+    const storedData = localStorage.getItem('studentData');
+
+    if (storedData) {
+      setStudentData(JSON.parse(storedData));
+    }
+  }, []);
   const navigate = useNavigate();
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
   const [second, setSecond] = useState(false);
-  const [part2, setPart2] = useState(false);
 
   const handleContinueToDashboard = () => {
-    setPart2(true); // Set part2 to true to move to the next part of the form
-    setSuccessDialogOpen(false); // Close the dialog
+    setSecond(true);
+    setSuccessDialogOpen(false);
   };
 
-  const { studentData, setStudentData } = useContext(UserContext);
-  const [hasFetchedCurrentStudent, setHasFetchedCurrentStudent] = useState<any | null>(null);
-
-  // Fetch current student data when studentData._id is available
   useEffect(() => {
     async function fetchCurrentStudentData() {
       try {
-        if (studentData && studentData._id && !hasFetchedCurrentStudent) {
-          const data = await getCurrentStudents(studentData._id);
-          console.log('SBS', data);
-          setHasFetchedCurrentStudent(data);
-        }
+
+          const res = await getCurrentStudent(studentData?._id);
+            console.log(' student data:', res.data?.applicationDetails?.applicationStatus);
+          if(res.data?.applicationDetails?.applicationStatus !== "initiated" &&
+            res.data?.applicationDetails?.applicationStatus !== undefined){
+              console.log("xxvxvx",res.data?.applicationDetails?.applicationStatus)
+
+              navigate('/dashboard/application-step-2');
+            }
+            if(res.data?.applicationDetails?.applicationStatus === 'initiated')
+              setSecond(true)
       } catch (error) {
-        console.error('Error fetching student data:', error);
-      } finally {
-        if(hasFetchedCurrentStudent?.data?.applicationStatus === 'initiated')
-          setSecond(true)
+        console.log('Error fetching student data:', error);
       }
     }
 
     fetchCurrentStudentData();
-  }, [studentData, setStudentData, hasFetchedCurrentStudent]);
+  }, [studentData]);
 
 
   return (

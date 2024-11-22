@@ -19,8 +19,7 @@ import {
   FormMessage,
 } from '~/components/ui/form';
 import { useNavigate } from '@remix-run/react';
-import { Dialog } from '~/components/ui/dialog';
-import { DialogContent } from '@radix-ui/react-dialog';
+import { Dialog, DialogContent } from '~/components/ui/dialog';
 import VerifyOTP from '~/components/organisms/VerifyOTP/VerifyOTP';
 import { getCohorts, getPrograms, verifyNumber } from '~/utils/api';
 import { UserContext } from '~/context/UserContext';
@@ -42,7 +41,6 @@ type FormData = z.infer<typeof formSchema>;
 
 const AccountDetailsForm: React.FC = () => {
   const { studentData  } = useContext(UserContext);
-  // console.log("caa",studentData)
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [programs, setPrograms] = useState<any[]>([]);
   const [cohorts, setCohorts] = useState<any[]>([]); 
@@ -320,12 +318,13 @@ const AccountDetailsForm: React.FC = () => {
       </form>
     </Form>
         
-    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className='max-w-3xl'>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className='max-w-4xl !p-0'>
             <VerifyOTP
               verificationType="contact" 
               contactInfo={contactInfo}
               errorMessage="Oops! Looks like you got the OTP wrong, Please Retry."
+              setIsDialogOpen={setIsDialogOpen}
             />
           </DialogContent>
         </Dialog>

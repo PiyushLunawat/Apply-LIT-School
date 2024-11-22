@@ -276,6 +276,7 @@ const ApplicationDetailsForm: React.FC = () => {
 
     try {
       await handlePayment(apiPayload);
+      
     } catch (error) {
       console.error("Error submitting application:", error);
       alert("Failed to submit the application. Please try again.");

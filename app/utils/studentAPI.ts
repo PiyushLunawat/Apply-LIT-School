@@ -42,19 +42,25 @@ export async function getStudents() {
   return response.json();
 }
 
-export async function getCurrentStudents(id: string) {
-    const response = await fetch(`${CONST_API}/admin/students/application/${id}`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
-  
-    if (!response.ok) {
-      throw new Error("Failed to fetch students");
-    }
-  
-    return response.json(); // Returns parsed JSON data
+
+export async function getCurrentStudent(id: string) {
+
+  console.log(' axaxax:',id);
+
+  const response = await fetch(`${CONST_API}/admin/student/${id}`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  if (!response.ok) {
+    console.error("API Error:", response.status, await response.text());
+    throw new Error("Failed to fetch students");
   }
-  
+
+  const data = await response.json();
+  console.log("API Response:", data); // Check this output
+  return data; // Ensure the response is parsed correctly
+}
 
 // Submit application function
 export async function submitApplication(data: {
@@ -134,24 +140,14 @@ export async function submitApplication(data: {
   return response.json();
 }
 
-export async function submitApplicationTask(data: {
-    courseDive: { text1: string; text2: string };
-    tasks: Array<{
-      text?: string;
-      images?: File[];
-      videos?: string[];
-      files?: (File | string)[];
-      links?: string[];
-    }>;
-  }) {
-    const response = await fetch(`${CONST_API}/students/submit-application-task`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+export async function submitApplicationTask(formData: FormData) {
+    const response = await fetch(`${CONST_API}/student/submit-application-task`, {
+      method: 'POST',
+      body: formData,
     });
   
     if (!response.ok) {
-      throw new Error("Failed to submit application task");
+      throw new Error('Failed to submit application task');
     }
   
     return response.json();

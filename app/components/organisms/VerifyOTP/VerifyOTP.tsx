@@ -29,15 +29,19 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 interface VerifyOTPProps {
-  verificationType: 'contact' | 'email'; // Contact or Email
-  contactInfo: string; // The phone number or email to display
-  errorMessage?: string; // Optional error message
+  verificationType: 'contact' | 'email'; 
+  contactInfo: string; 
+  errorMessage?: string;
+  setIsDialogOpen?: (isOpen: boolean) => void;
+  onVerificationSuccess?: () => void;
 }
 
 export const VerifyOTP: React.FC<VerifyOTPProps> = ({
   verificationType,
   contactInfo,
-  errorMessage
+  errorMessage,
+  setIsDialogOpen,
+  onVerificationSuccess
 }) => {
     const navigate = useNavigate();
     const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
@@ -85,7 +89,15 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
 
       if(verificationType === 'contact'){
         const res = await verifyMobileOTP({ mobileNumber: contactInfo, otp: data.otp });
-        localStorage.setItem('studentData', JSON.stringify(res.data));
+
+        if (res?.data) {
+          localStorage.setItem('studentData', JSON.stringify(res.data));
+          setStudentData(res.data); 
+          if (setIsDialogOpen) { // Ensure it's defined
+            setIsDialogOpen(false); 
+          }
+          console.log('Mobile number verified successfully.');
+        }
       }
       
     } catch (error) {
@@ -159,7 +171,7 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
           
           <div className="text-center mt-4">
             <Button size="xl" type="submit">
-              {verificationType === 'contact' ? 'Confirm and Login' : 'Confirm and Proceed'}
+              {verificationType === 'contact' ? 'Verify' : 'Confirm and Login'}
             </Button>
           </div>
       </form>
@@ -175,11 +187,11 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
 
       </div>
 
-      <div className="text-center my-8">
-       <a href={verificationType === 'contact' ? '/login' : '/sign-up'} className="text-base font-medium text-white hover:underline">
-         {verificationType === 'contact' ? '← Login' : '← Registration Page'}
+      {verificationType === 'email' && <div className="text-center my-8">
+       <a href={'/login'} className="text-base font-medium text-white hover:underline">
+         {'← Login'}
        </a>
-      </div>
+      </div>}
     </div>
   );
 };

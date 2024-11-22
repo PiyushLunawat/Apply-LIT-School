@@ -16,6 +16,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Initialize from localStorage when the component mounts
   useEffect(() => {
     const storedData = localStorage.getItem('studentData');
+
     if (storedData) {
       setStudentData(JSON.parse(storedData));
     }

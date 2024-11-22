@@ -8,9 +8,10 @@ import { Label } from '~/components/ui/label';
 import { UserContext } from '~/context/UserContext';
 import { getCohorts } from '~/utils/api';
 import { Button } from '~/components/ui/button';
-import { FileTextIcon, RefreshCw, XIcon } from 'lucide-react';
+import { FileTextIcon, Link2Icon, Phone, RefreshCw, UploadIcon, XIcon } from 'lucide-react';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '~/components/ui/form';
 import { submitApplicationTask } from '~/utils/studentAPI';
+import { useNavigate } from '@remix-run/react';
 
 const formSchema = z.object({
   courseDive: z.object({
@@ -31,10 +32,20 @@ const formSchema = z.object({
 
 type FormSchema = z.infer<typeof formSchema>;
 
+interface ConfigItem {
+  type: string;
+  answer: any;
+}
+
+interface Task {
+  configItems: ConfigItem[];
+}
+
 const ApplicationTaskForm: React.FC = () => {
   const { studentData } = useContext(UserContext);
   const [cohorts, setCohorts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
@@ -47,7 +58,7 @@ const ApplicationTaskForm: React.FC = () => {
     },
   });
 
-  const { control, handleSubmit, setValue, watch } = form;
+  const { control, handleSubmit, setValue } = form;
 
   useEffect(() => {
     async function fetchCohorts() {
@@ -59,77 +70,99 @@ const ApplicationTaskForm: React.FC = () => {
       }
     }
     fetchCohorts();
-  }, []);
+  }, [setValue, studentData]);
 
   const getCohort = (cohortId: string) => {
-    return cohorts.find((c) => c._id === cohortId);
-  };
+        return cohorts.find((c) => c._id === cohortId);
+      };
 
   const cohort = getCohort(studentData?.cohort);
 
+  
   const tasks = cohort?.applicationFormDetail?.[0]?.task || [];
-
-  // Initialize tasks in form state
   useEffect(() => {
-    setValue(
-      'tasks',
-      tasks.map((task: any) => ({
-        configItems: task.config.map((configItem: any) => ({
-          type: configItem.type,
-          answer: configItem.type === 'link' ? [''] : '',
-        })),
-      }))
-    );
+    if (tasks.length > 0) {
+      setValue(
+        'tasks',
+        tasks.map((task: any) => ({
+          configItems: task.config.map((configItem: any) => ({
+            type: configItem.type,
+            answer:
+              configItem.type === 'link'
+                ? Array(configItem.maxFiles || 1).fill('')
+                : configItem.type === 'file' || configItem.type === 'image' || configItem.type === 'video'
+                ? []
+                : '',
+          })),
+        }))
+      );
+    }
   }, [tasks, setValue]);
 
   const onSubmit = async (data: FormSchema) => {
     try {
       setLoading(true);
-  
-      // Map form data to the expected structure
-      const mappedData = {
-        courseDive: {
-          text1: data.courseDive.interest,
-          text2: data.courseDive.goals,
-        },
-        tasks: data.tasks.map((task) => {
-          const taskData: {
-            text?: string;
-            images?: File[];
-            videos?: string[];
-            files?: (File | string)[];
-            links?: string[];
-          } = {};
-  
-          task.configItems.forEach((configItem) => {
-            const { type, answer } = configItem;
-            switch (type) {
-              case 'long':
-              case 'short':
-                taskData.text = answer;
-                break;
-              case 'image':
-                taskData.images = answer;
-                break;
-              case 'video':
-                taskData.videos = answer;
-                break;
-              case 'file':
-                taskData.files = answer;
-                break;
-              case 'link':
-                taskData.links = Array.isArray(answer) ? answer : [answer];
-                break;
-              default:
-                break;
-            }
-          });
-  
-          return taskData;
-        }),
-      };
-  
-      await submitApplicationTask(mappedData);
+
+      const formData = new FormData();
+
+      // Append courseDive fields
+      formData.append('courseDive[text1]', data.courseDive.interest);
+      formData.append('courseDive[text2]', data.courseDive.goals);
+
+      // Append tasks
+      data.tasks.forEach((task, taskIndex) => {
+        // const taskKey = `${taskIndex + 1}`;
+
+        task.configItems.forEach((configItem, index) => {
+          const { type, answer } = configItem;
+
+          switch (type) {
+            case 'long':
+            case 'short':
+              if (answer) {
+                formData.append(`tasks[${taskIndex+1}].text[${index}]`, answer);
+              }
+              break;
+
+            case 'image':
+            case 'video':
+            case 'file':
+              if (Array.isArray(answer)) {
+                answer.forEach((file, idx) => {
+                  formData.append(`tasks[${taskIndex+1}].${type}s[${idx}]`, file);
+                });
+              }
+              break;
+
+            case 'link':
+              if (Array.isArray(answer)) {
+                answer.forEach((link, idx) => {
+                  formData.append(`tasks[${taskIndex+1}].links[${idx}]`, link);
+                });
+              }
+              break;
+
+            default:
+              break;
+          }
+        });
+      });
+
+      // **Console log the FormData contents**
+      console.log('FormData entries:');
+      for (let pair of formData.entries()) {
+        if (pair[1] instanceof File) {
+          console.log(`${pair[0]}: [File] ${pair[1].name}`);
+        } else {
+          console.log(`${pair[0]}:`, pair[1]);
+        }
+      }
+
+      // Send the formData using submitApplicationTask
+      const res = await submitApplicationTask(formData);
+      console.log("gsg",res);
+      navigate('/dashboard/application-step-2');
+
       // Handle success (e.g., show a success message or redirect)
     } catch (error) {
       console.error('Failed to submit application task:', error);
@@ -137,7 +170,7 @@ const ApplicationTaskForm: React.FC = () => {
       setLoading(false);
     }
   };
-  
+
 
   return (
     <Form {...form}>
@@ -230,7 +263,8 @@ const ApplicationTaskForm: React.FC = () => {
           </div>
         ))}
 
-        <div className="flex justify-end items-center mt-8">
+        <div className="flex justify-between items-center mt-8">
+           <Button variant="link" type='button' onClick={() => form.reset() }>Clear Form</Button>
            <Button size="xl" className='space-y-1' type="submit" disabled={loading}>
             {loading ? 'Submitting...' : 'Submit Application'}
           </Button>
@@ -290,25 +324,40 @@ const TaskConfigItem: React.FC<TaskConfigItemProps> = ({ control, taskIndex, con
         />
       );
 
-    case 'link':
-      return (
-        <FormField
-          control={control}
-          name={fieldName}
-          render={({ field }) => (
-            <FormItem className='flex-1 space-y-1 relative'>
-              <FormControl>
-                <Input
-                  className="w-full text-white text-base mt-2"
-                  placeholder="Enter URL here"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      );
+      case 'link':
+        return (
+          <FormField
+            control={control}
+            name={fieldName}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-base font-normal text-[#FA69E5] pl-3">
+                  {configItem.label || 'Links'}
+                </FormLabel>
+                <FormControl>
+                  <div className="flex flex-col space-y-2 mt-2">
+                    {Array.from({ length: configItem.characterLimit || 1 }).map((_, index) => (
+                      <div key={index} className="relative">
+                        <Input
+                          className="w-full text-white text-base mt-2 !pl-10"
+                          placeholder={`Enter URL ${index + 1}`}
+                          value={field.value?.[index] || ''}
+                          onChange={(e) => {
+                            const newLinks = [...(field.value || [])];
+                            newLinks[index] = e.target.value;
+                            field.onChange(newLinks);
+                          }}
+                        />
+                        <Link2Icon className="absolute left-3 top-[30px] w-5 h-5" />
+                      </div>
+                    ))}
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        );
 
     default:
       return null;
@@ -321,7 +370,7 @@ interface FileUploadFieldProps {
 }
 
 const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) => {
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<File[]>(field.value || []);
   const [error, setError] = useState<string | null>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -329,8 +378,11 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
     if (selectedFiles) {
       let fileArray = Array.from(selectedFiles);
 
+      // Combine existing files with new ones
+      const totalFiles = files.length + fileArray.length;
+
       // Apply maxFiles limit
-      if (configItem.maxFiles && fileArray.length > configItem.maxFiles) {
+      if (configItem.maxFiles && totalFiles > configItem.maxFiles) {
         setError(`You can upload up to ${configItem.maxFiles} files.`);
         return;
       }
@@ -344,28 +396,10 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
         }
       }
 
-      // Apply allowedTypes
-      let acceptTypes = '';
-      switch (configItem.type) {
-        case 'image':
-          acceptTypes = 'image/*';
-          break;
-        case 'video':
-          acceptTypes = 'video/*';
-          break;
-        case 'file':
-          if (configItem.allowedTypes && !configItem.allowedTypes.includes('All')) {
-            acceptTypes = configItem.allowedTypes.map((type: string) => `.${type.toLowerCase()}`).join(',');
-          } else {
-            acceptTypes = '';
-          }
-          break;
-        default:
-          acceptTypes = '';
-      }
-
-      setFiles(fileArray);
-      field.onChange(fileArray);
+      // Update files state
+      const newFiles = [...files, ...fileArray];
+      setFiles(newFiles);
+      field.onChange(newFiles);
       setError(null);
     }
   };
@@ -376,6 +410,9 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
     setFiles(newFiles);
     field.onChange(newFiles);
   };
+
+  // Determine if we should show the upload button
+  const showUploadButton = !configItem.maxFiles || files.length < configItem.maxFiles;
 
   return (
     <FormItem>
@@ -397,28 +434,36 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
           ))}
 
           {/* File upload input */}
-          <div className="flex items-center justify-between w-full h-16 border-2 border-dashed rounded-xl p-1.5">
-            <label className="w-full pl-3 text-muted-foreground">
-              <input
-                type="file"
-                className="hidden"
-                multiple={configItem.maxFiles > 1}
-                accept={
-                  configItem.type === 'image' ? 'image/*' :
-                  configItem.type === 'video' ? 'video/*' :
-                  configItem.type === 'file' && configItem.allowedTypes && !configItem.allowedTypes.includes('All') ?
-                    configItem.allowedTypes.map((type: string) => `.${type.toLowerCase()}`).join(',') : '*/*'
-                }
-                onChange={handleFileChange}
-              />
-              <span className="cursor-pointer">
-                {`Upload ${configItem.type}${configItem.maxFiles > 1 ? 's' : ''} (Max size: ${configItem.maxFileSize || 15} MB)`}
-              </span>
-            </label>
-            <Button className="text-white px-6 py-[18px] rounded-xl" onClick={() => document.querySelector<HTMLInputElement>(`input[type="file"]`)?.click()}>
-              Upload {configItem.type}
-            </Button>
-          </div>
+          {showUploadButton && (
+            <div className="flex items-center justify-between w-full h-16 border-2 border-dashed rounded-xl p-1.5">
+              <label className="w-full pl-3 text-muted-foreground">
+                <input
+                  type="file"
+                  className="hidden"
+                  multiple={configItem.maxFiles > 1}
+                  accept={
+                    configItem.type === 'image' ? 'image/*' :
+                    configItem.type === 'video' ? 'video/*' :
+                    configItem.type === 'file' && configItem.allowedTypes && !configItem.allowedTypes.includes('All') ?
+                      configItem.allowedTypes.map((type: string) => `.${type.toLowerCase()}`).join(',') : '*/*'
+                  }
+                  onChange={handleFileChange}
+                />
+                <span className="cursor-pointer">
+                  {`Upload ${configItem.type}${configItem.maxFiles > 1 ? 's' : ''} (Max size: ${configItem.maxFileSize || 15} MB)`}
+                </span>
+              </label>
+              <Button className="flex gap-2 text-white px-6 py-6 rounded-xl" onClick={() => document.querySelector<HTMLInputElement>(`input[type="file"]`)?.click()}>
+                <UploadIcon className='w-4 h-4'/> Upload {configItem.type}
+              </Button>
+            </div>
+          )}
+          {/* Display the number of uploaded files out of maxFiles */}
+          {configItem.maxFiles && (
+            <div className="text-sm text-muted-foreground">
+              Uploaded {files.length} of {configItem.maxFiles} file{configItem.maxFiles > 1 ? 's' : ''}
+            </div>
+          )}
           {error && <p className="text-red-500 text-sm">{error}</p>}
         </div>
       </FormControl>
@@ -426,5 +471,6 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
     </FormItem>
   );
 };
+
 
 export default ApplicationTaskForm;

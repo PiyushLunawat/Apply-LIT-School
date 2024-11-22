@@ -4,7 +4,7 @@ import ApplicationReview from '../../organisms/ApplicationReview/ApplicationRevi
 
 interface StatusMessageProps {
   name: string; // e.g., "John"
-  messageType: 'underReview' | 'onHold' | 'accepted' | 'rejected' | 'concluded' | 'selected' | 'waitlist' | 'notqualified';
+  messageType: string;
   bgClassName: string;
   timeRemaining?: string;
 }
@@ -21,13 +21,13 @@ const StatusMessage: React.FC<StatusMessageProps> = ({
   // Update headMessage and subMessage based on messageType
   useEffect(() => {
     switch (messageType) {
-      case 'underReview':
+      case 'under review':
         setHeadMessage(`Hey ${name}, your application is under review...`);
         setSubMessage(
           'Hold on tight, your application review will be made available to you within 24 hours! You will then proceed to schedule your interview call based on your performance.'
         );
         break;
-      case 'onHold':
+      case 'on hold':
         setHeadMessage(`Hey ${name}, your application review has been put on hold...`);
         setSubMessage(
           'Looks like you missed out on a few deliverables. Your review process will continue once you review and re-submit your application with the required updates.'
@@ -63,7 +63,7 @@ const StatusMessage: React.FC<StatusMessageProps> = ({
           'Thank you for taking the counselling interview. You have been waitlisted. You will be updated with regards to your seat approval before 24 October, 2024.'
         );
         break;
-      case 'notqualified':
+      case 'not qualified':
         setHeadMessage(`Hey John, you have not qualified for the upcoming Creator Marketer Cohort.`);
         setSubMessage(
           'Thank you for taking the counselling interview. You may choose to apply again for a different cohort and/or program of your choice.'
@@ -79,13 +79,13 @@ const StatusMessage: React.FC<StatusMessageProps> = ({
     <>
       <div className='flex relative w-screen h-[250px] sm:h-[350px] px-auto' >
         <div className='w-full md:w-[850px] mx-auto flex flex-col gap-4 sm:gap-8 justify-center items-center'>
-          {(messageType === 'onHold' || messageType === 'underReview' || messageType === 'concluded') && (
+          {(messageType === 'on hold' || messageType === 'under review' || messageType === 'concluded') && (
             <div
               className={`flex justify-center items-center gap-2 px-6 py-2 sm:py-4 border ${
-                messageType === 'onHold' ? 'border-[#F8E000]' : 'border-[#00A3FF]'
+                messageType === 'on hold' ? 'border-[#F8E000]' : 'border-[#00A3FF]'
               } bg-[#FFFFFF33] rounded-full text-sm sm:text-2xl`}
             >
-              {messageType === 'onHold' ? (
+              {messageType === 'on hold' ? (
                 <CirclePause className='w-4 h-4 sm:w-6 sm:h-6 text-[#F8E000]' />
               ) : (
                 <Clock className='w-4 h-4 sm:w-6 sm:h-6 text-[#00A3FF]' />
