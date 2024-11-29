@@ -65,22 +65,21 @@ const Review: React.FC<ReviewProps> = ({  }) => {
   }, [studentData]);
 
   return (
-    <div className='h-full mb-24' >
-      <div className={`${status === "on hold" ? 'grayscale' : 'grayscale-0'} px-6 absolute h-[500px]`} style={{
+    <div className='h-full' >
+      <div className={`${status === "on hold" ? 'grayscale' : 'grayscale-0'} mb-24`} style={{
           backgroundImage: `url('/assets/images/application-review-banner.svg')`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
         }}>
-      </div>
-      <StatusMessage 
+            <StatusMessage 
             name={name}
             time={time}
             messageType={status}
             bgClassName="bg-gradient-to-r from-blue-900 to-black"/> 
 
             <div className=''>
-              {status !== 'under review' && <Feedback status={status} feedbackList={appliData} setPass={setPass}/>}
+              {!(status === 'under review' || status == '') && <Feedback status={status} feedbackList={appliData} setPass={setPass}/>}
             </div>
            
            
@@ -97,6 +96,7 @@ const Review: React.FC<ReviewProps> = ({  }) => {
             </> */}
       
         
+      </div>
     </div>
   );
 };

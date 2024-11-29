@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button } from '~/components/ui/button'; // Assuming you have a Button component
+import BookYourSeat from '../BookYourSeat/BookYourSeat';
 
 interface FeedbackProps {
   status: string;
@@ -9,18 +10,18 @@ interface FeedbackProps {
 
 const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass }) => {
 
-  console.log("SGsdfb",feedbackList?.applicationDetails?.applicationTasks[0]?.applicationTaskDetail?.tasks)
+  console.log("SGsdfb",feedbackList?.applicationDetails?.applicationTasks[0]?.applicationTaskDetail?.applicationTasks[0]?.overallFeedback[0]?.feedback)
   return (
-    <div className="max-w-4xl bg-[#09090B] border border-[#2C2C2C] text-white px-4 sm:px-6 py-6 sm:py-8 mx-auto rounded-2xl shadow-[0px_4px_32px_rgba(121,121,121,0.2)] justify-between items-start">
+    <div className="max-w-[1216px] bg-[#09090B] border border-[#2C2C2C] text-white px-4 sm:px-6 py-6 sm:py-8 mx-auto rounded-2xl shadow-[0px_4px_32px_rgba(121,121,121,0.2)] justify-between items-start">
     <div className="flex justify-between">
       <div className="text-lg sm:text-xl font-semibold mb-4">
         {status === "on hold" ? 'Reason for hold up' : 'Feedback'}
       </div>
-      <div className="text-sm sm:text-base">{new Date(feedbackList?.applicationDetails?.applicationTasks[0]?.applicationTaskDetail?.updatedAt).toLocaleString()}</div>
+      <div className="text-sm sm:text-base">{new Date(feedbackList?.applicationDetails?.updatedAt).toLocaleString()}</div>
     </div>
     {status === "on hold" ? (
       <ul className="ml-4 sm:ml-6 space-y-2 list-disc">
-        {feedbackList?.applicationDetails?.applicationTasks[0]?.applicationTaskDetail?.overallFeedback.map((item: any, index: any) => (
+        {feedbackList?.applicationDetails?.applicationTasks[0]?.applicationTaskDetail?.applicationTasks[0]?.overallFeedback[0]?.feedback.map((item: any, index: any) => (
           <li className="text-sm sm:text-base" key={index}>
             {item}
           </li>
@@ -28,7 +29,7 @@ const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass }) =>
       </ul>
     ) : (status === "rejected" || status === "accepted") ? (
       <div className="space-y-4">
-        {feedbackList?.applicationDetails?.applicationTasks[0]?.applicationTaskDetail?.tasks?.slice(1).map((task: any, index: any) => (
+        {feedbackList?.applicationDetails?.applicationTasks[0]?.applicationTaskDetail?.applicationTasks[0].tasks?.map((task: any, index: any) => (
           <div key={task._id}>
               <div className="text-sm sm:text-base font-semibold text-[#00A3FF]">
                 Task 0{index+1}
@@ -46,12 +47,15 @@ const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass }) =>
     ) : (
       <div className="text-sm sm:text-base">No feedback available.</div>
     )}
-    {status !== "rejected" &&
+    {!(status === "rejected" || status === "accepted") &&
     <div className="flex justify-center mt-8">
       <Button size="xl" className=" mx-auto px-8"  onClick={() => { if (status === "accepted") {setPass(true);}}}>
         {status === "on hold" ? 'Revise Your Application' : 'Schedule Interview'}
       </Button>
     </div>}
+
+    {status === "accepted" && <BookYourSeat/>}
+
   </div>
   );
 };

@@ -1,15 +1,26 @@
 import React, { useState } from 'react';
 import { X, Pencil } from 'lucide-react'; // Icons for editing and deleting
 import { Button } from './button';
+import { useNavigate } from '@remix-run/react';
 
-const ImageUpload: React.FC = () => {
+interface TokenPaymentDialogProps {
+  paymentType: string;
+  
+}
+
+const ImageUpload: React.FC<TokenPaymentDialogProps> = ({ paymentType }) => {
+  const navigate = useNavigate();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [receiptFile, setReceiptFile] = useState<File | null>(null); // State for the uploaded file
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
       const reader = new FileReader();
 
+      // Preview image
       reader.onload = (e) => {
         if (e.target?.result) {
           setSelectedImage(e.target.result as string);
@@ -17,16 +28,51 @@ const ImageUpload: React.FC = () => {
       };
 
       reader.readAsDataURL(file);
+      setReceiptFile(file); // Store the selected file for upload
     }
   };
 
   const handleDeleteImage = () => {
-    setSelectedImage(null); // Remove the image
+    setSelectedImage(null); // Remove the image preview
+    setReceiptFile(null); // Remove the file from state
   };
 
-  // Trigger file input for editing the image
   const handleEditImage = () => {
     document.getElementById('image-upload')?.click();
+  };
+
+  const handleSubmitImage = async () => {
+    if (!receiptFile) {
+      alert('Please upload a receipt image.');
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadError(null); // Clear previous errors
+
+    const formData = new FormData();
+    formData.append('paymentType', paymentType); // Add paymentType to formData
+    formData.append('receipt', receiptFile); // Add receipt image file to formData
+
+    try {
+      const response = await fetch('https://myfashionfind.shop/student/token-receipt', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload receipt');
+      }
+
+      const data = await response.json();
+      console.log('Receipt uploaded successfully:', data);
+      navigate('../dashboard/application-step-3');
+    } catch (error) {
+      setUploadError('Error uploading receipt. Please try again.');
+      console.error('Error uploading receipt:', error);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (

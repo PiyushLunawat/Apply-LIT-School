@@ -3,9 +3,10 @@ import { Dialog, DialogContent } from '~/components/ui/dialog';
 import { RadioGroup, RadioGroupItem } from '~/components/ui/radio-group'; 
 import { Button } from '~/components/ui/button'; 
 import { Label } from '~/components/ui/label';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Pencil, X } from 'lucide-react';
 import ImageUpload from '~/components/ui/ImageUpload';
 import { useNavigate } from '@remix-run/react';
+import { useState } from 'react';
 
 interface TokenPaymentDialogProps {
   open: boolean;
@@ -14,21 +15,82 @@ interface TokenPaymentDialogProps {
 
 const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({ open, setOpen }) => {
   const navigate = useNavigate();
-  const [selectedPayment, setSelectedPayment] = React.useState<'cash' | 'bank'>('cash');
-  const [secondDialogOpen, setSecondDialogOpen] = React.useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<'cash' | 'bank transfer'>('cash');
+  const [secondDialogOpen, setSecondDialogOpen] = useState(false);
 
   const handleNextClick = () => {
     setSecondDialogOpen(true); // Open the second dialog when "Next" is clicked
   };
 
-  const handleSubmit = () => {
-    navigate('../dashboard/application-step-3');
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [receiptFile, setReceiptFile] = useState<File | null>(null); // State for the uploaded file
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      const file = event.target.files[0];
+      const reader = new FileReader();
+
+      // Preview image
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          setSelectedImage(e.target.result as string);
+        }
+      };
+
+      reader.readAsDataURL(file);
+      setReceiptFile(file); // Store the selected file for upload
+    }
+  };
+
+  const handleDeleteImage = () => {
+    setSelectedImage(null); // Remove the image preview
+    setReceiptFile(null); // Remove the file from state
+  };
+
+  const handleEditImage = () => {
+    document.getElementById('image-upload')?.click();
+  };
+
+  const handleSubmitImage = async () => {
+    if (!receiptFile) {
+      alert('Please upload a receipt image.');
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadError(null); // Clear previous errors
+
+    const formData = new FormData();
+    formData.append('paymentType', selectedPayment); // Add paymentType to formData
+    formData.append('receipt', receiptFile); // Add receipt image file to formData
+
+    try {
+      const response = await fetch('https://myfashionfind.shop/student/token-receipt', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload receipt');
+      }
+
+      const data = await response.json();
+      console.log('Receipt uploaded successfully:', data);
+      navigate('../dashboard/application-step-3');
+    } catch (error) {
+      setUploadError('Error uploading receipt. Please try again.');
+      console.error('Error uploading receipt:', error);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
   <>  
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-[480px] mx-4 bg-[#09090b] text-white rounded-lg px-8 py-12 text-center shadow-[0px_4px_32px_0px_rgba(0,0,0,0.75)]">
+      <DialogContent className="max-w-2xl mx-4 bg-[#09090b] text-white rounded-lg px-8 py-8 text-center shadow-[0px_4px_32px_0px_rgba(0,0,0,0.75)]">
         <div className="flex justify-center mb-6">
           <img src='/assets/images/lit-cash-icon.svg' className="w-[60px]" />
         </div>
@@ -40,7 +102,7 @@ const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({ open, setOpen }
         <RadioGroup
           className="flex flex-col gap-4"
           value={selectedPayment}
-          onValueChange={(value) => setSelectedPayment(value as 'cash' | 'bank')}
+          onValueChange={(value) => setSelectedPayment(value as 'cash' | 'bank transfer')}
         >
           {/* Cash Payment Option */}
           <div className="flex flex-col gap-2">
@@ -70,8 +132,8 @@ const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({ open, setOpen }
       </DialogContent>
     </Dialog>
     <Dialog open={secondDialogOpen} onOpenChange={setSecondDialogOpen}>
-        <DialogContent className="max-w-[480px] mx-4 bg-[#09090b] text-white rounded-lg px-8 py-12 text-center shadow-[0px_4px_32px_0px_rgba(0,0,0,0.75)] h-[600px] overflow-hidden overflow-y-auto">
-          <ArrowLeft className='w-6 h-6 cursor-pointer' onClick={() => setSecondDialogOpen(false)} />
+        <DialogContent className="max-w-2xl mx-4 bg-[#09090b] text-white rounded-lg px-8 py-8 text-center shadow-[0px_4px_32px_0px_rgba(0,0,0,0.75)] h-[600px] overflow-hidden overflow-y-auto">
+          <ArrowLeft className='w-6 h-6 cursor-pointer absolute top-10 left-8' onClick={() => setSecondDialogOpen(false)} />
           <div className="flex justify-center mb-6">
             <img src='/assets/images/lit-cash-icon.svg' className="w-[60px]" />
           </div>
@@ -115,10 +177,56 @@ const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({ open, setOpen }
               </div>
             </>
           )}</RadioGroup>
-          <ImageUpload />
+          <div className="flex flex-col items-center">
+      {selectedImage ? (
+        <div className="relative bg-[#64748B33] rounded-xl border border-[#2C2C2C] w-full h-[220px]">
+          <img
+            src={selectedImage}
+            alt="Uploaded receipt"
+            className="rounded-xl w-full h-full object-cover "
+          />
+
+          <div className="absolute top-3 right-3 flex space-x-2">
+            <Button variant="outline" size="icon"
+              className="w-8 h-8 bg-white/[0.2] border border-white rounded-full shadow hover:bg-white/[0.4]"
+              onClick={handleEditImage}
+            >
+              <Pencil className="w-4 h-4" />
+            </Button>
+            <Button variant="outline" size="icon"
+              className="w-8 h-8 bg-white/[0.2] border border-white rounded-full shadow hover:bg-white/[0.4]"
+              onClick={handleDeleteImage}
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <label
+          htmlFor="image-upload"
+          className="cursor-pointer flex flex-col items-center justify-center bg-[#64748B33] p-4 rounded-xl border-[#2C2C2C] w-full h-[220px]"
+        >
+          <div className="flex flex-col items-center space-y-3">
+            <img
+              src="/assets/images/receipt-icon.svg"
+              alt="Upload icon"
+              className="w-14 h-14"
+            />
+            <p className="text-sm">Upload your Acknowledgement Receipt</p>
+          </div>
+          <input
+            id="image-upload"
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleImageChange}
+          />
+        </label>
+      )}
+    </div>
 
           {/* Submit Button */}
-          <Button size="xl" variant="outline" className="mt-8 w-fit border-[#00CC92] text-[#00CC92] mx-auto" onClick={handleSubmit}>Submit</Button>
+          <Button size="xl" variant="outline" className="mt-8 w-fit border-[#00CC92] text-[#00CC92] mx-auto" onClick={handleSubmitImage}>Submit</Button>
         </DialogContent>
       </Dialog>
   </>

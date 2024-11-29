@@ -1,5 +1,5 @@
 // Import necessary modules and components
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { z } from 'zod';
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,7 +18,7 @@ import {
 import { Instagram, Linkedin, SaveIcon } from 'lucide-react';
 import { UserContext } from '~/context/UserContext';
 import { PaymentFailedDialog, PaymentSuccessDialog } from '../PaymentDialog/PaymentDialog';
-import { getCurrentStudent, submitApplication } from '~/utils/studentAPI';
+import { submitApplication } from '~/utils/studentAPI';
 
 type ExperienceType = 'employee' | 'business' | 'freelancer' | 'consultant';
 
@@ -94,28 +94,14 @@ const ApplicationDetailsForm: React.FC = () => {
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
   const [failedDialogOpen, setFailedDialogOpen] = useState(false);
 
-  const [fetchedStudentData, setFetchedStudentData] = useState<FormData | null>(null);
-
-  // Fetch current student data when component mounts
-  useEffect(() => {
-    const fetchStudentData = async () => {
-      try {
-        const student = await getCurrentStudent(studentData._id); // Pass the actual student ID here
-        setFetchedStudentData(student.data.applicationDetails); // Store the fetched data in state
-      } catch (error) {
-        console.error("Failed to fetch student data:", error);
-      }
-    };
-    fetchStudentData();
-  }, []);
 
   // Initialize the form
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: fetchedStudentData || {
-      linkedin: studentData?.linkedInUrl || "",
-      instagram: studentData?.instagramUrl || "",
-      gender: studentData?.gender || "Male",
+    defaultValues: {
+      linkedin: "",
+      instagram: "",
+      gender: "Male",
       address: '',
       city: '',
       zipcode: '',
@@ -171,7 +157,7 @@ const ApplicationDetailsForm: React.FC = () => {
   };
 
   // Handle payment process
-  const handlePayment = async () => {
+  const handlePayment = async (apiPayload: any) => {
     // Load the Razorpay script
     const res = await loadScript('https://checkout.razorpay.com/v1/checkout.js');
 
@@ -180,35 +166,20 @@ const ApplicationDetailsForm: React.FC = () => {
       return;
     }
 
-    const apiPayload = {
-      appFeeData:{
-        "currency":"INR",
-        "amount":500 * 100,
-        "receipt":""
-      }
+    const data:any = await fetch('https://myfashionfind.shop/student/submit-application', {
+      method: 'POST',
+  headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(apiPayload),
+    });
+
+    if (data.ok) {
+      // Handle success response
+      console.log('Form submitted successfully');
+    } else {
+      // Handle error response
+      console.error('Form submission failed');
     }
-
-    const data = await fetch(
-      "https://myfashionfind.shop/student/pay-application-fee",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          appFeeData: {
-            currency: "INR",
-            amount: 500 * 100,
-            receipt: "",
-          },
-        }),
-      }
-    )
-      .then((response) => response.json())
-      .catch((error) => console.error("Error:", error));
-
-      console.log("respose data",data);
-      
+    console.log('Order data:', data);
 
     // Configure Razorpay options
     const options = {
@@ -234,8 +205,6 @@ const ApplicationDetailsForm: React.FC = () => {
                 amount: 500, 
                 receipt: "", 
               },
-              studentId: studentData._id,
-              cohortId: studentData.cohort,
             razorpay_order_id: response.razorpay_order_id,
             razorpay_payment_id: response.razorpay_payment_id,
             razorpay_signature: response.razorpay_signature,
@@ -290,7 +259,7 @@ const ApplicationDetailsForm: React.FC = () => {
   };
 
   // Handle form submission
-  const saveData = async (data: FormData) => {
+  const onSubmit = async (data: FormData) => {
     const validationError = validateBeforeSubmit();
     if (validationError) {
       return;
@@ -371,18 +340,17 @@ const ApplicationDetailsForm: React.FC = () => {
   }
 
   // Append apiPayload as a JSON string
-  // formData.append('apiPayload', JSON.stringify(apiPayload));
+  formData.append('apiPayload', JSON.stringify(apiPayload));
 
   try {
     const response = await fetch('https://myfashionfind.shop/student/submit-application', {
       method: 'POST',
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(apiPayload), 
+      body: formData, // Send the FormData with file and payload
     });
 
     if (response.ok) {
       // Handle success response
-      console.log('Form submitted successfully', response);
+      console.log('Form submitted successfully');
     } else {
       // Handle error response
       console.error('Form submission failed');
@@ -393,29 +361,6 @@ const ApplicationDetailsForm: React.FC = () => {
       setFailedDialogOpen(true); 
     }
   };
-
-  const [isSaved, setIsSaved] = useState((studentData?.applicationDetails !== undefined));
-  useEffect(() => {
-    if (studentData?.applicationDetails !== undefined) {
-      setIsSaved(true);
-    } else {
-      setIsSaved(false);  // Reset if the condition is not met
-    }
-  }, [studentData]);
-
-  const onSubmit = async (data: FormData) => {
-    if (!isSaved) {
-      console.log("ggggggg",studentData?.applicationDetails, isSaved);
-      
-      await saveData(data);
-      setIsSaved(true); // Change button state to "Pay"
-    } else {
-      // Trigger payment function
-      console.log("ggggggg",studentData?.applicationDetails, isSaved);
-      handlePayment();
-    }
-  };
-  
   
   const resubmitForm = handleSubmit(onSubmit);
   const handleRetry = () => {
@@ -1130,17 +1075,10 @@ const ApplicationDetailsForm: React.FC = () => {
 
         <div className="flex justify-between items-center mt-10">
           <Button variant="link" type='button' onClick={() => form.reset() }>Clear Form</Button>
-          <Button size="xl" className='px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90' type="button" onClick={() => handlePayment()}>
-            <div className='flex items-center gap-2'>
-              {!isSaved ? (
-                <>
-                  <SaveIcon className='w-5 h-5' /> Submit
-                </>
-              ) : (
-                <>Pay INR 500.00</> 
-              )}
-            </div>
-          </Button>
+          <div className='flex gap-2'>
+            <Button size="xl" className=' px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90' type="submit" ><SaveIcon className='w-5 h-5'/></Button>
+            <Button size="xl" className='space-y-1 bg-[#00AB7B] hover:bg-[#00AB7B]/90' type="button" >Pay INR 500.00</Button>
+          </div>
         </div>
       </form>
     </Form>

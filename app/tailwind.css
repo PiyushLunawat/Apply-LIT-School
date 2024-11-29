@@ -76,4 +76,12 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+
+  ::-webkit-scrollbar {
+    display: none;
+  }
+  
+  html {
+    scrollbar-width: thin; 
+  } 
 }

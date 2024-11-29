@@ -79,7 +79,7 @@ const StatusMessage: React.FC<StatusMessageProps> = ({
   // Calculate and update the countdown
   useEffect(() => {
     if (time) {
-      const targetTime = new Date(time).getTime() + 1 * 45 * 60 * 1000; // Add 24 hours to the provided time
+      const targetTime = new Date(time).getTime() + 24 * 60 * 60 * 1000; // Add 24 hours to the provided time
       const updateCountdown = () => {
         const now = Date.now();
         const remainingTime = targetTime - now;

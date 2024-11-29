@@ -1,6 +1,5 @@
 import { DownloadIcon, File, HandMetal } from 'lucide-react';
 import React from 'react';
-import BookYourSeat from '~/components/molecules/BookYourSeat/BookYourSeat';
 import { Button } from '~/components/ui/button'; // Assuming you have a Button component
 
 interface InterviewFeedbackProps {
@@ -74,8 +73,7 @@ const InterviewFeedback: React.FC<InterviewFeedbackProps> = ({
           </ul>
         </div>
       </div>
-      
-      <BookYourSeat/>
+    
 
     </div>
     </div>

@@ -283,6 +283,15 @@ interface TaskConfigItemProps {
 const TaskConfigItem: React.FC<TaskConfigItemProps> = ({ control, taskIndex, configIndex, configItem }) => {
   const fieldName = `tasks.${taskIndex}.configItems.${configIndex}.answer`;
 
+  const wordLimitHandler = (event: React.ChangeEvent<HTMLTextAreaElement>, field: any, maxWordLimit: number) => {
+    const text = event.target.value;
+    const wordCount = text.split(/\s+/).filter(Boolean).length; // Count the words
+  
+    if (wordCount <= maxWordLimit) {
+      field.onChange(text); // Allow change if under word limit
+    }
+  };
+
   switch (configItem.type) {
     case 'long':
     case 'short':
@@ -294,11 +303,11 @@ const TaskConfigItem: React.FC<TaskConfigItemProps> = ({ control, taskIndex, con
             <FormItem className='w-full'>
               <FormControl>
                 <Textarea
-                  maxLength={configItem.characterLimit}
                   className={`w-full text-white text-base mt-2 ${configItem.type === 'short' ? 'h-24' : ''}`}
                   placeholder={`Write up to ${configItem.characterLimit} characters`}
                   rows={configItem.type === 'long' ? 6 : 3}
-                  {...field}
+                  onChange={(e) => wordLimitHandler(e, field, configItem.characterLimit)}
+                  value={field.value}
                 />
               </FormControl>
               <FormMessage />

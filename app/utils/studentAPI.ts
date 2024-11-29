@@ -1,5 +1,5 @@
-const CONST_API = "http://localhost:4000";
-// const CONST_API = "https://myfashionfind.shop";
+// const CONST_API = "http://localhost:4000";
+const CONST_API = "https://myfashionfind.shop";
 
 // Fetch all cohorts
 export async function getCohorts() {
@@ -44,9 +44,6 @@ export async function getStudents() {
 
 
 export async function getCurrentStudent(id: string) {
-
-  console.log(' axaxax:',id);
-
   const response = await fetch(`${CONST_API}/admin/student/${id}`, {
     method: "GET",
     headers: { "Content-Type": "application/json" },

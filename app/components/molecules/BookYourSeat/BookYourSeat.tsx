@@ -64,35 +64,67 @@ const BookYourSeat: React.FC = () => {
     { id: 19, status: 'booked' },
     { id: 20, status: 'available' },
   ]);
+
+  const [selectedSeat, setSelectedSeat] = useState<{
+    row: number;
+    seatId: number;
+  } | null>(null);
   const [PaymentDialogOpen, setPaymentDialogOpen] = useState(false);
 
-  const handleR1SeatClick = (seatId: number) => {
+  const handleSeatClick = (
+    row: number,
+    setRow: React.Dispatch<React.SetStateAction<Seat[]>>,
+    seatId: number
+  ) => {
     setR1((prevSeats) =>
-      prevSeats.map((seat) =>
-        seat.id === seatId && seat.status === 'available'
-          ? { ...seat, status: 'selected' }
-          : seat
-      )
+      row === 1
+        ? prevSeats.map((seat) => ({
+            ...seat,
+            status:
+              seat.id === seatId && seat.status === 'available'
+                ? 'selected'
+                : seat.status === 'selected'
+                ? 'available'
+                : seat.status,
+          }))
+        : prevSeats.map((seat) => ({
+            ...seat,
+            status: seat.status === 'selected' ? 'available' : seat.status,
+          }))
     );
-  };
-
-  const handleR2SeatClick = (seatId: number) => {
     setR2((prevSeats) =>
-      prevSeats.map((seat) =>
-        seat.id === seatId && seat.status === 'available'
-          ? { ...seat, status: 'selected' }
-          : seat
-      )
+      row === 2
+        ? prevSeats.map((seat) => ({
+            ...seat,
+            status:
+              seat.id === seatId && seat.status === 'available'
+                ? 'selected'
+                : seat.status === 'selected'
+                ? 'available'
+                : seat.status,
+          }))
+        : prevSeats.map((seat) => ({
+            ...seat,
+            status: seat.status === 'selected' ? 'available' : seat.status,
+          }))
     );
-  };
-  const handleR3SeatClick = (seatId: number) => {
     setR3((prevSeats) =>
-      prevSeats.map((seat) =>
-        seat.id === seatId && seat.status === 'available'
-          ? { ...seat, status: 'selected' }
-          : seat
-      )
+      row === 3
+        ? prevSeats.map((seat) => ({
+            ...seat,
+            status:
+              seat.id === seatId && seat.status === 'available'
+                ? 'selected'
+                : seat.status === 'selected'
+                ? 'available'
+                : seat.status,
+          }))
+        : prevSeats.map((seat) => ({
+            ...seat,
+            status: seat.status === 'selected' ? 'available' : seat.status,
+          }))
     );
+    setSelectedSeat({ row, seatId });
   };
 
   const calculateRotation = (index: number, totalSeats: number) => {
@@ -100,20 +132,11 @@ const BookYourSeat: React.FC = () => {
     return angle;
   };
 
-  const handleSeatClick = (row: Seat[], setRow: React.Dispatch<React.SetStateAction<Seat[]>>, seatId: number) => {
-    setRow((prevSeats) =>
-      prevSeats.map((seat) =>
-        seat.id === seatId && seat.status === 'available'
-          ? { ...seat, status: 'selected' }
-          : seat
-      )
-    );
-  };
 
   return (
   <>  
-    <div className='mt-4 pt-4 border-t border-dashed'>
-      <div className="text-2xl font-bold mb-4">Book Your Seat</div>
+    <div className='mt-8 pt-8 border-t-2 border-dashed '>
+      <div className="text-2xl font-bold mb-2">Book Your Seat</div>
       <div className="text-base mb-8">
         Select your seat and proceed to complete the reservation fee payment.
       </div>
@@ -124,16 +147,16 @@ const BookYourSeat: React.FC = () => {
 
         <div className="flex justify-center mt-8 gap-8">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-[#00CC92] rounded-sm"></div>
-            <span className="text-sm sm:text-base">Booked</span>
+            <div className="w-4 h-4 bg-[#00CC92] rounded-[2px]"></div>
+            <span className="text-sm sm:text-base">Available</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-[#FFFFFF66] rounded-sm"></div>
-            <span className="text-sm sm:text-base">Available</span>
+            <div className="w-4 h-4 bg-[#00CC92]/[0.3] rounded-[2px]"></div>
+            <span className="text-sm sm:text-base">Booked</span>
           </div>
         </div>
 
-        <div className="flex flex-col items-center space-y-7 mt-[120px]">
+        <div className="flex flex-col items-center space-y-7 mt-10">
           {/* Row 1 */}
           <div className="flex relative justify-center gap-1 sm:gap-2 md:gap-3 transform ">
             {r1.map((seat) => (
@@ -150,8 +173,8 @@ const BookYourSeat: React.FC = () => {
                   ? 'hover:shadow-[0px_0px_20px_rgba(255,121,31,1)] hover:bg-[#ff791f]/[0.3]'
                   : ''
               }`}
-                style={{ transform: `rotate(calc(56deg - ${8 * seat.id}deg))`}}
-                onClick={() => handleR1SeatClick(seat.id)}
+                // style={{ transform: `rotate(calc(56deg - ${8 * seat.id}deg))`}}
+                onClick={() => handleSeatClick(1, setR1, seat.id)}
               />
             ))}
           </div>
@@ -172,8 +195,8 @@ const BookYourSeat: React.FC = () => {
                   ? 'hover:shadow-[0px_0px_20px_rgba(255,121,31,1)] hover:bg-[#ff791f]/[0.3]'
                   : ''
               }`}
-                style={{ transform: `rotate(calc(72deg - ${8 * seat.id}deg))`}}
-                onClick={() => handleR2SeatClick(seat.id)}
+                // style={{ transform: `rotate(calc(72deg - ${8 * seat.id}deg))`}}
+                onClick={() => handleSeatClick(2, setR2, seat.id)}
               />
             ))}
           </div>
@@ -194,8 +217,8 @@ const BookYourSeat: React.FC = () => {
                     ? 'hover:shadow-[0px_0px_20px_rgba(255,121,31,1)] hover:bg-[#ff791f]/[0.3]'
                     : ''
                 }`}
-                style={{ transform: `rotate(calc(84deg - ${8 * seat.id}deg))`}}
-                onClick={() => handleR2SeatClick(seat.id)}
+                // style={{ transform: `rotate(calc(84deg - ${8 * seat.id}deg))`}}
+                onClick={() => handleSeatClick(3, setR3, seat.id)}
               />
             ))}
           </div>
@@ -203,7 +226,8 @@ const BookYourSeat: React.FC = () => {
       </div>
       
       <div className='flex justify-center'>
-        <Button size="xl" className="mt-8 w-fit bg-[#00AB7B] mx-auto" onClick={() => setPaymentDialogOpen(true)}>
+        <Button size="xl" className="mt-8 w-fit bg-[#00AB7B] hover:bg-[#00AB7B]/90 mx-auto" onClick={() => setPaymentDialogOpen(true)} disabled={!selectedSeat}
+        >
           Pay INR 25,000.00 and Reserve
         </Button>
       </div>
