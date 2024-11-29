@@ -72,8 +72,8 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
   const [cohorts, setCohorts] = useState<Cohort[]>([]);
   const [selectedProgram, setSelectedProgram] = useState<string | null>(null);
   const [selectedCentre, setSelectedCentre] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
+  
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -88,6 +88,8 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
       password: 'hi',
     },
   });
+  
+  const {  formState: { errors }, setError, control } = form;
 
   useEffect(() => {
     async function fetchData() {
@@ -122,7 +124,6 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     try {
-      // Convert `dateOfBirth` to ISO format
       const transformedData = {
         ...data,
         dateOfBirth: data.dateOfBirth.toISOString().split("T")[0], // ISO format (YYYY-MM-DD)
@@ -135,8 +136,12 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
 
       setEmail(data.email);
       setShowOtp(true);
-    } catch (error) {
-      setError("Sign-up failed. Please try again.");
+    } catch (error: any) {
+      setError('email', {
+        type: 'manual', 
+        message: error.message || 'An unexpected error occurred', // Display the error message
+      });
+      console.log("Sign-up failed efaefa",error)
     }
   };
 
@@ -161,9 +166,9 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
             name="firstName"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1 relative">
-                <Label>First Name</Label>
+                <Label className="text-sm font-normal pl-3">First Name</Label>
                 <Input placeholder="John" {...field} />
-                <FormMessage />
+                <FormMessage className="text-sm font-normal pl-3"/>
               </FormItem>
             )}
           />
@@ -172,9 +177,9 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
             name="lastName"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1 relative">
-                <Label>Last Name</Label>
+                <Label className="text-sm font-normal pl-3">Last Name</Label>
                 <Input placeholder="Doe" {...field} />
-                <FormMessage />
+                <FormMessage className="text-sm font-normal pl-3"/>
               </FormItem>
             )}
           />
@@ -186,10 +191,10 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
             name="email"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1 relative">
-                <Label>Email</Label>
-                <Input type="email" placeholder="johndoe@gmail.com" {...field} />
+                <Label className="text-sm font-normal pl-3">Email</Label>
+                <Input placeholder="johndoe@gmail.com" {...field} />
                 <Mail className="absolute right-3 top-[46px] w-5 h-5" />
-                <FormMessage />
+                <FormMessage className="text-sm font-normal pl-3"/>
               </FormItem>
             )}
           />
@@ -198,7 +203,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
             name="mobileNumber"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1 relative">
-                <Label>Contact No.</Label>
+                <Label className="text-sm font-normal pl-3">Contact No.</Label>
                 <Input  type="tel" maxLength={14}
         placeholder="+91 00000 00000"
         {...field}
@@ -218,7 +223,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
           field.onChange(value);
         }}/>
                 <Phone className="absolute right-3 top-[46px] w-5 h-5" />
-                <FormMessage />
+                <FormMessage className="text-sm font-normal pl-3"/>
               </FormItem>
             )}
           />
@@ -230,7 +235,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
   name="dateOfBirth"
   render={({ field }) => (
     <FormItem className="flex-1 space-y-1 relative">
-      <Label>Date of Birth</Label>
+      <Label className="text-sm font-normal pl-3">Date of Birth</Label>
       <Popover>
         <PopoverTrigger asChild>
           <Button
@@ -257,7 +262,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
           />
         </PopoverContent>
       </Popover>
-      <FormMessage />
+      <FormMessage className="text-sm font-normal pl-3"/>
     </FormItem>
   )}
 />
@@ -267,7 +272,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
             name="qualification"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1 relative">
-                <Label>Qualification</Label>
+                <Label className="text-sm font-normal pl-3">Qualification</Label>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select" />
@@ -282,7 +287,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
                     <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
-                <FormMessage />
+                <FormMessage className="text-sm font-normal pl-3"/>
               </FormItem>
             )}
           />
@@ -294,7 +299,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
           name="program"
           render={({ field }) => (
             <FormItem className="flex-1 space-y-1 relative">
-              <Label>Course of Interest</Label>
+              <Label className="text-sm font-normal pl-3">Course of Interest</Label>
               <Select onValueChange={(value) => { field.onChange(value); (value); }} defaultValue={field.value} >
                 <SelectTrigger>
                   <SelectValue placeholder="Select" />
@@ -307,7 +312,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
                 ))}
                 </SelectContent>
               </Select>
-              <Label htmlFor="form-alert" className='flex gap-1 items-center text-sm text-[#00A3FF] font-normal mt-1'>
+              <Label htmlFor="form-alert" className='flex gap-1 items-center text-sm text-[#00A3FF] font-normal mt-1 pl-3'>
                 Your application form will be in line with the course of your choice.
               </Label>
             </FormItem>
@@ -319,7 +324,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
           name="cohort"
           render={({ field }) => (
             <FormItem className="flex-1 space-y-1 relative">
-              <Label>Select Cohort</Label>
+              <Label className="text-sm font-normal pl-3">Select Cohort</Label>
               <Select onValueChange={(value) => { field.onChange(value); (value); }} defaultValue={field.value} disabled={!form.watch("program")}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select" />

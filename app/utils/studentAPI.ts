@@ -75,15 +75,10 @@ export async function submitApplication(data: {
   cohort?: string;
   gender: string;
   isVerified?: boolean;
-  profileUrl: string;
+  profileImage: any;
   linkedInUrl: string;
   instagramUrl: string;
   dateOfBirth: Date;
-  };
-  appFeeData: {
-    currency: string;
-    amount: number;
-    receipt: string;
   };
   applicationData: {
     currentAddress: {
@@ -127,14 +122,20 @@ export async function submitApplication(data: {
     };
   };
 }) {
-  const response = await fetch(`${CONST_API}/student/application`, {
+    console.log("laaaaaaaa",data);
+    const response = await fetch(`${CONST_API}/student/submit-application`, {    
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
 
   if (!response.ok) {
-    throw new Error("Application submission failed");
+    const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
+    throw new Error(
+      `Error : ${
+        errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
+      }`
+    );
   }
 
   return response.json();
@@ -148,6 +149,19 @@ export async function submitApplicationTask(formData: FormData) {
   
     if (!response.ok) {
       throw new Error('Failed to submit application task');
+    }
+  
+    return response.json();
+  }
+  
+  export async function submitLITMUSTest(formData: FormData) {
+    const response = await fetch(`${CONST_API}/student/litmus-test`, {
+      method: 'POST',
+      body: formData,
+    });
+  
+    if (!response.ok) {
+      throw new Error('Failed to submit Litmus-test');
     }
   
     return response.json();

@@ -112,7 +112,7 @@ const BookYourSeat: React.FC = () => {
 
   return (
   <>  
-    <div className={`flex flex-col rounded-2xl px-6 py-8 max-w-[1216px] mx-auto bg-[#09090B] text-white ${true ? ' shadow-[0px_4px_32px_rgba(0,163,255,0.2)]' : 'shadow-[0px_4px_32px_rgba(255,80,61,0.2)]'}`}>
+    <div className='mt-4 pt-4 border-t border-dashed'>
       <div className="text-2xl font-bold mb-4">Book Your Seat</div>
       <div className="text-base mb-8">
         Select your seat and proceed to complete the reservation fee payment.
@@ -202,9 +202,11 @@ const BookYourSeat: React.FC = () => {
         </div>
       </div>
       
-      <Button size="xl" className="mt-8 w-fit bg-[#00AB7B] mx-auto" onClick={() => setPaymentDialogOpen(true)}>
-        Pay INR 25,000.00 and Reserve
-      </Button>
+      <div className='flex justify-center'>
+        <Button size="xl" className="mt-8 w-fit bg-[#00AB7B] mx-auto" onClick={() => setPaymentDialogOpen(true)}>
+          Pay INR 25,000.00 and Reserve
+        </Button>
+      </div>
     </div>
     <TokenPaymentDialog open={PaymentDialogOpen} setOpen={setPaymentDialogOpen} />
   </>  

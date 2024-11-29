@@ -58,7 +58,7 @@ const PaymentFailedDialog: React.FC<DialogProps> = ({ open, setOpen, type, mail 
         <Button size="xl" className="w-fit mx-auto bg-[#FF791F] hover:bg-[#FF791F]/90">
           Try Again
         </Button>
-        <Button variant="link" className="">Cancel</Button>
+        <Button variant="link" className="" onClick={() => setOpen(false)}>Cancel</Button>
       </div>
     </DialogContent>
   </Dialog>

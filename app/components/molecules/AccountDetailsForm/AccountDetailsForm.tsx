@@ -9,7 +9,7 @@ import { Label } from '~/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select';
 import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group";
 import { Badge } from '~/components/ui/badge';
-import { Mail, Phone, Linkedin, Instagram, Calendar, Camera, CheckCircle } from 'lucide-react';
+import { Mail, Phone, Linkedin, Instagram, Calendar, Camera, CheckCircle, XIcon, Pencil } from 'lucide-react';
 import {
   Form,
   FormField,
@@ -33,19 +33,19 @@ const formSchema = z.object({
   currentStatus: z.string().nonempty("Current status is required"),
   courseOfInterest: z.string().nonempty("Course of Interest is required"),
   cohort: z.string().nonempty("Cohort selection is required"),
-  passportImage: z.any().optional(),
+  profileUrl: z.any().optional(),
   isMobileVerified: z.boolean().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
 
 const AccountDetailsForm: React.FC = () => {
-  const { studentData  } = useContext(UserContext);
+  const { studentData, setStudentData } = useContext(UserContext);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [programs, setPrograms] = useState<any[]>([]);
   const [cohorts, setCohorts] = useState<any[]>([]); 
   const [contactInfo, setContactInfo] = useState<string>('');
-  const [selectedCourse, setSelectedCourse] = useState<string>('');
+  const [imagePreview, setImagePreview] = useState<string | null>(studentData?.profileUrl || null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -57,7 +57,7 @@ const AccountDetailsForm: React.FC = () => {
       currentStatus: studentData?.qualification || '',
       courseOfInterest: studentData?.program || '',
       cohort: studentData?.cohort || '',
-      passportImage: undefined,
+      profileUrl: undefined,
       isMobileVerified: studentData?.isMobileVerified || false,
     },
   });
@@ -123,33 +123,52 @@ const AccountDetailsForm: React.FC = () => {
         <Badge size="xl" className='flex-1 bg-[#00A3FF]/[0.2] text-[#00A3FF] text-center '>Personal Details</Badge>
         <div className="flex gap-6">
           {/* Image Upload */}
-          <div className="w-[232px] bg-[#1F1F1F] p-4 sm:p-6 flex items-center justify-center rounded-xl text-sm ">
-            <div className="text-center text-muted-foreground">
-              <Camera className="mx-auto mb-2 w-8 h-8" />
-              <div className='text-wrap'>Upload a Passport size Image of Yourself. Ensure that your face covers 60% of this picture.</div>
-              {/* Image Upload Input */}
-              <FormField
-                control={control}
-                name="passportImage"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          field.onChange(file);
-                          
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          <div className="w-[232px] bg-[#1F1F1F] flex flex-col items-center justify-center rounded-xl text-sm space-y-4">
+      {imagePreview ? (
+        <div className="w-full h-full relative">
+          <img
+            src={imagePreview}
+            alt="Passport Preview"
+            className="w-full h-full object-cover rounded-lg"
+          />
+          <div className="absolute top-2 right-2 flex space-x-2">
+            <button
+              className="p-2 bg-white/10 border border-white rounded-full hover:bg-white/20"
+              onClick={() => {
+                setImagePreview(null);
+                setStudentData({ ...studentData, profileUrl: null });
+              }}
+            >
+              <XIcon className="w-5 h-5 text-white" />
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="text-center p-6 text-muted-foreground">
+            <Camera className="mx-auto mb-2 w-8 h-8" />
+            <div className="text-wrap">
+              Upload a Passport size Image of Yourself. Ensure that your face covers
+              60% of this picture.
             </div>
           </div>
+          <Input
+            id="passport-input"
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                const imageUrl = URL.createObjectURL(file);
+                setImagePreview(imageUrl);
+                setStudentData({ ...studentData, profileUrl: file });
+              }
+            }}
+          />
+        </>
+      )}
+    </div>
+
 
           {/* Form Fields */}
           <div className="flex-1 space-y-4">

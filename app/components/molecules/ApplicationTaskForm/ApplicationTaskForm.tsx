@@ -15,15 +15,19 @@ import { useNavigate } from '@remix-run/react';
 
 const formSchema = z.object({
   courseDive: z.object({
-    interest: z.string().max(120, 'Maximum 120 characters').nonempty('This field is required'),
-    goals: z.string().max(240, 'Maximum 240 characters').nonempty('This field is required'),
+    interest: z.string().nonempty('This field is required'),
+    goals: z.string().nonempty('This field is required'),
   }),
   tasks: z.array(
     z.object({
       configItems: z.array(
         z.object({
           type: z.string(),
-          answer: z.any(),
+          answer: z.union([
+            z.string().url('Please enter a valid Link URL').nonempty('This field is required'), // For links
+            z.string().nonempty('This field is required'), // For text inputs
+            z.array(z.any()).nonempty('This field is required'), // For file uploads
+          ]),
         })
       ),
     })
@@ -119,7 +123,7 @@ const ApplicationTaskForm: React.FC = () => {
           switch (type) {
             case 'long':
             case 'short':
-              if (answer) {
+              if (typeof answer === 'string') {
                 formData.append(`tasks[${taskIndex+1}].text[${index}]`, answer);
               }
               break;
@@ -171,6 +175,14 @@ const ApplicationTaskForm: React.FC = () => {
     }
   };
 
+  const wordLimitHandler = (event: React.ChangeEvent<HTMLTextAreaElement>, field: any, maxWordLimit: number) => {
+    const text = event.target.value;
+    const wordCount = text.split(/\s+/).filter(Boolean).length; // Count the words
+  
+    if (wordCount <= maxWordLimit) {
+      field.onChange(text); // Allow change if under word limit
+    }
+  };
 
   return (
     <Form {...form}>
@@ -193,11 +205,11 @@ const ApplicationTaskForm: React.FC = () => {
                   </FormLabel>
                   <FormControl>
                     <Textarea
-                      maxLength={120}
                       className="w-full text-white text-base"
                       placeholder="Write up to 120 characters"
                       rows={6}
-                      {...field}
+                      onChange={(e) => wordLimitHandler(e, field, 120)}
+                      value={field.value}
                     />
                   </FormControl>
                   <FormMessage />
@@ -216,11 +228,11 @@ const ApplicationTaskForm: React.FC = () => {
                   </FormLabel>
                   <FormControl>
                     <Textarea
-                      maxLength={240}
                       className="w-full text-white text-base"
                       placeholder="Write up to 240 characters"
                       rows={6}
-                      {...field}
+                      onChange={(e) => wordLimitHandler(e, field, 240)}
+                      value={field.value}
                     />
                   </FormControl>
                   <FormMessage />
@@ -284,6 +296,15 @@ interface TaskConfigItemProps {
 const TaskConfigItem: React.FC<TaskConfigItemProps> = ({ control, taskIndex, configIndex, configItem }) => {
   const fieldName = `tasks.${taskIndex}.configItems.${configIndex}.answer`;
 
+  const wordLimitHandler = (event: React.ChangeEvent<HTMLTextAreaElement>, field: any, maxWordLimit: number) => {
+    const text = event.target.value;
+    const wordCount = text.split(/\s+/).filter(Boolean).length; // Count the words
+  
+    if (wordCount <= maxWordLimit) {
+      field.onChange(text); // Allow change if under word limit
+    }
+  };
+
   switch (configItem.type) {
     case 'long':
     case 'short':
@@ -295,11 +316,11 @@ const TaskConfigItem: React.FC<TaskConfigItemProps> = ({ control, taskIndex, con
             <FormItem>
               <FormControl>
                 <Textarea
-                  maxLength={configItem.characterLimit}
                   className={`w-full text-white text-base mt-2 ${configItem.type === 'short' ? 'h-24' : ''}`}
                   placeholder={`Write up to ${configItem.characterLimit} characters`}
                   rows={configItem.type === 'long' ? 6 : 3}
-                  {...field}
+                  onChange={(e) => wordLimitHandler(e, field, configItem.characterLimit)}
+                  value={field.value}
                 />
               </FormControl>
               <FormMessage />
@@ -327,36 +348,44 @@ const TaskConfigItem: React.FC<TaskConfigItemProps> = ({ control, taskIndex, con
       case 'link':
         return (
           <FormField
-            control={control}
-            name={fieldName}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-base font-normal text-[#FA69E5] pl-3">
-                  {configItem.label || 'Links'}
-                </FormLabel>
-                <FormControl>
-                  <div className="flex flex-col space-y-2 mt-2">
-                    {Array.from({ length: configItem.characterLimit || 1 }).map((_, index) => (
-                      <div key={index} className="relative">
-                        <Input
-                          className="w-full text-white text-base mt-2 !pl-10"
-                          placeholder={`Enter URL ${index + 1}`}
-                          value={field.value?.[index] || ''}
-                          onChange={(e) => {
-                            const newLinks = [...(field.value || [])];
-                            newLinks[index] = e.target.value;
-                            field.onChange(newLinks);
-                          }}
-                        />
-                        <Link2Icon className="absolute left-3 top-[30px] w-5 h-5" />
-                      </div>
-                    ))}
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+      control={control}
+      name={fieldName}
+      render={({ field, fieldState }) => (
+        <FormItem>
+          <FormLabel className="text-base font-normal text-[#FA69E5] pl-3">
+            {configItem.label || 'Links'}
+          </FormLabel>
+          <FormControl>
+            <div className="flex flex-col space-y-2 mt-2">
+              {Array.from({ length: configItem.characterLimit || 1 }).map((_, index) => (
+                <div key={index} className="relative">
+                  <Input
+                    type="url"
+                    className={`w-full text-white text-base mt-2 !pl-10 ${
+                      fieldState?.error ? 'border-red-500' : ''
+                    }`}
+                    placeholder={`Enter URL ${index + 1}`}
+                    value={field.value?.[index] || ''}
+                    onChange={(e) => {
+                      const newLinks = [...(field.value || [])];
+                      newLinks[index] = e.target.value;
+                      field.onChange(newLinks);
+                    }}
+                  />
+                  <Link2Icon className="absolute left-3 top-[30px] w-5 h-5" />
+                </div>
+              ))}
+            </div>
+          </FormControl>
+          {fieldState.error && (
+            <p className="text-red-500 text-sm">
+              {fieldState.error.message || 'Please enter a valid URL'}
+            </p>
+          )}
+          <FormMessage />
+        </FormItem>
+      )}
+    />
         );
 
     default:

@@ -46,7 +46,7 @@ export const ApplicationStep1: React.FC = () => {
   useEffect(() => {
     async function fetchCurrentStudentData() {
       try {
-
+        console.log('faceofgf  studentData?._id:', studentData?._id);
           const res = await getCurrentStudent(studentData?._id);
             console.log(' student data:', res.data?.applicationDetails?.applicationStatus);
           if(res.data?.applicationDetails?.applicationStatus !== "initiated" &&
@@ -87,8 +87,6 @@ export const ApplicationStep1: React.FC = () => {
         </div>
       </div>
       <Footer />
-      <PaymentSuccessDialog open={successDialogOpen} setOpen={setSuccessDialogOpen} type='step1' mail='johndoe@gmail.com' onContinue={handleContinueToDashboard}/>
-      {/* <PaymentFailedDialog open={failedDialogOpen} setOpen={setFailedDialogOpen} type='step1' mail='johndoe@gmail.com' onContinue={handleSubmit}/> */}
     </div>
   );
 };

@@ -19,9 +19,13 @@ export async function signUp(data: {
   });
 
   if (!response.ok) {
-    throw new Error("Sign-up failed");
+    const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
+    throw new Error(
+      `Error : ${
+        errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
+      }`
+    );
   }
-
   return response.json();
 }
 
@@ -34,7 +38,12 @@ export async function verifyOtp(data: { email: string; otp: string }) {
   });
 
   if (!response.ok) {
-    throw new Error("OTP verification failed");
+    const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
+    throw new Error(
+      `Error : ${
+        errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
+      }`
+    );
   }
 
   return response.json();
@@ -49,7 +58,12 @@ export async function resendOtp(data: { email: string }) {
   });
 
   if (!response.ok) {
-    throw new Error("Failed to resend OTP");
+    const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
+    throw new Error(
+      `Error : ${
+        errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
+      }`
+    );
   }
 
   return response.json();
@@ -64,7 +78,12 @@ export async function loginOTP(data: { email: string }) {
   });
 
   if (!response.ok) {
-    throw new Error("Failed to login");
+    const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
+    throw new Error(
+      `Error : ${
+        errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
+      }`
+    );
   }
 
   return response.json();
@@ -79,7 +98,12 @@ export async function verifyNumber(data: { phone: string }) {
   });
 
   if (!response.ok) {
-    throw new Error("Failed to verify number");
+    const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
+    throw new Error(
+      `Error : ${
+        errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
+      }`
+    );
   }
 
   return response.json();
@@ -94,7 +118,12 @@ export async function verifyMobileOTP(data: { mobileNumber: string; otp: string 
   });
 
   if (!response.ok) {
-    throw new Error("Mobile number OTP verification failed");
+    const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
+    throw new Error(
+      `Error : ${
+        errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
+      }`
+    );
   }
 
   return response.json();

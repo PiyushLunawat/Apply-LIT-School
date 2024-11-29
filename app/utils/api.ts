@@ -141,15 +141,10 @@ export async function submitApplication(data: {
   cohort?: string;
   gender: string;
   isVerified?: boolean;
-  profileUrl: string;
+  profileImage: any;
   linkedInUrl: string;
   instagramUrl: string;
   dateOfBirth: Date;
-  };
-  appFeeData: {
-    currency: string;
-    amount: number;
-    receipt: string;
   };
   applicationData: {
     currentAddress: {
@@ -193,9 +188,8 @@ export async function submitApplication(data: {
     };
   };
 }) {
-  const response = await fetch(`${CONST_API}/student/application`, {
+  const response = await fetch(`${CONST_API}/student/submit-application`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
 

@@ -1,22 +1,23 @@
 import { CirclePause, Clock } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import ApplicationReview from '../../organisms/ApplicationReview/ApplicationReview';
 
 interface StatusMessageProps {
   name: string; // e.g., "John"
   messageType: string;
   bgClassName: string;
-  timeRemaining?: string;
+  time?: string;
 }
 
 const StatusMessage: React.FC<StatusMessageProps> = ({
   name,
   messageType,
   bgClassName,
-  timeRemaining,
+  time,
 }) => {
   const [headMessage, setHeadMessage] = useState('');
   const [subMessage, setSubMessage] = useState('');
+  const [countdown, setCountdown] = useState<string>('');
+  const [intervalId, setIntervalId] = useState<ReturnType<typeof setInterval> | null>(null); // Use ReturnType<typeof setInterval>
 
   // Update headMessage and subMessage based on messageType
   useEffect(() => {
@@ -52,11 +53,11 @@ const StatusMessage: React.FC<StatusMessageProps> = ({
         );
         break;
       case 'selected':
-          setHeadMessage(`Congratulations on acing your interview!`);
-          setSubMessage(
-            'Reserve your seat for the Creator Marketer Cohort Scheduled for Oct 22, 2024 by completing the payment of your reservation fee.'
-          );
-          break;
+        setHeadMessage(`Congratulations on acing your interview!`);
+        setSubMessage(
+          'Reserve your seat for the Creator Marketer Cohort Scheduled for Oct 22, 2024 by completing the payment of your reservation fee.'
+        );
+        break;
       case 'waitlist':
         setHeadMessage(`Hey John, you have been put on the waitlist.`);
         setSubMessage(
@@ -68,30 +69,67 @@ const StatusMessage: React.FC<StatusMessageProps> = ({
         setSubMessage(
           'Thank you for taking the counselling interview. You may choose to apply again for a different cohort and/or program of your choice.'
         );
-        break;  
+        break;
       default:
         setHeadMessage('');
         setSubMessage('');
     }
   }, [messageType, name]);
 
+  // Calculate and update the countdown
+  useEffect(() => {
+    if (time) {
+      const targetTime = new Date(time).getTime() + 1 * 45 * 60 * 1000; // Add 24 hours to the provided time
+      const updateCountdown = () => {
+        const now = Date.now();
+        const remainingTime = targetTime - now;
+
+        if (remainingTime <= 0) {
+          setCountdown('00:00:00');
+          if (intervalId !== null) clearInterval(intervalId); // Safely clear interval
+        } else {
+          const hours = Math.floor(remainingTime / (1000 * 60 * 60));
+          const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
+
+          setCountdown(
+            `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+          );
+        }
+      };
+
+      updateCountdown(); // Initial call to set the countdown
+      const id = setInterval(updateCountdown, 1000);
+      setIntervalId(id); // Set intervalId as a number (or Timeout in Node.js)
+
+      return () => {
+        if (id) {
+          clearInterval(id); // Cleanup the interval
+        }
+      };
+    }
+  }, [time]);
+
   return (
     <>
-      <div className='flex relative w-screen h-[250px] sm:h-[350px] px-auto' >
+      <div className='bg-transparent flex relative w-screen h-[250px] sm:h-[350px] px-auto'>
         <div className='w-full md:w-[850px] mx-auto flex flex-col gap-4 sm:gap-8 justify-center items-center'>
-          {(messageType === 'on hold' || messageType === 'under review' || messageType === 'concluded') && (
+          {(messageType === 'under review' || messageType === 'concluded') && (
+          <div className='space-y-2'>  
             <div
-              className={`flex justify-center items-center gap-2 px-6 py-2 sm:py-4 border ${
-                messageType === 'on hold' ? 'border-[#F8E000]' : 'border-[#00A3FF]'
+              className={`mx-auto w-fit flex justify-center items-center gap-2 px-6 py-2 sm:py-4 border ${
+                countdown === '00:00:00' ? 'border-[#FF503D]' : 'border-[#00A3FF]'
               } bg-[#FFFFFF33] rounded-full text-sm sm:text-2xl`}
             >
-              {messageType === 'on hold' ? (
-                <CirclePause className='w-4 h-4 sm:w-6 sm:h-6 text-[#F8E000]' />
+              {countdown === '00:00:00' ? (
+                <CirclePause className='w-4 h-4 sm:w-6 sm:h-6 text-[#FF503D]' />
               ) : (
                 <Clock className='w-4 h-4 sm:w-6 sm:h-6 text-[#00A3FF]' />
               )}
-              24:00:00
+              {countdown}
             </div>
+            {countdown === '00:00:00' && <div className='text-[#FF503D]'>A reminder has been sent to our team, we'll review it shortly</div>}
+          </div>
           )}
           <div className='mx-8 sm:mx-16 text-2xl sm:text-3xl md:text-5xl font-bold text-center'>
             {headMessage}

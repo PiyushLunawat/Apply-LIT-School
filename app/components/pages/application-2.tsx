@@ -12,51 +12,51 @@ export const ApplicationStep2: React.FC = () => {
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
   const [failedDialogOpen, setFailedDialogOpen] = useState(false);
   const [part2, setPart2] = useState(false);
-  const [name, setName] = useState("");
-  const [status, setStatus] = useState("");
-  const [studentData, setStudentData] = useState<any>(null);
+  // const [name, setName] = useState("");
+  // const [status, setStatus] = useState("");
+  // const [studentData, setStudentData] = useState<any>(null);
 
-  // Initialize from localStorage when the component mounts
-  useEffect(() => {
-    const storedData = localStorage.getItem('studentData');
-    if (storedData) {
-      setStudentData(JSON.parse(storedData));
-    }
-  }, []);
+  // // Initialize from localStorage when the component mounts
+  // useEffect(() => {
+  //   const storedData = localStorage.getItem('studentData');
+  //   if (storedData) {
+  //     setStudentData(JSON.parse(storedData));
+  //   }
+  // }, []);
 
-  useEffect(() => {
-    async function fetchCurrentStudentData() {
-      try {
+  // useEffect(() => {
+  //   async function fetchCurrentStudentData() {
+  //     try {
 
-          const res = await getCurrentStudent(studentData?._id);
-          console.log(' student data:', res.data?.applicationDetails?.applicationStatus);
-          setName(res.data?.firstName);
-          setStatus(res.data?.applicationDetails?.applicationStatus)
+  //         const res = await getCurrentStudent(studentData?._id);
+  //         console.log(' student data:', res.data?.applicationDetails?.applicationStatus);
+  //         setName(res.data?.firstName);
+  //         setStatus(res.data?.applicationDetails?.applicationStatus)
          
-      } catch (error) {
-        console.log('Error fetching student data:', error);
-      }
-    }
+  //     } catch (error) {
+  //       console.log('Error fetching student data:', error);
+  //     }
+  //   }
 
-    fetchCurrentStudentData();
-  }, [studentData]);
+  //   fetchCurrentStudentData();
+  // }, [studentData]);
 
-  const handlePayment = () => {
-    setPart2(true);
-    const paymentSuccess = true;
-    if (paymentSuccess) {
-      setSuccessDialogOpen(true);
-    } else {
-      setFailedDialogOpen(true);
-    }
-  };
+  // const handlePayment = () => {
+  //   setPart2(true);
+  //   const paymentSuccess = true;
+  //   if (paymentSuccess) {
+  //     setSuccessDialogOpen(true);
+  //   } else {
+  //     setFailedDialogOpen(true);
+  //   }
+  // };
 
   return (
     <div className="w-full">
       <Header subtitle={false} />
       
       <div className="max-w-[1216px] mx-8 sm:mx-16 xl:mx-auto justify-center items-center space-y-20">
-        <Review name={name} status={status} />
+        <Review />
         
         <div className='space-y-4 sm:space-y-6 mt-20' >
           <ProgressBar currentStage={1} />

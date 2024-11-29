@@ -15,16 +15,17 @@ import {
   FormControl,
   FormMessage,
 } from '~/components/ui/form';
-import { submitApplication } from '~/utils/api';
-import { Instagram, Linkedin } from 'lucide-react';
+import { Instagram, Linkedin, SaveIcon } from 'lucide-react';
 import { UserContext } from '~/context/UserContext';
+import { PaymentFailedDialog, PaymentSuccessDialog } from '../PaymentDialog/PaymentDialog';
+import { submitApplication } from '~/utils/studentAPI';
 
 type ExperienceType = 'employee' | 'business' | 'freelancer' | 'consultant';
 
 const formSchema = z.object({
   linkedin: z.string().optional(),
   instagram: z.string().optional(),
-  gender: z.enum(["male", "female", "other"]),
+  gender: z.enum(["Male", "Female", "Other"]),
   address: z.string().nonempty("Address is required"),
   city: z.string().nonempty("City is required"),
   zipcode: z.string().nonempty("Postal/Zip Code is required"),
@@ -55,7 +56,34 @@ const formSchema = z.object({
   motherEmail: z.string().email("Mother's email is required"),
   financiallyDependent: z.boolean(),
   appliedForFinancialAid: z.boolean(),
-});
+}).refine(
+  (data) => data.emergencyContact !== data.fatherContact,
+  {
+    message: "Emergency contact and father's contact must be different.",
+    path: ["fatherContact"], // Error for fatherContact
+  }
+)
+.refine(
+  (data) => data.emergencyContact !== data.motherContact,
+  {
+    message: "Emergency contact and mother's contact must be different.",
+    path: ["motherContact"], // Error for motherContact
+  }
+)
+.refine(
+  (data) => data.fatherContact !== data.motherContact,
+  {
+    message: "Father's contact and mother's contact must be different.",
+    path: ["motherContact"], // Error for motherContact
+  }
+)
+.refine(
+  (data) => data.fatherEmail !== data.motherEmail,
+  {
+    message: "Father's email and mother's email must be different.",
+    path: ["motherEmail"], // Error for mother's email
+  }
+);
 
 type FormData = z.infer<typeof formSchema>;
 
@@ -63,6 +91,9 @@ const ApplicationDetailsForm: React.FC = () => {
   const { studentData } = useContext(UserContext); 
   const [experienceType, setExperienceType] = useState<ExperienceType | null>(null);
   const [hasWorkExperience, setHasWorkExperience] = useState<boolean | null>(null);
+  const [successDialogOpen, setSuccessDialogOpen] = useState(false);
+  const [failedDialogOpen, setFailedDialogOpen] = useState(false);
+
 
   // Initialize the form
   const form = useForm<FormData>({
@@ -70,7 +101,7 @@ const ApplicationDetailsForm: React.FC = () => {
     defaultValues: {
       linkedin: "",
       instagram: "",
-      gender: "male",
+      gender: "Male",
       address: '',
       city: '',
       zipcode: '',
@@ -110,6 +141,10 @@ const ApplicationDetailsForm: React.FC = () => {
   const watchHasWorkExperience = watch('hasWorkExperience');
   const watchExperienceType = watch('experienceType');
 
+  const handleContinueToDashboard = () => {
+    window.location.href = '/dashboard/application-step-1';
+    setSuccessDialogOpen(false);
+  };
 
   const loadScript = (src: string): Promise<boolean> => {
     return new Promise((resolve) => {
@@ -131,25 +166,19 @@ const ApplicationDetailsForm: React.FC = () => {
       return;
     }
 
-    // Fetch order data from the server
-    const data = await fetch('http://localhost:4000/student/application', {
+    const data = await fetch('http://localhost:4000/student/submit-application', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+  headers: { "Content-Type": "application/json" },
       body: JSON.stringify(apiPayload),
-    })
-      .then((response) => response.json())
-      .catch((error) => {
-        console.error('Error:', error);
-        alert('Failed to initiate payment. Please try again.');
-      });
+    });
 
-    if (!data) {
-      alert('Server error. Are you online?');
-      return;
+    if (data.ok) {
+      // Handle success response
+      console.log('Form submitted successfully');
+    } else {
+      // Handle error response
+      console.error('Form submission failed');
     }
-
     console.log('Order data:', data);
 
     // Configure Razorpay options
@@ -171,6 +200,11 @@ const ApplicationDetailsForm: React.FC = () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
+            appFeeData: {
+                currency: "INR",
+                amount: 500, 
+                receipt: "", 
+              },
             razorpay_order_id: response.razorpay_order_id,
             razorpay_payment_id: response.razorpay_payment_id,
             razorpay_signature: response.razorpay_signature,
@@ -179,14 +213,14 @@ const ApplicationDetailsForm: React.FC = () => {
           .then((res) => res.json())
           .then((verifyData) => {
             if (verifyData.status === 'ok') {
-              window.location.href = '/dashboard/application-step-1';
+              setSuccessDialogOpen(true); 
             } else {
-              alert('Payment verification failed');
+              setFailedDialogOpen(true);
             }
           })
           .catch((error) => {
             console.error('Error verifying payment:', error);
-            alert('Error verifying payment');
+            setFailedDialogOpen(true); 
           });
       },
       prefill: {
@@ -204,13 +238,36 @@ const ApplicationDetailsForm: React.FC = () => {
 
     const paymentObject = new (window as any).Razorpay(options);
     paymentObject.open();
+    
+    paymentObject.on('payment.failed', function (response: any) {
+      console.error('Payment failed:', response);
+      setFailedDialogOpen(true); // Open failed dialog
+    });
+
+  };
+
+  const validateBeforeSubmit = () => {
+    if (!studentData?.profileUrl) {
+      return "Profile image is required.";
+    }
+    console.log("image",studentData?.profileUrl);
+    
+    // if (!studentData?.isMobileVerified) {
+    //   return "Mobile number verification is required.";
+    // }
+    return null;
   };
 
   // Handle form submission
   const onSubmit = async (data: FormData) => {
-    // Prepare data for the API
+    const validationError = validateBeforeSubmit();
+    if (validationError) {
+      return;
+    }
+    
+  
+ 
     const apiPayload = {
-      studentData: {
         firstName: studentData?.firstName || '',
         lastName: studentData?.lastName || '',
         mobileNumber: studentData?.mobileNumber || '',
@@ -222,68 +279,98 @@ const ApplicationDetailsForm: React.FC = () => {
         gender: data.gender,
         isVerified: studentData?.isVerified || false,
         dateOfBirth: new Date(studentData?.dateOfBirth || Date.now()), 
-        profileUrl: "", 
+        profile: "",
         linkedInUrl: data.linkedin || "",
         instagramUrl: data.instagram || "",
-      },
-      appFeeData: {
-        currency: "INR",
-        amount: 50000, // Amount in paise (e.g., 50000 paise = 500 INR)
-        receipt: "", 
-      },
-      applicationData: {
-        currentAddress: {
-          streetAddress: data.address,
-          city: data.city,
-          state: "", // Optional: Add state if available
-          postalCode: data.zipcode,
-        },
-        previousEducation: {
-          highestLevelOfEducation: data.educationLevel,
-          fieldOfStudy: data.fieldOfStudy,
-          nameOfInstitution: data.institutionName,
-          yearOfGraduation: parseInt(data.graduationYear, 10),
-        },
-        workExperience: data.hasWorkExperience,
-        emergencyContact: {
-          firstName: data.emergencyFirstName,
-          lastName: data.emergencyLastName,
-          contactNumber: data.emergencyContact,
-          relationshipWithStudent: data.relationship,
-        },
-        parentInformation: {
-          father: {
-            firstName: data.fatherFirstName,
-            lastName: data.fatherLastName,
-            contactNumber: data.fatherContact,
-            occupation: data.fatherOccupation,
-            email: data.fatherEmail,
-          },
-          mother: {
-            firstName: data.motherFirstName,
-            lastName: data.motherLastName,
-            contactNumber: data.motherContact,
-            occupation: data.motherOccupation,
-            email: data.motherEmail,
-          },
-        },
-        financialInformation: {
-          isFinanciallyIndependent: !data.financiallyDependent,
-          hasAppliedForFinancialAid: data.appliedForFinancialAid,
-        },
-      },
+    
+      // appFeeData: {
+      //   currency: "INR",
+      //   amount: 500, // Amount in paise (e.g., 50000 paise = 500 INR)
+      //   receipt: "", 
+      // },
+      // applicationData: {
+      //   currentAddress: {
+      //     streetAddress: data.address,
+      //     city: data.city,
+      //     state: "", // Optional: Add state if available
+      //     postalCode: data.zipcode,
+      //   },
+      //   previousEducation: {
+      //     highestLevelOfEducation: data.educationLevel,
+      //     fieldOfStudy: data.fieldOfStudy,
+      //     nameOfInstitution: data.institutionName,
+      //     yearOfGraduation: parseInt(data.graduationYear, 10),
+      //   },
+      //   workExperience: data.hasWorkExperience,
+      //   emergencyContact: {
+      //     firstName: data.emergencyFirstName,
+      //     lastName: data.emergencyLastName,
+      //     contactNumber: data.emergencyContact,
+      //     relationshipWithStudent: data.relationship,
+      //   },
+      //   parentInformation: {
+      //     father: {
+      //       firstName: data.fatherFirstName,
+      //       lastName: data.fatherLastName,
+      //       contactNumber: data.fatherContact,
+      //       occupation: data.fatherOccupation,
+      //       email: data.fatherEmail,
+      //     },
+      //     mother: {
+      //       firstName: data.motherFirstName,
+      //       lastName: data.motherLastName,
+      //       contactNumber: data.motherContact,
+      //       occupation: data.motherOccupation,
+      //       email: data.motherEmail,
+      //     },
+      //   },
+      //   financialInformation: {
+      //     isFinanciallyIndependent: !data.financiallyDependent,
+      //     hasAppliedForFinancialAid: data.appliedForFinancialAid,
+      //   },
+      // },
     };
+    
+    const formData = new FormData();
 
+    // Append the image file if available
+    if (studentData?.profileUrl) {
+      formData.append('profileImage', studentData.profileUrl);
+    }
+  
+    // Append apiPayload as a JSON string
+    formData.append('studentData', JSON.stringify(apiPayload));
+  
     try {
-      await handlePayment(apiPayload);
-      
+      const response = await fetch('http://localhost:4000/student/submit-application', {
+        method: 'POST',
+        body: formData, // Send the FormData with file and payload
+      });
+  
+      if (response.ok) {
+        // Handle success response
+        console.log('Form submitted successfully');
+      } else {
+        // Handle error response
+        console.error('Form submission failed');
+      }
+  
     } catch (error) {
       console.error("Error submitting application:", error);
-      alert("Failed to submit the application. Please try again.");
+      setFailedDialogOpen(true); 
     }
+  };
+  
+
+
+  const resubmitForm = handleSubmit(onSubmit);
+  const handleRetry = () => {
+    setFailedDialogOpen(false); // Close the dialog
+    resubmitForm(); // Resubmit the form
   };
 
   return (
+    <>
     <Form {...form}>
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 mt-8">
         
@@ -335,15 +422,15 @@ const ApplicationDetailsForm: React.FC = () => {
                   className="flex space-x-6 mt-2"
                 >
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="male" id="male" />
+                    <RadioGroupItem value="Male" id="male" />
                     <Label htmlFor="male" className="text-base font-normal">Male</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="female" id="female" />
+                    <RadioGroupItem value="Female" id="female" />
                     <Label htmlFor="female" className="text-base font-normal">Female</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="other" id="other" />
+                    <RadioGroupItem value="Other" id="other" />
                     <Label htmlFor="other" className="text-base font-normal">Other</Label>
                   </div>
                 </RadioGroup>
@@ -392,7 +479,12 @@ const ApplicationDetailsForm: React.FC = () => {
               <FormItem className='flex-1 space-y-1'>
                 <Label htmlFor="zipcode" className="text-base font-normal pl-3">Postal/Zip Code</Label>
                 <FormControl>
-                  <Input id="zipcode" placeholder="Postal/Zip Code" {...field} />
+                  <Input maxLength={6} id="zipcode" placeholder="Postal/Zip Code" {...field} 
+                  onInput={(e) => {
+                    const target = e.target as HTMLInputElement;
+                    target.value = target.value.replace(/[^0-9+ ]/g, '');
+                    field.onChange(target.value);
+                  }}/>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -715,8 +807,13 @@ const ApplicationDetailsForm: React.FC = () => {
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="emergencyContact" className="text-base font-normal pl-3">Contact No.</Label>
                 <FormControl>
-                  <Input id="emergencyContact" placeholder="+91 00000 00000" {...field} maxLength={14}
-                  value={field.value || "+91 "}/>
+                  <Input id="emergencyContact" type='tel' placeholder="+91 00000 00000" {...field} maxLength={14}
+                  value={field.value || "+91 "}
+                  onInput={(e) => {
+                    const target = e.target as HTMLInputElement;
+                    target.value = target.value.replace(/[^0-9+ ]/g, '');
+                    field.onChange(target.value);
+                  }}/>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -783,8 +880,13 @@ const ApplicationDetailsForm: React.FC = () => {
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="fatherContact" className="text-base font-normal pl-3">Father's Contact No.</Label>
                 <FormControl>
-                  <Input id="fatherContact" placeholder="+91 00000 00000" {...field} maxLength={14}
-                  value={field.value || "+91 "}/>
+                  <Input id="fatherContact" type='tel' placeholder="+91 00000 00000" {...field} maxLength={14}
+                  value={field.value || "+91 "}
+                  onInput={(e) => {
+                    const target = e.target as HTMLInputElement;
+                    target.value = target.value.replace(/[^0-9+ ]/g, '');
+                    field.onChange(target.value);
+                  }}/>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -859,8 +961,13 @@ const ApplicationDetailsForm: React.FC = () => {
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="motherContact" className="text-base font-normal pl-3">Mother's Contact No.</Label>
                 <FormControl>
-                  <Input id="motherContact" placeholder="+91 00000 00000" {...field} maxLength={14}
-                  value={field.value || "+91 "}/>
+                  <Input id="motherContact" type='tel' placeholder="+91 00000 00000" {...field} maxLength={14}
+                  value={field.value || "+91 "}
+                  onInput={(e) => {
+                    const target = e.target as HTMLInputElement;
+                    target.value = target.value.replace(/[^0-9+ ]/g, '');
+                    field.onChange(target.value);
+                  }}/>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -957,12 +1064,29 @@ const ApplicationDetailsForm: React.FC = () => {
           />
         </div>
 
+        {(!studentData?.profileUrl || !studentData?.isMobileVerified) && (
+            <div className="text-red-500 text-sm font-medium pl-3">
+              {studentData?.profileUrl
+                ? null
+                : "Please upload your profile image before submitting."}<br></br>
+              {!studentData?.isMobileVerified &&
+                " Please verify your mobile number before submitting."}
+            </div>
+          )}
+
         <div className="flex justify-between items-center mt-10">
           <Button variant="link" type='button' onClick={() => form.reset() }>Clear Form</Button>
-          <Button size="xl" className='space-y-1 bg-[#00AB7B] hover:bg-[#00AB7B]/90' type="submit" >Pay INR 500.00 and Submit</Button>
+          <div className='flex gap-2'>
+            <Button size="xl" className=' px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90' type="submit" ><SaveIcon className='w-5 h-5'/></Button>
+            <Button size="xl" className='space-y-1 bg-[#00AB7B] hover:bg-[#00AB7B]/90' type="button" >Pay INR 500.00</Button>
+          </div>
         </div>
       </form>
     </Form>
+
+    <PaymentSuccessDialog open={successDialogOpen} setOpen={setSuccessDialogOpen} type='step1' mail={studentData?.email || 'your email'} onContinue={handleContinueToDashboard}/>
+    <PaymentFailedDialog open={failedDialogOpen} setOpen={setFailedDialogOpen} type='step1' mail={studentData?.email || 'your email'} onContinue={handleRetry}/>
+    </>
   );
 };
 

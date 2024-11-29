@@ -41,11 +41,17 @@ export const LoginForm: React.FC<LoginFormProps> = ({ setShowOtp, setEmail }) =>
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     try {
       console.log("Submitted data:", data);
-      await loginOTP(data);
+      const res = await loginOTP(data);
+      console.log("Error:", res);
       setEmail(data.email);
       setShowOtp(true);
-    } catch (error) {
-      setError('email', { message: 'Sign-up failed. Please try again.' });
+    } catch (error: any) {
+      console.log(error);
+      setError('email', {
+        type: 'manual', 
+        message: error.message || 'An unexpected error occurred', // Display the error message
+      });
+  
     }
   };
 

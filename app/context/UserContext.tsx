@@ -6,7 +6,7 @@ interface UserContextType {
 }
 
 export const UserContext = createContext<UserContextType>({
-  studentData: null,
+  studentData: {},
   setStudentData: () => {},
 });
 
