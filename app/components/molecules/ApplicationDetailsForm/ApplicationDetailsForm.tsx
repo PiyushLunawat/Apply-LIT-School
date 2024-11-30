@@ -399,20 +399,18 @@ const ApplicationDetailsForm: React.FC = () => {
     if (studentData?.applicationDetails !== undefined) {
       setIsSaved(true);
     } else {
-      setIsSaved(false);  // Reset if the condition is not met
+      setIsSaved(false); 
     }
   }, [studentData]);
 
   const onSubmit = async (data: FormData) => {
-    if (!isSaved) {
-      console.log("ggggggg",studentData?.applicationDetails, isSaved);
-      
-      await saveData(data);
-      setIsSaved(true); // Change button state to "Pay"
-    } else {
-      // Trigger payment function
-      console.log("ggggggg",studentData?.applicationDetails, isSaved);
+    if (isSaved) {
+      console.log("pay",studentData?.applicationDetails, isSaved);
       handlePayment();
+    } else {
+      console.log("save",studentData?.applicationDetails, isSaved);
+      await saveData(data);
+      setIsSaved(true);
     }
   };
   
@@ -1130,15 +1128,13 @@ const ApplicationDetailsForm: React.FC = () => {
 
         <div className="flex justify-between items-center mt-10">
           <Button variant="link" type='button' onClick={() => form.reset() }>Clear Form</Button>
-          <Button size="xl" className='px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90' type="button" onClick={() => handlePayment()}>
+          <Button size="xl" className='px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90' type="submit" >
             <div className='flex items-center gap-2'>
-              {!isSaved ? (
-                <>
-                  <SaveIcon className='w-5 h-5' /> Submit
-                </>
-              ) : (
+              {isSaved ? (
                 <>Pay INR 500.00</> 
-              )}
+              ) : (
+                <> <SaveIcon className='w-5 h-5' /> Submit </>
+              ) }
             </div>
           </Button>
         </div>
