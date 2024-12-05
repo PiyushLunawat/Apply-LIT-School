@@ -24,7 +24,7 @@ const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({ open, setOpen }
 
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [receiptFile, setReceiptFile] = useState<File | null>(null); // State for the uploaded file
-  const [isUploading, setIsUploading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,15 +59,18 @@ const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({ open, setOpen }
       return;
     }
 
-    setIsUploading(true);
-    setUploadError(null); // Clear previous errors
+    setUploadError(null)
 
     const formData = new FormData();
     formData.append('paymentType', selectedPayment); // Add paymentType to formData
     formData.append('receipt', receiptFile); // Add receipt image file to formData
 
     try {
-      const response = await fetch('https://myfashionfind.shop/student/token-receipt', {
+      setLoading(true);
+      console.log("tis",selectedPayment,receiptFile);
+      
+
+      const response = await fetch('http://localhost:4000/student/token-receipt', {
         method: 'POST',
         body: formData,
       });
@@ -78,12 +81,12 @@ const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({ open, setOpen }
 
       const data = await response.json();
       console.log('Receipt uploaded successfully:', data);
-      navigate('../dashboard/application-step-3');
+      navigate('../dashboard');
     } catch (error) {
       setUploadError('Error uploading receipt. Please try again.');
       console.error('Error uploading receipt:', error);
     } finally {
-      setIsUploading(false);
+      setLoading(false);
     }
   };
 
@@ -183,7 +186,7 @@ const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({ open, setOpen }
           <img
             src={selectedImage}
             alt="Uploaded receipt"
-            className="rounded-xl w-full h-full object-cover "
+            className="mx-auto h-full  "
           />
 
           <div className="absolute top-3 right-3 flex space-x-2">
@@ -226,7 +229,9 @@ const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({ open, setOpen }
     </div>
 
           {/* Submit Button */}
-          <Button size="xl" variant="outline" className="mt-8 w-fit border-[#00CC92] text-[#00CC92] mx-auto" onClick={handleSubmitImage}>Submit</Button>
+          <Button size="xl" variant="outline"
+            className="mt-8 w-fit border-[#00CC92] text-[#00CC92] mx-auto" 
+            onClick={handleSubmitImage} disabled={loading}>{loading ? 'Submitting...' : 'Submit'}</Button>
         </DialogContent>
       </Dialog>
   </>

@@ -1,7 +1,7 @@
-import ApplicationHome from "~/components/pages/application";
+import ApplicationDashboard from "~/components/pages/dashboard";
 
-export default function ApplicationDashboard() {
+export default function Dashboard() {
     return (
-      <div>Dashboard</div>
+      <ApplicationDashboard />
     )
   }

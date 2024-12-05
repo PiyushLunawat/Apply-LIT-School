@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getCohorts, getPrograms, signUp } from '~/utils/api';
+import { getCentres, getCohorts, getPrograms } from '~/utils/api';
 import { AlertCircle, CalendarIcon, Mail, Phone } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { Label } from '~/components/ui/label';
@@ -20,6 +20,8 @@ import { format } from 'date-fns';
 import { z } from 'zod';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { signUp } from '~/utils/authAPI';
+
 
 interface Program {
   _id: string;
@@ -50,7 +52,11 @@ const formSchema = z.object({
   lastName: z.string().nonempty("Last name is required"),
   email: z.string().email("Invalid email address"),
   mobileNumber: z.string().min(10, "Contact No. should be 10 digits"),
-  dateOfBirth: z.date({ required_error: "Date of birth is required" }),
+  dateOfBirth: z.preprocess((arg) => {
+    if (typeof arg === 'string' || arg instanceof Date) {
+      return new Date(arg);
+    }
+  }, z.date().max(new Date(new Date().setFullYear(new Date().getFullYear() - 16)), "You must be at least 16 years old")),
   qualification: z.string().nonempty("Qualification is required"),
   program: z.string().nonempty("Please select a program"),
   cohort: z.string().nonempty("Please select a cohort"),
@@ -68,6 +74,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
   const navigate = useNavigate();
   const [date, setDate] = useState<Date>();
   const [programs, setPrograms] = useState<Program[]>([]);  
+  const [centres, setCentres] = useState<any[]>([]);
   const [interest, setInterest] = useState<Cohort[]>([]);  
   const [cohorts, setCohorts] = useState<Cohort[]>([]);
   const [selectedProgram, setSelectedProgram] = useState<string | null>(null);
@@ -97,6 +104,8 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
         const cohortsData = await getCohorts();
         const programsData = await getPrograms();
         setPrograms(programsData.data);
+        const centresData = await getCentres();
+        setCentres(centresData.data);
         const openCohorts = cohortsData.data.filter((cohort:Cohort) => cohort.status === "Open");
         setInterest(openCohorts);
         setCohorts(cohortsData.data);
@@ -120,6 +129,11 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
   const getProgramName = (programId: string) => {
     const program = programs.find((p) => p._id === programId);
     return program ? program.name : "Unknown Program";
+  };
+
+  const getCenterName = (centerId: string) => {
+    const center = centres.find((c) => c._id === centerId);
+    return center ? center.name : "--";
   };
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
@@ -233,38 +247,29 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
         <FormField
   control={form.control}
   name="dateOfBirth"
-  render={({ field }) => (
-    <FormItem className="flex-1 space-y-1 relative">
-      <Label className="text-sm font-normal pl-3">Date of Birth</Label>
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            size="xl"
-            className="w-full text-left !h-[64px] items-center justify-start h-12"
-          >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {field.value
-              ? format(new Date(field.value), 'dd/MM/yyyy') // Format only for display
-              : <span className="text-muted-foreground">DD/MM/YYYY</span>}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent align="start">
-          <Calendar
-            mode="single"
-            selected={field.value}
-            onSelect={(selectedDate) => {
-              if (selectedDate) {
-                field.onChange(selectedDate); // Store as Date object
-                setDate(selectedDate); // Update local state
-              }
-            }}
-          />
-        </PopoverContent>
-      </Popover>
-      <FormMessage className="text-sm font-normal pl-3"/>
-    </FormItem>
-  )}
+  render={({ field }) => {
+    const maxDate = new Date();
+    maxDate.setFullYear(maxDate.getFullYear() - 16); // Subtract 16 years from today's date
+    const maxDateString = maxDate.toISOString().split('T')[0];
+    return (
+      <FormItem className="flex-1 flex flex-col space-y-1 relative">
+        <FormLabel className="text-sm font-normal pl-3">Date of Birth</FormLabel>
+        <input
+          type="date"
+          className="!h-[64px] bg-[#09090B] px-3 rounded-xl border"
+          id="dateOfBirth"
+          name="dateOfBirth"
+          value={field.value ? format(new Date(field.value), 'yyyy-MM-dd') : ''}
+          onChange={(e) => {
+            const date = e.target.value;
+            field.onChange(date);
+          }}
+          max={maxDateString}
+        />
+        <FormMessage className="text-sm font-normal pl-3" />
+      </FormItem>
+    );
+  }}
 />
 
           <FormField
@@ -331,7 +336,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
                 </SelectTrigger>
                 <SelectContent>
                   {cohorts.map((cohort) => (
-                    <SelectItem key={cohort._id} value={cohort._id}>{formatDateToMonthYear(cohort.startDate)} ({cohort.timeSlot})</SelectItem>
+                    <SelectItem key={cohort._id} value={cohort._id}>{formatDateToMonthYear(cohort.startDate)} ({cohort.timeSlot}), {getCenterName(cohort?.centerDetail)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

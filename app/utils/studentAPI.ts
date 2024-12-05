@@ -1,5 +1,5 @@
-// const CONST_API = "http://localhost:4000";
-const CONST_API = "https://myfashionfind.shop";
+const CONST_API = "http://localhost:4000";
+// const CONST_API = "https://myfashionfind.shop";
 
 // Fetch all cohorts
 export async function getCohorts() {
@@ -151,7 +151,9 @@ export async function submitApplicationTask(formData: FormData) {
     return response.json();
   }
   
-  export async function submitLITMUSTest(formData: FormData) {
+  export async function submitLITMUSTest(formData: FormData, litmusTaskId: string) {
+    formData.append('litmusTaskId', litmusTaskId);
+    console.log("sgsf",formData)
     const response = await fetch(`${CONST_API}/student/litmus-test`, {
       method: 'POST',
       body: formData,

@@ -3,7 +3,7 @@ import { Button } from '~/components/ui/button';
 import Header from '../organisms/Header/Header';
 import Footer from '../organisms/Footer/Footer';
 import LITMUSTest from '../organisms/LITMUSTest/LITMUSTest';
-import FeeWaiverCard from '../molecules/FeeWaiverCard/FeeWaiverCard';
+import FeeWaiverCard from '../molecules/scholarshipSlabCard/scholarshipSlabCard';
 import ProgressBar from '../molecules/ProgressBar/ProgressBar';
 import LITMUSTestReview from '../organisms/LITMUSTestReview/LITMUSTestReview';
 
@@ -35,14 +35,6 @@ export const ApplicationStep3: React.FC = () => {
         {!isChallengeSkipped ? (
           <div className='max-w-[1152px] mx-auto'>
             <LITMUSTest />
-            <div className="flex flex-col mt-8 p-6 bg-[#1B1B1C] border border-[#2C2C2C] rounded-3xl ">
-              <p className="text-xl">
-                On skipping the LITMUS Challenge you will <span className="text-red-500 font-bold">NOT</span> be eligible for any scholarship waiver on your fee.
-              </p>
-              <Button variant="outline" size="xl" className="mt-4 w-fit border-white bg-transparent" onClick={handleSkipChallenge}>
-                Skip LITMUS Challenge
-              </Button>
-            </div>
           </div>
         ) : (
           <div className='max-w-[1000px] mx-auto'>

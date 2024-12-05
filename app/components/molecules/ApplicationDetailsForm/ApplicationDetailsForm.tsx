@@ -48,12 +48,16 @@ const formSchema = z.object({
   fatherLastName: z.string().nonempty("Father's last name is required"),
   fatherContact: z.string().min(10, "Father's contact number is required"),
   fatherOccupation: z.string().nonempty("Father's occupation is required"),
-  fatherEmail: z.string().email("Father's email is required"),
+  fatherEmail: z.string()
+    .email("Email format is invalid")
+    .refine((email) => email.length > 0, { message: "Father's email is required" }),
   motherFirstName: z.string().nonempty("Mother's first name is required"),
   motherLastName: z.string().nonempty("Mother's last name is required"),
   motherContact: z.string().min(10, "Mother's contact number is required"),
   motherOccupation: z.string().nonempty("Mother's occupation is required"),
-  motherEmail: z.string().email("Mother's email is required"),
+  motherEmail: z.string()
+    .email("Email format is invalid")
+    .refine((email) => email.length > 0, { message: "Mother's email is required" }), 
   financiallyDependent: z.boolean(),
   appliedForFinancialAid: z.boolean(),
 }).refine(
@@ -183,13 +187,13 @@ const ApplicationDetailsForm: React.FC = () => {
     const apiPayload = {
       appFeeData:{
         "currency":"INR",
-        "amount":500 * 100,
+        "amount":(fetchedStudentData?.cohort?.cohortFeesDetail?.applicationFee || 500) * 100,
         "receipt":""
       }
     }
 
     const data = await fetch(
-      "https://myfashionfind.shop/student/pay-application-fee",
+      "http://localhost:4000/student/pay-application-fee",
       {
         method: "POST",
         headers: {
@@ -223,7 +227,7 @@ const ApplicationDetailsForm: React.FC = () => {
         console.log('Payment successful:', response);
 
         // Verify the payment on the server
-        fetch('https://myfashionfind.shop/student/verify-application-fee-payement', {
+        fetch('http://localhost:4000/student/verify-application-fee-payement', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -316,11 +320,6 @@ const ApplicationDetailsForm: React.FC = () => {
         linkedInUrl: data.linkedin || "",
         instagramUrl: data.instagram || "",
       },
-      // appFeeData: {
-      //   currency: "INR",
-      //   amount: 500, // Amount in paise (e.g., 50000 paise = 500 INR)
-      //   receipt: "", 
-      // },
       applicationData: {
         currentAddress: {
           streetAddress: data.address,
@@ -332,7 +331,7 @@ const ApplicationDetailsForm: React.FC = () => {
           highestLevelOfEducation: data.educationLevel,
           fieldOfStudy: data.fieldOfStudy,
           nameOfInstitution: data.institutionName,
-          yearOfGraduation: parseInt(data.graduationYear, 10),
+          yearOfGraduation: data.graduationYear,
         },
         workExperience: data.hasWorkExperience,
         emergencyContact: {
@@ -374,7 +373,9 @@ const ApplicationDetailsForm: React.FC = () => {
   // formData.append('apiPayload', JSON.stringify(apiPayload));
 
   try {
-    const response = await fetch('https://myfashionfind.shop/student/submit-application', {
+    console.log("vdvdz",apiPayload);
+    
+    const response = await fetch('http://localhost:4000/student/submit-application', {
       method: 'POST',
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(apiPayload), 
@@ -383,6 +384,7 @@ const ApplicationDetailsForm: React.FC = () => {
     if (response.ok) {
       // Handle success response
       console.log('Form submitted successfully', response);
+      setIsSaved(true);
     } else {
       // Handle error response
       console.error('Form submission failed');
@@ -410,7 +412,6 @@ const ApplicationDetailsForm: React.FC = () => {
     } else {
       console.log("save",studentData?.applicationDetails, isSaved);
       await saveData(data);
-      setIsSaved(true);
     }
   };
   
@@ -436,7 +437,7 @@ const ApplicationDetailsForm: React.FC = () => {
               <FormItem className="flex-1 space-y-1 relative">
                 <Label className="text-base font-normal pl-3">Your LinkedIn ID (Not Compulsory)</Label>
                 <FormControl>
-                  <Input id="linkedin" placeholder="John Doe" {...field} />
+                  <Input id="linkedin" placeholder="linkedin.com/in" {...field} />
                 </FormControl>
                 <Linkedin className="absolute right-3 top-[46px] w-5 h-5" />
                 <FormMessage />
@@ -612,10 +613,14 @@ const ApplicationDetailsForm: React.FC = () => {
             control={control}
             name="graduationYear"
             render={({ field }) => (
-              <FormItem className="flex-1 space-y-1">
+              <FormItem className="flex-1 flex flex-col space-y-1">
                 <Label htmlFor="graduationYear" className="text-base font-normal pl-3">Year of Graduation</Label>
                 <FormControl>
-                  <Input id="graduationYear" placeholder="MM/YYYY" {...field} />
+                  <input 
+                    placeholder="MM YYYY"
+                    type="month"
+                    className="!h-[64px] bg-[#09090B] px-3 rounded-xl border"
+                    id="graduationYear" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -730,10 +735,14 @@ const ApplicationDetailsForm: React.FC = () => {
                   control={control}
                   name="workDuration"
                   render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1">
+                    <FormItem className="flex-1 flex flex-col space-y-1">
                       <Label htmlFor="workDuration" className="text-base font-normal pl-3">Approximate Duration of Work</Label>
                       <FormControl>
-                        <Input id="workDuration" placeholder="MM/YYYY - MM/YYYY" {...field} />
+                        <input 
+                          placeholder="MM/YYYY - MM/YYYY" 
+                          type="month"
+                          className="!h-[64px] bg-[#09090B] px-3 rounded-xl border"
+                          id="workDuration" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -763,10 +772,14 @@ const ApplicationDetailsForm: React.FC = () => {
                   control={control}
                   name="companyStartDate"
                   render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1">
+                    <FormItem className="flex-1 flex flex-col space-y-1">
                       <Label htmlFor="companyStartDate" className="text-base font-normal pl-3">When Did You Start Your Company?</Label>
                       <FormControl>
-                        <Input id="companyStartDate" placeholder="MM/YYYY" {...field} />
+                        <input 
+                          placeholder="MM/YYYY" 
+                          type="month"
+                          className="!h-[64px] bg-[#09090B] px-3 rounded-xl border"
+                          id="companyStartDate" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -782,10 +795,14 @@ const ApplicationDetailsForm: React.FC = () => {
                   control={control}
                   name="durationOfWork"
                   render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1">
+                    <FormItem className="flex-1 flex flex-col space-y-1">
                       <Label htmlFor="durationOfWork" className="text-base font-normal pl-3">Approximate Duration of Work</Label>
                       <FormControl>
-                        <Input id="durationOfWork" placeholder="MM/YYYY - MM/YYYY" {...field} />
+                        <input 
+                          placeholder="MM/YYYY - MM/YYYY" 
+                          type="month"
+                          className="!h-[64px] bg-[#09090B] px-3 rounded-xl border"
+                          id="durationOfWork" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -801,10 +818,14 @@ const ApplicationDetailsForm: React.FC = () => {
                   control={control}
                   name="durationOfWork"
                   render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1">
+                    <FormItem className="flex-1 flex flex-col space-y-1">
                       <Label htmlFor="durationOfWork" className="text-base font-normal pl-3">Approximate Duration of Work</Label>
                       <FormControl>
-                        <Input id="durationOfWork" placeholder="MM/YYYY - MM/YYYY" {...field} />
+                        <input 
+                          placeholder="MM/YYYY - MM/YYYY" 
+                          type="month"
+                          className="!h-[64px] bg-[#09090B] px-3 rounded-xl border"
+                          id="durationOfWork" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

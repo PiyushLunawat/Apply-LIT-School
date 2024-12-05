@@ -6,9 +6,10 @@ interface FeedbackProps {
   status: string;
   feedbackList: any;
   setPass: React.Dispatch<React.SetStateAction<boolean>>;
+  booked: number;
 }
 
-const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass }) => {
+const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass, booked }) => {
 
   console.log("SGsdfb",feedbackList?.applicationDetails?.applicationTasks[0]?.applicationTaskDetail?.applicationTasks[0]?.overallFeedback[0]?.feedback)
   return (
@@ -54,7 +55,7 @@ const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass }) =>
       </Button>
     </div>}
 
-    {status === "accepted" && <BookYourSeat/>}
+    {status === "accepted" && <BookYourSeat booked={booked}/>}
 
   </div>
   );

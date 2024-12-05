@@ -166,7 +166,7 @@ const ApplicationDetailsForm: React.FC = () => {
       return;
     }
 
-    const data:any = await fetch('https://myfashionfind.shop/student/submit-application', {
+    const data:any = await fetch('http://localhost:4000/student/submit-application', {
       method: 'POST',
   headers: { "Content-Type": "application/json" },
       body: JSON.stringify(apiPayload),
@@ -194,7 +194,7 @@ const ApplicationDetailsForm: React.FC = () => {
         console.log('Payment successful:', response);
 
         // Verify the payment on the server
-        fetch('https://myfashionfind.shop/student/verify-application-fee-payement', {
+        fetch('http://localhost:4000/student/verify-application-fee-payement', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -343,7 +343,7 @@ const ApplicationDetailsForm: React.FC = () => {
   formData.append('apiPayload', JSON.stringify(apiPayload));
 
   try {
-    const response = await fetch('https://myfashionfind.shop/student/submit-application', {
+    const response = await fetch('http://localhost:4000/student/submit-application', {
       method: 'POST',
       body: formData, // Send the FormData with file and payload
     });

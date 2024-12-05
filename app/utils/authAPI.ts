@@ -1,5 +1,5 @@
-// const CONST_API = "http://localhost:4000";
-const CONST_API = "https://myfashionfind.shop";
+const CONST_API = "http://localhost:4000";
+// const CONST_API = "https://myfashionfind.shop";
 
 // Sign-up function
 export async function signUp(data: {
@@ -21,7 +21,7 @@ export async function signUp(data: {
   if (!response.ok) {
     const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
     throw new Error(
-      `Error : ${
+      `Error: ${
         errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
       }`
     );

@@ -21,7 +21,7 @@ import {
 import { useNavigate } from '@remix-run/react';
 import { Dialog, DialogContent } from '~/components/ui/dialog';
 import VerifyOTP from '~/components/organisms/VerifyOTP/VerifyOTP';
-import { getCohorts, getPrograms, verifyNumber } from '~/utils/api';
+import { getCentres, getCohorts, getPrograms, verifyNumber } from '~/utils/api';
 import { UserContext } from '~/context/UserContext';
 
 // Define the form schema using Zod
@@ -43,6 +43,7 @@ const AccountDetailsForm: React.FC = () => {
   const { studentData, setStudentData } = useContext(UserContext);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [programs, setPrograms] = useState<any[]>([]);
+  const [ centres, setCentres] = useState<any[]>([]);
   const [cohorts, setCohorts] = useState<any[]>([]); 
   const [contactInfo, setContactInfo] = useState<string>('');
   const [imagePreview, setImagePreview] = useState<string | null>(studentData?.profileUrl || null);
@@ -69,6 +70,8 @@ const AccountDetailsForm: React.FC = () => {
       try {
         const programsData = await getPrograms();
         setPrograms(programsData.data);
+        const centresData = await getCentres();
+        setCentres(centresData.data);
         const cohortsData = await getCohorts();
         setCohorts(cohortsData.data);
       } catch (error) {
@@ -103,12 +106,18 @@ const AccountDetailsForm: React.FC = () => {
   
   const getProgramName = (programId: string) => {
     const program = programs.find((p) => p._id === programId);
-    return program ? program.name : "Unknown Program";
+    return program ? program.name : "--";
   };
+
+  const getCenterName = (centerId: string) => {
+    const center = centres.find((c) => c._id === centerId);
+    return center ? center.name : "--";
+  };
+
 
   const getCohortName = (cohortId: string) => {
     const cohort = cohorts.find((c) => c._id === cohortId);
-    return cohort ? `${formatDateToMonthYear(cohort.startDate)} (${cohort.timeSlot})` : "Unknown Cohort";
+    return cohort ? `${formatDateToMonthYear(cohort?.startDate)} (${cohort?.timeSlot}), ${getCenterName(cohort?.centerDetail)}` : "--";
   };
 
   const formatDateToMonthYear = (dateString: string) => {
@@ -121,9 +130,9 @@ const AccountDetailsForm: React.FC = () => {
     <Form {...form}>
       <form className="flex flex-col gap-6 mt-8">
         <Badge size="xl" className='flex-1 bg-[#00A3FF]/[0.2] text-[#00A3FF] text-center '>Personal Details</Badge>
-        <div className="flex gap-6">
+        <div className="grid sm:flex gap-6">
           {/* Image Upload */}
-          <div className="w-[232px] bg-[#1F1F1F] flex flex-col items-center justify-center rounded-xl text-sm space-y-4">
+          <div className="w-full sm:w-[232px] bg-[#1F1F1F] flex flex-col items-center justify-center rounded-xl text-sm space-y-4">
       {imagePreview ? (
         <div className="w-full h-full relative">
           <img
@@ -145,7 +154,35 @@ const AccountDetailsForm: React.FC = () => {
         </div>
       ) : (
         <>
-          <div className="text-center p-6 text-muted-foreground">
+        <label
+          htmlFor="passport-input"
+          className="cursor-pointer flex flex-col items-center justify-center items-center bg-[#1F1F1F] px-6 rounded-xl border-[#2C2C2C] w-full h-[220px]"
+        >
+          <div className="text-center my-auto text-muted-foreground">
+            <Camera className="mx-auto mb-2 w-8 h-8" />
+            <div className="text-wrap">
+              Upload a Passport size Image of Yourself. Ensure that your face covers
+              60% of this picture.
+            </div>
+          </div>
+          <input
+            id="passport-input"
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                const imageUrl = URL.createObjectURL(file);
+                setImagePreview(imageUrl);
+                setStudentData({ ...studentData, profileUrl: file });
+              }
+            }}
+          />
+        </label>
+
+
+          {/* <div className="text-center p-6 text-muted-foreground">
             <Camera className="mx-auto mb-2 w-8 h-8" />
             <div className="text-wrap">
               Upload a Passport size Image of Yourself. Ensure that your face covers
@@ -164,7 +201,7 @@ const AccountDetailsForm: React.FC = () => {
                 setStudentData({ ...studentData, profileUrl: file });
               }
             }}
-          />
+          /> */}
         </>
       )}
     </div>
@@ -180,7 +217,7 @@ const AccountDetailsForm: React.FC = () => {
                 <FormItem className='flex-1 space-y-1'>
                   <FormLabel className="text-base font-normal pl-3">Full Name</FormLabel>
                   <FormControl>
-                    <Input id="fullName" value={studentData?.firstName+' '+studentData?.lastName} disabled placeholder="John Doe" />
+                    <Input id="fullName" defaultValue={((studentData?.firstName || "-")+' '+(studentData?.lastName || "-"))} placeholder="John Doe" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -203,8 +240,7 @@ const AccountDetailsForm: React.FC = () => {
                         type="email"
                         placeholder="johndoe@gmail.com"
                         className='pl-10'
-                        value={studentData?.email}
-                        disabled
+                        defaultValue={studentData?.email || "--"}
                       />
                     </FormControl>
                     <Mail className="absolute right-3 top-[46px] w-5 h-5 " />
@@ -229,8 +265,7 @@ const AccountDetailsForm: React.FC = () => {
                         type="tel"
                         placeholder="+91 95568 97688"
                         className='pl-10'
-                        value={studentData?.mobileNumber}
-                        disabled={studentData?.mobileNumber}
+                        defaultValue={studentData?.mobileNumber || "--"}
                       />
                     </FormControl>
                     {studentData?.isMobileVerified ?
@@ -255,7 +290,7 @@ const AccountDetailsForm: React.FC = () => {
                   <FormItem className="flex-1 space-y-1 relative">
                     <FormLabel className="text-base font-normal pl-3">Date of Birth</FormLabel>
                     <FormControl>
-                      <Input id="dob" type="text" placeholder="08 March, 2000" value={formatDate(studentData?.dateOfBirth)} disabled/>
+                      <Input id="dob" type="text" placeholder="08 March, 2000" defaultValue={formatDate(studentData?.dateOfBirth)}/>
                     </FormControl>
                     <Calendar className="absolute right-3 top-[46px] w-5 h-5" />
                     <FormMessage />
@@ -270,7 +305,7 @@ const AccountDetailsForm: React.FC = () => {
                   <FormItem className='flex-1 space-y-1'>
                     <FormLabel className="text-base font-normal pl-3">You are Currently a</FormLabel>
                     <FormControl>
-                      <Input id="currentStatus" type="text" placeholder="College Student" value={studentData?.qualification} disabled/>
+                      <Input id="currentStatus" type="text" placeholder="College Student" defaultValue={studentData?.qualification} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -288,11 +323,10 @@ const AccountDetailsForm: React.FC = () => {
             name="courseOfInterest"
             render={({ field }) => (
               <FormItem className='flex-1 space-y-1'>
-                <FormLabel className='text-sm font-normal pl-3'>Course of Interest</FormLabel>
+                <FormLabel className='text-base font-normal pl-3'>Course of Interest</FormLabel>
                 <FormControl>
                   <Select
                     value={studentData?.program}
-                    disabled
                   >
                     <SelectTrigger className="">
                       <SelectValue placeholder="Select" />
@@ -315,11 +349,10 @@ const AccountDetailsForm: React.FC = () => {
             name="cohort"
             render={({ field }) => (
               <FormItem className='flex-1 space-y-1'>
-                <FormLabel className='text-sm font-normal pl-3'>Select Cohort</FormLabel>
+                <FormLabel className='text-base font-normal pl-3'>Select Cohort</FormLabel>
                 <FormControl>
                   <Select
                     value={studentData?.cohort}
-                    disabled
                   >
                     <SelectTrigger className="">
                       <SelectValue placeholder="Select" />

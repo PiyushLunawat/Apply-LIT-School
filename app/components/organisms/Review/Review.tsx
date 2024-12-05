@@ -23,6 +23,8 @@ const Review: React.FC<ReviewProps> = ({  }) => {
     const [name, setName] = useState("");
     const [status, setStatus] = useState("");
     const [time, setTime] = useState("");
+    const [filledSeats, setFilledSeats] = useState(0);
+
   
   const [studentData, setStudentData] = useState<any>(null);
   const [appliData, setAppliData] = useState<any>(null);
@@ -53,6 +55,7 @@ const Review: React.FC<ReviewProps> = ({  }) => {
           setName(res.data?.firstName);
           setStatus(res.data?.applicationDetails?.applicationStatus)
           setTime(res.data?.applicationDetails?.updatedAt)
+          setFilledSeats(res.data?.cohort?.filledSeats.length)
           console.log("fvv",status, time);
           
          
@@ -65,8 +68,8 @@ const Review: React.FC<ReviewProps> = ({  }) => {
   }, [studentData]);
 
   return (
-    <div className='h-full' >
-      <div className={`${status === "on hold" ? 'grayscale' : 'grayscale-0'} mb-24`} style={{
+    <div className='min-h-screen relative' >
+      <div className={`${status === "on hold" ? 'grayscale' : 'grayscale-0'}absolute top-0 left-0 right-0 h-[60%] bg-black-to-b from-blue-900 to-transparent mb-24`} style={{
           backgroundImage: `url('/assets/images/application-review-banner.svg')`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
@@ -79,7 +82,7 @@ const Review: React.FC<ReviewProps> = ({  }) => {
             bgClassName="bg-gradient-to-r from-blue-900 to-black"/> 
 
             <div className=''>
-              {!(status === 'under review' || status == '') && <Feedback status={status} feedbackList={appliData} setPass={setPass}/>}
+              {!(status === 'under review' || status == '') && <Feedback status={status} feedbackList={appliData} setPass={setPass} booked={filledSeats}/>}
             </div>
            
            

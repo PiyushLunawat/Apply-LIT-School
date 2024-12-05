@@ -9,12 +9,17 @@ import { UserContext } from '~/context/UserContext';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '~/components/ui/form';
 import { Textarea } from '~/components/ui/textarea';
 import { Input } from '~/components/ui/input';
-import FeeWaiverCard from '~/components/molecules/FeeWaiverCard/FeeWaiverCard';
-
+import ScholarshipSlabCard from '~/components/molecules/scholarshipSlabCard/scholarshipSlabCard';
+import JudgementCriteriaCard from '~/components/molecules/JudgementCriteriaCard/JudgementCriteriaCard';
 
 const getColor = (index: number) => {
-  const colors = ['00CC92', 'FA69E5', 'FF791F', '3698FB'];
-  return colors[index % 4]; // Pick color based on index
+  const colors = [ 'text-emerald-600', 'text-[#3698FB]', 'text-orange-600', 'text-[#FA69E5]'];
+  return colors[index % 4];
+};
+
+const getBgColor = (index: number) => {
+  const colors = ['bg-emerald-600/20', 'bg-[#3698FB]/20', 'bg-orange-600/20', 'bg-[#FA69E5]/20' ];
+  return colors[index % 4];
 };
 
 const litmusTestSchema = z.object({
@@ -162,7 +167,7 @@ const LITMUSTest: React.FC = () => {
       }
 
       // Submit the form data using the provided API function
-      const response = await submitLITMUSTest(formData);
+      const response = await submitLITMUSTest(formData, '67505a9410b184ba591cc1ea');
       console.log('Submission successful:', response);
       // Handle success (e.g., show a success message or redirect)
     } catch (error) {
@@ -222,23 +227,35 @@ const LITMUSTest: React.FC = () => {
             allowFullScreen
          ></iframe>
         </div>
+        
+        <div className='w-full space-y-4'>
+          <div className="flex justify-between items-center">
+            <div className="text-xl sm:text-3xl font-semibold">Judgement Criteria</div>
+          </div>
+          <div className="w-full grid grid-cols sm:grid-cols-2 gap-3">
+            {cohort?.litmusTestDetail?.[0]?.litmusTasks[0]?.judgmentCriteria.map((criteria: any, index: number) => ( 
+              <JudgementCriteriaCard criteria={criteria?.name} maxPoint={criteria?.points} desc={criteria?.description} />
+            ))}
+          </div>
+        </div>
 
-              { !cohort ? 
-                <div className="text-center text-white">
-                  No tasks available. Please ensure the cohort data is loaded correctly.
-                </div> : 
-                task.submissionTypes.map((configItem: any, configIndex: number) => (
-                  <TaskConfigItem
-                    key={configIndex}
-                    control={control}
-                    taskIndex={taskIndex}
-                    configIndex={configIndex}
-                    configItem={configItem}
-                  />
-                ))
-              }
+        { !cohort ? 
+          <div className="text-center text-white">
+            No tasks available. Please ensure the cohort data is loaded correctly.
+          </div> : 
+          task.submissionTypes.map((configItem: any, configIndex: number) => (
+            <TaskConfigItem
+              key={configIndex}
+              control={control}
+              taskIndex={taskIndex}
+               configIndex={configIndex}
+              configItem={configItem}
+             />
+           ))
+        }
         
         </>))}
+
 
         <div className='w-full flex justify-between items-center '>
           {/* Submit Button */}
@@ -263,9 +280,9 @@ const LITMUSTest: React.FC = () => {
                   Scholarship Slabs
                 </div>
               </div>
-              <div className="grid grid-cols sm:grid-cols-2 gap-x-4">
+              <div className="w-full grid grid-cols sm:grid-cols-2 gap-3">
                 {cohort?.litmusTestDetail?.[0]?.scholarshipSlabs.map((slab: any, index: number) => ( 
-                  <FeeWaiverCard title={slab?.name} waiverAmount={slab?.percentage+"%"} clearanceRange={slab?.clearance+"%"} desc={slab?.description} color={getColor(index)} bg={getColor(index)+'1F'} />
+                  <ScholarshipSlabCard title={slab?.name} waiverAmount={slab?.percentage+"%"} clearanceRange={slab?.clearance+"%"} desc={slab?.description} color={getColor(index)} bg={getBgColor(index)} />
                 ))}
               </div>
             </div>
