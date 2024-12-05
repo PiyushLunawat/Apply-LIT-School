@@ -16,7 +16,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ currentStage }) => {
       
       <div
         className={`flex-1 h-full rounded-full ${
-          currentStage >= 2 ? 'bg-[#00C896]' : 'bg-[#3A3A3A]'
+          currentStage >= 1 ? 'bg-[#00C896]' : 'bg-[#3A3A3A]'
         }`}
       ></div>
       

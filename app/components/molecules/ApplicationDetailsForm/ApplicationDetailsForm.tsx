@@ -97,6 +97,7 @@ const ApplicationDetailsForm: React.FC = () => {
   const [hasWorkExperience, setHasWorkExperience] = useState<boolean | null>(null);
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
   const [failedDialogOpen, setFailedDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [fetchedStudentData, setFetchedStudentData] = useState<FormData | null>(null);
 
@@ -373,7 +374,7 @@ const ApplicationDetailsForm: React.FC = () => {
   // formData.append('apiPayload', JSON.stringify(apiPayload));
 
   try {
-    console.log("vdvdz",apiPayload);
+    setLoading(true);
     
     const response = await fetch('http://localhost:4000/student/submit-application', {
       method: 'POST',
@@ -393,6 +394,8 @@ const ApplicationDetailsForm: React.FC = () => {
     } catch (error) {
       console.error("Error submitting application:", error);
       setFailedDialogOpen(true); 
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -416,10 +419,9 @@ const ApplicationDetailsForm: React.FC = () => {
   };
   
   
-  const resubmitForm = handleSubmit(onSubmit);
   const handleRetry = () => {
     setFailedDialogOpen(false); // Close the dialog
-    resubmitForm(); // Resubmit the form
+    handlePayment();
   };
 
   return (
@@ -1080,6 +1082,7 @@ const ApplicationDetailsForm: React.FC = () => {
         </div>
 
         {/* Financial Dependency and Aid */}
+        <div className='space-y-2'>
         <div className="flex flex-col sm:flex-row gap-2">
           {/* Financially Dependent */}
           <FormField
@@ -1135,9 +1138,9 @@ const ApplicationDetailsForm: React.FC = () => {
               </FormItem>
             )}
           />
-        </div>
+          </div>
 
-        {(!studentData?.profileUrl || !studentData?.isMobileVerified) && (
+          {(!studentData?.profileUrl || !studentData?.isMobileVerified) && (
             <div className="text-red-500 text-sm font-medium pl-3">
               {studentData?.profileUrl
                 ? null
@@ -1147,14 +1150,16 @@ const ApplicationDetailsForm: React.FC = () => {
             </div>
           )}
 
+        </div>
+ 
         <div className="flex justify-between items-center mt-10">
           <Button variant="link" type='button' onClick={() => form.reset() }>Clear Form</Button>
-          <Button size="xl" className='px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90' type="submit" >
+          <Button size="xl" className='px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90' type="submit" disabled={loading}>
             <div className='flex items-center gap-2'>
               {isSaved ? (
-                <>Pay INR 500.00</> 
+                <>{loading ? 'Initializing Payment...' : 'Pay INR 500.00'}</> 
               ) : (
-                <> <SaveIcon className='w-5 h-5' /> Submit </>
+                 <> <SaveIcon className='w-5 h-5' />{loading ? 'Submitting...' : 'Submit'}</>
               ) }
             </div>
           </Button>

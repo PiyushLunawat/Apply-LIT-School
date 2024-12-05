@@ -4,13 +4,14 @@ import { Upload, Clock, FileTextIcon, RefreshCw, X, Link2Icon, XIcon, UploadIcon
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { getCohorts, submitLITMUSTest } from '~/utils/studentAPI'; // Import your API function
+import { getCohorts, getCurrentStudent, submitLITMUSTest } from '~/utils/studentAPI'; // Import your API function
 import { UserContext } from '~/context/UserContext';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '~/components/ui/form';
 import { Textarea } from '~/components/ui/textarea';
 import { Input } from '~/components/ui/input';
 import ScholarshipSlabCard from '~/components/molecules/scholarshipSlabCard/scholarshipSlabCard';
 import JudgementCriteriaCard from '~/components/molecules/JudgementCriteriaCard/JudgementCriteriaCard';
+import { useNavigate } from '@remix-run/react';
 
 const getColor = (index: number) => {
   const colors = [ 'text-emerald-600', 'text-[#3698FB]', 'text-orange-600', 'text-[#FA69E5]'];
@@ -57,9 +58,10 @@ const LITMUSTest: React.FC = () => {
 
   const { studentData } = useContext(UserContext);
   const [cohorts, setCohorts] = useState<any[]>([]);
-  const [currCohorts, setCurrCohorts] = useState<any[]>([]);
+  const [stu, setStu] = useState("");
   const [loading, setLoading] = useState(false);
-
+  const navigate = useNavigate();
+  
   const form = useForm<LitmusTestFormValues>({
     resolver: zodResolver(litmusTestSchema),
     defaultValues: {
@@ -81,6 +83,18 @@ const LITMUSTest: React.FC = () => {
     }
     fetchCohorts();
   }, [setValue, studentData]);
+
+  useEffect(() => {
+    const fetchStudentData = async () => {
+      try {
+        const student = await getCurrentStudent(studentData._id); // Pass the actual student ID here
+        setStu(student.data?.litmusTestDetails[0]?.litmusTaskId?._id); // Store the fetched data in state
+      } catch (error) {
+        console.error("Failed to fetch student data:", error);
+      }
+    };
+    fetchStudentData();
+  }, []);
 
   const getCohort = (cohortId: string) => {
         return cohorts.find((c) => c._id === cohortId);
@@ -108,13 +122,11 @@ const LITMUSTest: React.FC = () => {
     }
   }, [tasks, setValue]);
 
-  // console.log("evedfv",tasks,cohort?.litmusTestDetail?.[0]?.litmusTasks)
 
   const onSubmit = async (data: LitmusTestFormValues) => {
     try {
-
+      console.log("evedfv",stu)
       setLoading(true);
-
       const formData = new FormData();
       
       // Append tasks
@@ -167,8 +179,10 @@ const LITMUSTest: React.FC = () => {
       }
 
       // Submit the form data using the provided API function
-      const response = await submitLITMUSTest(formData, '67505a9410b184ba591cc1ea');
+      const response = await submitLITMUSTest(formData, stu);
       console.log('Submission successful:', response);
+      navigate('/Dashboard');
+
       // Handle success (e.g., show a success message or redirect)
     } catch (error) {
       console.error('Failed to submit Litmus Test:', error);
@@ -184,7 +198,7 @@ const LITMUSTest: React.FC = () => {
     <>
   <Form {...form}>  
     <form onSubmit={handleSubmit(onSubmit)}>
-      <div className="flex flex-col items-start p-[52px] bg-[#09090B] border border-[#2C2C2C] text-white shadow-md w-full mx-auto space-y-6">
+      <div className="flex flex-col items-start p-[52px] bg-[#09090B] text-white shadow-md w-full mx-auto space-y-6">
         {/* Title and Guidelines */}
         {tasks.map((task: any, taskIndex: number) => (
           <>
@@ -258,34 +272,27 @@ const LITMUSTest: React.FC = () => {
 
 
         <div className='w-full flex justify-between items-center '>
-          {/* Submit Button */}
             <Button size="xl" className='' type="submit" disabled={loading}>
-            {loading ? 'Submitting...' : 'Make Challenge Submission'}
+            {loading ? 'Submitting...' : 'Submit and Book Presentation Session'}
           </Button>
-
-          {/* Countdown Timer */}
-          <div className={`flex justify-center items-center gap-2 px-6 py-2 sm:py-3 border bg-[#09090B] rounded-full text-sm sm:text-2xl`}>
-            <Clock className="w-4 h-4 sm:w-6 sm:h-6 text-[#00A3FF]" />
-            {cohort?.litmusTestDetail?.[0]?.litmusTestDuration || "--"} days
-          </div>
         </div>
 
       </div>
     </form>
   </Form>
-  <div className="flex flex-col items-start mt-16 space-y-4">
-              <div className='flex justify-between px-3 w-full'>
-                <div className="flex gap-4 items-center text-3xl font-semibold text-white">
-                  <img src="/assets/images/scholarship-slabs.svg" alt="scholarship-slabs" className="h-9 "/>
-                  Scholarship Slabs
-                </div>
-              </div>
-              <div className="w-full grid grid-cols sm:grid-cols-2 gap-3">
-                {cohort?.litmusTestDetail?.[0]?.scholarshipSlabs.map((slab: any, index: number) => ( 
-                  <ScholarshipSlabCard title={slab?.name} waiverAmount={slab?.percentage+"%"} clearanceRange={slab?.clearance+"%"} desc={slab?.description} color={getColor(index)} bg={getBgColor(index)} />
-                ))}
-              </div>
-            </div>
+  <div className="flex flex-col items-start p-[52px] pt-2 space-y-8">
+    <div className='flex justify-between px-3 w-full'>
+      <div className="flex gap-4 items-center text-3xl font-semibold text-white">
+        <img src="/assets/images/scholarship-slabs.svg" alt="scholarship-slabs" className="h-9 "/>
+        Scholarship Slabs
+      </div>
+    </div>
+    <div className="w-full grid grid-cols sm:grid-cols-2 gap-3">
+      {cohort?.litmusTestDetail?.[0]?.scholarshipSlabs.map((slab: any, index: number) => ( 
+        <ScholarshipSlabCard title={slab?.name} waiverAmount={slab?.percentage+"%"} clearanceRange={slab?.clearance+"%"} desc={slab?.description} color={getColor(index)} bg={getBgColor(index)} />
+      ))}
+    </div>
+  </div>
   </>
   );
 };

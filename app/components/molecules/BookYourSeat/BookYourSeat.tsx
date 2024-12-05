@@ -155,7 +155,7 @@ const BookYourSeat: React.FC<FeedbackProps> = ({ booked }) => {
 
                   className={`
                     'lg:w-7 lg:h-7 rounded -mx-[4px] transition-all transform hover:scale-110 
-                    ${isSelected ? 'rounded-full bg-[#ff791f]/[0.3] shadow-[0px_0px_20px_rgba(255,121,31,1)]' : 
+                    ${isSelected ? 'bg-[#ff791f]/[0.3] shadow-[0px_0px_20px_rgba(255,121,31,1)]' : 
                     !isBooked ? ' hover:shadow-[0px_0px_20px_rgba(255,121,31,1)] hover:bg-[#ff791f]/[0.3]' : 
                     'opacity-20 cursor-disabled'}
                   `}

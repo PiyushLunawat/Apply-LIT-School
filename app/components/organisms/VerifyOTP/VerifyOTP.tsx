@@ -49,6 +49,7 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
     const [resendError, setResendError] = useState<string | null>(null);
     const [verifyError, setVerifyError] = useState<string | null>(null);
     const { studentData, setStudentData } = useContext(UserContext);
+    const [loading, setLoading] = useState(false);
 
     const form = useForm<FormValues>({
       resolver: zodResolver(formSchema),
@@ -72,7 +73,8 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
-      console.log("otpp", data.otp);
+      setLoading(true);
+
       if(verificationType === 'email'){
         const res = await verifyOtp({ email: contactInfo, otp: data.otp });
         Cookies.set('user-token', res.token);
@@ -103,17 +105,23 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
     } catch (error) {
       console.error('OTP verification failed:', error);
       setVerifyError('OTP verification failed. Please check your OTP and try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleResendOtp = async () => {
     try {
+      setLoading(true);
+
       await resendOtp({ email: contactInfo });
       setTimer(60);
       setResendError(null);
     } catch (error) {
       console.error('Resend OTP failed:', error);
       setResendError('Failed to resend OTP. Please try again later.');
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -170,8 +178,8 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
           )}
           
           <div className="text-center mt-4">
-            <Button size="xl" type="submit">
-              {verificationType === 'contact' ? 'Verify' : 'Confirm and Login'}
+            <Button size="xl" type="submit" disabled={loading}>
+              {loading ? '...' : verificationType === 'contact' ? 'Verify' : 'Confirm and Login'}
             </Button>
           </div>
       </form>
@@ -179,8 +187,8 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
 
 
         <div className="flex gap-2 text-center items-center text-base mx-auto">
-          <Button variant="link" onClick={handleResendOtp} disabled={timer>0}>
-            Resend OTP
+          <Button variant="link" onClick={handleResendOtp} disabled={loading || timer>0}>
+            {loading ? 'Resending OTP...' : 'Resend OTP'}
           </Button>
           {timer > 0 ? `in 00:${timer < 10 ? `0${timer}` : timer}` : ""}
         </div>

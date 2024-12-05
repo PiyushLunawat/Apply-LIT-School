@@ -79,6 +79,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
   const [cohorts, setCohorts] = useState<Cohort[]>([]);
   const [selectedProgram, setSelectedProgram] = useState<string | null>(null);
   const [selectedCentre, setSelectedCentre] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   
   const form = useForm<FormValues>({
@@ -138,6 +139,8 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     try {
+      setLoading(true);
+
       const transformedData = {
         ...data,
         dateOfBirth: data.dateOfBirth.toISOString().split("T")[0], // ISO format (YYYY-MM-DD)
@@ -156,6 +159,8 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
         message: error.message || 'An unexpected error occurred', // Display the error message
       });
       console.log("Sign-up failed efaefa",error)
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -349,8 +354,8 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
           <Button type="button" onClick={() => navigate('../login')} size="xl" variant="ghost">
             Login to Dashboard
           </Button>
-          <Button type="submit" size="xl" className='flex-1'>
-            Verify Account
+          <Button type="submit" size="xl" className='flex-1' disabled={loading}>
+            {loading ? 'Sending OTP...' : 'Verify Account'}
           </Button>
         </div>
       </form>

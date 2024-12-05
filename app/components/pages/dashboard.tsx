@@ -1,5 +1,5 @@
 import ApplicationHome from "~/components/pages/application";
-import { Link } from "@remix-run/react";
+import { Link, useNavigate } from "@remix-run/react";
 import { Clock, ClockArrowUp, FileText, FolderClosed, ReceiptIndianRupee, UserIcon } from "lucide-react";
 import Header from "../organisms/Header/Header";
 import Sidebar from "../organisms/Sidebar/Sidebar";
@@ -33,6 +33,11 @@ export default function ApplicationDashboard() {
   const user = {
     name: "John Walker",
     school: "LIT School"
+  };
+  const navigate = useNavigate();
+  
+  const handleExploreClick = () => {
+    navigate('/Dashboard/Litmus-task');
   };
 
   return (
@@ -75,7 +80,7 @@ export default function ApplicationDashboard() {
               Your submission deadline has been extended. You stand to receive a scholarship based on your performance.
             </p>
           </div>
-            <Button size={'xl'} className="">
+            <Button size={'xl'} onClick={handleExploreClick}>
               Explore
             </Button>
         </div>
