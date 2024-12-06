@@ -37,7 +37,15 @@ export default function ApplicationDashboard() {
   const navigate = useNavigate();
   
   const handleExploreClick = () => {
-    navigate('/Dashboard/Litmus-task');
+    navigate('/Dashboard/litmus-task');
+  };
+
+  const handleDocumentClick = () => {
+    navigate('/Dashboard/documents');
+  };
+
+  const handleFeePaymentClick = () => {
+    navigate('/Dashboard/fee-payment-setup');
   };
 
   return (
@@ -95,7 +103,7 @@ export default function ApplicationDashboard() {
               Kindly setup your fee payment process to access your dashboard.
             </p>
           </div>
-            <Button size={'xl'} className="">
+            <Button size={'xl'} className="" onClick={handleFeePaymentClick}>
               Setup Fee Payment
             </Button>
         </div>
@@ -110,7 +118,7 @@ export default function ApplicationDashboard() {
               Kindly upload all required personal ID documents.
             </p>
           </div>
-            <Button size={'xl'} className="">
+            <Button size={'xl'} className="" onClick={handleDocumentClick}>
               Upload Documents
             </Button>
         </div>

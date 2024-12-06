@@ -322,6 +322,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
                 ))}
                 </SelectContent>
               </Select>
+              <FormMessage className="text-sm font-normal pl-3"/>
               <Label htmlFor="form-alert" className='flex gap-1 items-center text-sm text-[#00A3FF] font-normal mt-1 pl-3'>
                 Your application form will be in line with the course of your choice.
               </Label>
@@ -345,6 +346,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
                   ))}
                 </SelectContent>
               </Select>
+              <FormMessage className="text-sm font-normal pl-3"/>
             </FormItem>
           )}
         />
