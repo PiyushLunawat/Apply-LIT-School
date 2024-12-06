@@ -43,10 +43,10 @@ const ApplicationQNA: React.FC = () => {
   return (
     <div className="w-full text-white space-y-[72px] sm:space-y-24">
       <div className=''>
-        <div className="text-center text-3xl font-semibold my-10 sm:my-14">Your Application Process</div>
+        <div className="text-center text-xl sm:text-3xl font-semibold my-10 sm:my-14">Your Application Process</div>
 
         <img src="/assets/images/application-process-banner.svg" alt="BANNER" className="w-screen hidden sm:block" />
-        <div className='sm:hidden mx-10'>
+        <div className='sm:hidden'>
           <img src="/assets/images/application-step-01.svg" alt="BANNER" className="w-full" />
           <img src="/assets/images/application-step-02.svg" alt="BANNER" className="w-full" />
           <img src="/assets/images/application-step-03.svg" alt="BANNER" className="w-full" />

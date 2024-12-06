@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { getCentres, getCohorts, getPrograms } from '~/utils/api';
 import { AlertCircle, CalendarIcon, Mail, Phone } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { Label } from '~/components/ui/label';
@@ -21,6 +20,7 @@ import { z } from 'zod';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { signUp } from '~/utils/authAPI';
+import { getCentres, getCohorts, getPrograms } from '~/utils/studentAPI';
 
 
 interface Program {
@@ -223,24 +223,13 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1 relative">
                 <Label className="text-sm font-normal pl-3">Contact No.</Label>
-                <Input  type="tel" maxLength={14}
-        placeholder="+91 00000 00000"
-        {...field}
-        onFocus={(e) => {
-          if (!field.value) {
-            field.onChange('+91 ');
-          }
-        }}
-        onChange={(e) => {
-          let value = e.target.value;
-          // Remove all non-numeric characters, but allow "+91" at the beginning
-          if (value.startsWith('+91 ')) {
-            value = '+91 ' + value.slice(4).replace(/\D/g, ''); // Retain only digits after +91
-          } else {
-            value = value.replace(/[^0-9+\s]/g, ''); // For any other input, retain only digits
-          }
-          field.onChange(value);
-        }}/>
+                <Input  type="tel" maxLength={14} placeholder="+91 00000 00000" {...field}
+                value={field.value || "+91 "}
+                onInput={(e) => {
+                  const target = e.target as HTMLInputElement;
+                  target.value = target.value.replace(/[^0-9+ ]/g, '');
+                  field.onChange(target.value);
+                }}/>
                 <Phone className="absolute right-3 top-[46px] w-5 h-5" />
                 <FormMessage className="text-sm font-normal pl-3"/>
               </FormItem>
@@ -261,7 +250,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
         <Label className="text-sm font-normal pl-3">Date of Birth</Label>
         <input
           type="date"
-          className="!h-[64px] bg-[#09090B] px-3 rounded-xl border"
+          className="!h-[64px] bg-[#09090B] px-3 uppercase rounded-xl border"
           id="dateOfBirth"
           name="dateOfBirth"
           value={field.value ? format(new Date(field.value), 'yyyy-MM-dd') : ''}
@@ -303,6 +292,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
           />
         </div>
 
+        <div className='space-y-2'>
         <div className="grid sm:grid-cols-2 gap-2">
         <FormField
           control={form.control}
@@ -323,9 +313,6 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
                 </SelectContent>
               </Select>
               <FormMessage className="text-sm font-normal pl-3"/>
-              <Label htmlFor="form-alert" className='flex gap-1 items-center text-sm text-[#00A3FF] font-normal mt-1 pl-3'>
-                Your application form will be in line with the course of your choice.
-              </Label>
             </FormItem>
           )}
         />
@@ -351,9 +338,13 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
           )}
         />
         </div>
+          <Label htmlFor="form-alert" className='flex gap-1 items-center text-sm text-[#00A3FF] font-normal mt-1 pl-3'>
+            Your application form will be in line with the course of your choice.
+          </Label>
+        </div>
 
         <div className="flex gap-2 mt-6">
-          <Button type="button" onClick={() => navigate('../login')} size="xl" variant="ghost">
+          <Button type="button" onClick={() => navigate('../login')} size="xl" variant="ghost" className='bg-[#27272A]'>
             Login to Dashboard
           </Button>
           <Button type="submit" size="xl" className='flex-1' disabled={loading}>

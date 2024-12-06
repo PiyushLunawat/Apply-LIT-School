@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { AlertCircle, Mail } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { Label } from '../../ui/label';
@@ -7,8 +7,8 @@ import { z } from 'zod';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from '@remix-run/react';
-import { Form, FormControl, FormField, FormItem } from '~/components/ui/form';
-import { loginOTP } from '~/utils/api';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '~/components/ui/form';
+import { loginOTP } from '~/utils/authAPI';
 
 interface LoginFormProps {
   setShowOtp: React.Dispatch<React.SetStateAction<boolean>>; 
@@ -24,6 +24,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 export const LoginForm: React.FC<LoginFormProps> = ({ setShowOtp, setEmail }) => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -40,6 +41,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ setShowOtp, setEmail }) =>
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     try {
+      setLoading(true);
       console.log("Submitted data:", data);
       const res = await loginOTP(data);
       console.log("Error:", res);
@@ -51,7 +53,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ setShowOtp, setEmail }) =>
         type: 'manual', 
         message: error.message || 'An unexpected error occurred', // Display the error message
       });
-  
+    } finally{
+      setLoading(false);
     }
   };
 
@@ -70,7 +73,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ setShowOtp, setEmail }) =>
               <Mail className="absolute right-3 top-[46px] w-5 h-5" />
               {errors.email && (
                 <Label className="flex gap-1 items-center text-sm text-[#FF503D] font-normal pl-3">
-                  <AlertCircle className="w-3 h-3" /> {errors.email.message}
+                  {errors.email.message}
                 </Label>
               )}
             </FormItem>
@@ -78,8 +81,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({ setShowOtp, setEmail }) =>
         />
 
         <div className="flex gap-2 justify-between items-center mt-6">
-          <Button onClick={handleRegisterClick} type="button" size="xl" variant="ghost">Register</Button>
-          <Button type="submit" className="flex-1 space-y-1" size="xl">Send OTP</Button>
+          <Button onClick={handleRegisterClick} type="button" size="xl" variant="ghost" className='bg-[#27272A]'>Register</Button>
+          <Button type="submit" className="flex-1 space-y-1" size="xl" disabled={loading}>
+            {loading ? 'Sending OTP...' : 'Send OTP'}
+          </Button>
         </div>
       </form>
     </Form>

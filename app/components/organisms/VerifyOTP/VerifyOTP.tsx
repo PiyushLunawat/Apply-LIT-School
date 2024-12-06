@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { verifyOtp, resendOtp, verifyMobileOTP } from '~/utils/api';
+import { verifyOtp, resendOtp, verifyMobileOTP } from '~/utils/authAPI';
 import Cookies from 'js-cookie';
 import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '../../ui/input-otp';
 import { Button } from '~/components/ui/button';
@@ -34,6 +34,7 @@ interface VerifyOTPProps {
   errorMessage?: string;
   setIsDialogOpen?: (isOpen: boolean) => void;
   onVerificationSuccess?: () => void;
+  back?: string;
 }
 
 export const VerifyOTP: React.FC<VerifyOTPProps> = ({
@@ -41,7 +42,8 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
   contactInfo,
   errorMessage,
   setIsDialogOpen,
-  onVerificationSuccess
+  onVerificationSuccess,
+  back
 }) => {
     const navigate = useNavigate();
     const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
@@ -179,7 +181,7 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
           
           <div className="text-center mt-4">
             <Button size="xl" type="submit" disabled={loading}>
-              {loading ? '...' : verificationType === 'contact' ? 'Verify' : 'Confirm and Login'}
+              {loading ? '...' : verificationType === 'contact' ? 'Verify and Login' : 'Confirm and Login'}
             </Button>
           </div>
       </form>
@@ -195,11 +197,18 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
 
       </div>
 
-      {verificationType === 'email' && <div className="text-center my-8">
-       <a href={'/login'} className="text-base font-medium text-white hover:underline">
-         {'← Login'}
-       </a>
-      </div>}
+      {(verificationType === 'email') && (back === 'login' ? 
+        <div className="text-center my-8">
+         <a href={'/login'} className="text-base font-medium text-white hover:underline">
+           {'← Login'}
+         </a>
+        </div> : 
+        <div className="text-center my-8">
+        <a href={'/sign-up'} className="text-base font-medium text-white hover:underline">
+          {'← Register'}
+        </a>
+       </div>)
+      }
     </div>
   );
 };

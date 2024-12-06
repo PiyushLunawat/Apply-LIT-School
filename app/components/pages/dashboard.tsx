@@ -19,9 +19,9 @@ interface DashboardCardProps {
 const DashboardCard = ({ title, description, icon, to, bgColor, border }: DashboardCardProps) => (
   <Link
     to={to}
-    className={`p-6 rounded-2xl ${bgColor}/10 ${border} border border-b-8 hover:opacity-90 transition-opacity`}
+    className={`p-6 rounded-2xl ${bgColor} ${border} border border-b-8 hover:opacity-90 transition-opacity`}
   >
-    <div className={`w-20 h-20 rounded-full ${bgColor}/40 flex items-center justify-center mb-4`}>
+    <div className={`w-20 h-20 rounded-full ${bgColor} flex items-center justify-center mb-4`}>
       {icon}
     </div>
     <h3 className="text-2xl font-semibold mb-2">{title}</h3>
@@ -41,7 +41,7 @@ export default function ApplicationDashboard() {
   };
 
   const handleDocumentClick = () => {
-    navigate('/Dashboard/documents');
+    navigate('/Dashboard/personal-documents');
   };
 
   const handleFeePaymentClick = () => {
@@ -130,32 +130,32 @@ export default function ApplicationDashboard() {
           title="Application Documents"
           description="Access all your submission documents, task reports and personal information forms"
           icon={<FolderClosed className="w-6 h-6 text-white" />}
-          to="/dashboard/documents"
-          bgColor="bg-orange-600"
+          to="/dashboard/application-documents"
+          bgColor="bg-orange-600/10"
           border="border-orange-600"
         />
         <DashboardCard
           title="Fee Payment"
           description="Set up your fee payment process, clear your timely fee instalments and record all your transactions."
           icon={<ReceiptIndianRupee className="w-6 h-6 text-white" />}
-          to="/dashboard/payment"
-          bgColor="bg-blue-600"
+          to="/dashboard/fee-payment-setup"
+          bgColor="bg-blue-600/10"
           border="border-blue-600"
         />
         <DashboardCard
           title="Account Details"
           description="Maintain all your profile information along with your passwords."
           icon={<UserIcon className="w-6 h-6 text-white" />}
-          to="/dashboard/account"
-          bgColor="bg-yellow-600"
+          to="/dashboard/account-details"
+          bgColor="bg-yellow-600/10"
           border="border-yellow-600"
         />
         <DashboardCard
           title="Personal Documents"
           description="Maintain a record of your identification documents. These are mandatory for your course."
           icon={<FileText className="w-6 h-6 text-white" />}
-          to="/dashboard/personal"
-          bgColor="bg-emerald-600"
+          to="/dashboard/personal-documents"
+          bgColor="bg-emerald-600/10"
           border="border-emerald-600"
         />
       </div>

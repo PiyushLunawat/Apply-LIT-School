@@ -21,8 +21,9 @@ import {
 import { useNavigate } from '@remix-run/react';
 import { Dialog, DialogContent } from '~/components/ui/dialog';
 import VerifyOTP from '~/components/organisms/VerifyOTP/VerifyOTP';
-import { getCentres, getCohorts, getPrograms, verifyNumber } from '~/utils/api';
 import { UserContext } from '~/context/UserContext';
+import { getCentres, getCohorts, getPrograms } from '~/utils/studentAPI';
+import { verifyNumber } from '~/utils/authAPI';
 
 // Define the form schema using Zod
 const formSchema = z.object({

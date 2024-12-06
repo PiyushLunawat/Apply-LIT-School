@@ -44,7 +44,8 @@ export const SignUp: React.FC = () => {
           verificationType="email"
           contactInfo={email}
           errorMessage="Oops! Looks like you got the OTP wrong, Please Retry."
-        />)}
+          back="login"
+          />)}
 
     </div>
   );

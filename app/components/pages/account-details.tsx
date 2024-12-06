@@ -6,10 +6,10 @@ import Sidebar from "../organisms/Sidebar/Sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import LITMUSTest from "../organisms/LITMUSTest/LITMUSTest";
+import PersonalDocuments from "../organisms/PersonalDocuments/PersonalDocuments";
 
 
-export default function Documents() {
+export default function AccountDetails() {
   const user = {
     name: "John Walker",
     school: "LIT School"
@@ -20,16 +20,12 @@ export default function Documents() {
   <Header subtitle={false} classn="" />
   <div className="flex">
     <Sidebar user={user}/>
-    <div className="overflow-y-auto" style={{ height: `calc(100vh - 52px)`}}>
-      <div className="flex justify-between items-end p-[52px] bg-[#3698FB1A] border-b">
+    <div className="w-full overflow-y-auto" style={{ height: `calc(100vh - 52px)`}}>
+      <div className="flex justify-between items-end p-[52px] bg-[#F8E0001A] border-b">
         <div className="space-y-8">
           <div className="flex items-center gap-4 mb-2">
-            <Badge className="text-sm border-[#3698FB] text-[#3698FB] bg-[#3698FB]/10">
-              Litmus Task
-            </Badge>
-            <Badge className="flex gap-2 items-center bg-black">
-              <Clock className="text-[#00A3FF] w-3 h-3"/>
-              <div className="text-base font-normal">52:00:00</div>
+            <Badge className="text-sm border-[#F8E000] text-[#F8E000] bg-[#F8E000]/10">
+              Application Documents
             </Badge>
           </div>
           <h1 className="text-4xl font-normal">
@@ -37,11 +33,11 @@ export default function Documents() {
             <div className="text-2xl">October, 2024</div>
           </h1>
         </div>
-        <p className="max-w-[360px] w-full text-[13.67px] ">
-          Complete your LITMUS test prior to deadline to avail a scholarship on your fee. This scholarship will be applicable on the last semester fee instalments.
+        <p className="max-w-[360px] w-full text-base ">
+          Maintain all your profile information along with your passwords. 
         </p>
       </div>
-      <LITMUSTest />
+      <PersonalDocuments />
 
     </div>
     </div>

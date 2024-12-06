@@ -6,11 +6,10 @@ import { Textarea } from '~/components/ui/textarea';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { UserContext } from '~/context/UserContext';
-import { getCohorts } from '~/utils/api';
 import { Button } from '~/components/ui/button';
 import { FileTextIcon, Link2Icon, Phone, RefreshCw, UploadIcon, XIcon } from 'lucide-react';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '~/components/ui/form';
-import { submitApplicationTask } from '~/utils/studentAPI';
+import { getCohorts, submitApplicationTask } from '~/utils/studentAPI';
 import { useNavigate } from '@remix-run/react';
 
 const formSchema = z.object({

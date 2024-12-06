@@ -21,7 +21,7 @@ export async function signUp(data: {
   if (!response.ok) {
     const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
     throw new Error(
-      `Error: ${
+      `${
         errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
       }`
     );
@@ -40,7 +40,7 @@ export async function verifyOtp(data: { email: string; otp: string }) {
   if (!response.ok) {
     const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
     throw new Error(
-      `Error : ${
+      `${
         errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
       }`
     );
@@ -60,7 +60,7 @@ export async function resendOtp(data: { email: string }) {
   if (!response.ok) {
     const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
     throw new Error(
-      `Error : ${
+      `${
         errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
       }`
     );
@@ -80,7 +80,7 @@ export async function loginOTP(data: { email: string }) {
   if (!response.ok) {
     const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
     throw new Error(
-      `Error : ${
+      `${
         errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
       }`
     );
@@ -100,7 +100,7 @@ export async function verifyNumber(data: { phone: string }) {
   if (!response.ok) {
     const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
     throw new Error(
-      `Error : ${
+      `${
         errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
       }`
     );
@@ -120,7 +120,7 @@ export async function verifyMobileOTP(data: { mobileNumber: string; otp: string 
   if (!response.ok) {
     const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
     throw new Error(
-      `Error : ${
+      `${
         errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
       }`
     );

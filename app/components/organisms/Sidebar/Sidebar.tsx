@@ -1,5 +1,5 @@
 import { Link, NavLink } from "@remix-run/react";
-import { FileText, FolderClosed, ReceiptIndianRupee, UploadIcon, UserRound } from "lucide-react";
+import { FileText, FolderClosed, House, ReceiptIndianRupee, UploadIcon, UserRound } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 
 interface SidebarProps {
@@ -12,27 +12,33 @@ interface SidebarProps {
 
 const navItems = [
   {
+    title: "Home",
+    icon: House,
+    to: "/dashboard",
+    badge: null
+  },
+  {
     title: "Application Documents",
     icon: FolderClosed,
-    to: "/dashboard/documents",
+    to: "/dashboard/application-documents",
     badge: null
   },
   {
     title: "Fee Payment",
     icon: ReceiptIndianRupee,
-    to: "/dashboard/payment",
+    to: "/dashboard/fee-payment-setup",
     badge: 1
   },
   {
     title: "Account Details",
     icon: UserRound,
-    to: "/dashboard/account",
+    to: "/dashboard/account-details",
     badge: null
   },
   {
     title: "Personal Documents",
     icon: FileText,
-    to: "/dashboard/personal",
+    to: "/dashboard/personal-documents",
     badge: 1
   }
 ];
@@ -55,18 +61,18 @@ export default function Sidebar({ user }: SidebarProps) {
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex flex-col h-full flex-1 space-y-2 p-8">
+      <nav className="flex flex-col h-full flex-1 space-y-2 py-6">
         {navItems.map((item) => (
           <NavLink
             key={item.title}
             to={item.to}
             className={({ isActive }) =>
-              `flex items-center justify-between hover:bg-gray-800 transition-colors ${
-                isActive ? "bg-gray-800" : ""
+              `flex items-center justify-between px-8 py-2 hover:bg-gray-800 transition-colors ${
+                isActive ? "bg-[#272727]" : ""
               }`
             }
           >
-            <div className="flex items-center text-sm gap-3">
+            <div className="flex items-center text-base gap-3">
               <item.icon className="w-4 h-4" />
               <span>{item.title}</span>
             </div>

@@ -12,6 +12,7 @@ import { Input } from '~/components/ui/input';
 import ScholarshipSlabCard from '~/components/molecules/scholarshipSlabCard/scholarshipSlabCard';
 import JudgementCriteriaCard from '~/components/molecules/JudgementCriteriaCard/JudgementCriteriaCard';
 import { useNavigate } from '@remix-run/react';
+import { Badge } from '~/components/ui/badge';
 
 const getColor = (index: number) => {
   const colors = [ 'text-emerald-600', 'text-[#3698FB]', 'text-orange-600', 'text-[#FA69E5]'];
@@ -203,6 +204,9 @@ const LITMUSTest: React.FC = () => {
         {tasks.map((task: any, taskIndex: number) => (
           <>
           <div>
+          <Badge className="text-sm my-4 border-[#3698FB] text-[#3698FB] bg-[#3698FB]/10">
+            Task 0{taskIndex+1}
+          </Badge>
           <h2 className="text-3xl font-semibold mb-2">
             {task.title}
           </h2>

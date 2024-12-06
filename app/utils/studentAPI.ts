@@ -6,7 +6,12 @@ export async function getCohorts() {
   const response = await fetch(`${CONST_API}/admin/cohort`);
   
   if (!response.ok) {
-    throw new Error("Failed to fetch cohorts");
+    const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
+    throw new Error(
+      `${
+        errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
+      }`
+    );
   }
   return response.json();
 }
@@ -14,8 +19,14 @@ export async function getCohorts() {
 // Fetch all centres
 export async function getCentres() {
   const response = await fetch(`${CONST_API}/admin/center`);
+  
   if (!response.ok) {
-    throw new Error("Failed to fetch centres");
+    const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
+    throw new Error(
+      `${
+        errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
+      }`
+    );
   }
   return response.json();
 }
@@ -23,8 +34,14 @@ export async function getCentres() {
 // Fetch all programs
 export async function getPrograms() {
   const response = await fetch(`${CONST_API}/admin/program`);
+  
   if (!response.ok) {
-    throw new Error("Failed to fetch programs");
+    const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
+    throw new Error(
+      `${
+        errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
+      }`
+    );
   }
   return response.json();
 }
@@ -36,9 +53,13 @@ export async function getStudents() {
   });
 
   if (!response.ok) {
-    throw new Error("Failed to fetch students");
+    const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
+    throw new Error(
+      `${
+        errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
+      }`
+    );
   }
-
   return response.json();
 }
 
@@ -50,13 +71,14 @@ export async function getCurrentStudent(id: string) {
   });
 
   if (!response.ok) {
-    console.error("API Error:", response.status, await response.text());
-    throw new Error("Failed to fetch students");
+    const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
+    throw new Error(
+      `${
+        errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
+      }`
+    );
   }
-
-  const data = await response.json();
-  console.log("API Response:", data); // Check this output
-  return data; // Ensure the response is parsed correctly
+  return response.json();
 }
 
 // Submit application function
@@ -129,12 +151,11 @@ export async function submitApplication(data: {
   if (!response.ok) {
     const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
     throw new Error(
-      `Error : ${
+      `${
         errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
       }`
     );
   }
-
   return response.json();
 }
 
@@ -145,9 +166,13 @@ export async function submitApplicationTask(formData: FormData) {
     });
   
     if (!response.ok) {
-      throw new Error('Failed to submit application task');
+      const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
+      throw new Error(
+        `${
+          errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
+        }`
+      );
     }
-  
     return response.json();
   }
   
@@ -160,9 +185,13 @@ export async function submitApplicationTask(formData: FormData) {
     });
   
     if (!response.ok) {
-      throw new Error('Failed to submit Litmus-test');
+      const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
+      throw new Error(
+        `${
+          errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
+        }`
+      );
     }
-  
     return response.json();
   }
   

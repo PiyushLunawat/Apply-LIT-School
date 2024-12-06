@@ -1,6 +1,6 @@
 import FeePaymentSetup from "~/components/pages/fee-payment-setup";
 
-export default function ApplicationDashboarFeePaymentSetup() {
+export default function DashboardFeePaymentSetup() {
   return (
     <FeePaymentSetup />
   );

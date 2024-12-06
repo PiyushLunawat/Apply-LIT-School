@@ -1,7 +1,7 @@
-import LitmusTask from "~/components/pages/litmus";
+import LitmusTask from "~/components/pages/litmus-task";
 
-export default function ApplicationDashboarLitmusTask() {
+export default function DashboardLitmusTask() {
   return (
     <LitmusTask />
   );
-  }
+}
