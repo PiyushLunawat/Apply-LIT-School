@@ -258,7 +258,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
     const maxDateString = maxDate.toISOString().split('T')[0];
     return (
       <FormItem className="flex-1 flex flex-col space-y-1 relative">
-        <FormLabel className="text-sm font-normal pl-3">Date of Birth</FormLabel>
+        <Label className="text-sm font-normal pl-3">Date of Birth</FormLabel>
         <input
           type="date"
           className="!h-[64px] bg-[#09090B] px-3 rounded-xl border"
