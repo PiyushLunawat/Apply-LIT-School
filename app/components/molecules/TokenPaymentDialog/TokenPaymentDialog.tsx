@@ -70,7 +70,7 @@ const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({ open, setOpen }
       console.log("tis",selectedPayment,receiptFile);
       
 
-      const response = await fetch('http://localhost:4000/student/token-receipt', {
+      const response = await fetch('https://myfashionfind.shop/student/token-receipt', {
         method: 'POST',
         body: formData,
       });

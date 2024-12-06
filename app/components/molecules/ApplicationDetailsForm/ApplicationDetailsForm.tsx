@@ -194,7 +194,7 @@ const ApplicationDetailsForm: React.FC = () => {
     }
 
     const data = await fetch(
-      "http://localhost:4000/student/pay-application-fee",
+      "https://myfashionfind.shop/student/pay-application-fee",
       {
         method: "POST",
         headers: {
@@ -228,7 +228,7 @@ const ApplicationDetailsForm: React.FC = () => {
         console.log('Payment successful:', response);
 
         // Verify the payment on the server
-        fetch('http://localhost:4000/student/verify-application-fee-payement', {
+        fetch('https://myfashionfind.shop/student/verify-application-fee-payement', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -376,7 +376,7 @@ const ApplicationDetailsForm: React.FC = () => {
   try {
     setLoading(true);
     
-    const response = await fetch('http://localhost:4000/student/submit-application', {
+    const response = await fetch('https://myfashionfind.shop/student/submit-application', {
       method: 'POST',
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(apiPayload), 
