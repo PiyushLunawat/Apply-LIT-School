@@ -1,5 +1,5 @@
-// const CONST_API = "http://localhost:4000";
-const CONST_API = "https://myfashionfind.shop";
+const CONST_API = "http://localhost:4000";
+// const CONST_API = "https://myfashionfind.shop";
 
 // Fetch all cohorts
 export async function getCohorts() {
@@ -195,3 +195,37 @@ export async function submitApplicationTask(formData: FormData) {
     return response.json();
   }
   
+  // New API for uploading student documents
+  export async function uploadStudentDocuments(formData: FormData) {
+    const response = await fetch(`${CONST_API}/student/documents`, {
+      method: "POST",
+      // Do not set Content-Type headers, fetch will handle it for FormData
+      body: formData,
+    });
+  
+    if (!response.ok) {
+      throw new Error("Failed to upload student documents");
+    }
+  
+    return await response.json();
+  }
+
+  
+  // New API for fee setup
+  export async function setupFeePayment(feeData: FormData) {
+    const response = await fetch(`${CONST_API}/student/fee-setup`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(feeData),
+    });
+  
+    if (!response.ok) {
+      const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
+      throw new Error(
+        `${
+          errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
+        }`
+      );
+    }
+    return response.json();
+  }

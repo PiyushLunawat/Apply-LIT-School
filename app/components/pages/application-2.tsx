@@ -58,7 +58,7 @@ export const ApplicationStep2: React.FC = () => {
       <div className="max-w-[1216px] mx-8 sm:mx-16 xl:mx-auto justify-center items-center space-y-20">
         <Review />
         
-        <div className='space-y-4 sm:space-y-6 mt-20' >
+        <div className='space-y-4 sm:space-y-6 ' >
           <ProgressBar currentStage={2} />
           <img src="/assets/images/application-process-02.svg" alt="BANNER" className="w-full rounded-xl sm:rounded-3xl" /> 
         </div>

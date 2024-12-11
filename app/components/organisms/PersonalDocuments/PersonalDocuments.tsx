@@ -1,19 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Button } from "~/components/ui/button";
-import { Badge } from "~/components/ui/badge";
 import { Dialog, DialogContent, DialogTrigger } from "~/components/ui/dialog";
-import { File, CheckCircle, AlertCircle, Download, Upload, FilePenLine } from "lucide-react";
+import { File as FileIcon, Download, Upload, FilePenLine, FilePen } from "lucide-react";
+import { getCurrentStudent, uploadStudentDocuments } from "~/utils/studentAPI"; // Ensure correct path
+import { UserContext } from "~/context/UserContext";
 
 interface Document {
   id: string;
   name: string;
   isMandatory: boolean;
   description?: string;
-  status?: "verified" | "flagged" | "updated" | "pending";
+  status?: "verified" | "flagged" | "updated" | "";
   uploadDate?: string;
   fileUrl?: string;
+  docType: string; // Add this property to map doc name to a type
 }
 
 const PersonalDocuments = () => {
@@ -23,45 +25,87 @@ const PersonalDocuments = () => {
       name: "Identity Proof (Aadhar Card)",
       isMandatory: true,
       description: "Mandatory",
-      status: "verified",
-      uploadDate: "13 Dec, 2024",
-      fileUrl: "/path/to/aadhar.pdf",
+      docType: "aadharDocument"
     },
     {
       id: "2",
       name: "12th Grade Marks Sheet",
       isMandatory: true,
       description: "Mandatory",
-      status: "updated",
-      uploadDate: "13 Dec, 2024",
-      fileUrl: "/path/to/12th.pdf",
+      docType: "higherSecondaryMarkSheet"
     },
     {
       id: "3",
       name: "10th Grade Marks Sheet",
       isMandatory: true,
       description: "Mandatory",
-      status: "flagged",
-      uploadDate: "13 Dec, 2024",
+      docType: "secondarySchoolMarksheet"
     },
     {
       id: "4",
       name: "Graduation Marks Sheet",
       isMandatory: false,
       description: "If you hold a UG Degree",
-      status: "pending",
+      docType: "graduationMarkSheet"
     },
   ]);
+  const { studentData } = useContext(UserContext);
+  const [docs, setDocs] = useState<any>();
+  const [loading, setLoading] = useState(false);  
+  
+  useEffect(() => {
+    const fetchStudentData = async () => {
+      try {
+        const student = await getCurrentStudent(studentData._id);
+        setDocs(student.data?.personalDocsDetails);
+        console.log("doc",student.data?.personalDocsDetails);
+        
+      } catch (error) {
+        console.error("Failed to fetch student data:", error);
+      }
+    };
+    fetchStudentData();
+  }, []);
 
-  const handleFileUpload = (documentId: string, file: File) => {
-    console.log(`File uploaded for document ID: ${documentId}`, file);
-    // Handle the file upload logic here
+  const handleFileDownload = (fileUrl: string, docType: string) => {
+    if (!fileUrl) {
+      console.error("No file URL available for download.");
+      return;
+    }
+  
+    const link = document.createElement("a");
+    link.href = fileUrl;
+    link.setAttribute('download', `${studentData?.firstName}_${docType}.pdf`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
-  const handleFileDownload = (fileUrl: string) => {
-    // Logic to download the file
-    console.log(`Downloading file from URL: ${fileUrl}`);
+  const handleFileChange = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    docId: string,
+    docType: string
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+  
+    try {
+      // Construct the FormData
+      const formData = new FormData();
+      formData.append('type', docType); 
+      formData.append('files', file); // Use docType as the field name
+
+      // Call the API function with FormData
+      const response = await uploadStudentDocuments(formData);
+      console.log("Upload response:", response);
+
+    } catch (error) {
+      console.error("Error uploading file:", error);
+    } finally {
+      e.target.value = ""; // Reset the input field
+    }
   };
+  
 
   return (
     <div className="p-8 space-y-4">
@@ -71,78 +115,131 @@ const PersonalDocuments = () => {
           className="flex items-center justify-between p-6 bg-[#64748B1F] border rounded-xl"
         >
           <div className="flex items-center gap-4">
-            <File className="h-16 w-16 text-green-600 p-4 rounded-full bg-[#00CC921F]" />
+          {docs && docs[doc.docType] && docs[doc.docType].length > 0 ? (
+            <div className="cursor-pointer h-16 w-16 rounded-full">
+              hii
+            </div>
+          ) : (
+            <FileIcon className="h-16 w-16 text-green-600 p-4 rounded-full bg-[#00CC921F]" />
+          )}
             <div>
               <h3 className="font-medium text-white">{doc.name}</h3>
               <p className="text-sm text-gray-400">
                 PDF •{" "}
+              {docs && docs[doc.docType] && docs[doc.docType].length > 0 ?
+                <><span
+                  className={`capitalize 
+                    ${docs[doc.docType][0].status === "updated"
+                      ? "text-white"
+                      : docs[doc.docType][0].status === "verified"
+                      ? "text-green-500"
+                      : "text-red-500 underline"}
+                  `}
+                >
+                  {docs[doc.docType][0].status}
+                </span>  
+                  <span className="text-muted-foreground underline-0"> •{" "}{new Date(docs?.updatedAt).toLocaleDateString()}</span>
+                </> :
                 <span
-                  className={`${
+                  className={
                     doc.description?.toLowerCase() === "mandatory"
                       ? "text-green-500"
                       : "text-yellow-500"
-                  }`}
+                  }
                 >
                   {doc.description}
                 </span>
+              }
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-4">
-            {doc.status === "verified" && (
+          {docs && docs[doc.docType] && docs[doc.docType].length > 0 && (
+            (docs[doc.docType][0].status === "verified" || docs[doc.docType][0].status === "updated") && (
               <>
-                {/* <Badge className="bg-green-500 text-white">
-                  Verified • {doc.uploadDate}
-                </Badge> */}
-                <Button size="xl" 
-                  variant="ghost" className="border bg-[#1B1B1C]"
-                  onClick={() => handleFileDownload(doc.fileUrl || "")}
+                <Button
+                  size="xl"
+                  variant="ghost"
+                  className="border bg-[#1B1B1C]"
+                  onClick={() => handleFileDownload(docs[doc.docType][0].url || "", doc.docType)}
                 >
                   <Download className="h-4 w-4 mr-2" />
                   Download
                 </Button>
-              </>
-            )}
-
-            {doc.status === "updated" && (
-              <>
-                {/* <Badge className="bg-blue-500 text-white">
-                  Updated • {doc.uploadDate}
-                </Badge> */}
-                <Button size="xl" 
-                  variant="ghost" className="border bg-[#1B1B1C]"
-                  onClick={() => handleFileDownload(doc.fileUrl || "")}
+                <input
+                  type="file"
+                  accept="application/pdf,image/*"
+                  className="hidden"
+                  id={`file-input-${doc.id}`}
+                  onChange={(e) => handleFileChange(e, doc.id, doc.docType)}
+                />
+                <Button
+                  size="xl"
+                  variant="ghost"
+                  className="border bg-[#1B1B1C] !px-4"
+                  onClick={() =>
+                    document.getElementById(`file-input-${doc.id}`)?.click()
+                  }
                 >
-                  <Download className="h-4 w-4 mr-2" />
-                  Download
+                  <FilePenLine className="h-5 w-5" />
                 </Button>
-              </>
-            )}
+              </>  
+              ))}
 
-            {doc.status === "flagged" && (
+            {docs && docs[doc.docType] && docs[doc.docType].length > 0 && (
+            (docs[doc.docType][0].status === "flagged") && (
               <>
-                {/* <Badge className="bg-red-500 text-white">
-                  Document Flagged • {doc.uploadDate}
-                </Badge> */}
-                <Button size="xl" variant="default">
+                <input
+                  type="file"
+                  accept="application/pdf,image/*"
+                  className="hidden"
+                  id={`file-input-${doc.id}`}
+                  onChange={(e) => handleFileChange(e, doc.id, doc.docType)}
+                />
+                <Button
+                  size="xl"
+                  variant="default"
+                  onClick={() =>
+                    document.getElementById(`file-input-${doc.id}`)?.click()
+                  }
+                >
                   <Upload className="h-4 w-4 mr-2" />
                   Re-Upload File
                 </Button>
               </>
-            )}
+            ))}
 
-            {doc.status === "pending" && (
-              <Button size="xl" variant="default">
-                <Upload className="h-4 w-4 mr-2" />
-                Upload File
-              </Button>
+            {docs && docs[doc.docType] && docs[doc.docType].length === 0 && (
+              <>
+                <input
+                  type="file"
+                  accept="application/pdf,image/*"
+                  className="hidden"
+                  id={`file-input-${doc.id}`}
+                  onChange={(e) => handleFileChange(e, doc.id, doc.docType)}
+                />
+                <Button
+                  size="xl"
+                  variant="default"
+                  onClick={() =>
+                    document.getElementById(`file-input-${doc.id}`)?.click()
+                  }
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload File
+                </Button>
+              </>
             )}
 
             {doc.fileUrl && (
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button size="xl" variant="ghost" className=" !p-[18px] border bg-[#1B1B1C]">
+                  <Button
+                    size="xl"
+                    variant="ghost"
+                    className="!p-[18px] border bg-[#1B1B1C]"
+                  >
                     <FilePenLine className="h-4 w-4" />
                   </Button>
                 </DialogTrigger>
