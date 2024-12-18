@@ -116,15 +116,17 @@ const PersonalDocuments = () => {
         >
           <div className="flex items-center gap-4">
           {docs && docs[doc.docType] && docs[doc.docType].length > 0 ? (
-            <div className="cursor-pointer h-16 w-16 rounded-full">
-              hii
+            <div className="cursor-pointer h-16 w-16 justify-center flex items-center rounded-full bg-[#00CC921F]">
+              PDF
             </div>
           ) : (
-            <FileIcon className="h-16 w-16 text-green-600 p-4 rounded-full bg-[#00CC921F]" />
+            <div className="h-16 w-16 justify-center flex items-center rounded-full bg-[#00CC921F]">
+              <img src="/assets/images/personal-document-icon.svg" className="w-6 h-6"/>
+            </div>
           )}
             <div>
-              <h3 className="font-medium text-white">{doc.name}</h3>
-              <p className="text-sm text-gray-400">
+              <h3 className="font-medium text-2xl text-white">{doc.name}</h3>
+              <p className="text-base text-gray-400">
                 PDF •{" "}
               {docs && docs[doc.docType] && docs[doc.docType].length > 0 ?
                 <><span
@@ -132,8 +134,8 @@ const PersonalDocuments = () => {
                     ${docs[doc.docType][0].status === "updated"
                       ? "text-white"
                       : docs[doc.docType][0].status === "verified"
-                      ? "text-green-500"
-                      : "text-red-500 underline"}
+                      ? "text-[#00CC92]"
+                      : "text-[#FF503D] underline"}
                   `}
                 >
                   {docs[doc.docType][0].status}
@@ -143,8 +145,8 @@ const PersonalDocuments = () => {
                 <span
                   className={
                     doc.description?.toLowerCase() === "mandatory"
-                      ? "text-green-500"
-                      : "text-yellow-500"
+                      ? "text-[#00CC92]"
+                      : "text-[#F8E000]"
                   }
                 >
                   {doc.description}

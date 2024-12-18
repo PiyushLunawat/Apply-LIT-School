@@ -7,6 +7,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import LITMUSTest from "../organisms/LITMUSTest/LITMUSTest";
+import { getCurrentStudent } from "~/utils/studentAPI";
+import { UserContext } from "~/context/UserContext";
+import { useContext, useEffect, useState } from "react";
 
 interface DashboardCardProps {
   title: string;
@@ -31,16 +34,25 @@ const DashboardCard = ({ title, description, icon, to, bgColor, border }: Dashbo
 );
 
 export default function LitmusTask() {
-  const user = {
-    name: "John Walker",
-    school: "LIT School"
-  };
+  const { studentData } = useContext(UserContext);
+  const [student, setStudent] = useState<any>([]);
+  useEffect(() => {
+    const fetchStudentData = async () => {
+      try {
+        const student = await getCurrentStudent(studentData._id); // Pass the actual student ID here
+        setStudent(student.data); // Store the fetched data in state
+      } catch (error) {
+        console.error("Failed to fetch student data:", error);
+      }
+    };
+    fetchStudentData();
+  }, []);
 
   return (
   <>
   <Header subtitle={false} classn="" />
   <div className="flex">
-    <Sidebar user={user}/>
+    <Sidebar student={student}/>
     <div className="overflow-y-auto" style={{ height: `calc(100vh - 52px)`}}>
       <div className="flex justify-between items-end p-[52px] bg-[#3698FB1A] border-b">
         <div className="space-y-8">

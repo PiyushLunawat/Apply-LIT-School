@@ -3,11 +3,7 @@ import { FileText, FolderClosed, House, ReceiptIndianRupee, UploadIcon, UserRoun
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 
 interface SidebarProps {
-  user: {
-    name?: string;
-    school?: string;
-    avatar?: string;
-  };
+  student: any;
 }
 
 const navItems = [
@@ -21,29 +17,33 @@ const navItems = [
     title: "Application Documents",
     icon: FolderClosed,
     to: "/dashboard/application-documents",
-    badge: null
+    badge: 1,
+    bgColor: "bg-orange-600/20"
   },
   {
     title: "Fee Payment",
     icon: ReceiptIndianRupee,
     to: "/dashboard/fee-payment-setup",
-    badge: 1
+    badge: 1,
+    bgColor: "bg-blue-600/20"
   },
   {
     title: "Account Details",
     icon: UserRound,
     to: "/dashboard/account-details",
-    badge: null
+    badge: 1,
+    bgColor: "bg-[#F8E000]/20"
   },
   {
     title: "Personal Documents",
     icon: FileText,
     to: "/dashboard/personal-documents",
-    badge: 1
+    badge: 1,
+    bgColor: "bg-emerald-600/20"
   }
 ];
 
-export default function Sidebar({ user }: SidebarProps) {
+export default function Sidebar({ student }: SidebarProps) {
   return (
     <div className="max-w-[360px] w-full text-white flex flex-col border-r" style={{ height: `calc(100vh - 52px)`}}>
       {/* User Profile Section */}
@@ -54,8 +54,8 @@ export default function Sidebar({ user }: SidebarProps) {
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>
           <div>
-            <h2 className="text -base font-semibold">{user.name}</h2>
-            <p className="text-sm text-normal">{user.school}</p>
+            <h2 className="text -base font-semibold">{student?.firstName}</h2>
+            <p className="text-sm text-normal">{student?.studentDetails?.previousEducation?.nameOfInstitution}</p>
           </div>
         </div>
       </div>
@@ -67,8 +67,8 @@ export default function Sidebar({ user }: SidebarProps) {
             key={item.title}
             to={item.to}
             className={({ isActive }) =>
-              `flex items-center justify-between px-8 py-2 hover:bg-gray-800 transition-colors ${
-                isActive ? "bg-[#272727]" : ""
+              `flex items-center justify-between px-8 py-2 hover:bg-gray-900 transition-colors ${
+                isActive ? "bg-gray-800" : ""
               }`
             }
           >
@@ -77,7 +77,7 @@ export default function Sidebar({ user }: SidebarProps) {
               <span>{item.title}</span>
             </div>
             {item.badge && (
-              <span className="bg-[#1388FF33] text-white text-[10px] px-2 py-0.5 rounded-md">
+              <span className={`${item.bgColor} text-white text-[10px] px-2 py-0.5 rounded-md`}>
                 {item.badge}
               </span>
             )}

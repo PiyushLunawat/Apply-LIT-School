@@ -6,6 +6,9 @@ import Sidebar from "../organisms/Sidebar/Sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
+import { UserContext } from "~/context/UserContext";
+import { useContext, useEffect, useState } from "react";
+import { getCurrentStudent } from "~/utils/studentAPI";
 
 interface DashboardCardProps {
   title: string;
@@ -19,13 +22,15 @@ interface DashboardCardProps {
 const DashboardCard = ({ title, description, icon, to, bgColor, border }: DashboardCardProps) => (
   <Link
     to={to}
-    className={`p-6 rounded-2xl ${bgColor} ${border} border border-b-8 hover:opacity-90 transition-opacity`}
+    className={`rounded-2xl ${bgColor} ${border} border border-b-8 hover:opacity-90 transition-opacity`}
   >
-    <div className={`w-20 h-20 rounded-full ${bgColor} flex items-center justify-center mb-4`}>
+    <div className={``}>
       {icon}
     </div>
-    <h3 className="text-2xl font-semibold mb-2">{title}</h3>
-    <p className="text-base opacity-80">{description}</p>
+    <div className="m-6">
+      <h3 className="text-2xl font-semibold mb-2">{title}</h3>
+      <p className="text-base opacity-80">{description}</p>
+    </div>
   </Link>
 );
 
@@ -34,7 +39,21 @@ export default function ApplicationDashboard() {
     name: "John Walker",
     school: "LIT School"
   };
+  const { studentData } = useContext(UserContext);
+  const [student, setStudent] = useState<any>([]);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchStudentData = async () => {
+      try {
+        const student = await getCurrentStudent(studentData._id); // Pass the actual student ID here
+        setStudent(student.data); // Store the fetched data in state
+      } catch (error) {
+        console.error("Failed to fetch student data:", error);
+      }
+    };
+    fetchStudentData();
+  }, []);
   
   const handleExploreClick = () => {
     navigate('/Dashboard/litmus-task');
@@ -50,9 +69,9 @@ export default function ApplicationDashboard() {
 
   return (
   <>
-  <Header subtitle={false} classn="" />
+  <Header subtitle={false} classn="drop-shadow-lg" />
   <div className="flex">
-    <Sidebar user={user}/>
+    <Sidebar student={student}/>
     <div className="overflow-y-auto" style={{ height: `calc(100vh - 52px)`}}>
       <div className="flex justify-between items-end p-[52px] bg-[#64748B1A] border-b">
         <div className="space-y-8">
@@ -61,7 +80,7 @@ export default function ApplicationDashboard() {
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>
           <h1 className="text-4xl font-normal">
-            👋 Hey {user.name},
+            👋 Hey {student?.firstName+' '+student?.lastName},
             <div className="">welcome to your LIT portal</div>
           </h1>
         </div>
@@ -129,7 +148,7 @@ export default function ApplicationDashboard() {
         <DashboardCard
           title="Application Documents"
           description="Access all your submission documents, task reports and personal information forms"
-          icon={<FolderClosed className="w-6 h-6 text-white" />}
+          icon={<img src="/assets/images/application-documents-icon.svg" className="w-[120px] h-[120px] text-white" />}
           to="/dashboard/application-documents"
           bgColor="bg-orange-600/10"
           border="border-orange-600"
@@ -137,7 +156,7 @@ export default function ApplicationDashboard() {
         <DashboardCard
           title="Fee Payment"
           description="Set up your fee payment process, clear your timely fee instalments and record all your transactions."
-          icon={<ReceiptIndianRupee className="w-6 h-6 text-white" />}
+          icon={<img src="/assets/images/fee-payment-icon.svg" className="w-[120px] h-[120px] text-white" />}
           to="/dashboard/fee-payment-setup"
           bgColor="bg-blue-600/10"
           border="border-blue-600"
@@ -145,15 +164,15 @@ export default function ApplicationDashboard() {
         <DashboardCard
           title="Account Details"
           description="Maintain all your profile information along with your passwords."
-          icon={<UserIcon className="w-6 h-6 text-white" />}
+          icon={<img src="/assets/images/account-details-icon.svg" className="w-[120px] h-[120px] text-white" />}
           to="/dashboard/account-details"
-          bgColor="bg-yellow-600/10"
-          border="border-yellow-600"
+          bgColor="bg-[#F8E000]/10"
+          border="border-[#F8E000]"
         />
         <DashboardCard
           title="Personal Documents"
           description="Maintain a record of your identification documents. These are mandatory for your course."
-          icon={<FileText className="w-6 h-6 text-white" />}
+          icon={<img src="/assets/images/personal-documents-icon.svg" className="w-[120px] h-[120px] text-white" />}
           to="/dashboard/personal-documents"
           bgColor="bg-emerald-600/10"
           border="border-emerald-600"

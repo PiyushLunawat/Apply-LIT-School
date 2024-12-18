@@ -1,7 +1,7 @@
-import AccountDetails from "~/components/pages/account-details";
+import AccountDetailsDashboard from "~/components/pages/account-details";
 
 export default function DashboardAccountDetails() {
     return (
-      <AccountDetails />
+      <AccountDetailsDashboard />
     );
   }

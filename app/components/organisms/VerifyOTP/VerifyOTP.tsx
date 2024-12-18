@@ -77,6 +77,7 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
     try {
       setLoading(true);
 
+
       if(verificationType === 'email'){
         const res = await verifyOtp({ email: contactInfo, otp: data.otp });
         Cookies.set('user-token', res.token);
@@ -88,6 +89,10 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
             setStudentData(JSON.parse(storedData));
           }
         }
+
+      if(res.studentData?.litmusTestDetails[0]?.litmusTaskId !== undefined)
+        navigate('../dashboard');
+      else
         navigate('../dashboard/application-step-1');
       }
 

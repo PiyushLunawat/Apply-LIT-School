@@ -1,25 +1,31 @@
-import ApplicationHome from "~/components/pages/application";
-import { Link } from "@remix-run/react";
-import { Clock, ClockArrowUp, FileText, FolderClosed, ReceiptIndianRupee, UserIcon } from "lucide-react";
+import ApplicationDocuments from "../organisms/ApplicationDocuments/ApplicationDocuments";
 import Header from "../organisms/Header/Header";
 import Sidebar from "../organisms/Sidebar/Sidebar";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import PersonalDocuments from "../organisms/PersonalDocuments/PersonalDocuments";
+import { getCurrentStudent } from "~/utils/studentAPI";
+import { UserContext } from "~/context/UserContext";
+import { useContext, useEffect, useState } from "react";
 
-
-export default function ApplicationDocuments() {
-  const user = {
-    name: "John Walker",
-    school: "LIT School"
-  };
+export default function ApplicationDocumentsDashboard() {
+  const { studentData } = useContext(UserContext);
+  const [student, setStudent] = useState<any>([]);
+  useEffect(() => {
+    const fetchStudentData = async () => {
+      try {
+        const student = await getCurrentStudent(studentData._id); // Pass the actual student ID here
+        setStudent(student.data); // Store the fetched data in state
+      } catch (error) {
+        console.error("Failed to fetch student data:", error);
+      }
+    };
+    fetchStudentData();
+  }, []);
 
   return (
   <>
   <Header subtitle={false} classn="" />
   <div className="flex">
-    <Sidebar user={user}/>
+    <Sidebar student={student}/>
     <div className="w-full overflow-y-auto" style={{ height: `calc(100vh - 52px)`}}>
       <div className="flex justify-between items-end p-[52px] bg-[#FF791F1A] border-b">
         <div className="space-y-8">
@@ -37,8 +43,7 @@ export default function ApplicationDocuments() {
           Access all your submission documents, task reports and personal information forms 
         </p>
       </div>
-      <PersonalDocuments />
-
+      <ApplicationDocuments />
     </div>
     </div>
   </>
