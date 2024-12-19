@@ -49,12 +49,6 @@ export const ApplicationStep1: React.FC = () => {
         console.log('faceofgf  studentData?._id:', studentData?._id);
           const res = await getCurrentStudent(studentData?._id);
             console.log(' student data:', res.data?.applicationDetails?.applicationStatus);
-          if(res.data?.applicationDetails?.applicationStatus !== "initiated" &&
-            res.data?.applicationDetails?.applicationStatus !== undefined){
-              console.log("xxvxvx",res.data?.applicationDetails?.applicationStatus)
-
-              navigate('/dashboard/application-step-2');
-            }
             if(res.data?.applicationDetails?.applicationStatus === 'initiated')
               setSecond(true)
       } catch (error) {
@@ -75,7 +69,7 @@ export const ApplicationStep1: React.FC = () => {
           
           {!second ? (
             <div className="flex flex-col gap-4 mt-8">
-              <AccountDetailsForm/>
+              {/* <AccountDetailsForm/> */}
               <ApplicationDetailsForm/>
             </div>
           ) : (

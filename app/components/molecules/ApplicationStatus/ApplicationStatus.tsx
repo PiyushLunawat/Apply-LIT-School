@@ -53,19 +53,19 @@ const StatusMessage: React.FC<StatusMessageProps> = ({
         );
         break;
       case 'selected':
-        setHeadMessage(`Congratulations on acing your interview!`);
+        setHeadMessage(`Congratulations on clearing the interview!`);
         setSubMessage(
           'Reserve your seat for the Creator Marketer Cohort Scheduled for Oct 22, 2024 by completing the payment of your reservation fee.'
         );
         break;
       case 'waitlist':
-        setHeadMessage(`Hey John, you have been put on the waitlist.`);
+        setHeadMessage(`Hey ${name}, you have been put on the waitlist.`);
         setSubMessage(
           'Thank you for taking the counselling interview. You have been waitlisted. You will be updated with regards to your seat approval before 24 October, 2024.'
         );
         break;
       case 'not qualified':
-        setHeadMessage(`Hey John, you have not qualified for the upcoming Creator Marketer Cohort.`);
+        setHeadMessage(`Hey ${name}, you have not qualified for the upcoming Creator Marketer Cohort.`);
         setSubMessage(
           'Thank you for taking the counselling interview. You may choose to apply again for a different cohort and/or program of your choice.'
         );

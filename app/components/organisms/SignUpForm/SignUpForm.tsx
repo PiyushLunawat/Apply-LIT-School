@@ -278,12 +278,12 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Student">Student</SelectItem>
-                    <SelectItem value="CollegeGraduate">College Graduate</SelectItem>
-                    <SelectItem value="WorkingProfessional">Working Professional</SelectItem>
+                    <SelectItem value="Highschool Graduate">Highschool Graduate</SelectItem>
+                    <SelectItem value="College Graduate">College Graduate</SelectItem>
+                    <SelectItem value="Working Professional">Working Professional</SelectItem>
                     <SelectItem value="Freelancer">Freelancer</SelectItem>
-                    <SelectItem value="BusinessOwner">Business Owner</SelectItem>
+                    <SelectItem value="Business Owner">Business Owner</SelectItem>
                     <SelectItem value="Consultant">Consultant</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage className="text-sm font-normal pl-3"/>

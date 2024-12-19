@@ -15,14 +15,27 @@ import {
   FormControl,
   FormMessage,
 } from '~/components/ui/form';
-import { Instagram, Linkedin, SaveIcon } from 'lucide-react';
+import { Calendar, Camera, CheckCircle, Instagram, Linkedin, Mail, Phone, SaveIcon, XIcon } from 'lucide-react';
 import { UserContext } from '~/context/UserContext';
 import { PaymentFailedDialog, PaymentSuccessDialog } from '../PaymentDialog/PaymentDialog';
-import { getCurrentStudent, submitApplication } from '~/utils/studentAPI';
+import { getCentres, getCohorts, getCurrentStudent, getPrograms, submitApplication } from '~/utils/studentAPI';
+import { Badge } from '~/components/ui/badge';
+import { Dialog, DialogContent } from '~/components/ui/dialog';
+import VerifyOTP from '~/components/organisms/VerifyOTP/VerifyOTP';
+import { verifyNumber } from '~/utils/authAPI';
 
 type ExperienceType = 'employee' | 'business' | 'freelancer' | 'consultant';
 
 const formSchema = z.object({
+  fullName: z.string().nonempty("Full Name is required"),
+  email: z.string().email("Invalid email address"),
+  contact: z.string().nonempty("Contact number is required"),
+  dob: z.string().nonempty("Date of Birth is required"),
+  currentStatus: z.string().nonempty("Current status is required"),
+  courseOfInterest: z.string().nonempty("Course of Interest is required"),
+  cohort: z.string().nonempty("Cohort selection is required"),
+  profileUrl: z.any().optional(),
+  isMobileVerified: z.boolean().optional(),
   linkedin: z.string().optional(),
   instagram: z.string().optional(),
   gender: z.enum(["Male", "Female", "Other"]),
@@ -61,16 +74,23 @@ const formSchema = z.object({
   financiallyDependent: z.boolean(),
   appliedForFinancialAid: z.boolean(),
 }).refine(
-  (data) => data.emergencyContact !== data.fatherContact,
+  (data) => data.emergencyContact !== data.contact,
   {
-    message: "Emergency contact and father's contact must be different.",
+    message: "Emergency contact and your contact must be different.",
+    path: ["emergencyContact"], // Error for emergencyContact
+  }
+)
+.refine(
+  (data) => data.fatherContact !== data.contact,
+  {
+    message: "Father's contact and your contact must be different.",
     path: ["fatherContact"], // Error for fatherContact
   }
 )
 .refine(
-  (data) => data.emergencyContact !== data.motherContact,
+  (data) => data.motherContact !== data.contact,
   {
-    message: "Emergency contact and mother's contact must be different.",
+    message: "Mother's contact and your contact must be different.",
     path: ["motherContact"], // Error for motherContact
   }
 )
@@ -79,6 +99,20 @@ const formSchema = z.object({
   {
     message: "Father's contact and mother's contact must be different.",
     path: ["motherContact"], // Error for motherContact
+  }
+)
+.refine(
+  (data) => data.fatherEmail !== data.email,
+  {
+    message: "Father's email and your email must be different.",
+    path: ["fatherEmail"], // Error for Father's email
+  }
+)
+.refine(
+  (data) => data.email !== data.motherEmail,
+  {
+    message: "Mother's email and your email must be different.",
+    path: ["motherEmail"], // Error for mother's email
   }
 )
 .refine(
@@ -92,63 +126,81 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 const ApplicationDetailsForm: React.FC = () => {
-  const { studentData } = useContext(UserContext); 
+  const { studentData, setStudentData } = useContext(UserContext); 
   const [experienceType, setExperienceType] = useState<ExperienceType | null>(null);
   const [hasWorkExperience, setHasWorkExperience] = useState<boolean | null>(null);
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
   const [failedDialogOpen, setFailedDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [programs, setPrograms] = useState<any[]>([]);
+  const [ centres, setCentres] = useState<any[]>([]);
+  const [cohorts, setCohorts] = useState<any[]>([]); 
+  const [contactInfo, setContactInfo] = useState<string>('');
+  const [imagePreview, setImagePreview] = useState<string | null>(studentData?.profileUrl || null);
 
-  const [fetchedStudentData, setFetchedStudentData] = useState<FormData | null>(null);
+
+  const [fetchedStudentData, setFetchedStudentData] = useState<any>(null);
 
   // Fetch current student data when component mounts
   useEffect(() => {
     const fetchStudentData = async () => {
       try {
         const student = await getCurrentStudent(studentData._id); // Pass the actual student ID here
-        setFetchedStudentData(student.data.applicationDetails); // Store the fetched data in state
+        setFetchedStudentData(student.data?.studentDetails); // Store the fetched data in state
+        console.log("csc",fetchedStudentData?.currentAddress?.streetAddress);
+        
       } catch (error) {
         console.error("Failed to fetch student data:", error);
       }
     };
     fetchStudentData();
-  }, []);
+  }, fetchedStudentData);
 
   // Initialize the form
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: fetchedStudentData || {
+      fullName: studentData?.firstName + ' ' + studentData?.lastName || '',
+      email: studentData?.email || '',
+      contact: studentData?.mobileNumber || '',
+      dob: studentData?.dateOfBirth?.split('T')[0] || '',
+      currentStatus: studentData?.qualification || '',
+      courseOfInterest: studentData?.program || '',
+      cohort: studentData?.cohort || '',
+      profileUrl: undefined,
+      isMobileVerified: studentData?.isMobileVerified || false,
       linkedin: studentData?.linkedInUrl || "",
       instagram: studentData?.instagramUrl || "",
       gender: studentData?.gender || "Male",
-      address: '',
-      city: '',
-      zipcode: '',
-      educationLevel: '',
-      fieldOfStudy: '',
-      institutionName: '',
-      graduationYear: '',
+      address: fetchedStudentData?.currentAddress?.streetAddress || '',
+      city: fetchedStudentData?.currentAddress?.streetAddress || '',
+      zipcode: fetchedStudentData?.currentAddress?.streetAddress || '',
+      educationLevel: fetchedStudentData?.currentAddress?.streetAddress || '',
+      fieldOfStudy: fetchedStudentData?.currentAddress?.streetAddress || '',
+      institutionName: fetchedStudentData?.currentAddress?.streetAddress || '',
+      graduationYear: fetchedStudentData?.currentAddress?.streetAddress || '',
       hasWorkExperience: false,
       experienceType: 'employee',
-      jobDescription: '',
-      companyName: '',
-      workDuration: '',
-      companyStartDate: '',
-      durationOfWork: '',
-      emergencyFirstName: '',
-      emergencyLastName: '',
-      emergencyContact: '',
-      relationship: '',
-      fatherFirstName: '',
-      fatherLastName: '',
-      fatherContact: '',
-      fatherOccupation: '',
-      fatherEmail: '',
-      motherFirstName: '',
-      motherLastName: '',
-      motherContact: '',
-      motherOccupation: '',
-      motherEmail: '',
+      jobDescription: fetchedStudentData?.currentAddress?.streetAddress || '',
+      companyName: fetchedStudentData?.currentAddress?.streetAddress || '',
+      workDuration: fetchedStudentData?.currentAddress?.streetAddress || '',
+      companyStartDate: fetchedStudentData?.currentAddress?.streetAddress || '',
+      durationOfWork: fetchedStudentData?.currentAddress?.streetAddress || '',
+      emergencyFirstName: fetchedStudentData?.currentAddress?.streetAddress || '',
+      emergencyLastName: fetchedStudentData?.currentAddress?.streetAddress || '',
+      emergencyContact: fetchedStudentData?.currentAddress?.streetAddress || '',
+      relationship: fetchedStudentData?.currentAddress?.streetAddress || '',
+      fatherFirstName: fetchedStudentData?.currentAddress?.streetAddress || '',
+      fatherLastName: fetchedStudentData?.currentAddress?.streetAddress || '',
+      fatherContact: fetchedStudentData?.currentAddress?.streetAddress || '',
+      fatherOccupation: fetchedStudentData?.currentAddress?.streetAddress || '',
+      fatherEmail: fetchedStudentData?.currentAddress?.streetAddress || '',
+      motherFirstName: fetchedStudentData?.currentAddress?.streetAddress || '',
+      motherLastName: fetchedStudentData?.currentAddress?.streetAddress || '',
+      motherContact: fetchedStudentData?.currentAddress?.streetAddress || '',
+      motherOccupation: fetchedStudentData?.currentAddress?.streetAddress || '',
+      motherEmail: fetchedStudentData?.currentAddress?.streetAddress || '',
       financiallyDependent: false,
       appliedForFinancialAid: false,
     },
@@ -159,6 +211,67 @@ const ApplicationDetailsForm: React.FC = () => {
   // Watch fields for conditional rendering
   const watchHasWorkExperience = watch('hasWorkExperience');
   const watchExperienceType = watch('experienceType');
+
+  useEffect(() => {
+    async function fetchCohorts() {
+      try {
+        const programsData = await getPrograms();
+        setPrograms(programsData.data);
+        const centresData = await getCentres();
+        setCentres(centresData.data);
+        const cohortsData = await getCohorts();
+        setCohorts(cohortsData.data);
+      } catch (error) {
+        console.error('Error fetching cohorts:', error);
+      }
+    }
+    fetchCohorts();
+  }, []);
+
+  const handleVerifyClick = async (contact: string) => {
+    const formattedContact = studentData?.mobileNumber.replace('+91 ', '') || '';
+    console.log("xxdv",formattedContact)
+    try {
+      const response = await verifyNumber({ phone: formattedContact });
+      console.log('Verification initiated:', response);
+    } catch (error) {
+      console.error('Error verifying number:', error);
+    }
+    setContactInfo(formattedContact);
+    setIsDialogOpen(true);
+  };
+
+  const formatDate = (isoDate: string | number | Date) => {
+    if (!isoDate) return ''; // Handle cases where date is undefined
+    const date = new Date(isoDate);
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    });
+  };
+  
+  const getProgramName = (programId: string) => {
+    const program = programs.find((p) => p._id === programId);
+    return program ? program.name : "--";
+  };
+
+  const getCenterName = (centerId: string) => {
+    const center = centres.find((c) => c._id === centerId);
+    return center ? center.name : "--";
+  };
+
+
+  const getCohortName = (cohortId: string) => {
+    const cohort = cohorts.find((c) => c._id === cohortId);
+    return cohort ? `${formatDateToMonthYear(cohort?.startDate)} (${cohort?.timeSlot}), ${getCenterName(cohort?.centerDetail)}` : "--";
+  };
+
+  const formatDateToMonthYear = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleString('default', { month: 'long', year: 'numeric' });
+  };
+
 
   const handleContinueToDashboard = () => {
     window.location.href = '/dashboard/application-step-1';
@@ -428,6 +541,222 @@ const ApplicationDetailsForm: React.FC = () => {
     <>
     <Form {...form}>
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 mt-8">
+      <Badge size="xl" className='flex-1 bg-[#00A3FF]/[0.2] text-[#00A3FF] text-center '>Personal Details</Badge>
+        <div className="grid sm:flex gap-6">
+          {/* Image Upload */}
+          <div className="w-full sm:w-[232px] bg-[#1F1F1F] flex flex-col items-center justify-center rounded-xl text-sm space-y-4">
+      {imagePreview ? (
+        <div className="w-full h-full relative">
+          <img
+            src={imagePreview}
+            alt="Passport Preview"
+            className="w-full h-full object-cover rounded-lg"
+          />
+          <div className="absolute top-2 right-2 flex space-x-2">
+            <button
+              className="p-2 bg-white/10 border border-white rounded-full hover:bg-white/20"
+              onClick={() => {
+                setImagePreview(null);
+                setStudentData({ ...studentData, profileUrl: null });
+              }}
+            >
+              <XIcon className="w-5 h-5 text-white" />
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+        <label
+          htmlFor="passport-input"
+          className="cursor-pointer flex flex-col items-center justify-center items-center bg-[#1F1F1F] px-6 rounded-xl border-[#2C2C2C] w-full h-[220px]"
+        >
+          <div className="text-center my-auto text-muted-foreground">
+            <Camera className="mx-auto mb-2 w-8 h-8" />
+            <div className="text-wrap">
+              Upload a Passport size Image of Yourself. Ensure that your face covers
+              60% of this picture.
+            </div>
+          </div>
+          <input
+            id="passport-input"
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                const imageUrl = URL.createObjectURL(file);
+                setImagePreview(imageUrl);
+                setStudentData({ ...studentData, profileUrl: file });
+              }
+            }}
+          />
+        </label>
+        </>
+      )}
+    </div>
+
+
+          {/* Form Fields */}
+          <div className="flex-1 space-y-4">
+            {/* Full Name */}
+            <FormField
+              control={control}
+              name="fullName"
+              render={({ field }) => (
+                <FormItem className='flex-1 space-y-1'>
+                  <Label className="text-base font-normal pl-3">Full Name</Label>
+                  <FormControl>
+                    <Input id="fullName" defaultValue={((studentData?.firstName || "-")+' '+(studentData?.lastName || "-"))} placeholder="John Doe" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Email and Contact */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {/* Email */}
+              <FormField
+                control={control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem className='flex-1 space-y-1 relative'>
+                    <CheckCircle className="text-[#00CC92] absolute left-3 top-[52px] w-5 h-5 " />
+                    <Label className="text-base font-normal pl-3">Email</Label>
+                    <FormControl>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="johndoe@gmail.com"
+                        className='pl-10'
+                        defaultValue={studentData?.email || "--"}
+                      />
+                    </FormControl>
+                    <Mail className="absolute right-3 top-[46px] w-5 h-5 " />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {/* Contact */}
+              <FormField
+                control={control}
+                name="contact"
+                render={({ field }) => (
+                  <FormItem className="flex-1 space-y-1 relative">
+                    {studentData?.isMobileVerified ? 
+                      <CheckCircle className="text-[#00CC92] absolute left-3 top-[52px] w-5 h-5 " /> : 
+                      <Phone className="absolute left-3 top-[52px] w-5 h-5 " />
+                    }
+                    <Label className="text-base font-normal pl-3">Contact No.</Label>
+                    <FormControl>
+                      <Input
+                        id="contact"
+                        type="tel"
+                        placeholder="+91 95568 97688"
+                        className='pl-10'
+                        defaultValue={studentData?.mobileNumber || "--"}
+                      />
+                    </FormControl>
+                    {studentData?.isMobileVerified ?
+                      <Phone className="absolute right-3 top-[46px] w-5 h-5" /> : 
+                      <Button size='sm' className='absolute right-3 top-10 rounded-full px-4 bg-[#00CC92]' onClick={() => handleVerifyClick(field.value)} type="button">
+                        Verify
+                      </Button>
+                    }
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Date of Birth and Current Status */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {/* Date of Birth */}
+              <FormField
+                control={control}
+                name="dob"
+                render={({ field }) => (
+                  <FormItem className="flex-1 space-y-1 relative">
+                    <Label className="text-base font-normal pl-3">Date of Birth</Label>
+                    <FormControl>
+                      <Input id="dob" type="text" placeholder="08 March, 2000" defaultValue={formatDate(studentData?.dateOfBirth)}/>
+                    </FormControl>
+                    <Calendar className="absolute right-3 top-[46px] w-5 h-5" />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {/* Currently a */}
+              <FormField
+                control={control}
+                name="currentStatus"
+                render={({ field }) => (
+                  <FormItem className='flex-1 space-y-1'>
+                    <Label className="text-base font-normal pl-3">You are Currently a</Label>
+                    <FormControl>
+                      <Input id="currentStatus" type="text" placeholder="College Student" defaultValue={studentData?.qualification} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Course of Interest and Select Cohort */}
+        <div className="flex flex-col sm:flex-row gap-2 ">
+          {/* Course of Interest */}
+          <FormField
+            control={control}
+            name="courseOfInterest"
+            render={({ field }) => (
+              <FormItem className='flex-1 space-y-1'>
+                <Label className='text-base font-normal pl-3'>Course of Interest</Label>
+                <FormControl>
+                  <Select
+                    value={studentData?.program}
+                  >
+                    <SelectTrigger className="">
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={studentData?.program}>{getProgramName(studentData?.program)}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <Label htmlFor="form-alert" className='flex gap-1 items-center text-sm text-[#00A3FF] font-normal pl-3 mt-1'>
+                  Your application form will be in line with the course of your choice.
+                </Label>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          {/* Select Cohort */}
+          <FormField
+            control={control}
+            name="cohort"
+            render={({ field }) => (
+              <FormItem className='flex-1 space-y-1'>
+                <Label className='text-base font-normal pl-3'>Select Cohort</Label>
+                <FormControl>
+                  <Select
+                    value={studentData?.cohort}
+                  >
+                    <SelectTrigger className="">
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem key={studentData?.cohort} value={studentData?.cohort}>{getCohortName(studentData?.cohort)}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         
         {/* LinkedIn and Instagram IDs */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -1166,7 +1495,16 @@ const ApplicationDetailsForm: React.FC = () => {
         </div>
       </form>
     </Form>
-
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <DialogContent className='max-w-4xl !p-0'>
+        <VerifyOTP
+          verificationType="contact" 
+          contactInfo={contactInfo}
+          errorMessage="Oops! Looks like you got the OTP wrong, Please Retry."
+          setIsDialogOpen={setIsDialogOpen}
+        />
+      </DialogContent>
+    </Dialog>
     <PaymentSuccessDialog open={successDialogOpen} setOpen={setSuccessDialogOpen} type='step1' mail={studentData?.email || 'your email'} onContinue={handleContinueToDashboard}/>
     <PaymentFailedDialog open={failedDialogOpen} setOpen={setFailedDialogOpen} type='step1' mail={studentData?.email || 'your email'} onContinue={handleRetry}/>
     </>

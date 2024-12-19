@@ -19,6 +19,7 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { UserContext } from '~/context/UserContext';
+import { getCurrentStudent } from '~/utils/studentAPI';
 
 const formSchema = z.object({
   otp: z
@@ -92,6 +93,17 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
 
       if(res.studentData?.litmusTestDetails[0]?.litmusTaskId !== undefined)
         navigate('../dashboard');
+
+      else if(res.studentData?.applicationDetails !== undefined){
+       
+              console.log('studentData?._id:', studentData?._id);
+                const res = await getCurrentStudent(studentData?._id);
+                  console.log(' student data:', res.data?.applicationDetails?.applicationStatus);
+                if(res.data?.applicationDetails?.applicationStatus !== "initiated" &&
+                  res.data?.applicationDetails?.applicationStatus !== undefined){
+                    navigate('/dashboard/application-step-2');
+                  }
+          }
       else
         navigate('../dashboard/application-step-1');
       }

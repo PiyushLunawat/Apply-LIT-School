@@ -83,18 +83,25 @@ const BookYourSeat: React.FC<FeedbackProps> = ({ booked }) => {
     
     const angle = normalizedIndex * Math.PI;
     const x = Math.sin(angle) * rowCurveIntensity;
-    const y = Math.cos(angle * BASE_CURVE_MULTIPLIER) * (rowCurveIntensity * 0.5);
+    let y;
+    if (row === 0) {
+      y = Math.cos(angle * BASE_CURVE_MULTIPLIER) * (rowCurveIntensity * 0.6);
+    } else if (row === 1) {
+      y = Math.cos(angle * BASE_CURVE_MULTIPLIER) * (rowCurveIntensity * 0.7);
+    } else {
+      y = Math.cos(angle * BASE_CURVE_MULTIPLIER) * (rowCurveIntensity * 0.8);
+    } 
     
     const rowY = row * 50;
     const rowZ = row * 1;
 
     let rotationAngle;
     if (row === 0) {
-      rotationAngle = `calc(48deg - ${8 * seatIndex}deg)`;
+      rotationAngle = `calc(36deg - ${6 * seatIndex}deg)`;
     } else if (row === 1) {
-      rotationAngle = `calc(64deg - ${8 * seatIndex}deg)`;
+      rotationAngle = `calc(40deg - ${5 * seatIndex}deg)`;
     } else {
-      rotationAngle = `calc(76deg - ${8 * seatIndex}deg)`;
+      rotationAngle = `calc(38deg - ${4 * seatIndex}deg)`;
     }
 
     return {
@@ -131,7 +138,7 @@ const BookYourSeat: React.FC<FeedbackProps> = ({ booked }) => {
           </div>
         </div>
 
-        <div className="relative h-[380px] perspective-1000 -mt-32">
+        <div className="relative h-[460px] perspective-1000 -mt-48">
         {ROW_CONFIG.map((rowConfig) => (
           <div
             key={rowConfig.row}
