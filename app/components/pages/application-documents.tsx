@@ -23,7 +23,7 @@ export default function ApplicationDocumentsDashboard() {
 
   return (
   <>
-  <Header subtitle={false} classn="" />
+  <Header subtitle="" classn="" />
   <div className="flex">
     <Sidebar student={student}/>
     <div className="w-full overflow-y-auto" style={{ height: `calc(100vh - 52px)`}}>

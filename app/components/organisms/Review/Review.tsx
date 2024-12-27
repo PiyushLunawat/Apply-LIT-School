@@ -68,8 +68,8 @@ const Review: React.FC<ReviewProps> = ({  }) => {
   }, [studentData]);
 
   return (
-    <div className='h-fit mb-24' >
-      <div className={`${status === "on hold" ? 'grayscale h-[500px] ' : status === "accepted" ? 'h-[650px] grayscale-0' : status === "rejected" ? 'h-[500px] grayscale-0' : 'h-[350px] grayscale-0'} absolute top-0 left-0 right-0 mt-[50px] absolute bg-black-to-b from-blue-900 to-transparent mb-24`} style={{
+    <div className='h-fit mb-16 sm:mb-24' >
+      <div className={`${status === "on hold" ? 'grayscale h-[400px] sm:h-[500px] ' : status === "accepted" ? 'h-[550px] sm:h-[650px] grayscale-0' : status === "rejected" ? 'h-[350px] sm:h-[450px] grayscale-0' : 'h-[250px] sm:h-[350px] grayscale-0'} absolute top-0 left-0 right-0 mt-[50px] absolute bg-black-to-b from-blue-900 to-transparent mb-24`} style={{
           backgroundImage: `url('/assets/images/application-review-banner.svg')`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
@@ -82,7 +82,7 @@ const Review: React.FC<ReviewProps> = ({  }) => {
             messageType={status}
             bgClassName=""/> 
 
-            <div className='z-10 relative'>
+            <div className='z-10 relative mx-4'>
               {!(status === 'under review' || status == '') && <Feedback status={status} feedbackList={appliData} setPass={setPass} booked={filledSeats}/>}
             </div>
            

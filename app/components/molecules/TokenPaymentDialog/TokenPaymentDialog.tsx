@@ -92,8 +92,8 @@ const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({ open, setOpen }
 
   return (
   <>  
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-2xl mx-4 bg-[#09090b] text-white rounded-lg px-8 py-8 text-center shadow-[0px_4px_32px_0px_rgba(0,0,0,0.75)]">
+    <Dialog  open={open} onOpenChange={setOpen}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto h-fit max-w-2xl mx-4 bg-[#09090b] text-white rounded-lg px-8 py-8 text-center shadow-[0px_4px_32px_0px_rgba(0,0,0,0.75)]">
         <div className="flex justify-center mb-6">
           <img src='/assets/images/lit-cash-icon.svg' className="w-[60px]" />
         </div>
@@ -135,7 +135,7 @@ const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({ open, setOpen }
       </DialogContent>
     </Dialog>
     <Dialog open={secondDialogOpen} onOpenChange={setSecondDialogOpen}>
-        <DialogContent className="max-w-2xl mx-4 bg-[#09090b] text-white rounded-lg px-8 py-8 text-center shadow-[0px_4px_32px_0px_rgba(0,0,0,0.75)] h-[600px] overflow-hidden overflow-y-auto">
+        <DialogContent className="min-h-[90vh] overflow-y-auto max-w-2xl mx-4 bg-[#09090b] text-white rounded-lg px-8 py-8 text-center shadow-[0px_4px_32px_0px_rgba(0,0,0,0.75)] h-[600px] overflow-hidden overflow-y-auto">
           <ArrowLeft className='w-6 h-6 cursor-pointer absolute top-10 left-8' onClick={() => setSecondDialogOpen(false)} />
           <div className="flex justify-center mb-6">
             <img src='/assets/images/lit-cash-icon.svg' className="w-[60px]" />
@@ -167,9 +167,10 @@ const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({ open, setOpen }
                 <div className=" text-start">
                   <div className="flex justify-start gap-2 mt-4 p-4 border border-[#2C2C2C] rounded-md">
                     <div className="flex flex-col text-left">
-                      <p className='text-base'>LITschool</p>
-                      <p className='text-sm'>Account No.: 123456789</p>
-                      <p className='text-sm'>IFS Code: ABCD0001234</p>
+                      <p className='flex gap-2 items-center text-base font-medium'>
+                        <img src='/assets/images/institute-icon.svg' className='w-4 h-3'/>LITschool</p>
+                      <p className='text-sm'>Account No.: 50200082405270</p>
+                      <p className='text-sm'>IFS Code: HDFC0001079</p>
                       <p className='text-sm'>Branch: Sadashivnagar</p>
                     </div>
                   </div>

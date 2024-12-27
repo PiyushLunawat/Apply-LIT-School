@@ -6,11 +6,12 @@ import { Button } from '~/components/ui/button';
 import { UserContext } from '~/context/UserContext';
 
 interface HeaderProps {
-  subtitle?: boolean;
+  subtitle?: string;
+  submessage?: string
   classn?: string;
 }
 
-export const Header: React.FC<HeaderProps> = ({ subtitle, classn }) => {
+export const Header: React.FC<HeaderProps> = ({ subtitle, submessage, classn }) => {
     const navigate = useNavigate();
 
     const { studentData, setStudentData } = useContext(UserContext);
@@ -38,9 +39,9 @@ export const Header: React.FC<HeaderProps> = ({ subtitle, classn }) => {
 
       {subtitle && <div className="flex flex-col gap-2 sm:gap-4 text-center px-4 ">
         <div className="text-xl sm:text-3xl font-semibold">
-          Hey {studentData?.firstName} <span role="img" aria-label="waving-hand">👋</span> Welcome to LIT
+          Hey {studentData?.firstName} <span role="img" aria-label="waving-hand">👋</span> {subtitle}
         </div>
-        <div className="text-xs sm:text-base">Get started with your application process</div>
+        <div className="text-xs sm:text-base">{submessage}</div>
       </div>}
     </header>
   );

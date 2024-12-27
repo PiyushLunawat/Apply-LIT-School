@@ -23,7 +23,7 @@ export const ApplicationH: React.FC = () => {
 
   return (
     <div className="w-full">
-      <Header subtitle={false} />
+      <Header subtitle="" />
       <Review />
       <div className="max-w-[1216px] mx-8 sm:mx-16 xl:mx-auto justify-center items-center space-y-20">
       

@@ -23,7 +23,7 @@ const formSchema = z.object({
         z.object({
           type: z.string(),
           answer: z.union([
-            z.string().url('Please enter a valid Link URL').nonempty('This field is required'), // For links
+            z.string().nonempty('This field is required').url('Please enter a valid Link URL'), // For links
             z.string().nonempty('This field is required'), // For text inputs
             z.array(z.any()).nonempty('This field is required'), // For file uploads
           ]),
@@ -488,7 +488,7 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
           )}
           {/* Display the number of uploaded files out of maxFiles */}
           {configItem.maxFiles && (
-            <div className="text-sm text-muted-foreground">
+            <div className="text-sm text-muted-foreground pl-3">
               Uploaded {files.length} of {configItem.maxFiles} file{configItem.maxFiles > 1 ? 's' : ''}
             </div>
           )}

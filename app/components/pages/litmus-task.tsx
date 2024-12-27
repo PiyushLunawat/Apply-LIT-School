@@ -50,10 +50,10 @@ export default function LitmusTask() {
 
   return (
   <>
-  <Header subtitle={false} classn="" />
+  <Header subtitle="" classn="" />
   <div className="flex">
     <Sidebar student={student}/>
-    <div className="overflow-y-auto" style={{ height: `calc(100vh - 52px)`}}>
+    <div className="w-full overflow-y-auto" style={{ height: `calc(100vh - 52px)`}}>
       <div className="flex justify-between items-end p-[52px] bg-[#3698FB1A] border-b">
         <div className="space-y-8">
           <div className="flex items-center gap-4 mb-2">

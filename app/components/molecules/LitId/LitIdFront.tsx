@@ -1,10 +1,11 @@
 import React from 'react';
 
 interface LitIdFrontProps {
+  data: any;
   ImageUrl: string;
 }
 
-const LitIdFront: React.FC<LitIdFrontProps> = ({ ImageUrl }) => {
+const LitIdFront: React.FC<LitIdFrontProps> = ({ data, ImageUrl }) => {
   return (
     <div className="w-[400px] h-[590.11px] relative bg-white">
       <img src={ImageUrl} alt="@shadcn" />
@@ -14,10 +15,10 @@ const LitIdFront: React.FC<LitIdFrontProps> = ({ ImageUrl }) => {
         <div className="text-zinc-950 text-base font-medium font-['Geist'] leading-snug">LITCM085</div>
       </div>
       <div className="self-stretch h-[63px] pl-1 flex-col justify-start items-start gap-4 flex">
-        <div className="self-stretch text-zinc-950 text-2xl font-semibold font-['Geist'] leading-[33.60px]">Kartikey Jain</div>
+        <div className="self-stretch text-zinc-950 text-2xl font-semibold font-['Geist'] leading-[33.60px]">{data?.firstName+' '+data?.lastName || '--'}</div>
         <div className="self-stretch h-[30px] flex-col justify-start items-start gap-2.5 flex">
-          <div className="self-stretch text-[#4f4f4f] text-sm font-normal font-['Geist'] leading-tight">kartikey@litschool.edu</div>
-          <div className="self-stretch text-[#4f4f4f] text-sm font-normal font-['Geist'] leading-tight">+91 8005890986</div>
+          <div className="self-stretch text-[#4f4f4f] text-sm font-normal font-['Geist'] leading-tight">{data?.email || '--'}</div>
+          <div className="self-stretch text-[#4f4f4f] text-sm font-normal font-['Geist'] leading-tight">{data?.mobileNumber || '--'}</div>
         </div>
       </div>
     </div>

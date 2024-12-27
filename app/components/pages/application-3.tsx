@@ -29,7 +29,7 @@ export const ApplicationStep3: React.FC = () => {
 
   return (
     <div className="w-full">
-      <Header subtitle={true} />
+      <Header subtitle="Welcome to LIT" submessage='Get started with your application process' />
       <img src="/assets/images/application-process-03.svg" alt="BANNER" className="w-screen my-8 sm:my-12" />
       <div className="w-full px-6 justify-center items-center">
         {!isChallengeSkipped ? (

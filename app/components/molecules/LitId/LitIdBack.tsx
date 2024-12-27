@@ -1,10 +1,11 @@
 import React from 'react';
 
 interface LitIdBackProps {
+  data: any;
   ScanUrl: string;
 }
 
-const LitIdBack: React.FC<LitIdBackProps> = ({ ScanUrl }) => {
+const LitIdBack: React.FC<LitIdBackProps> = ({ data, ScanUrl }) => {
   return (
     <div className="w-[400px] h-[590.11px] pb-[0.11px] bg-white flex-col justify-center items-center inline-flex">
   <div className="self-stretch h-[590px] flex-col justify-start items-start inline-flex">
@@ -17,13 +18,14 @@ const LitIdBack: React.FC<LitIdBackProps> = ({ ScanUrl }) => {
         </div>
       </div>
       <div className="self-stretch h-[50px] flex-col justify-start items-start gap-2.5 flex">
-        <div className="self-stretch text-[#4f4f4f] text-sm font-normal font-['Geist'] leading-tight">Father’s Name: Devendra Kumar Jain</div>
-        <div className="self-stretch text-[#4f4f4f] text-sm font-normal font-['Geist'] leading-tight">Emercency Contact: 9414071012</div>
+        <div className="self-stretch text-[#4f4f4f] text-sm font-normal font-['Geist'] leading-tight">Father’s Name: {data?.studentDetails?.parentInformation?.father?.firstName+' '+data?.studentDetails?.parentInformation?.father?.lastName || '--'}</div>
+        <div className="self-stretch text-[#4f4f4f] text-sm font-normal font-['Geist'] leading-tight">Emercency Contact: {data?.studentDetails?.emergencyContact?.contactNumber || '--'}</div>
         <div className="self-stretch text-[#4f4f4f] text-sm font-normal font-['Geist'] leading-tight">Blood Group: O+</div>
       </div>
       <div className="self-stretch h-[30px] flex-col justify-start items-start gap-2.5 flex">
-        <div className="self-stretch text-[#4f4f4f] text-sm font-normal font-['Geist'] leading-tight">Address: Flat no. 401, Krishna kripa 1st, Subhash nagar, 
-        Jaipur, Rajasthan 302016</div>
+        <div className="self-stretch text-[#4f4f4f] text-sm font-normal font-['Geist'] leading-tight">
+          Address: {data?.studentDetails?.currentAddress?.streetAddress+', '+data?.studentDetails?.currentAddress?.city+', '+data?.studentDetails?.currentAddress?.postalCode}
+        </div>
       </div>
       <div className="self-stretch h-[30px] flex-col justify-start items-start gap-2.5 flex">
         <div className="self-stretch text-[#4f4f4f] text-sm font-normal font-['Geist'] leading-tight">Issued On: 25/9/24</div>

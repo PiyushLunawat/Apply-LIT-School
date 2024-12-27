@@ -90,12 +90,14 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
             setStudentData(JSON.parse(storedData));
           }
         }
-
-      if(res.studentData?.litmusTestDetails[0]?.litmusTaskId !== undefined)
+        console.log("navigating")
+      if(res.studentData?.litmusTestDetails[0]?.litmusTaskId !== undefined){
         navigate('../dashboard');
+        console.log("navigating")
+      }
 
       else if(res.studentData?.applicationDetails !== undefined){
-       
+              console.log("navigating")
               console.log('studentData?._id:', studentData?._id);
                 const res = await getCurrentStudent(studentData?._id);
                   console.log(' student data:', res.data?.applicationDetails?.applicationStatus);
@@ -103,6 +105,8 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
                   res.data?.applicationDetails?.applicationStatus !== undefined){
                     navigate('/dashboard/application-step-2');
                   }
+                else
+                  navigate('../dashboard/application-step-1');
           }
       else
         navigate('../dashboard/application-step-1');
@@ -155,9 +159,19 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
         <div className="flex flex-col gap-4 text-center text-2xl font-semibold mb-2">
           {verificationType === 'contact' ? 'Verify Your Contact No.' : 'Verify Your Account'}
           <div className="text-center text-base">
-            {verificationType === 'contact'
-              ? <div className='w-fit flex items-center text-center mx-auto'>An OTP was sent to your contact no. <Phone className='w-3 h-3 mx-1'/> {contactInfo}</div>
-              : <div className='w-fit flex items-center text-center mx-auto'>An OTP was sent to your email <MailIcon className='w-3 h-3 mx-1'/> {contactInfo}</div>
+            {verificationType === 'contact' ?
+                <div className='sm:w-fit sm:flex text-center mx-auto'>
+                  <span className='font-normal'>An OTP was sent to your contact no.</span>
+                  <span className='flex text-center mx-auto w-fit items-center'>
+                    <Phone className='w-4 h-4 ml-2 mr-1'/> {contactInfo}
+                  </span>
+                </div> : 
+                <div className='sm:w-fit sm:flex text-center mx-auto'>
+                  <span className='font-normal'>An OTP was sent to your email</span>
+                  <span className='flex text-center mx-auto w-fit items-center'>
+                    <MailIcon className='w-4 h-4 ml-2 mr-1'/> {contactInfo}
+                  </span>
+                </div>
             }
           </div>
         </div>
@@ -169,7 +183,11 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
           render={({ field }) => (
             <FormItem>
               <FormControl>
-                <InputOTP maxLength={6} {...field}>
+                <InputOTP maxLength={6} {...field}onChange={(e) => {
+                field.onChange(e); // React Hook Form's internal handler
+                setResendError(null); // Clear resend error
+                setVerifyError(null); // Clear verification error
+              }}>
                   <InputOTPGroup>
                     <InputOTPSlot index={0} />
                     <InputOTPSlot index={1} />
@@ -187,8 +205,9 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
         />
 
           {(resendError || verifyError) && (
-            <Label htmlFor="contact-error" className='flex gap-1 items-center text-sm justify-start text-[#FF503D] font-normal pl-3 mt-2'>
-              <AlertCircle className='w-3 h-3'/>{resendError  || verifyError}
+            <Label htmlFor="contact-error" className='flex gap-1 items-center text-sm justify-start text-[#FF503D] font-normal mt-2'>
+              {/* <AlertCircle className='w-3 h-3'/> */}
+              {resendError  || verifyError}
             </Label>
           )}
 

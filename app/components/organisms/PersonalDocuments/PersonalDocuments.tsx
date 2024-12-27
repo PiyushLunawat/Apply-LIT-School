@@ -65,7 +65,7 @@ const PersonalDocuments = () => {
       }
     };
     fetchStudentData();
-  }, []);
+  }, studentData);
 
   const handleFileDownload = (fileUrl: string, docType: string) => {
     if (!fileUrl) {
@@ -212,7 +212,7 @@ const PersonalDocuments = () => {
               </>
             ))}
 
-            {docs && docs[doc.docType] && docs[doc.docType].length === 0 && (
+            {((docs && docs[doc.docType] && docs[doc.docType].length === 0)) && (
               <>
                 <input
                   type="file"

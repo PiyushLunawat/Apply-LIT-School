@@ -14,7 +14,7 @@ const StatusMessage: React.FC<StatusMessageProps> = ({
   bgClassName,
   time,
 }) => {
-  const [headMessage, setHeadMessage] = useState('');
+  const [headMessage, setHeadMessage] = useState<string | JSX.Element>('');
   const [subMessage, setSubMessage] = useState('');
   const [countdown, setCountdown] = useState<string>('');
   const [intervalId, setIntervalId] = useState<ReturnType<typeof setInterval> | null>(null); // Use ReturnType<typeof setInterval>
@@ -35,13 +35,21 @@ const StatusMessage: React.FC<StatusMessageProps> = ({
         );
         break;
       case 'accepted':
-        setHeadMessage('Congratulations! Your application has been accepted.');
+        setHeadMessage(
+          <>
+            <span className="text-[#00A3FF]">Congratulations!</span> Your application has been accepted.
+          </>
+        );
         setSubMessage(
           'We have curated feedback based on your submission. Review your feedback and proceed to book your interview call with our counsellor.'
         );
         break;
       case 'rejected':
-        setHeadMessage(`Hey ${name}, we’re very sorry but we cannot move forward with your application.`);
+        setHeadMessage(
+          <>
+            Hey {name}, we’re very sorry but we <span className="text-[#FF503D]">cannot move forward</span> with your application.
+          </>
+        );
         setSubMessage(
           'We have curated feedback based on your submission. You may choose to apply again for a different cohort and/or program of your choice.'
         );
@@ -112,7 +120,7 @@ const StatusMessage: React.FC<StatusMessageProps> = ({
 
   return (
     <>
-      <div className='bg-transparent flex relative w-screen h-[250px] sm:h-[350px] px-auto'>
+      <div className='bg-transparent flex relative h-[250px] sm:h-[350px] px-auto'>
         <div className='w-full md:w-[850px] mx-auto flex flex-col gap-4 sm:gap-8 justify-center items-center'>
           {(messageType === 'under review' || messageType === 'concluded') && (
           <div className='space-y-2'>  
@@ -134,7 +142,7 @@ const StatusMessage: React.FC<StatusMessageProps> = ({
           <div className='mx-8 sm:mx-16 text-2xl sm:text-3xl md:text-5xl font-bold text-center'>
             {headMessage}
           </div>
-          <div className='mx-8 sm:mx-16 text-xs sm:text-sm md:text-base text-center'>
+          <div className='mx-8 sm:mx-16 text-xs sm:text-sm md:text-base text-center font-normal'>
             {subMessage}
           </div>
         </div>

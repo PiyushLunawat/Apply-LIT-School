@@ -62,7 +62,7 @@ export const ApplicationStep1: React.FC = () => {
 
   return (
     <div className="w-full">
-      <Header subtitle={true} />
+      <Header subtitle="Welcome to LIT" submessage='Get started with your application process'/>
       <img src="/assets/images/application-process-01.svg" alt="BANNER" className="w-screen my-8 sm:my-12" />
       <div className="w-full px-6 justify-center items-center">
         <div className='max-w-[1000px] mx-auto'>

@@ -69,7 +69,7 @@ export default function ApplicationDashboard() {
 
   return (
   <>
-  <Header subtitle={false} classn="drop-shadow-lg" />
+  <Header subtitle="" classn="drop-shadow-lg" />
   <div className="flex">
     <Sidebar student={student}/>
     <div className="overflow-y-auto" style={{ height: `calc(100vh - 52px)`}}>
