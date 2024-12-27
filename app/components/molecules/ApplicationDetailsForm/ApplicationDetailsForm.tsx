@@ -739,7 +739,10 @@ const formData = buildFormData(apiPayload);
     
     const response = await fetch('https://myfashionfind.shop/student/submit-application', {
       method: 'POST',
-      body: formData, 
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(apiPayload), 
     });
 
     if (response.ok) {
