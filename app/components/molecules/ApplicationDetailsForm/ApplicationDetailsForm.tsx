@@ -27,96 +27,99 @@ import { verifyNumber } from '~/utils/authAPI';
 type ExperienceType = 'Working Professional' | 'Business Owner' | 'Freelancer' | 'Consultant';
 
 const formSchema = z.object({
-  fullName: z.string().optional(),
-  email: z.string().optional(),
-  contact: z.string().optional(),
-  dob: z.string().optional(),
-  currentStatus: z.string().optional(),
-  courseOfInterest: z.string().optional(),
-  cohort: z.string().optional(),
+  studentData: z.object({   
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
+    email: z.string().optional(),
+    contact: z.string().optional(),
+    dob: z.string().optional(),
+    currentStatus: z.string().optional(),
+    courseOfInterest: z.string().optional(),
+    cohort: z.string().optional(),
+    isMobileVerified: z.boolean().optional(),
+    linkedInUrl: z.string().optional(),
+    instagramUrl: z.string().optional(),
+    gender: z.enum(["Male", "Female", "Other"]),
+  }),
   profileUrl: z.any().optional(),
-  isMobileVerified: z.boolean().optional(),
-  linkedin: z.string().optional(),
-  instagram: z.string().optional(),
-  gender: z.enum(["Male", "Female", "Other"]),
-  address: z.string().nonempty("Address is required"),
-  city: z.string().nonempty("City is required"),
-  zipcode: z.string().nonempty("Postal/Zip Code is required"),
-  educationLevel: z.string().nonempty("Education level is required"),
-  fieldOfStudy: z.string().nonempty("Field of study is required"),
-  institutionName: z.string().nonempty("Institution name is required"),
-  graduationYear: z.string().nonempty("Graduation year is required"),
-  hasWorkExperience: z.boolean(),
-  experienceType: z.enum(['', 'Working Professional', 'Business Owner', 'Freelancer', 'Consultant']).optional(),
-  jobDescription: z.string().optional(),
-  companyName: z.string().optional(),
-  workDuration: z.string().optional(),
-  companyStartDate: z.string().optional(),
-  durationOfWork: z.string().optional(),
-  emergencyFirstName: z.string().nonempty("Emergency contact's first name is required"),
-  emergencyLastName: z.string().nonempty("Emergency contact's last name is required"),
-  emergencyContact: z.string().min(10, "Emergency contact number is required"),
-  relationship: z.string().nonempty("Relationship is required"),
-  fatherFirstName: z.string().nonempty("Father's first name is required"),
-  fatherLastName: z.string().nonempty("Father's last name is required"),
-  fatherContact: z.string().min(10, "Father's contact number is required"),
-  fatherOccupation: z.string().nonempty("Father's occupation is required"),
-  fatherEmail: z.string()
-    .email("Email format is invalid")
-    .refine((email) => email.length > 0, { message: "Father's email is required" }),
-  motherFirstName: z.string().nonempty("Mother's first name is required"),
-  motherLastName: z.string().nonempty("Mother's last name is required"),
-  motherContact: z.string().min(10, "Mother's contact number is required"),
-  motherOccupation: z.string().nonempty("Mother's occupation is required"),
-  motherEmail: z.string()
-    .email("Email format is invalid")
-    .refine((email) => email.length > 0, { message: "Mother's email is required" }), 
-  financiallyDependent: z.boolean(),
-  appliedForFinancialAid: z.boolean(),
+  applicationData: z.object({  
+    address: z.string().nonempty("Address is required"),
+    city: z.string().nonempty("City is required"),
+    zipcode: z.string().nonempty("Postal/Zip Code is required"),
+    educationLevel: z.string().nonempty("Education level is required"),
+    fieldOfStudy: z.string().nonempty("Field of study is required"),
+    institutionName: z.string().nonempty("Institution name is required"),
+    graduationYear: z.string().nonempty("Graduation year is required"),
+    isExperienced: z.boolean(),
+    experienceType: z.enum(['', 'Working Professional', 'Business Owner', 'Freelancer', 'Consultant']).optional(),
+    nameOfCompany: z.string().optional(),
+    duration: z.string().optional(),
+    jobDescription: z.string().optional(),
+    emergencyFirstName: z.string().nonempty("Emergency contact's first name is required"),
+    emergencyLastName: z.string().nonempty("Emergency contact's last name is required"),
+    emergencyContact: z.string().min(10, "Emergency contact number is required"),
+    relationship: z.string().nonempty("Relationship is required"),
+    fatherFirstName: z.string().nonempty("Father's first name is required"),
+    fatherLastName: z.string().nonempty("Father's last name is required"),
+    fatherContact: z.string().min(10, "Father's contact number is required"),
+    fatherOccupation: z.string().nonempty("Father's occupation is required"),
+    fatherEmail: z.string()
+      .email("Email format is invalid")
+      .refine((email) => email.length > 0, { message: "Father's email is required" }),
+    motherFirstName: z.string().nonempty("Mother's first name is required"),
+    motherLastName: z.string().nonempty("Mother's last name is required"),
+    motherContact: z.string().min(10, "Mother's contact number is required"),
+    motherOccupation: z.string().nonempty("Mother's occupation is required"),
+    motherEmail: z.string()
+      .email("Email format is invalid")
+      .refine((email) => email.length > 0, { message: "Mother's email is required" }), 
+    financiallyDependent: z.boolean(),
+    appliedForFinancialAid: z.boolean(),
+  })
 }).refine(
-  (data) => data.emergencyContact !== data.contact,
+  (data) => data.applicationData.emergencyContact !== data.studentData.contact,
   {
     message: "Emergency contact and your contact must be different.",
     path: ["emergencyContact"], // Error for emergencyContact
   }
 )
 .refine(
-  (data) => data.fatherContact !== data.contact,
+  (data) => data.applicationData.fatherContact !== data.studentData.contact,
   {
     message: "Father's contact and your contact must be different.",
     path: ["fatherContact"], // Error for fatherContact
   }
 )
 .refine(
-  (data) => data.motherContact !== data.contact,
+  (data) => data.applicationData.motherContact !== data.studentData.contact,
   {
     message: "Mother's contact and your contact must be different.",
     path: ["motherContact"], // Error for motherContact
   }
 )
 .refine(
-  (data) => data.fatherContact !== data.motherContact,
+  (data) => data.applicationData.fatherContact !== data.applicationData.motherContact,
   {
     message: "Father's contact and mother's contact must be different.",
     path: ["motherContact"], // Error for motherContact
   }
 )
 .refine(
-  (data) => data.fatherEmail !== data.email,
+  (data) => data.applicationData.fatherEmail !== data.studentData.email,
   {
     message: "Father's email and your email must be different.",
     path: ["fatherEmail"], // Error for Father's email
   }
 )
 .refine(
-  (data) => data.email !== data.motherEmail,
+  (data) => data.studentData.email !== data.applicationData.motherEmail,
   {
     message: "Mother's email and your email must be different.",
     path: ["motherEmail"], // Error for mother's email
   }
 )
 .refine(
-  (data) => data.fatherEmail !== data.motherEmail,
+  (data) => data.applicationData.fatherEmail !== data.applicationData.motherEmail,
   {
     message: "Father's email and mother's email must be different.",
     path: ["motherEmail"], // Error for mother's email
@@ -135,9 +138,10 @@ const ApplicationDetailsForm: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [programs, setPrograms] = useState<any[]>([]);
   const [ centres, setCentres] = useState<any[]>([]);
+  const [interest, setInterest] = useState<any[]>([]); 
   const [cohorts, setCohorts] = useState<any[]>([]); 
   const [contactInfo, setContactInfo] = useState<string>('');
-  const [imagePreview, setImagePreview] = useState<File[]>([]);
+  const [imagePreview, setImagePreview] = useState<File | null>(null);
 
   const [previewUrl, setPreviewUrl] = useState<string>(studentData?.profileUrl || '');
 
@@ -162,45 +166,46 @@ const ApplicationDetailsForm: React.FC = () => {
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      fullName: '',
-      email: '',
-      contact: '',
-      dob: '',
-      currentStatus: '',
-      courseOfInterest: '',
-      cohort: '',
-      // ... include all other default fields with empty strings or false as necessary
-      gender: "Male",
-      address: '',
-      city: '',
-      zipcode: '',
-      educationLevel: '',
-      fieldOfStudy: '',
-      institutionName: '',
-      graduationYear: '',
-      hasWorkExperience: false,
-      experienceType: '',
-    jobDescription: '',
-    companyName: '',
-    workDuration: '',
-    companyStartDate: '',
-    durationOfWork: '',
-      emergencyFirstName: '',
-      emergencyLastName: '',
-      emergencyContact: '',
-      relationship: '',
-      fatherFirstName: '',
-      fatherLastName: '',
-      fatherContact: '',
-      fatherOccupation: '',
-      fatherEmail: '',
-      motherFirstName: '',
-      motherLastName: '',
-      motherContact: '',
-      motherOccupation: '',
-      motherEmail: '',
-      financiallyDependent: false,
-      appliedForFinancialAid: false,
+      studentData: {
+        firstName: studentData?.firstName || '',
+        lastName: studentData?.lastName || '',
+        email: studentData?.email || '',
+        contact: studentData?.mobileNumber || '',
+        dob: studentData?.dateOfBirth || '',
+        currentStatus: studentData?.qualification || '',
+        courseOfInterest: studentData?.program || '',
+        cohort: studentData?.cohort || '',
+        linkedInUrl: studentData?.linkedInUrl || '',
+        instagramUrl: studentData?.instagramUrl || '',
+        gender: "Male",
+      },
+      profileUrl: studentData?.profileUrl || null,
+      applicationData: {
+        address: '',
+        city: '',
+        zipcode: '',
+        educationLevel: '',
+        fieldOfStudy: '',
+        institutionName: '',
+        graduationYear: '',
+        isExperienced: false,
+        emergencyFirstName: '',
+        emergencyLastName: '',
+        emergencyContact: '',
+        relationship: '',
+        fatherFirstName: '',
+        fatherLastName: '',
+        fatherContact: '',
+        fatherOccupation: '',
+        fatherEmail: '',
+        motherFirstName: '',
+        motherLastName: '',
+        motherContact: '',
+        motherOccupation: '',
+        motherEmail: '',
+        financiallyDependent: false,
+        appliedForFinancialAid: false,
+      },
     },
   });
 
@@ -214,30 +219,34 @@ const ApplicationDetailsForm: React.FC = () => {
 
         // Once fetched, reset the form with the fetched data
         reset({
-          fullName: `${studentData?.firstName || ''} ${studentData?.lastName || ''}`,
-          email: studentData?.email || '',
-          contact: studentData?.mobileNumber || '',
-          dob: studentData?.dateOfBirth ? studentData.dateOfBirth.split('T')[0] : '',
-          currentStatus: studentData?.qualification || '',
-          courseOfInterest: studentData?.program || '',
-          cohort: studentData?.cohort || '',
-          gender: studentData?.gender || "Male",
-          address: sData?.currentAddress?.streetAddress || '',
+          studentData: {
+            firstName: studentData?.firstName || '',
+            lastName: studentData?.lastName || '',
+            email: studentData?.email || '',
+            contact: studentData?.mobileNumber || '',
+            dob: studentData?.dateOfBirth ? studentData.dateOfBirth.split('T')[0] : '',
+            currentStatus: studentData?.qualification || '',
+            courseOfInterest: studentData?.program || '',
+            cohort: studentData?.cohort || '',
+            linkedInUrl: student.data?.linkedInUrl || '',
+            instagramUrl: student.data?.instagramUrl || '',
+            gender: studentData?.gender || "Male",
+          },
+          applicationData: {
+            address: sData?.currentAddress?.streetAddress || '',
           city: sData?.currentAddress?.city || '',
           zipcode: sData?.currentAddress?.postalCode || '',
           educationLevel: sData?.previousEducation?.highestLevelOfEducation || '',
           fieldOfStudy: sData?.previousEducation?.fieldOfStudy || '',
           institutionName: sData?.previousEducation?.nameOfInstitution || '',
           graduationYear: sData?.previousEducation?.yearOfGraduation || '',
-          hasWorkExperience: sData?.workExperience || 
+          isExperienced: sData?.workExperience || 
             ["Working Professional", "Freelancer", "Business Owner", "Consultant",].includes(studentData?.qualification) 
             || false,
-          experienceType: sData?.experienceType || '',
+          experienceType: sData?.experienceType || studentData?.qualification || '',
+          nameOfCompany: sData?.nameOfCompany || '',
+          duration: sData?.duration || '',
           jobDescription: sData?.jobDescription || '',
-          companyName: sData?.companyName || '',
-          workDuration: sData?.workDuration || '',
-          companyStartDate: sData?.companyStartDate || '',
-          durationOfWork: sData?.durationOfWork || '',
           emergencyFirstName: sData?.emergencyContact?.firstName || '',
           emergencyLastName: sData?.emergencyContact?.lastName || '',
           emergencyContact: sData?.emergencyContact?.contactNumber || '',
@@ -254,6 +263,7 @@ const ApplicationDetailsForm: React.FC = () => {
           motherEmail: sData?.parentInformation?.mother?.email || '',
           financiallyDependent: !sData?.financialInformation?.isFinanciallyIndependent || false,
           appliedForFinancialAid: sData?.financialInformation?.hasAppliedForFinancialAid || false,
+        }
         });
 
         setFetchedStudentData(sData);
@@ -267,8 +277,9 @@ const ApplicationDetailsForm: React.FC = () => {
   
 
   // Watch fields for conditional rendering
-  const watchHasWorkExperience = watch('hasWorkExperience');
-  const watchExperienceType = watch('experienceType');
+  const watchHasWorkExperience = watch('applicationData.isExperienced');
+  const watchExperienceType = watch('applicationData.experienceType');
+
 
   useEffect(() => {
     async function fetchCohorts() {
@@ -278,7 +289,10 @@ const ApplicationDetailsForm: React.FC = () => {
         const centresData = await getCentres();
         setCentres(centresData.data);
         const cohortsData = await getCohorts();
-        setCohorts(cohortsData.data);
+        const openCohorts = cohortsData.data.filter((cohort: any) => cohort.status === "Open");
+        setInterest(openCohorts);
+        console.log("vss");
+        
       } catch (error) {
         console.error('Error fetching cohorts:', error);
       }
@@ -308,6 +322,16 @@ const ApplicationDetailsForm: React.FC = () => {
       year: 'numeric',
     });
   };
+
+   useEffect(() => {
+      // Filter cohorts by selected program
+      if (form.watch("studentData.courseOfInterest")) {
+        const filteredCohorts = interest.filter(
+          (interest) => interest?.programDetail === form.watch("studentData.courseOfInterest")
+        );
+        setCohorts(filteredCohorts);
+      }
+    }, [form.watch("studentData.courseOfInterest"), interest]);
   
   const getProgramName = (programId: string) => {
     const program = programs.find((p) => p._id === programId);
@@ -460,7 +484,7 @@ const ApplicationDetailsForm: React.FC = () => {
     if (!studentData?.profileUrl) {
       return "Profile image is required.";
     }
-    console.log("image",imagePreview[0]);
+    console.log("image",imagePreview);
     
     // if (!studentData?.isMobileVerified) {
     //   return "Mobile number verification is required.";
@@ -487,60 +511,58 @@ const ApplicationDetailsForm: React.FC = () => {
         qualification: studentData?.qualification || '',
         program: studentData?.program || '',
         cohort: studentData?.cohort || '',
-        gender: data.gender,
+        gender: data.studentData.gender,
         isVerified: studentData?.isVerified || false,
         dateOfBirth: new Date(studentData?.dateOfBirth || Date.now()), 
-        profileImage: imagePreview[0],
-        linkedInUrl: data.linkedin || "",
-        instagramUrl: data.instagram || "",
+        linkedInUrl: data.studentData.linkedInUrl || "",
+        instagramUrl: data.studentData.instagramUrl || "",
       },
+      profileImage: imagePreview,
       applicationData: {
         currentAddress: {
-          streetAddress: data.address,
-          city: data.city,
+          streetAddress: data.applicationData.address,
+          city: data.applicationData.city,
           state: "", // Optional: Add state if available
-          postalCode: data.zipcode,
+          postalCode: data.applicationData.zipcode,
         },
         previousEducation: {
-          highestLevelOfEducation: data.educationLevel,
-          fieldOfStudy: data.fieldOfStudy,
-          nameOfInstitution: data.institutionName,
-          yearOfGraduation: data.graduationYear,
+          highestLevelOfEducation: data.applicationData.educationLevel,
+          fieldOfStudy: data.applicationData.fieldOfStudy,
+          nameOfInstitution: data.applicationData.institutionName,
+          yearOfGraduation: data.applicationData.graduationYear,
         },
-        workExperience: data.hasWorkExperience,
-        workExperienceDetails: {
-          experienceType: data.experienceType || '',
-          jobDescription: data.jobDescription || '',
-          companyName: data.companyName || '',
-          workDuration: data.workDuration || '',
-          companyStartDate: data.companyStartDate || '',
-          durationOfWork: data.durationOfWork || '',
+        workExperience: {
+          isExperienced: data.applicationData.isExperienced,
+          experienceType: data.applicationData.experienceType || '',
+          nameOfCompany: data.applicationData.nameOfCompany || '',
+          duration: data.applicationData.duration || '',
+          jobDescription: data.applicationData.jobDescription || '',
         },
         emergencyContact: {
-          firstName: data.emergencyFirstName,
-          lastName: data.emergencyLastName,
-          contactNumber: data.emergencyContact,
-          relationshipWithStudent: data.relationship,
+          firstName: data.applicationData.emergencyFirstName,
+          lastName: data.applicationData.emergencyLastName,
+          contactNumber: data.applicationData.emergencyContact,
+          relationshipWithStudent: data.applicationData.relationship,
         },
         parentInformation: {
           father: {
-            firstName: data.fatherFirstName,
-            lastName: data.fatherLastName,
-            contactNumber: data.fatherContact,
-            occupation: data.fatherOccupation,
-            email: data.fatherEmail,
+            firstName: data.applicationData.fatherFirstName,
+            lastName: data.applicationData.fatherLastName,
+            contactNumber: data.applicationData.fatherContact,
+            occupation: data.applicationData.fatherOccupation,
+            email: data.applicationData.fatherEmail,
           },
           mother: {
-            firstName: data.motherFirstName,
-            lastName: data.motherLastName,
-            contactNumber: data.motherContact,
-            occupation: data.motherOccupation,
-            email: data.motherEmail,
+            firstName: data.applicationData.motherFirstName,
+            lastName: data.applicationData.motherLastName,
+            contactNumber: data.applicationData.motherContact,
+            occupation: data.applicationData.motherOccupation,
+            email: data.applicationData.motherEmail,
           },
         },
         financialInformation: {
-          isFinanciallyIndependent: !data.financiallyDependent,
-          hasAppliedForFinancialAid: data.appliedForFinancialAid,
+          isFinanciallyIndependent: !data.applicationData.financiallyDependent,
+          hasAppliedForFinancialAid: data.applicationData.appliedForFinancialAid,
         },
       },
     };
@@ -548,183 +570,90 @@ const ApplicationDetailsForm: React.FC = () => {
     const buildFormData = (apiPayload: any) => {
   const formData = new FormData();
 
-  // 1) STUDENT DATA
-  formData.append("studentData[firstName]", apiPayload.studentData.firstName);
-  formData.append("studentData[lastName]", apiPayload.studentData.lastName);
-  formData.append("studentData[mobileNumber]", apiPayload.studentData.mobileNumber);
-  formData.append("studentData[isMobileVerified]", String(apiPayload.studentData.isMobileVerified));
-  formData.append("studentData[email]", apiPayload.studentData.email);
-  formData.append("studentData[qualification]", apiPayload.studentData.qualification);
-  formData.append("studentData[program]", apiPayload.studentData.program);
-  formData.append("studentData[cohort]", apiPayload.studentData.cohort);
-  formData.append("studentData[gender]", apiPayload.studentData.gender);
-  formData.append("studentData[isVerified]", String(apiPayload.studentData.isVerified));
+  const studentData = apiPayload.studentData;
+  formData.append("studentData.firstName", studentData.firstName || "");
+  formData.append("studentData.lastName", studentData.lastName || "");
+  formData.append("studentData.mobileNumber", studentData.mobileNumber);
+  formData.append("studentData.isMobileVerified", String(studentData.isMobileVerified));
+  formData.append("studentData.email", studentData.email || "");
+  formData.append("studentData.qualification", studentData.qualification || "");
+  formData.append("studentData.program", studentData.program || "");
+  formData.append("studentData.cohort", studentData.cohort || "");
+  formData.append("studentData.gender", studentData.gender);
+  formData.append("studentData.isVerified", String(studentData.isVerified || false));
+  formData.append("studentData.dateOfBirth", studentData.dateOfBirth ? new Date(studentData.dateOfBirth).toISOString() : "");
+  formData.append("studentData.linkedInUrl", studentData.linkedInUrl || "");
+  formData.append("studentData.instagramUrl", studentData.instagramUrl || "");
 
-  // Convert dateOfBirth (Date object) to string if needed
-  const dobString = apiPayload.studentData.dateOfBirth.toISOString();
-  formData.append("studentData[dateOfBirth]", dobString);
-
-  // Append the File object (profileImage)
-  // Make sure imagePreview[0] is indeed a File
-  if (apiPayload.studentData.profileImage) {
-    formData.append(
-      "studentData[profileImage]",
-      apiPayload.studentData.profileImage
-    );
+  // Append profile image
+  if (apiPayload.profileImage) {
+    formData.append("profileImage", apiPayload.profileImage);
   }
 
-  formData.append("studentData[linkedInUrl]", apiPayload.studentData.linkedInUrl);
-  formData.append("studentData[instagramUrl]", apiPayload.studentData.instagramUrl);
+  // Application Data
+  const applicationData = apiPayload.applicationData;
 
-  // 2) APPLICATION DATA
-  
-  // 2a) currentAddress
-  formData.append(
-    "applicationData[currentAddress][streetAddress]",
-    apiPayload.applicationData.currentAddress.streetAddress
-  );
-  formData.append(
-    "applicationData[currentAddress][city]",
-    apiPayload.applicationData.currentAddress.city
-  );
-  formData.append(
-    "applicationData[currentAddress][state]",
-    apiPayload.applicationData.currentAddress.state
-  );
-  formData.append(
-    "applicationData[currentAddress][postalCode]",
-    apiPayload.applicationData.currentAddress.postalCode
-  );
+  // Current Address
+  const currentAddress = applicationData.currentAddress;
+  formData.append("applicationData.currentAddress.streetAddress", currentAddress.streetAddress);
+  formData.append("applicationData.currentAddress.city", currentAddress.city);
+  formData.append("applicationData.currentAddress.state", currentAddress.state || "");
+  formData.append("applicationData.currentAddress.postalCode", currentAddress.postalCode);
 
-  // 2b) previousEducation
-  formData.append(
-    "applicationData[previousEducation][highestLevelOfEducation]",
-    apiPayload.applicationData.previousEducation.highestLevelOfEducation
-  );
-  formData.append(
-    "applicationData[previousEducation][fieldOfStudy]",
-    apiPayload.applicationData.previousEducation.fieldOfStudy
-  );
-  formData.append(
-    "applicationData[previousEducation][nameOfInstitution]",
-    apiPayload.applicationData.previousEducation.nameOfInstitution
-  );
-  formData.append(
-    "applicationData[previousEducation][yearOfGraduation]",
-    apiPayload.applicationData.previousEducation.yearOfGraduation
-  );
+  // Previous Education
+  const previousEducation = applicationData.previousEducation;
+  formData.append("applicationData.previousEducation.highestLevelOfEducation", previousEducation.highestLevelOfEducation);
+  formData.append("applicationData.previousEducation.fieldOfStudy", previousEducation.fieldOfStudy);
+  formData.append("applicationData.previousEducation.nameOfInstitution", previousEducation.nameOfInstitution);
+  formData.append("applicationData.previousEducation.yearOfGraduation", String(previousEducation.yearOfGraduation));
 
-  // 2c) workExperience
-  formData.append(
-    "applicationData[workExperience]",
-    String(apiPayload.applicationData.workExperience)
-  );
+  // Work Experience
+  formData.append("applicationData.workExperience.isExperienced", String(applicationData.isExperienced));
+  if (applicationData.isExperienced) {
+    formData.append("applicationData.workExperience.experienceType", applicationData.workExperience.experienceType || "");
+    formData.append("applicationData.workExperience.nameOfCompany", applicationData.workExperience.nameOfCompany || "");
+    formData.append("applicationData.workExperience.duration", applicationData.workExperience.duration || "");
+    formData.append("applicationData.workExperience.jobDescription", applicationData.workExperience.jobDescription || "");
+  }
 
-  // 2d) workExperienceDetails
-  formData.append(
-    "applicationData[workExperienceDetails][experienceType]",
-    apiPayload.applicationData.workExperienceDetails.experienceType
-  );
-  formData.append(
-    "applicationData[workExperienceDetails][jobDescription]",
-    apiPayload.applicationData.workExperienceDetails.jobDescription
-  );
-  formData.append(
-    "applicationData[workExperienceDetails][companyName]",
-    apiPayload.applicationData.workExperienceDetails.companyName
-  );
-  formData.append(
-    "applicationData[workExperienceDetails][workDuration]",
-    apiPayload.applicationData.workExperienceDetails.workDuration
-  );
-  formData.append(
-    "applicationData[workExperienceDetails][companyStartDate]",
-    apiPayload.applicationData.workExperienceDetails.companyStartDate
-  );
-  formData.append(
-    "applicationData[workExperienceDetails][durationOfWork]",
-    apiPayload.applicationData.workExperienceDetails.durationOfWork
-  );
+  // Emergency Contact
+  const emergencyContact = applicationData.emergencyContact;
+  formData.append("applicationData.emergencyContact.firstName", emergencyContact.firstName);
+  formData.append("applicationData.emergencyContact.lastName", emergencyContact.lastName);
+  formData.append("applicationData.emergencyContact.contactNumber", emergencyContact.contactNumber);
+  formData.append("applicationData.emergencyContact.relationshipWithStudent", emergencyContact.relationshipWithStudent);
 
-  // 2e) emergencyContact
-  formData.append(
-    "applicationData[emergencyContact][firstName]",
-    apiPayload.applicationData.emergencyContact.firstName
-  );
-  formData.append(
-    "applicationData[emergencyContact][lastName]",
-    apiPayload.applicationData.emergencyContact.lastName
-  );
-  formData.append(
-    "applicationData[emergencyContact][contactNumber]",
-    apiPayload.applicationData.emergencyContact.contactNumber
-  );
-  formData.append(
-    "applicationData[emergencyContact][relationshipWithStudent]",
-    apiPayload.applicationData.emergencyContact.relationshipWithStudent
-  );
+  // Parent Information
+  const parentInformation = applicationData.parentInformation;
 
-  // 2f) parentInformation
-  // father
-  formData.append(
-    "applicationData[parentInformation][father][firstName]",
-    apiPayload.applicationData.parentInformation.father.firstName
-  );
-  formData.append(
-    "applicationData[parentInformation][father][lastName]",
-    apiPayload.applicationData.parentInformation.father.lastName
-  );
-  formData.append(
-    "applicationData[parentInformation][father][contactNumber]",
-    apiPayload.applicationData.parentInformation.father.contactNumber
-  );
-  formData.append(
-    "applicationData[parentInformation][father][occupation]",
-    apiPayload.applicationData.parentInformation.father.occupation
-  );
-  formData.append(
-    "applicationData[parentInformation][father][email]",
-    apiPayload.applicationData.parentInformation.father.email
-  );
+  // Father
+  const father = parentInformation.father;
+  formData.append("applicationData.parentInformation.father.firstName", father.firstName);
+  formData.append("applicationData.parentInformation.father.lastName", father.lastName);
+  formData.append("applicationData.parentInformation.father.contactNumber", father.contactNumber);
+  formData.append("applicationData.parentInformation.father.occupation", father.occupation);
+  formData.append("applicationData.parentInformation.father.email", father.email);
 
-  // mother
-  formData.append(
-    "applicationData[parentInformation][mother][firstName]",
-    apiPayload.applicationData.parentInformation.mother.firstName
-  );
-  formData.append(
-    "applicationData[parentInformation][mother][lastName]",
-    apiPayload.applicationData.parentInformation.mother.lastName
-  );
-  formData.append(
-    "applicationData[parentInformation][mother][contactNumber]",
-    apiPayload.applicationData.parentInformation.mother.contactNumber
-  );
-  formData.append(
-    "applicationData[parentInformation][mother][occupation]",
-    apiPayload.applicationData.parentInformation.mother.occupation
-  );
-  formData.append(
-    "applicationData[parentInformation][mother][email]",
-    apiPayload.applicationData.parentInformation.mother.email
-  );
+  // Mother
+  const mother = parentInformation.mother;
+  formData.append("applicationData.parentInformation.mother.firstName", mother.firstName);
+  formData.append("applicationData.parentInformation.mother.lastName", mother.lastName);
+  formData.append("applicationData.parentInformation.mother.contactNumber", mother.contactNumber);
+  formData.append("applicationData.parentInformation.mother.occupation", mother.occupation);
+  formData.append("applicationData.parentInformation.mother.email", mother.email);
 
-  // 2g) financialInformation
-  formData.append(
-    "applicationData[financialInformation][isFinanciallyIndependent]",
-    String(apiPayload.applicationData.financialInformation.isFinanciallyIndependent)
-  );
-  formData.append(
-    "applicationData[financialInformation][hasAppliedForFinancialAid]",
-    String(apiPayload.applicationData.financialInformation.hasAppliedForFinancialAid)
-  );
+  // Financial Information
+  const financialInformation = applicationData.financialInformation;
+  formData.append("applicationData.financialInformation.isFinanciallyIndependent", String(financialInformation.isFinanciallyIndependent));
+  formData.append("applicationData.financialInformation.hasAppliedForFinancialAid", String(financialInformation.hasAppliedForFinancialAid));
+
   return formData;
 };
+
 
 const formData = buildFormData(apiPayload);
 
     
-
   // Append the image file if available
   // if (studentData?.profileUrl) {
   //   formData.append('profileImage', imagePreview);
@@ -736,14 +665,23 @@ const formData = buildFormData(apiPayload);
   try {
     setLoading(true);
     console.log("dssd",apiPayload);
+    console.log('FormData entries:');
+    for (let pair of formData.entries()) {
+      if (pair[1] instanceof File) {
+        console.log(`${pair[0]}: [File] ${pair[1].name}`);
+      } else {
+        console.log(`${pair[0]}:`, pair[1]);
+      }
+    }
     
-    const response = await fetch('https://myfashionfind.shop/student/submit-application', {
+    const response = await fetch('http://localhost:4000/student/submit-application', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(apiPayload), 
     });
+
 
     if (response.ok) {
       // Handle success response
@@ -806,7 +744,7 @@ const formData = buildFormData(apiPayload);
             <button
               className="p-2 bg-white/10 mix-blend-difference border border-white rounded-full hover:bg-white/20"
               onClick={() => {
-                setImagePreview([]);
+                setImagePreview(null);
                 setPreviewUrl('')
               }}
             >
@@ -833,12 +771,12 @@ const formData = buildFormData(apiPayload);
             accept="image/*"
             className="hidden"
             onChange={(e) => {
-              const file = e.target.files;
+              const file = e.target.files?.[0];
               if (file) {
-                let fileArray = Array.from(file);
-                const newFiles = [...file, ...fileArray];
-                const imageUrl = URL.createObjectURL(file?.[0]);
-                setImagePreview(newFiles);
+                const imageUrl = URL.createObjectURL(file);
+                console.log("fefs",imageUrl,file);
+                
+                setImagePreview(file);
                 setPreviewUrl(imageUrl);
                 setStudentData({ ...studentData, profileUrl: file });
               }
@@ -855,7 +793,7 @@ const formData = buildFormData(apiPayload);
             {/* Full Name */}
             <FormField
               control={control}
-              name="fullName"
+              name="studentData.firstName"
               render={({ field }) => (
                 <FormItem className='flex-1 space-y-1'>
                   <Label className="text-base font-normal pl-3">Full Name</Label>
@@ -872,7 +810,7 @@ const formData = buildFormData(apiPayload);
               {/* Email */}
               <FormField
                 control={control}
-                name="email"
+                name="studentData.email"
                 render={({ field }) => (
                   <FormItem className='flex-1 space-y-1 relative'>
                     <CheckCircle className="text-[#00CC92] absolute left-3 top-[52px] w-5 h-5 " />
@@ -895,7 +833,7 @@ const formData = buildFormData(apiPayload);
               {/* Contact */}
               <FormField
                 control={control}
-                name="contact"
+                name="studentData.contact"
                 render={({ field }) => (
                   <FormItem className="flex-1 space-y-1 relative">
                     {studentData?.isMobileVerified ? 
@@ -929,7 +867,7 @@ const formData = buildFormData(apiPayload);
               {/* Date of Birth */}
               <FormField
                 control={control}
-                name="dob"
+                name="studentData.dob"
                 render={({ field }) => (
                   <FormItem className="flex-1 space-y-1 relative">
                     <Label className="text-base font-normal pl-3">Date of Birth</Label>
@@ -944,7 +882,7 @@ const formData = buildFormData(apiPayload);
               {/* Currently a */}
               <FormField
                 control={control}
-                name="currentStatus"
+                name="studentData.currentStatus"
                 render={({ field }) => (
                   <FormItem className='flex-1 space-y-1'>
                     <Label className="text-base font-normal pl-3">You are Currently a</Label>
@@ -978,19 +916,25 @@ const formData = buildFormData(apiPayload);
           {/* Course of Interest */}
           <FormField
             control={control}
-            name="courseOfInterest"
+            name="studentData.courseOfInterest"
             render={({ field }) => (
               <FormItem className='flex-1 space-y-1'>
                 <Label className='text-base font-normal pl-3'>Course of Interest</Label>
                 <FormControl>
                   <Select
-                    value={studentData?.program}
+                  onValueChange={(value) => { field.onChange(value); (value); }} 
+                  value={field.value}
                   >
                     <SelectTrigger className="">
                       <SelectValue placeholder="Select" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={studentData?.program}>{getProgramName(studentData?.program)}</SelectItem>
+                      {Array.from(new Map(interest.map((int) => [int.programDetail, int])).values()).map((int) => (
+                        <SelectItem key={int.programDetail} value={int.programDetail}>
+                          {getProgramName(int.programDetail)}
+                        </SelectItem>
+                      ))}
+                      {/* <SelectItem value={studentData?.program}>{getProgramName(studentData?.program)}</SelectItem> */}
                     </SelectContent>
                   </Select>
                 </FormControl>
@@ -1004,19 +948,23 @@ const formData = buildFormData(apiPayload);
           {/* Select Cohort */}
           <FormField
             control={control}
-            name="cohort"
+            name="studentData.cohort"
             render={({ field }) => (
               <FormItem className='flex-1 space-y-1'>
                 <Label className='text-base font-normal pl-3'>Select Cohort</Label>
                 <FormControl>
                   <Select
-                    value={studentData?.cohort}
+                    onValueChange={(value) => { field.onChange(value); (value); }} 
+                    value={field.value}
                   >
                     <SelectTrigger className="">
                       <SelectValue placeholder="Select" />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem key={studentData?.cohort} value={studentData?.cohort}>{getCohortName(studentData?.cohort)}</SelectItem>
+                      {cohorts.map((cohort) => (
+                                          <SelectItem key={cohort._id} value={cohort._id}>{formatDateToMonthYear(cohort.startDate)} ({cohort.timeSlot}), {getCenterName(cohort?.centerDetail)}</SelectItem>
+                                        ))}
+                        {/* <SelectItem key={studentData?.cohort} value={studentData?.cohort}>{getCohortName(studentData?.cohort)}</SelectItem> */}
                     </SelectContent>
                   </Select>
                 </FormControl>
@@ -1031,12 +979,12 @@ const formData = buildFormData(apiPayload);
           {/* LinkedIn ID */}
           <FormField
             control={control}
-            name="linkedin"
+            name="studentData.linkedInUrl"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1 relative">
                 <Label className="text-base font-normal pl-3">Your LinkedIn ID (Not Compulsory)</Label>
                 <FormControl>
-                  <Input id="linkedin" placeholder="linkedin.com/in" {...field} 
+                  <Input id="linkedInUrl" placeholder="linkedin.com/in" {...field} 
                   onChange={(e) => {
                     const newValue = e.target.value.replace(/\s/g, "");
                     field.onChange(newValue);
@@ -1050,12 +998,12 @@ const formData = buildFormData(apiPayload);
           {/* Instagram ID */}
           <FormField
             control={control}
-            name="instagram"
+            name="studentData.instagramUrl"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1 relative">
                 <Label className="text-base font-normal pl-3">Your Instagram ID (Not Compulsory)</Label>
                 <FormControl>
-                  <Input id="instagram" placeholder="@JohnDoe" {...field} 
+                  <Input id="instagramUrl" placeholder="@JohnDoe" {...field} 
                   onChange={(e) => {
                     const newValue = e.target.value.replace(/\s/g, "");
                     field.onChange(newValue);
@@ -1071,7 +1019,7 @@ const formData = buildFormData(apiPayload);
         {/* Gender Selection */}
         <FormField
           control={control}
-          name="gender"
+          name="studentData.gender"
           render={({ field }) => (
             <FormItem className='flex-1 space-y-1 pl-3'>
               <Label className="text-base font-normal">Select Your Gender</Label>
@@ -1103,7 +1051,7 @@ const formData = buildFormData(apiPayload);
         {/* Current Address */}
         <FormField
           control={control}
-          name="address"
+          name="applicationData.address"
           render={({ field }) => (
             <FormItem className='flex-1 space-y-1'>
               <Label htmlFor="address" className="text-base font-normal pl-3">Your Current Address</Label>
@@ -1120,7 +1068,7 @@ const formData = buildFormData(apiPayload);
           {/* City */}
           <FormField
             control={control}
-            name="city"
+            name="applicationData.city"
             render={({ field }) => (
               <FormItem className='flex-1 space-y-1'>
                 <Label htmlFor="city" className="text-base font-normal pl-3">City, State</Label>
@@ -1134,7 +1082,7 @@ const formData = buildFormData(apiPayload);
           {/* Zip Code */}
           <FormField
             control={control}
-            name="zipcode"
+            name="applicationData.zipcode"
             render={({ field }) => (
               <FormItem className='flex-1 space-y-1'>
                 <Label htmlFor="zipcode" className="text-base font-normal pl-3">Postal/Zip Code</Label>
@@ -1160,7 +1108,7 @@ const formData = buildFormData(apiPayload);
           {/* Education Level */}
           <FormField
             control={control}
-            name="educationLevel"
+            name="applicationData.educationLevel"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="educationLevel" className="text-base font-normal pl-3">Highest Level of Education Attained</Label>
@@ -1186,7 +1134,7 @@ const formData = buildFormData(apiPayload);
           {/* Field of Study */}
           <FormField
             control={control}
-            name="fieldOfStudy"
+            name="applicationData.fieldOfStudy"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="fieldOfStudy" className="text-base font-normal pl-3">Field of Study (Your Major)</Label>
@@ -1204,7 +1152,7 @@ const formData = buildFormData(apiPayload);
           {/* Institution Name */}
           <FormField
             control={control}
-            name="institutionName"
+            name="applicationData.institutionName"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="institutionName" className="text-base font-normal pl-3">Name of Institution</Label>
@@ -1218,7 +1166,7 @@ const formData = buildFormData(apiPayload);
           {/* Graduation Year */}
           <FormField
             control={control}
-            name="graduationYear"
+            name="applicationData.graduationYear"
             render={({ field }) => (
               <FormItem className="flex-1 flex flex-col space-y-1">
                 <Label htmlFor="graduationYear" className="text-base font-normal pl-3">Year of Graduation</Label>
@@ -1238,7 +1186,7 @@ const formData = buildFormData(apiPayload);
         {/* Work Experience */}
         <FormField
           control={control}
-          name="hasWorkExperience"
+          name="applicationData.isExperienced"
           render={({ field }) => (
             <FormItem className="flex flex-col sm:flex-row gap-2">
               <div className="flex-1 space-y-1 pl-3">
@@ -1277,7 +1225,7 @@ const formData = buildFormData(apiPayload);
               {/* Experience Type */}
               <FormField
                 control={control}
-                name="experienceType"
+                name="applicationData.experienceType"
                 render={({ field }) => (
                   <FormItem className="flex-1 space-y-1">
                     <Label htmlFor="experienceType" className="text-base font-normal pl-3">Select Your Latest Work Experience Type</Label>
@@ -1322,7 +1270,7 @@ const formData = buildFormData(apiPayload);
               {/* Job Description */}
               <FormField
                 control={control}
-                name="jobDescription"
+                name="applicationData.jobDescription"
                 render={({ field }) => (
                   <FormItem className="flex-1 space-y-1">
                     <Label htmlFor="jobDescription" className="text-base font-normal pl-3">Latest Job/Service Description</Label>
@@ -1341,7 +1289,7 @@ const formData = buildFormData(apiPayload);
                 {/* Company Name */}
                 <FormField
                   control={control}
-                  name="companyName"
+                  name="applicationData.nameOfCompany"
                   render={({ field }) => (
                     <FormItem className="flex-1 space-y-1">
                       <Label htmlFor="companyName" className="text-base font-normal pl-3">Name of Company (Latest or Current)</Label>
@@ -1355,7 +1303,7 @@ const formData = buildFormData(apiPayload);
                 {/* Work Duration */}
                 <FormField
                   control={control}
-                  name="workDuration"
+                  name="applicationData.duration"
                   render={({ field }) => (
                     <FormItem className="flex-1 flex flex-col space-y-1">
                       <Label htmlFor="workDuration" className="text-base font-normal pl-3">Approximate Duration of Work</Label>
@@ -1365,6 +1313,7 @@ const formData = buildFormData(apiPayload);
                           type="month"
                           className="!h-[64px] bg-[#09090B] px-3 rounded-xl border"
                           id="workDuration" {...field} />
+                          
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -1378,7 +1327,7 @@ const formData = buildFormData(apiPayload);
                 {/* Company Name */}
                 <FormField
                   control={control}
-                  name="companyName"
+                  name="applicationData.nameOfCompany"
                   render={({ field }) => (
                     <FormItem className="flex-1 space-y-1">
                       <Label htmlFor="companyName" className="text-base font-normal pl-3">Name of Company</Label>
@@ -1392,7 +1341,7 @@ const formData = buildFormData(apiPayload);
                 {/* Company Start Date */}
                 <FormField
                   control={control}
-                  name="companyStartDate"
+                  name="applicationData.duration"
                   render={({ field }) => (
                     <FormItem className="flex-1 flex flex-col space-y-1">
                       <Label htmlFor="companyStartDate" className="text-base font-normal pl-3">When Did You Start Your Company?</Label>
@@ -1415,7 +1364,7 @@ const formData = buildFormData(apiPayload);
                 {/* Duration of Work */}
                 <FormField
                   control={control}
-                  name="durationOfWork"
+                  name="applicationData.duration"
                   render={({ field }) => (
                     <FormItem className="flex-1 flex flex-col space-y-1">
                       <Label htmlFor="durationOfWork" className="text-base font-normal pl-3">Approximate Duration of Work</Label>
@@ -1438,7 +1387,7 @@ const formData = buildFormData(apiPayload);
                 {/* Duration of Work */}
                 <FormField
                   control={control}
-                  name="durationOfWork"
+                  name="applicationData.duration"
                   render={({ field }) => (
                     <FormItem className="flex-1 flex flex-col space-y-1">
                       <Label htmlFor="durationOfWork" className="text-base font-normal pl-3">Approximate Duration of Work</Label>
@@ -1466,7 +1415,7 @@ const formData = buildFormData(apiPayload);
           {/* Emergency Contact First Name */}
           <FormField
             control={control}
-            name="emergencyFirstName"
+            name="applicationData.emergencyFirstName"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="emergencyFirstName" className="text-base font-normal pl-3">First Name</Label>
@@ -1480,7 +1429,7 @@ const formData = buildFormData(apiPayload);
           {/* Emergency Contact Last Name */}
           <FormField
             control={control}
-            name="emergencyLastName"
+            name="applicationData.emergencyLastName"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="emergencyLastName" className="text-base font-normal pl-3">Last Name</Label>
@@ -1497,7 +1446,7 @@ const formData = buildFormData(apiPayload);
           {/* Emergency Contact Number */}
           <FormField
             control={control}
-            name="emergencyContact"
+            name="applicationData.emergencyContact"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="emergencyContact" className="text-base font-normal pl-3">Contact No.</Label>
@@ -1517,7 +1466,7 @@ const formData = buildFormData(apiPayload);
           {/* Relationship */}
           <FormField
             control={control}
-            name="relationship"
+            name="applicationData.relationship"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="relationship" className="text-base font-normal pl-3">Relationship with Contact</Label>
@@ -1539,7 +1488,7 @@ const formData = buildFormData(apiPayload);
           {/* Father's First Name */}
           <FormField
             control={control}
-            name="fatherFirstName"
+            name="applicationData.fatherFirstName"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="fatherFirstName" className="text-base font-normal pl-3">Father's First Name</Label>
@@ -1553,7 +1502,7 @@ const formData = buildFormData(apiPayload);
           {/* Father's Last Name */}
           <FormField
             control={control}
-            name="fatherLastName"
+            name="applicationData.fatherLastName"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="fatherLastName" className="text-base font-normal pl-3">Father's Last Name</Label>
@@ -1570,7 +1519,7 @@ const formData = buildFormData(apiPayload);
           {/* Father's Contact Number */}
           <FormField
             control={control}
-            name="fatherContact"
+            name="applicationData.fatherContact"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="fatherContact" className="text-base font-normal pl-3">Father's Contact No.</Label>
@@ -1590,7 +1539,7 @@ const formData = buildFormData(apiPayload);
           {/* Father's Occupation */}
           <FormField
             control={control}
-            name="fatherOccupation"
+            name="applicationData.fatherOccupation"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="fatherOccupation" className="text-base font-normal pl-3">Father's Occupation</Label>
@@ -1607,7 +1556,7 @@ const formData = buildFormData(apiPayload);
           {/* Mother's Last Name */}
           <FormField
             control={control}
-            name="fatherEmail"
+            name="applicationData.fatherEmail"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="fatherEmail" className="text-base font-normal pl-3">Father's Email</Label>
@@ -1620,7 +1569,7 @@ const formData = buildFormData(apiPayload);
           />
           <FormField
             control={control}
-            name="motherFirstName"
+            name="applicationData.motherFirstName"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="motherFirstName" className="text-base font-normal pl-3">Mother's First Name</Label>
@@ -1637,7 +1586,7 @@ const formData = buildFormData(apiPayload);
           {/* Mother's Last Name */}
           <FormField
             control={control}
-            name="motherLastName"
+            name="applicationData.motherLastName"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="motherLastName" className="text-base font-normal pl-3">Mother's Last Name</Label>
@@ -1651,7 +1600,7 @@ const formData = buildFormData(apiPayload);
           {/* Mother's Contact Number */}
           <FormField
             control={control}
-            name="motherContact"
+            name="applicationData.motherContact"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="motherContact" className="text-base font-normal pl-3">Mother's Contact No.</Label>
@@ -1674,7 +1623,7 @@ const formData = buildFormData(apiPayload);
           {/* Mother's Occupation */}
           <FormField
             control={control}
-            name="motherOccupation"
+            name="applicationData.motherOccupation"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="motherOccupation" className="text-base font-normal pl-3">Mother's Occupation</Label>
@@ -1688,7 +1637,7 @@ const formData = buildFormData(apiPayload);
           {/* Mother's First Name */}
           <FormField
             control={control}
-            name="motherEmail"
+            name="applicationData.motherEmail"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="motherEmail" className="text-base font-normal pl-3">Mother's Email</Label>
@@ -1707,7 +1656,7 @@ const formData = buildFormData(apiPayload);
           {/* Financially Dependent */}
           <FormField
             control={control}
-            name="financiallyDependent"
+            name="applicationData.financiallyDependent"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1 p-6 bg-[#27272A]/[0.6] rounded-2xl">
                 <Label className="text-base font-normal">Are you financially dependent on your Parents?</Label>
@@ -1734,7 +1683,7 @@ const formData = buildFormData(apiPayload);
           {/* Applied for Financial Aid */}
           <FormField
             control={control}
-            name="appliedForFinancialAid"
+            name="applicationData.appliedForFinancialAid"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1 p-6 bg-[#27272A]/[0.6] rounded-2xl">
                 <Label className="text-base font-normal">Have you tried applying for financial aid earlier?</Label>

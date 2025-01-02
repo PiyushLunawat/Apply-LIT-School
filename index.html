@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Firebase OTP Authentication</title>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-auth.js"></script>
+  </head>
+  <body>
+    <h2>Phone Authentication</h2>
+
+    <!-- Phone number input -->
+    <input type="text" id="phone-number" placeholder="Enter phone number" />
+    <button onclick="sendOtp()">Send OTP</button>
+
+    <!-- OTP input -->
+    <input type="text" id="otp-input" placeholder="Enter OTP" />
+    <button onclick="verifyOtp()">Verify OTP</button>
+
+    <!-- Invisible reCAPTCHA container -->
+    <div id="recaptcha-container"></div>
+
+    <!-- Your custom JS code goes here -->
+    <script>
+      // Your Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyDEzuKZKyMCzwAOGe4Pj0gi9wJI1OVuAsg",
+        authDomain: "lit-application-portal-e53df.firebaseapp.com",
+        projectId: "lit-application-portal-e53df",
+        storageBucket: "lit-application-portal-e53df.firebasestorage.app",
+        messagingSenderId: "983858968291",
+        appId: "1:983858968291:web:d1f2498080a917e081f7d6",
+        measurementId: "G-YWEXXYCP4Y",
+      };
+      // Initialize Firebase
+      const app = firebase.initializeApp(firebaseConfig);
+      const auth = firebase.auth();
+
+      // Function to send OTP
+      function sendOtp() {
+        const phoneNumber = document.getElementById("phone-number").value;
+        const recaptchaVerifier = new firebase.auth.RecaptchaVerifier(
+          "recaptcha-container",
+          {
+            size: "visible", //Make reCAPTCHA invisible
+          }
+        );
+
+        firebase
+          .auth()
+          .signInWithPhoneNumber(phoneNumber, recaptchaVerifier)
+          .then((confirmationResult) => {
+            window.confirmationResult = confirmationResult;
+            alert("OTP sent successfully!");
+          })
+          .catch((error) => {
+            console.error("Error during OTP sending:", error);
+            alert("Error sending OTP: " + error.message);
+          });
+      }
+
+      // Function to verify OTP
+      function verifyOtp() {
+        const otp = document.getElementById("otp-input").value;
+        window.confirmationResult
+          .confirm(otp)
+          .then((result) => {
+            const user = result.user;
+            alert("User signed in successfully:", user);
+          })
+          .catch((error) => {
+            console.error("Error verifying OTP:", error);
+            alert("Failed to verify OTP: " + error.message);
+          });
+      }
+    </script>
+  </body>
+</html>

@@ -1,5 +1,5 @@
 // Import necessary modules and components
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,14 +15,27 @@ import {
   FormControl,
   FormMessage,
 } from '~/components/ui/form';
-import { Instagram, Linkedin, SaveIcon } from 'lucide-react';
+import { Calendar, Camera, CheckCircle, Instagram, Linkedin, Mail, Phone, SaveIcon, XIcon } from 'lucide-react';
 import { UserContext } from '~/context/UserContext';
 import { PaymentFailedDialog, PaymentSuccessDialog } from '../PaymentDialog/PaymentDialog';
-import { submitApplication } from '~/utils/studentAPI';
+import { getCentres, getCohorts, getCurrentStudent, getPrograms, submitApplication } from '~/utils/studentAPI';
+import { Badge } from '~/components/ui/badge';
+import { Dialog, DialogContent } from '~/components/ui/dialog';
+import VerifyOTP from '~/components/organisms/VerifyOTP/VerifyOTP';
+import { verifyNumber } from '~/utils/authAPI';
 
-type ExperienceType = 'employee' | 'business' | 'freelancer' | 'consultant';
+type ExperienceType = 'Working Professional' | 'Business Owner' | 'Freelancer' | 'Consultant';
 
 const formSchema = z.object({
+  fullName: z.string().optional(),
+  email: z.string().optional(),
+  contact: z.string().optional(),
+  dob: z.string().optional(),
+  currentStatus: z.string().optional(),
+  courseOfInterest: z.string().optional(),
+  cohort: z.string().optional(),
+  profileUrl: z.any().optional(),
+  isMobileVerified: z.boolean().optional(),
   linkedin: z.string().optional(),
   instagram: z.string().optional(),
   gender: z.enum(["Male", "Female", "Other"]),
@@ -33,13 +46,11 @@ const formSchema = z.object({
   fieldOfStudy: z.string().nonempty("Field of study is required"),
   institutionName: z.string().nonempty("Institution name is required"),
   graduationYear: z.string().nonempty("Graduation year is required"),
-  hasWorkExperience: z.boolean(),
-  experienceType: z.enum(['employee', 'business', 'freelancer', 'consultant']).optional(),
+  isExperienced: z.boolean(),
+  experienceType: z.enum(['', 'Working Professional', 'Business Owner', 'Freelancer', 'Consultant']).optional(),
+  nameOfCompany: z.string().optional(),
+  duration: z.string().optional(),
   jobDescription: z.string().optional(),
-  companyName: z.string().optional(),
-  workDuration: z.string().optional(),
-  companyStartDate: z.string().optional(),
-  durationOfWork: z.string().optional(),
   emergencyFirstName: z.string().nonempty("Emergency contact's first name is required"),
   emergencyLastName: z.string().nonempty("Emergency contact's last name is required"),
   emergencyContact: z.string().min(10, "Emergency contact number is required"),
@@ -48,25 +59,36 @@ const formSchema = z.object({
   fatherLastName: z.string().nonempty("Father's last name is required"),
   fatherContact: z.string().min(10, "Father's contact number is required"),
   fatherOccupation: z.string().nonempty("Father's occupation is required"),
-  fatherEmail: z.string().email("Father's email is required"),
+  fatherEmail: z.string()
+    .email("Email format is invalid")
+    .refine((email) => email.length > 0, { message: "Father's email is required" }),
   motherFirstName: z.string().nonempty("Mother's first name is required"),
   motherLastName: z.string().nonempty("Mother's last name is required"),
   motherContact: z.string().min(10, "Mother's contact number is required"),
   motherOccupation: z.string().nonempty("Mother's occupation is required"),
-  motherEmail: z.string().email("Mother's email is required"),
+  motherEmail: z.string()
+    .email("Email format is invalid")
+    .refine((email) => email.length > 0, { message: "Mother's email is required" }), 
   financiallyDependent: z.boolean(),
   appliedForFinancialAid: z.boolean(),
 }).refine(
-  (data) => data.emergencyContact !== data.fatherContact,
+  (data) => data.emergencyContact !== data.contact,
   {
-    message: "Emergency contact and father's contact must be different.",
+    message: "Emergency contact and your contact must be different.",
+    path: ["emergencyContact"], // Error for emergencyContact
+  }
+)
+.refine(
+  (data) => data.fatherContact !== data.contact,
+  {
+    message: "Father's contact and your contact must be different.",
     path: ["fatherContact"], // Error for fatherContact
   }
 )
 .refine(
-  (data) => data.emergencyContact !== data.motherContact,
+  (data) => data.motherContact !== data.contact,
   {
-    message: "Emergency contact and mother's contact must be different.",
+    message: "Mother's contact and your contact must be different.",
     path: ["motherContact"], // Error for motherContact
   }
 )
@@ -75,6 +97,20 @@ const formSchema = z.object({
   {
     message: "Father's contact and mother's contact must be different.",
     path: ["motherContact"], // Error for motherContact
+  }
+)
+.refine(
+  (data) => data.fatherEmail !== data.email,
+  {
+    message: "Father's email and your email must be different.",
+    path: ["fatherEmail"], // Error for Father's email
+  }
+)
+.refine(
+  (data) => data.email !== data.motherEmail,
+  {
+    message: "Mother's email and your email must be different.",
+    path: ["motherEmail"], // Error for mother's email
   }
 )
 .refine(
@@ -88,19 +124,51 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 const ApplicationDetailsForm: React.FC = () => {
-  const { studentData } = useContext(UserContext); 
+  const { studentData, setStudentData } = useContext(UserContext); 
   const [experienceType, setExperienceType] = useState<ExperienceType | null>(null);
   const [hasWorkExperience, setHasWorkExperience] = useState<boolean | null>(null);
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
   const [failedDialogOpen, setFailedDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [programs, setPrograms] = useState<any[]>([]);
+  const [ centres, setCentres] = useState<any[]>([]);
+  const [interest, setInterest] = useState<any[]>([]); 
+  const [cohorts, setCohorts] = useState<any[]>([]); 
+  const [contactInfo, setContactInfo] = useState<string>('');
+  const [imagePreview, setImagePreview] = useState<File[]>([]);
+
+  const [previewUrl, setPreviewUrl] = useState<string>(studentData?.profileUrl || '');
 
 
-  // Initialize the form
+  const [fetchedStudentData, setFetchedStudentData] = useState<any>(null);
+
+  // Fetch current student data when component mounts
+  useEffect(() => {
+    const fetchStudentData = async () => {
+      try {
+        const student = await getCurrentStudent(studentData._id); // Pass the actual student ID here
+        setFetchedStudentData(student.data?.studentDetails); // Store the fetched data in state
+        console.log("csc",fetchedStudentData?.currentAddress?.streetAddress);
+        
+      } catch (error) {
+        console.error("Failed to fetch student data:", error);
+      }
+    };
+    fetchStudentData();
+  }, []);
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      linkedin: "",
-      instagram: "",
+      fullName: '',
+      email: '',
+      contact: '',
+      dob: '',
+      currentStatus: '',
+      courseOfInterest: '',
+      cohort: '',
+      // ... include all other default fields with empty strings or false as necessary
       gender: "Male",
       address: '',
       city: '',
@@ -109,13 +177,11 @@ const ApplicationDetailsForm: React.FC = () => {
       fieldOfStudy: '',
       institutionName: '',
       graduationYear: '',
-      hasWorkExperience: false,
-      experienceType: 'employee',
+      isExperienced: false,
+      experienceType: '',
+      nameOfCompany: '',
+      duration: '',
       jobDescription: '',
-      companyName: '',
-      workDuration: '',
-      companyStartDate: '',
-      durationOfWork: '',
       emergencyFirstName: '',
       emergencyLastName: '',
       emergencyContact: '',
@@ -135,11 +201,133 @@ const ApplicationDetailsForm: React.FC = () => {
     },
   });
 
-  const { control, handleSubmit, watch } = form;
+  const { control, handleSubmit, formState: { errors }, reset, watch } = form;
+
+  useEffect(() => {
+    const fetchStudentData = async () => {
+      try {
+        const student = await getCurrentStudent(studentData._id);
+        const sData = student.data?.studentDetails;
+
+        // Once fetched, reset the form with the fetched data
+        reset({
+          fullName: `${studentData?.firstName || ''} ${studentData?.lastName || ''}`,
+          email: studentData?.email || '',
+          contact: studentData?.mobileNumber || '',
+          dob: studentData?.dateOfBirth ? studentData.dateOfBirth.split('T')[0] : '',
+          currentStatus: studentData?.qualification || '',
+          courseOfInterest: studentData?.program || '',
+          cohort: studentData?.cohort || '',
+          gender: studentData?.gender || "Male",
+          address: sData?.currentAddress?.streetAddress || '',
+          city: sData?.currentAddress?.city || '',
+          zipcode: sData?.currentAddress?.postalCode || '',
+          educationLevel: sData?.previousEducation?.highestLevelOfEducation || '',
+          fieldOfStudy: sData?.previousEducation?.fieldOfStudy || '',
+          institutionName: sData?.previousEducation?.nameOfInstitution || '',
+          graduationYear: sData?.previousEducation?.yearOfGraduation || '',
+          isExperienced: sData?.workExperience || 
+            ["Working Professional", "Freelancer", "Business Owner", "Consultant",].includes(studentData?.qualification) 
+            || false,
+          experienceType: sData?.experienceType || '',
+          nameOfCompany: sData?.nameOfCompany || '',
+          duration: sData?.duration || '',
+          jobDescription: sData?.jobDescription || '',
+          emergencyFirstName: sData?.emergencyContact?.firstName || '',
+          emergencyLastName: sData?.emergencyContact?.lastName || '',
+          emergencyContact: sData?.emergencyContact?.contactNumber || '',
+          relationship: sData?.emergencyContact?.relationshipWithStudent || '',
+          fatherFirstName: sData?.parentInformation?.father?.firstName || '',
+          fatherLastName: sData?.parentInformation?.father?.lastName || '',
+          fatherContact: sData?.parentInformation?.father?.contactNumber || '',
+          fatherOccupation: sData?.parentInformation?.father?.occupation || '',
+          fatherEmail: sData?.parentInformation?.father?.email || '',
+          motherFirstName: sData?.parentInformation?.mother?.firstName || '',
+          motherLastName: sData?.parentInformation?.mother?.lastName || '',
+          motherContact: sData?.parentInformation?.mother?.contactNumber || '',
+          motherOccupation: sData?.parentInformation?.mother?.occupation || '',
+          motherEmail: sData?.parentInformation?.mother?.email || '',
+          financiallyDependent: !sData?.financialInformation?.isFinanciallyIndependent || false,
+          appliedForFinancialAid: sData?.financialInformation?.hasAppliedForFinancialAid || false,
+        });
+
+        setFetchedStudentData(sData);
+      } catch (error) {
+        console.error("Failed to fetch student data:", error);
+      }
+    };
+
+    fetchStudentData();
+  }, [studentData, reset]);
+  
 
   // Watch fields for conditional rendering
-  const watchHasWorkExperience = watch('hasWorkExperience');
+  const watchHasWorkExperience = watch('isExperienced');
   const watchExperienceType = watch('experienceType');
+
+  useEffect(() => {
+     async function fetchCohorts() {
+       try {
+         const programsData = await getPrograms();
+         setPrograms(programsData.data);
+         const centresData = await getCentres();
+         setCentres(centresData.data);
+         const cohortsData = await getCohorts();
+         const openCohorts = cohortsData.data.filter((cohort: any) => cohort.status === "Open");
+         setInterest(openCohorts);
+         console.log("vss");
+         
+       } catch (error) {
+         console.error('Error fetching cohorts:', error);
+       }
+     }
+     fetchCohorts();
+   }, []);
+
+  const handleVerifyClick = async (contact: string) => {
+    const formattedContact = studentData?.mobileNumber.replace('+91 ', '') || '';
+    console.log("xxdv",formattedContact)
+    try {
+      const response = await verifyNumber({ phone: formattedContact });
+      console.log('Verification initiated:', response);
+    } catch (error) {
+      console.error('Error verifying number:', error);
+    }
+    setContactInfo(formattedContact);
+    setIsDialogOpen(true);
+  };
+
+  const formatDate = (isoDate: string | number | Date) => {
+    if (!isoDate) return ''; // Handle cases where date is undefined
+    const date = new Date(isoDate);
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    });
+  };
+  
+  const getProgramName = (programId: string) => {
+    const program = programs.find((p) => p._id === programId);
+    return program ? program.name : "--";
+  };
+
+  const getCenterName = (centerId: string) => {
+    const center = centres.find((c) => c._id === centerId);
+    return center ? center.name : "--";
+  };
+
+
+  const getCohortName = (cohortId: string) => {
+    const cohort = cohorts.find((c) => c._id === cohortId);
+    return cohort ? `${formatDateToMonthYear(cohort?.startDate)} (${cohort?.timeSlot}), ${getCenterName(cohort?.centerDetail)}` : "--";
+  };
+
+  const formatDateToMonthYear = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleString('default', { month: 'long', year: 'numeric' });
+  };
+
 
   const handleContinueToDashboard = () => {
     window.location.href = '/dashboard/application-step-1';
@@ -157,8 +345,11 @@ const ApplicationDetailsForm: React.FC = () => {
   };
 
   // Handle payment process
-  const handlePayment = async (apiPayload: any) => {
+  const handlePayment = async () => {
     // Load the Razorpay script
+
+    setLoading(true);
+
     const res = await loadScript('https://checkout.razorpay.com/v1/checkout.js');
 
     if (!res) {
@@ -166,27 +357,42 @@ const ApplicationDetailsForm: React.FC = () => {
       return;
     }
 
-    const data:any = await fetch('https://myfashionfind.shop/student/submit-application', {
-      method: 'POST',
-  headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(apiPayload),
-    });
-
-    if (data.ok) {
-      // Handle success response
-      console.log('Form submitted successfully');
-    } else {
-      // Handle error response
-      console.error('Form submission failed');
+    const apiPayload = {
+      appFeeData:{
+        "currency":"INR",
+        "amount":(fetchedStudentData?.cohort?.cohortFeesDetail?.applicationFee || 500) * 100,
+        "receipt":""
+      }
     }
-    console.log('Order data:', data);
+
+    const data = await fetch(
+      "https://myfashionfind.shop/student/pay-application-fee",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          appFeeData: {
+            currency: "INR",
+            amount: 500 * 100,
+            receipt: "",
+          },
+        }),
+      }
+    )
+      .then((response) => response.json())
+      .catch((error) => console.error("Error:", error));
+
+      console.log("respose data",data);
+      
 
     // Configure Razorpay options
     const options = {
       key: 'rzp_test_1wAgBK19fS5nhr', // Replace with your Razorpay API key
       amount: data.data.amount, // Amount from server in currency subunits
       currency: data.data.currency,
-      name: 'Find Corp',
+      name: 'The LIT School',
       description: 'Application Fee',
       image: 'https://example.com/your_logo', // Replace with your logo URL
       order_id: data.data.id, // Use the order ID returned from the server
@@ -205,6 +411,8 @@ const ApplicationDetailsForm: React.FC = () => {
                 amount: 500, 
                 receipt: "", 
               },
+              studentId: studentData._id,
+              cohortId: studentData.cohort,
             razorpay_order_id: response.razorpay_order_id,
             razorpay_payment_id: response.razorpay_payment_id,
             razorpay_signature: response.razorpay_signature,
@@ -235,7 +443,7 @@ const ApplicationDetailsForm: React.FC = () => {
         color: '#3399cc',
       },
     };
-
+    setLoading(false);
     const paymentObject = new (window as any).Razorpay(options);
     paymentObject.open();
     
@@ -250,7 +458,7 @@ const ApplicationDetailsForm: React.FC = () => {
     if (!studentData?.profileUrl) {
       return "Profile image is required.";
     }
-    console.log("image",studentData?.profileUrl);
+    console.log("image",imagePreview[0]);
     
     // if (!studentData?.isMobileVerified) {
     //   return "Mobile number verification is required.";
@@ -259,13 +467,12 @@ const ApplicationDetailsForm: React.FC = () => {
   };
 
   // Handle form submission
-  const onSubmit = async (data: FormData) => {
+  const saveData = async (data: FormData) => {
     const validationError = validateBeforeSubmit();
     if (validationError) {
       return;
     }
     
-    const formData = new FormData();
   
  
     const apiPayload = {
@@ -281,15 +488,10 @@ const ApplicationDetailsForm: React.FC = () => {
         gender: data.gender,
         isVerified: studentData?.isVerified || false,
         dateOfBirth: new Date(studentData?.dateOfBirth || Date.now()), 
-        profile: "",
+        profileImage: imagePreview[0],
         linkedInUrl: data.linkedin || "",
         instagramUrl: data.instagram || "",
       },
-      // appFeeData: {
-      //   currency: "INR",
-      //   amount: 500, // Amount in paise (e.g., 50000 paise = 500 INR)
-      //   receipt: "", 
-      // },
       applicationData: {
         currentAddress: {
           streetAddress: data.address,
@@ -301,9 +503,15 @@ const ApplicationDetailsForm: React.FC = () => {
           highestLevelOfEducation: data.educationLevel,
           fieldOfStudy: data.fieldOfStudy,
           nameOfInstitution: data.institutionName,
-          yearOfGraduation: parseInt(data.graduationYear, 10),
+          yearOfGraduation: data.graduationYear,
         },
-        workExperience: data.hasWorkExperience,
+        workExperience: {
+          isExperienced: data.isExperienced,
+          experienceType: data.experienceType || '',
+          nameOfCompany: data.nameOfCompany || '',
+          duration: data.duration || '',
+          jobDescription: data.jobDescription || '',
+        },
         emergencyContact: {
           firstName: data.emergencyFirstName,
           lastName: data.emergencyLastName,
@@ -332,25 +540,23 @@ const ApplicationDetailsForm: React.FC = () => {
         },
       },
     };
-    
-
-  // Append the image file if available
-  if (studentData?.profileUrl) {
-    formData.append('profileImage', studentData.profileUrl);
-  }
-
-  // Append apiPayload as a JSON string
-  formData.append('apiPayload', JSON.stringify(apiPayload));
 
   try {
-    const response = await fetch('https://myfashionfind.shop/student/submit-application', {
+    setLoading(true);
+    console.log("dssd",apiPayload);
+    
+    const response = await fetch('http://localhost:4000/student/submit-application', {
       method: 'POST',
-      body: formData, // Send the FormData with file and payload
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(apiPayload), 
     });
 
     if (response.ok) {
       // Handle success response
-      console.log('Form submitted successfully');
+      console.log('Form submitted successfully', response);
+      setIsSaved(true);
     } else {
       // Handle error response
       console.error('Form submission failed');
@@ -359,19 +565,283 @@ const ApplicationDetailsForm: React.FC = () => {
     } catch (error) {
       console.error("Error submitting application:", error);
       setFailedDialogOpen(true); 
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const [isSaved, setIsSaved] = useState((studentData?.applicationDetails !== undefined));
+  useEffect(() => {
+    if (studentData?.applicationDetails !== undefined) {
+      setIsSaved(true);
+    } else {
+      setIsSaved(false); 
+    }
+  }, [studentData]);
+
+  const onSubmit = async (data: FormData) => {
+    if (isSaved) {
+      console.log("pay",studentData?.applicationDetails, isSaved);
+      handlePayment();
+    } else {
+      console.log("save",studentData?.applicationDetails, isSaved);
+      await saveData(data);
     }
   };
   
-  const resubmitForm = handleSubmit(onSubmit);
+  
   const handleRetry = () => {
     setFailedDialogOpen(false); // Close the dialog
-    resubmitForm(); // Resubmit the form
+    handlePayment();
   };
 
   return (
     <>
     <Form {...form}>
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 mt-8">
+      <Badge size="xl" className='flex-1 bg-[#00A3FF]/[0.2] text-[#00A3FF] text-center '>Personal Details</Badge>
+        <div className="grid sm:flex gap-6">
+          {/* Image Upload */}
+          <div className="w-full sm:w-[232px] h-[308px] bg-[#1F1F1F] flex flex-col items-center justify-center rounded-xl text-sm space-y-4">
+      {previewUrl ? (
+        <div className="w-full h-full relative">
+          <img
+            src={previewUrl}
+            alt="Passport Preview"
+            className="w-full h-full object-cover rounded-lg"
+          />
+          <div className="absolute top-2 right-2 flex space-x-2">
+            <button
+              className="p-2 bg-white/10 mix-blend-difference border border-white rounded-full hover:bg-white/20"
+              onClick={() => {
+                setImagePreview([]);
+                setPreviewUrl('')
+              }}
+            >
+              <XIcon className="w-5 h-5 text-white" />
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+        <label
+          htmlFor="passport-input"
+          className="cursor-pointer flex flex-col items-center justify-center items-center bg-[#1F1F1F] px-6 rounded-xl border-[#2C2C2C] w-full h-[220px]"
+        >
+          <div className="text-center my-auto text-muted-foreground">
+            <Camera className="mx-auto mb-2 w-8 h-8" />
+            <div className="text-wrap">
+              Upload a Passport size Image of Yourself. Ensure that your face covers
+              60% of this picture.
+            </div>
+          </div>
+          <input
+            id="passport-input"
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files;
+              if (file) {
+                let fileArray = Array.from(file);
+                const newFiles = [...file, ...fileArray];
+                const imageUrl = URL.createObjectURL(file?.[0]);
+                setImagePreview(newFiles);
+                setPreviewUrl(imageUrl);
+                setStudentData({ ...studentData, profileUrl: file });
+              }
+            }}
+          />
+        </label>
+        </>
+      )}
+    </div>
+
+
+          {/* Form Fields */}
+          <div className="flex-1 space-y-4">
+            {/* Full Name */}
+            <FormField
+              control={control}
+              name="fullName"
+              render={({ field }) => (
+                <FormItem className='flex-1 space-y-1'>
+                  <Label className="text-base font-normal pl-3">Full Name</Label>
+                  <FormControl>
+                    <Input id="fullName" defaultValue={((studentData?.firstName || "-")+' '+(studentData?.lastName || "-"))} placeholder="John Doe" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Email and Contact */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {/* Email */}
+              <FormField
+                control={control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem className='flex-1 space-y-1 relative'>
+                    <CheckCircle className="text-[#00CC92] absolute left-3 top-[52px] w-5 h-5 " />
+                    <Label className="text-base font-normal pl-3">Email</Label>
+                    <FormControl>
+                      <Input
+                        id="email"
+                        type="email"
+                        disabled
+                        placeholder="johndoe@gmail.com"
+                        className='pl-10'
+                        defaultValue={studentData?.email || "--"}
+                      />
+                    </FormControl>
+                    <Mail className="absolute right-3 top-[46px] w-5 h-5 " />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {/* Contact */}
+              <FormField
+                control={control}
+                name="contact"
+                render={({ field }) => (
+                  <FormItem className="flex-1 space-y-1 relative">
+                    {studentData?.isMobileVerified ? 
+                      <CheckCircle className="text-[#00CC92] absolute left-3 top-[52px] w-5 h-5 " /> : 
+                      <Phone className="absolute left-3 top-[52px] w-5 h-5 " />
+                    }
+                    <Label className="text-base font-normal pl-3">Contact No.</Label>
+                    <FormControl>
+                      <Input
+                        id="contact"
+                        type="tel"
+                        placeholder="+91 95568 97688"
+                        className='pl-10'
+                        defaultValue={studentData?.mobileNumber || "--"}
+                      />
+                    </FormControl>
+                    {studentData?.isMobileVerified ?
+                      <Phone className="absolute right-3 top-[46px] w-5 h-5" /> : 
+                      <Button size='sm' className='absolute right-3 top-10 rounded-full px-4 bg-[#00CC92]' onClick={() => handleVerifyClick(studentData?.mobileNumber)} type="button">
+                        Verify
+                      </Button>
+                    }
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Date of Birth and Current Status */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {/* Date of Birth */}
+              <FormField
+                control={control}
+                name="dob"
+                render={({ field }) => (
+                  <FormItem className="flex-1 space-y-1 relative">
+                    <Label className="text-base font-normal pl-3">Date of Birth</Label>
+                    <FormControl>
+                      <Input id="dob" type="text" placeholder="08 March, 2000" defaultValue={formatDate(studentData?.dateOfBirth)}/>
+                    </FormControl>
+                    <Calendar className="absolute right-3 top-[46px] w-5 h-5" />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {/* Currently a */}
+              <FormField
+                control={control}
+                name="currentStatus"
+                render={({ field }) => (
+                  <FormItem className='flex-1 space-y-1'>
+                    <Label className="text-base font-normal pl-3">You are Currently a</Label>
+                    <FormControl>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Student">Student</SelectItem>
+                          <SelectItem value="Highschool Graduate">Highschool Graduate</SelectItem>
+                          <SelectItem value="College Graduate">College Graduate</SelectItem>
+                          <SelectItem value="Working Professional">Working Professional</SelectItem>
+                          <SelectItem value="Freelancer">Freelancer</SelectItem>
+                          <SelectItem value="Business Owner">Business Owner</SelectItem>
+                          <SelectItem value="Consultant">Consultant</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {/* <Input id="currentStatus" type="text" placeholder="College Student" defaultValue={studentData?.qualification} /> */}
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Course of Interest and Select Cohort */}
+        <div className="flex flex-col sm:flex-row gap-2 ">
+          {/* Course of Interest */}
+          <FormField
+            control={control}
+            name="courseOfInterest"
+            render={({ field }) => (
+              <FormItem className='flex-1 space-y-1'>
+                <Label className='text-base font-normal pl-3'>Course of Interest</Label>
+                <FormControl>
+                  <Select
+                  onValueChange={(value) => { field.onChange(value); (value); }} 
+                  value={field.value}
+                  >
+                    <SelectTrigger className="">
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from(new Map(interest.map((int) => [int.programDetail, int])).values()).map((int) => (
+                        <SelectItem key={int.programDetail} value={int.programDetail}>
+                          {getProgramName(int.programDetail)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <Label htmlFor="form-alert" className='flex gap-1 items-center text-sm text-[#00A3FF] font-normal pl-3 mt-1'>
+                  Your application form will be in line with the course of your choice.
+                </Label>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          {/* Select Cohort */}
+          <FormField
+            control={control}
+            name="cohort"
+            render={({ field }) => (
+              <FormItem className='flex-1 space-y-1'>
+                <Label className='text-base font-normal pl-3'>Select Cohort</Label>
+                <FormControl>
+                  <Select
+                    onValueChange={(value) => { field.onChange(value); (value); }} 
+                    value={field.value}
+                  >
+                    <SelectTrigger className="">
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cohorts.map((cohort) => (
+                          <SelectItem key={cohort._id} value={cohort._id}>{formatDateToMonthYear(cohort.startDate)} ({cohort.timeSlot}), {getCenterName(cohort?.centerDetail)}</SelectItem>
+                        ))}
+                        {/* <SelectItem key={studentData?.cohort} value={studentData?.cohort}>{getCohortName(studentData?.cohort)}</SelectItem> */}
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         
         {/* LinkedIn and Instagram IDs */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -383,7 +853,11 @@ const ApplicationDetailsForm: React.FC = () => {
               <FormItem className="flex-1 space-y-1 relative">
                 <Label className="text-base font-normal pl-3">Your LinkedIn ID (Not Compulsory)</Label>
                 <FormControl>
-                  <Input id="linkedin" placeholder="John Doe" {...field} />
+                  <Input id="linkedin" placeholder="linkedin.com/in" {...field} 
+                  onChange={(e) => {
+                    const newValue = e.target.value.replace(/\s/g, "");
+                    field.onChange(newValue);
+                  }}/>
                 </FormControl>
                 <Linkedin className="absolute right-3 top-[46px] w-5 h-5" />
                 <FormMessage />
@@ -398,7 +872,11 @@ const ApplicationDetailsForm: React.FC = () => {
               <FormItem className="flex-1 space-y-1 relative">
                 <Label className="text-base font-normal pl-3">Your Instagram ID (Not Compulsory)</Label>
                 <FormControl>
-                  <Input id="instagram" placeholder="@JohnDoe" {...field} />
+                  <Input id="instagram" placeholder="@JohnDoe" {...field} 
+                  onChange={(e) => {
+                    const newValue = e.target.value.replace(/\s/g, "");
+                    field.onChange(newValue);
+                  }}/>
                 </FormControl>
                 <Instagram className="absolute right-3 top-[46px] w-5 h-5" />
                 <FormMessage />
@@ -559,10 +1037,14 @@ const ApplicationDetailsForm: React.FC = () => {
             control={control}
             name="graduationYear"
             render={({ field }) => (
-              <FormItem className="flex-1 space-y-1">
+              <FormItem className="flex-1 flex flex-col space-y-1">
                 <Label htmlFor="graduationYear" className="text-base font-normal pl-3">Year of Graduation</Label>
                 <FormControl>
-                  <Input id="graduationYear" placeholder="MM/YYYY" {...field} />
+                  <input 
+                    placeholder="MM YYYY"
+                    type="month"
+                    className="!h-[64px] bg-[#09090B] px-3 rounded-xl border"
+                    id="graduationYear" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -571,196 +1053,228 @@ const ApplicationDetailsForm: React.FC = () => {
         </div>
 
         {/* Work Experience */}
-        <FormField
-          control={control}
-          name="hasWorkExperience"
-          render={({ field }) => (
-            <FormItem className="flex flex-col sm:flex-row gap-2">
-              <div className="flex-1 space-y-1 pl-3">
-                <Label className="text-base font-normal">Do you have any work experience?</Label>
-                <FormControl>
-                  <RadioGroup
-                    className="flex space-x-6 mt-2"
-                    onValueChange={(value) => {
-                      const booleanValue = value === 'yes';
-                      field.onChange(booleanValue);
-                      setHasWorkExperience(booleanValue);
-                    }}
-                    value={field.value ? 'yes' : 'no'}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="yes" id="yesWorkExperience" />
-                      <Label htmlFor="yesWorkExperience" className="text-base font-normal">Yes</Label>
+         <FormField
+                  control={control}
+                  name="isExperienced"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col sm:flex-row gap-2">
+                      <div className="flex-1 space-y-1 pl-3">
+                        <Label className="text-base font-normal">Do you have any work experience?</Label>
+                        <FormControl>
+                          <RadioGroup
+                            className="flex space-x-6 mt-2"
+                            onValueChange={(value) => {
+                              const booleanValue = value === 'yes';
+                              field.onChange(booleanValue);
+                              setHasWorkExperience(booleanValue);
+                            }}
+                            value={field.value ? 'yes' : 'no'}
+                          >
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="yes" id="yesWorkExperience" />
+                              <Label htmlFor="yesWorkExperience" className="text-base font-normal">Yes</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="no" id="noWorkExperience" />
+                              <Label htmlFor="noWorkExperience" className="text-base font-normal">No</Label>
+                            </div>
+                          </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </div>
+                    </FormItem>
+                  )}
+                />
+        
+                {/* Conditional Work Experience Section */}
+                {watchHasWorkExperience && (
+                  <>
+                    {/* Experience Type and Job Description */}
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      {/* Experience Type */}
+                      <FormField
+                        control={control}
+                        name="experienceType"
+                        render={({ field }) => (
+                          <FormItem className="flex-1 space-y-1">
+                            <Label htmlFor="experienceType" className="text-base font-normal pl-3">Select Your Latest Work Experience Type</Label>
+                            <FormControl>
+                              {/* <Select
+                                onValueChange={(value) => {
+                                  field.onChange(value);
+                                  setExperienceType(value as ExperienceType);
+                                }}
+                                value={field.value}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="employee">Employee</SelectItem>
+                                  <SelectItem value="business">Business Owner</SelectItem>
+                                  <SelectItem value="freelancer">Freelancer</SelectItem>
+                                  <SelectItem value="consultant">Consultant</SelectItem>
+                                </SelectContent>
+                              </Select> */}
+                              <Select value={field.value}
+                                  onValueChange={(value) => {
+                                    field.onChange(value);
+                                    setExperienceType(value as ExperienceType);
+                                  }}>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="Working Professional">Employee</SelectItem>
+                                  <SelectItem value="Freelancer">Freelancer</SelectItem>
+                                  <SelectItem value="Business Owner">Business Owner</SelectItem>
+                                  <SelectItem value="Consultant">Consultant</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      {/* Job Description */}
+                      <FormField
+                        control={control}
+                        name="jobDescription"
+                        render={({ field }) => (
+                          <FormItem className="flex-1 space-y-1">
+                            <Label htmlFor="jobDescription" className="text-base font-normal pl-3">Latest Job/Service Description</Label>
+                            <FormControl>
+                              <Input id="jobDescription" placeholder="Type here" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="no" id="noWorkExperience" />
-                      <Label htmlFor="noWorkExperience" className="text-base font-normal">No</Label>
-                    </div>
-                  </RadioGroup>
-                </FormControl>
-                <FormMessage />
-              </div>
-            </FormItem>
-          )}
-        />
-
-        {/* Conditional Work Experience Section */}
-        {watchHasWorkExperience && (
-          <>
-            {/* Experience Type and Job Description */}
-            <div className="flex flex-col sm:flex-row gap-2">
-              {/* Experience Type */}
-              <FormField
-                control={control}
-                name="experienceType"
-                render={({ field }) => (
-                  <FormItem className="flex-1 space-y-1">
-                    <Label htmlFor="experienceType" className="text-base font-normal pl-3">Select Your Latest Work Experience Type</Label>
-                    <FormControl>
-                      <Select
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                          setExperienceType(value as ExperienceType);
-                        }}
-                        value={field.value}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="employee">Employee</SelectItem>
-                          <SelectItem value="business">Business Owner</SelectItem>
-                          <SelectItem value="freelancer">Freelancer</SelectItem>
-                          <SelectItem value="consultant">Consultant</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+        
+                    {/* Conditional Fields Based on Experience Type */}
+                    {watchExperienceType === 'Working Professional' && (
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        {/* Company Name */}
+                        <FormField
+                          control={control}
+                          name="nameOfCompany"
+                          render={({ field }) => (
+                            <FormItem className="flex-1 space-y-1">
+                              <Label htmlFor="companyName" className="text-base font-normal pl-3">Name of Company (Latest or Current)</Label>
+                              <FormControl>
+                                <Input id="companyName" placeholder="Type here" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        {/* Work Duration */}
+                        <FormField
+                          control={control}
+                          name="duration"
+                          render={({ field }) => (
+                            <FormItem className="flex-1 flex flex-col space-y-1">
+                              <Label htmlFor="workDuration" className="text-base font-normal pl-3">Approximate Duration of Work</Label>
+                              <FormControl>
+                                <input 
+                                  placeholder="MM/YYYY - MM/YYYY" 
+                                  type="month"
+                                  className="!h-[64px] bg-[#09090B] px-3 rounded-xl border"
+                                  id="workDuration" {...field} />
+                                  
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    )}
+        
+                    {watchExperienceType === 'Business Owner' && (
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        {/* Company Name */}
+                        <FormField
+                          control={control}
+                          name="nameOfCompany"
+                          render={({ field }) => (
+                            <FormItem className="flex-1 space-y-1">
+                              <Label htmlFor="companyName" className="text-base font-normal pl-3">Name of Company</Label>
+                              <FormControl>
+                                <Input id="companyName" placeholder="Type here" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        {/* Company Start Date */}
+                        <FormField
+                          control={control}
+                          name="duration"
+                          render={({ field }) => (
+                            <FormItem className="flex-1 flex flex-col space-y-1">
+                              <Label htmlFor="companyStartDate" className="text-base font-normal pl-3">When Did You Start Your Company?</Label>
+                              <FormControl>
+                                <input 
+                                  placeholder="MM/YYYY" 
+                                  type="month"
+                                  className="!h-[64px] bg-[#09090B] px-3 rounded-xl border"
+                                  id="companyStartDate" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    )}
+        
+                    {watchExperienceType === 'Freelancer' && (
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        {/* Duration of Work */}
+                        <FormField
+                          control={control}
+                          name="duration"
+                          render={({ field }) => (
+                            <FormItem className="flex-1 flex flex-col space-y-1">
+                              <Label htmlFor="durationOfWork" className="text-base font-normal pl-3">Approximate Duration of Work</Label>
+                              <FormControl>
+                                <input 
+                                  placeholder="MM/YYYY - MM/YYYY" 
+                                  type="month"
+                                  className="!h-[64px] bg-[#09090B] px-3 rounded-xl border"
+                                  id="durationOfWork" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    )}
+        
+                    {watchExperienceType === 'Consultant' && (
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        {/* Duration of Work */}
+                        <FormField
+                          control={control}
+                          name="duration"
+                          render={({ field }) => (
+                            <FormItem className="flex-1 flex flex-col space-y-1">
+                              <Label htmlFor="durationOfWork" className="text-base font-normal pl-3">Approximate Duration of Work</Label>
+                              <FormControl>
+                                <input 
+                                  placeholder="MM/YYYY - MM/YYYY" 
+                                  type="month"
+                                  className="!h-[64px] bg-[#09090B] px-3 rounded-xl border"
+                                  id="durationOfWork" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    )}
+                  </>
                 )}
-              />
-              {/* Job Description */}
-              <FormField
-                control={control}
-                name="jobDescription"
-                render={({ field }) => (
-                  <FormItem className="flex-1 space-y-1">
-                    <Label htmlFor="jobDescription" className="text-base font-normal pl-3">Latest Job/Service Description</Label>
-                    <FormControl>
-                      <Input id="jobDescription" placeholder="Type here" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Conditional Fields Based on Experience Type */}
-            {watchExperienceType === 'employee' && (
-              <div className="flex flex-col sm:flex-row gap-2">
-                {/* Company Name */}
-                <FormField
-                  control={control}
-                  name="companyName"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1">
-                      <Label htmlFor="companyName" className="text-base font-normal pl-3">Name of Company (Latest or Current)</Label>
-                      <FormControl>
-                        <Input id="companyName" placeholder="Type here" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                {/* Work Duration */}
-                <FormField
-                  control={control}
-                  name="workDuration"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1">
-                      <Label htmlFor="workDuration" className="text-base font-normal pl-3">Approximate Duration of Work</Label>
-                      <FormControl>
-                        <Input id="workDuration" placeholder="MM/YYYY - MM/YYYY" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
-
-            {watchExperienceType === 'business' && (
-              <div className="flex flex-col sm:flex-row gap-2">
-                {/* Company Name */}
-                <FormField
-                  control={control}
-                  name="companyName"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1">
-                      <Label htmlFor="companyName" className="text-base font-normal pl-3">Name of Company</Label>
-                      <FormControl>
-                        <Input id="companyName" placeholder="Type here" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                {/* Company Start Date */}
-                <FormField
-                  control={control}
-                  name="companyStartDate"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1">
-                      <Label htmlFor="companyStartDate" className="text-base font-normal pl-3">When Did You Start Your Company?</Label>
-                      <FormControl>
-                        <Input id="companyStartDate" placeholder="MM/YYYY" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
-
-            {watchExperienceType === 'freelancer' && (
-              <div className="flex flex-col sm:flex-row gap-2">
-                {/* Duration of Work */}
-                <FormField
-                  control={control}
-                  name="durationOfWork"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1">
-                      <Label htmlFor="durationOfWork" className="text-base font-normal pl-3">Approximate Duration of Work</Label>
-                      <FormControl>
-                        <Input id="durationOfWork" placeholder="MM/YYYY - MM/YYYY" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
-
-            {watchExperienceType === 'consultant' && (
-              <div className="flex flex-col sm:flex-row gap-2">
-                {/* Duration of Work */}
-                <FormField
-                  control={control}
-                  name="durationOfWork"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1">
-                      <Label htmlFor="durationOfWork" className="text-base font-normal pl-3">Approximate Duration of Work</Label>
-                      <FormControl>
-                        <Input id="durationOfWork" placeholder="MM/YYYY - MM/YYYY" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
-          </>
-        )}
 
         {/* Emergency Contact Details */}
         <div className='flex-1 bg-[#00AB7B]/[0.2] text-[#00AB7B] text-center py-4 mt-10 text-2xl rounded-full'>
@@ -1006,6 +1520,7 @@ const ApplicationDetailsForm: React.FC = () => {
         </div>
 
         {/* Financial Dependency and Aid */}
+        <div className='space-y-2'>
         <div className="flex flex-col sm:flex-row gap-2">
           {/* Financially Dependent */}
           <FormField
@@ -1061,9 +1576,9 @@ const ApplicationDetailsForm: React.FC = () => {
               </FormItem>
             )}
           />
-        </div>
+          </div>
 
-        {(!studentData?.profileUrl || !studentData?.isMobileVerified) && (
+          {(!studentData?.profileUrl || !studentData?.isMobileVerified) && (
             <div className="text-red-500 text-sm font-medium pl-3">
               {studentData?.profileUrl
                 ? null
@@ -1073,16 +1588,32 @@ const ApplicationDetailsForm: React.FC = () => {
             </div>
           )}
 
+        </div>
+ 
         <div className="flex justify-between items-center mt-10">
           <Button variant="link" type='button' onClick={() => form.reset() }>Clear Form</Button>
-          <div className='flex gap-2'>
-            <Button size="xl" className=' px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90' type="submit" ><SaveIcon className='w-5 h-5'/></Button>
-            <Button size="xl" className='space-y-1 bg-[#00AB7B] hover:bg-[#00AB7B]/90' type="button" >Pay INR 500.00</Button>
-          </div>
+          <Button size="xl" className='px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90' type="submit" disabled={loading}>
+            <div className='flex items-center gap-2'>
+              {isSaved ? (
+                <>{loading ? 'Initializing Payment...' : 'Pay INR 500.00'}</> 
+              ) : (
+                 <> <SaveIcon className='w-5 h-5' />{loading ? 'Submitting...' : 'Submit'}</>
+              ) }
+            </div>
+          </Button>
         </div>
       </form>
     </Form>
-
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <DialogContent className='max-w-4xl !p-0'>
+        <VerifyOTP
+          verificationType="contact" 
+          contactInfo={contactInfo}
+          errorMessage="Oops! Looks like you got the OTP wrong, Please Retry."
+          setIsDialogOpen={setIsDialogOpen}
+        />
+      </DialogContent>
+    </Dialog>
     <PaymentSuccessDialog open={successDialogOpen} setOpen={setSuccessDialogOpen} type='step1' mail={studentData?.email || 'your email'} onContinue={handleContinueToDashboard}/>
     <PaymentFailedDialog open={failedDialogOpen} setOpen={setFailedDialogOpen} type='step1' mail={studentData?.email || 'your email'} onContinue={handleRetry}/>
     </>

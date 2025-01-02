@@ -6,7 +6,6 @@ import { Input } from '../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import Header from '../organisms/Header/Header';
 import AccountDetailsForm from '../molecules/AccountDetailsForm/AccountDetailsForm';
-import ApplicationDetailsForm from '../molecules/ApplicationDetailsForm/ApplicationDetailsForm';
 import Footer from '../organisms/Footer/Footer';
 import { PaymentFailedDialog, PaymentSuccessDialog } from '../molecules/PaymentDialog/PaymentDialog';
 import ApplicationTaskForm from '../molecules/ApplicationTaskForm/ApplicationTaskForm';
@@ -15,6 +14,8 @@ import Task02 from '../molecules/Task02/Task02';
 import { redirect, useNavigate } from '@remix-run/react';
 import { getCurrentStudent, getStudents } from '~/utils/studentAPI';
 import { UserContext } from '~/context/UserContext';
+import ApplicationDetailsForm from '../molecules/ApplicationDetailsForm/ApplicationDetailsForm';
+// import ApplicationDetailsForm from '../molecules/ApplicationDetailsForm/trash';
 
 // Extend the global Window interface to include Razorpay
 declare global {
@@ -49,7 +50,11 @@ export const ApplicationStep1: React.FC = () => {
         console.log('faceofgf  studentData?._id:', studentData?._id);
           const res = await getCurrentStudent(studentData?._id);
             console.log(' student data:', res.data?.applicationDetails?.applicationStatus);
-            if(res.data?.applicationDetails?.applicationStatus === 'initiated')
+            if(res.data?.applicationDetails?.applicationStatus === 'under review'
+               || res.data?.applicationDetails?.applicationStatus === 'accepted'
+               || res.data?.applicationDetails?.applicationStatus === 'rejected')
+               navigate("/dashboard/application-step-2");
+            if(res.data?.applicationDetails?.applicationStatus === 'initiated' || res.data?.applicationDetails?.applicationStatus === 'on hold')
               setSecond(true)
       } catch (error) {
         console.log('Error fetching student data:', error);
