@@ -14,8 +14,8 @@ import Task02 from '../molecules/Task02/Task02';
 import { redirect, useNavigate } from '@remix-run/react';
 import { getCurrentStudent, getStudents } from '~/utils/studentAPI';
 import { UserContext } from '~/context/UserContext';
-import ApplicationDetailsForm from '../molecules/ApplicationDetailsForm/ApplicationDetailsForm';
-// import ApplicationDetailsForm from '../molecules/ApplicationDetailsForm/trash';
+import ApplicationDetailsForm from '../molecules/ApplicationDetailsForm/OneTimeSetup';
+// import ApplicationDetailsForm from '../molecules/ApplicationDetailsForm/ApplicationDetailsForm';
 
 // Extend the global Window interface to include Razorpay
 declare global {
