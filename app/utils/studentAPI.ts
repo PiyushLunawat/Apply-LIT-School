@@ -1,5 +1,5 @@
-// const CONST_API = "http://localhost:4000";
-const CONST_API = "https://myfashionfind.shop";
+const CONST_API = "http://localhost:4000";
+// const CONST_API = "https://myfashionfind.shop";
 
 // Fetch all cohorts
 export async function getCohorts() {
@@ -82,81 +82,32 @@ export async function getCurrentStudent(id: string) {
 }
 
 // Submit application function
-export async function submitApplication(data: {
-  studentData:{
-  firstName: string;
-  lastName: string;
-  mobileNumber: string;
-  isMobileVerified: boolean;
-  email: string;
-  qualification?: string;
-  program?: string;
-  cohort?: string;
-  gender: string;
-  isVerified?: boolean;
-  profileImage: any;
-  linkedInUrl: string;
-  instagramUrl: string;
-  dateOfBirth: Date;
-  };
-  applicationData: {
-    currentAddress: {
-      streetAddress: string;
-      city: string;
-      state: string;
-      postalCode: string;
-    };
-    previousEducation: {
-      highestLevelOfEducation: string;
-      fieldOfStudy: string;
-      nameOfInstitution: string;
-      yearOfGraduation: number;
-    };
-    workExperience: boolean;
-    emergencyContact: {
-      firstName: string;
-      lastName: string;
-      contactNumber: string;
-      relationshipWithStudent: string;
-    };
-    parentInformation: {
-      father: {
-        firstName: string;
-        lastName: string;
-        email: string;
-        contactNumber: string;
-        occupation: string;
-      };
-      mother: {
-        firstName: string;
-        lastName: string;
-        email: string;
-        contactNumber: string;
-        occupation: string;
-      };
-    };
-    financialInformation: {
-      isFinanciallyIndependent: boolean;
-      hasAppliedForFinancialAid: boolean;
-    };
-  };
-}) {
-    console.log("laaaaaaaa",data);
-    const response = await fetch(`${CONST_API}/student/submit-application`, {    
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
+export async function submitApplication(apiPayload: any) {
+  try {
+    const response = await fetch(`${CONST_API}/student/submit-application`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(apiPayload),
+    });
 
-  if (!response.ok) {
-    const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
-    throw new Error(
-      `${
-        errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
-      }`
-    );
+    if (!response.ok) {
+      const errorDetails = await response.json().catch(() => null); // Catch cases where response is not JSON
+      throw new Error(
+        `${
+          errorDetails
+            ? `${errorDetails.message || JSON.stringify(errorDetails)}`
+            : 'Failed to submit application'
+        }`
+      );
+    }
+
+    return response.json();
+  } catch (error: any) {
+    console.error('Error submitting application:', error);
+    throw new Error(`Application submission failed: ${error.message}`);
   }
-  return response.json();
 }
 
 export async function submitApplicationTask(formData: FormData) {
@@ -212,13 +163,36 @@ export async function submitApplicationTask(formData: FormData) {
 
   
   // New API for fee setup
-  export async function setupFeePayment(feeData: FormData) {
-    const response = await fetch(`${CONST_API}/student/fee-setup`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(feeData),
-    });
+  export async function setupFeePayment(feeData: any) {
+    try {
+      const response = await fetch(`${CONST_API}/student/fee-setup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(feeData),
+      });
   
+      if (!response.ok) {
+        const errorDetails = await response.json().catch(() => null); // Handle non-JSON responses
+        throw new Error(
+          `${
+            errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : "Unknown error occurred"
+          }`
+        );
+      }
+  
+      return response.json();
+    } catch (error: any) {
+      console.error("setupFeePayment error:", error.message);
+      throw error;
+    }
+  }
+  
+
+  export async function submitTokenReceipt(formData: FormData) {
+    const response = await fetch(`${CONST_API}/student/token-receipt`, {
+      method: "POST",
+      body: formData,
+    });
     if (!response.ok) {
       const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
       throw new Error(
@@ -227,5 +201,92 @@ export async function submitApplicationTask(formData: FormData) {
         }`
       );
     }
+    return await response.json();
+  }
+  
+  export async function payApplicationFee(amount: number, currency: string) {
+    const response = await fetch(`${CONST_API}/student/pay-application-fee`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        appFeeData: {
+          currency,
+          amount: amount * 100, // Convert to smallest currency unit
+          receipt: "",
+        },
+      }),
+    });
+  
+    if (!response.ok) {
+      const errorDetails = await response.json().catch(() => null);
+      throw new Error(
+        `${
+          errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
+        }`
+      );
+    }
     return response.json();
   }
+
+  export async function verifyApplicationFeePayment(data: {
+    appFeeData: {
+      currency: string;
+      amount: number;
+      receipt: string;
+    };
+    studentId: string;
+    cohortId: string;
+    razorpay_order_id: string;
+    razorpay_payment_id: string;
+    razorpay_signature: string;
+  }) {
+    const response = await fetch(`${CONST_API}/student/verify-application-fee-payement`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+  
+    if (!response.ok) {
+      const errorDetails = await response.json().catch(() => null);
+      throw new Error(
+        `${
+          errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : "Payment verification failed"
+        }`
+      );
+    }
+    return response.json();
+  }
+  
+  export async function uploadFeeReceipt(data: {
+    recieptImage: File;
+    semester: number;
+    installment: number;
+  }) {
+    const CONST_API = "http://localhost:4000"; // Replace with your base API URL if needed
+  
+    const formData = new FormData();
+    formData.append("recieptImage", data.recieptImage);
+    formData.append("semester", data.semester.toString());
+    formData.append("installment", data.installment.toString());
+  
+    const response = await fetch(`${CONST_API}/student/upload-fee-receipt`, {
+      method: "POST",
+      // FormData automatically sets the proper `Content-Type` headers
+      body: formData,
+    });
+  
+    if (!response.ok) {
+      const errorDetails = await response.json().catch(() => null);
+      throw new Error(
+        `${
+          errorDetails
+            ? `${errorDetails.message || JSON.stringify(errorDetails)}`
+            : "Failed to upload fee receipt"
+        }`
+      );
+    }
+    return response;
+  }
+  

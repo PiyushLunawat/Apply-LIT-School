@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Pencil } from 'lucide-react'; // Icons for editing and deleting
 import { Button } from './button';
 import { useNavigate } from '@remix-run/react';
+import { submitTokenReceipt } from '~/utils/studentAPI';
 
 interface TokenPaymentDialogProps {
   paymentType: string;
@@ -55,10 +56,7 @@ const ImageUpload: React.FC<TokenPaymentDialogProps> = ({ paymentType }) => {
     formData.append('receipt', receiptFile); // Add receipt image file to formData
 
     try {
-      const response = await fetch('https://myfashionfind.shop/student/token-receipt', {
-        method: 'POST',
-        body: formData,
-      });
+      const response = await submitTokenReceipt(formData);
 
       if (!response.ok) {
         throw new Error('Failed to upload receipt');

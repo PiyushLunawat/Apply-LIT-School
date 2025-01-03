@@ -4,9 +4,9 @@ import { RadioGroup, RadioGroupItem } from '~/components/ui/radio-group';
 import { Button } from '~/components/ui/button'; 
 import { Label } from '~/components/ui/label';
 import { ArrowLeft, Pencil, X } from 'lucide-react';
-import ImageUpload from '~/components/ui/ImageUpload';
 import { useNavigate } from '@remix-run/react';
 import { useState } from 'react';
+import { submitTokenReceipt } from '~/utils/studentAPI';
 
 interface TokenPaymentDialogProps {
   open: boolean;
@@ -68,19 +68,10 @@ const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({ open, setOpen }
     try {
       setLoading(true);
       console.log("tis",selectedPayment,receiptFile);
-      
+    
+      const response = await submitTokenReceipt(formData);
 
-      const response = await fetch('https://myfashionfind.shop/student/token-receipt', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to upload receipt');
-      }
-
-      const data = await response.json();
-      console.log('Receipt uploaded successfully:', data);
+      console.log('Receipt uploaded successfully:', response);
       navigate('../dashboard');
     } catch (error) {
       setUploadError('Error uploading receipt. Please try again.');

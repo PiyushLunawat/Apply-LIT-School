@@ -1,5 +1,5 @@
-// const CONST_API = "http://localhost:4000";
-const CONST_API = "https://myfashionfind.shop";
+const CONST_API = "http://localhost:4000";
+// const CONST_API = "https://myfashionfind.shop";
 
 // Sign-up function
 export async function signUp(data: {

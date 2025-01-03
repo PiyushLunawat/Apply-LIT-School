@@ -9,7 +9,7 @@ import { UserContext } from '~/context/UserContext';
 import { Button } from '~/components/ui/button';
 import { FileTextIcon, Link2Icon, Phone, RefreshCw, UploadIcon, XIcon } from 'lucide-react';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '~/components/ui/form';
-import { getCohorts, submitApplicationTask } from '~/utils/studentAPI';
+import { getCohorts, getCurrentStudent, submitApplicationTask } from '~/utils/studentAPI';
 import { useNavigate } from '@remix-run/react';
 
 const formSchema = z.object({
@@ -48,7 +48,9 @@ const ApplicationTaskForm: React.FC = () => {
   const { studentData } = useContext(UserContext);
   const [cohorts, setCohorts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const navigate = useNavigate();  
+  const [fetchedStudentData, setFetchedStudentData] = useState<any>(null);
+  
 
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
@@ -61,7 +63,114 @@ const ApplicationTaskForm: React.FC = () => {
     },
   });
 
-  const { control, handleSubmit, setValue } = form;
+  const { control, handleSubmit, setValue, reset } = form;
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        // A) Get the cohorts
+        const cohortsData = await getCohorts();
+        setCohorts(cohortsData.data);
+
+        // B) Get the student data
+        const studentResp = await getCurrentStudent(studentData._id);
+        const sData =
+          studentResp.data?.applicationDetails?.applicationTasks?.[0]
+            ?.applicationTaskDetail?.applicationTasks?.[0];
+        setFetchedStudentData(sData);
+
+        // C) If we have a cohort ID, find the matching one
+        const studentCohortId = studentData?.cohort;
+        const foundCohort = cohortsData.data.find(
+          (c: any) => c._id === studentCohortId
+        );
+
+        // D) If the cohort has an applicationFormDetail => tasks
+        const cohortTasks =
+          foundCohort?.applicationFormDetail?.[0]?.task || [];
+
+        // E) Build final tasks by merging the "cohort" config 
+        //    with the existing "sData.tasks"
+        let sDataTasks: any[] = sData?.tasks || [];
+        // sDataTasks might look like: [ { text: [...], images: [...], ... }, ... ]
+
+        const finalTasks = cohortTasks.map((ct: any, tIndex: number) => {
+          // ct.config => array of { type, maxFiles, etc. }
+          // find the existing data in sDataTasks[tIndex] if it exists
+          const existing = sDataTasks[tIndex] || {};
+
+          return {
+            configItems: ct.config.map((configItem: any, cIndex: number) => {
+              let answer: any = "";
+
+              /** 
+               * Now check if existing data has something like:
+               * text, images, videos, links, files, etc. 
+               * Usually you'd match by "type" or index cIndex
+               */
+              switch (configItem.type) {
+                case "long":
+                case "short":
+                  // If existing => text array => just pick the cIndex-th element
+                  // Or if your data structure stores text in "existing.text" array
+                  answer = existing?.text ? existing?.text[cIndex] || "" : "";
+                  break;
+
+                case "link":
+                  // existing.links might be an array
+                  // e.g. [ "http://some.com", "http://some2.com" ]
+                  answer = existing?.links || [];
+                  break;
+
+                case "image":
+                case "video":
+                case "file":
+                  // existing might have existing.images, existing.videos, etc.
+                  if (configItem?.type === "image") {
+                    answer = existing?.images || [];
+                  } else if (configItem?.type === "video") {
+                    answer = existing?.videos || [];
+                  } else {
+                    answer = existing?.files || [];
+                  }
+                  break;
+
+                default:
+                  // or do something else
+                  answer = "";
+                  break;
+              }
+
+              return {
+                type: configItem.type,
+                maxFiles: configItem.maxFiles,
+                maxFileSize: configItem.maxFileSize,
+                // etc...
+                answer,
+              };
+            }),
+          };
+        });
+
+        // F) Prepare the courseDive from sData
+        const courseDiveData = {
+          interest: sData?.courseDive?.text1 || "",
+          goals: sData?.courseDive?.text2 || "",
+        };
+
+        // G) Finally reset the entire form
+        reset({
+          courseDive: courseDiveData,
+          tasks: finalTasks,
+        });
+      } catch (err) {
+        console.error("Error fetching data:", err);
+      }
+    }
+
+    fetchData();
+  }, [studentData, reset]);
+
 
   useEffect(() => {
     async function fetchCohorts() {
@@ -107,40 +216,42 @@ const ApplicationTaskForm: React.FC = () => {
       setLoading(true);
 
       const formData = new FormData();
+      // courseDive => text1, text2
+      formData.append("courseDive[text1]", data.courseDive.interest);
+      formData.append("courseDive[text2]", data.courseDive.goals);
 
-      // Append courseDive fields
-      formData.append('courseDive[text1]', data.courseDive.interest);
-      formData.append('courseDive[text2]', data.courseDive.goals);
-
-      // Append tasks
-      data.tasks.forEach((task, taskIndex) => {
-        // const taskKey = `${taskIndex + 1}`;
-
-        task.configItems.forEach((configItem, index) => {
-          const { type, answer } = configItem;
-
-          switch (type) {
-            case 'long':
-            case 'short':
-              if (typeof answer === 'string') {
-                formData.append(`tasks[${taskIndex+1}].text[${index}]`, answer);
+      // tasks => each configItem's answer
+      data.tasks.forEach((task, tIndex) => {
+        task.configItems.forEach((configItem, cIndex) => {
+          switch (configItem.type) {
+            case "long":
+            case "short":
+              if (typeof configItem.answer === "string") {
+                formData.append(`tasks[${tIndex + 1}].text[${cIndex}]`, configItem.answer);
               }
               break;
 
-            case 'image':
-            case 'video':
-            case 'file':
-              if (Array.isArray(answer)) {
-                answer.forEach((file, idx) => {
-                  formData.append(`tasks[${taskIndex+1}].${type}s[${idx}]`, file);
+            case "link":
+              if (Array.isArray(configItem.answer)) {
+                configItem.answer.forEach((link, idx) => {
+                  formData.append(`tasks[${tIndex + 1}].links[${idx}]`, link);
                 });
               }
               break;
 
-            case 'link':
-              if (Array.isArray(answer)) {
-                answer.forEach((link, idx) => {
-                  formData.append(`tasks[${taskIndex+1}].links[${idx}]`, link);
+            case "image":
+            case "video":
+            case "file":
+              if (Array.isArray(configItem.answer)) {
+                configItem.answer.forEach((f: File, idx: number) => {
+                  // e.g. tasks[1].files[0]
+                  if (configItem.type === "image") {
+                    formData.append(`tasks[${tIndex + 1}].images[${idx}]`, f);
+                  } else if (configItem.type === "video") {
+                    formData.append(`tasks[${tIndex + 1}].videos[${idx}]`, f);
+                  } else {
+                    formData.append(`tasks[${tIndex + 1}].files[${idx}]`, f);
+                  }
                 });
               }
               break;
@@ -151,24 +262,23 @@ const ApplicationTaskForm: React.FC = () => {
         });
       });
 
-      // **Console log the FormData contents**
-      console.log('FormData entries:');
+      // Debug the FormData
       for (let pair of formData.entries()) {
         if (pair[1] instanceof File) {
-          console.log(`${pair[0]}: [File] ${pair[1].name}`);
+          console.log(pair[0], "[File]", (pair[1] as File).name);
         } else {
-          console.log(`${pair[0]}:`, pair[1]);
+          console.log(pair[0], pair[1]);
         }
       }
 
-      // Send the formData using submitApplicationTask
+      // send to your API
       const res = await submitApplicationTask(formData);
-      console.log("gsg",res);
-      navigate('/dashboard/application-step-2');
+      console.log("Submission success => ", res);
 
-      // Handle success (e.g., show a success message or redirect)
-    } catch (error) {
-      console.error('Failed to submit application task:', error);
+      // optionally redirect
+      navigate("/dashboard/application-step-2");
+    } catch (err) {
+      console.error("Failed to submit application task:", err);
     } finally {
       setLoading(false);
     }
