@@ -1,5 +1,5 @@
-const CONST_API = "http://localhost:4000";
-// const CONST_API = "https://myfashionfind.shop";
+// const CONST_API = "http://localhost:4000";
+const CONST_API = "https://myfashionfind.shop";
 
 // Fetch all cohorts
 export async function getCohorts() {
@@ -263,9 +263,7 @@ export async function submitApplicationTask(formData: FormData) {
     recieptImage: File;
     semester: number;
     installment: number;
-  }) {
-    const CONST_API = "http://localhost:4000"; // Replace with your base API URL if needed
-  
+  }) {  
     const formData = new FormData();
     formData.append("recieptImage", data.recieptImage);
     formData.append("semester", data.semester.toString());
