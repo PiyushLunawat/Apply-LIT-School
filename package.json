@@ -35,7 +35,9 @@
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
     "dayjs": "^1.11.13",
+    "dotenv": "^16.4.7",
     "fetch-intercept": "^2.4.0",
+    "firebase": "^11.1.0",
     "html2canvas": "^1.4.1",
     "input-otp": "^1.2.4",
     "isbot": "^4.1.0",
@@ -54,6 +56,7 @@
   },
   "devDependencies": {
     "@remix-run/dev": "^2.12.1",
+    "@types/firebase": "^2.4.32",
     "@types/js-cookie": "^3.0.6",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.2.7",

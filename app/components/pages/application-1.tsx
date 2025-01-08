@@ -8,14 +8,16 @@ import Header from '../organisms/Header/Header';
 import AccountDetailsForm from '../molecules/AccountDetailsForm/AccountDetailsForm';
 import Footer from '../organisms/Footer/Footer';
 import { PaymentFailedDialog, PaymentSuccessDialog } from '../molecules/PaymentDialog/PaymentDialog';
-import ApplicationTaskForm from '../molecules/ApplicationTaskForm/ApplicationTaskForm';
 import Task01 from '../molecules/Task01/Task01';
 import Task02 from '../molecules/Task02/Task02';
 import { redirect, useNavigate } from '@remix-run/react';
 import { getCurrentStudent, getStudents } from '~/utils/studentAPI';
 import { UserContext } from '~/context/UserContext';
+import { Skeleton } from '../ui/skeleton';
 import ApplicationDetailsForm from '../molecules/ApplicationDetailsForm/OneTimeSetup';
 // import ApplicationDetailsForm from '../molecules/ApplicationDetailsForm/ApplicationDetailsForm';
+import ApplicationTaskForm from '../molecules/ApplicationTaskForm/trash';
+// import ApplicationTaskForm from '../molecules/ApplicationTaskForm/ApplicationTaskForm';
 
 // Extend the global Window interface to include Razorpay
 declare global {
@@ -26,6 +28,7 @@ declare global {
 
 export const ApplicationStep1: React.FC = () => {
   const [studentData, setStudentData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   // Initialize from localStorage when the component mounts
   useEffect(() => {
@@ -58,6 +61,8 @@ export const ApplicationStep1: React.FC = () => {
               setSecond(true)
       } catch (error) {
         console.log('Error fetching student data:', error);
+      } finally {
+        setLoading(false)
       }
     }
 
@@ -72,7 +77,28 @@ export const ApplicationStep1: React.FC = () => {
       <div className="w-full px-6 justify-center items-center">
         <div className='max-w-[1000px] mx-auto'>
           
-          {!second ? (
+          {loading ? 
+          <div className='space-y-4'>
+            <div className='flex gap-2'>
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-full flex-1" />
+                <Skeleton className="h-[52px] rounded-xl w-full flex-1" />
+              </div>
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-full flex-1" />
+                <Skeleton className="h-[52px] rounded-xl w-full flex-1" />
+              </div>
+            </div>
+            <div className=" space-y-2">
+              <Skeleton className="h-4 w-full flex-1" />
+              <Skeleton className="h-[52px] rounded-xl w-full flex-1" />
+            </div>
+            <div className=" space-y-2">
+              <Skeleton className="h-4 w-full flex-1" />
+              <Skeleton className="h-[52px] rounded-xl w-full flex-1" />
+            </div>
+          </div> :
+          !second ? (
             <div className="flex flex-col gap-4 mt-8">
               {/* <AccountDetailsForm/> */}
               <ApplicationDetailsForm/>

@@ -82,14 +82,11 @@ export async function getCurrentStudent(id: string) {
 }
 
 // Submit application function
-export async function submitApplication(apiPayload: any) {
+export async function submitApplication(formdata: any) {
   try {
     const response = await fetch(`${CONST_API}/student/submit-application`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(apiPayload),
+      body: formdata,
     });
 
     if (!response.ok) {

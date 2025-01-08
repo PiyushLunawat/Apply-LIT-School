@@ -15,7 +15,7 @@ import {
   FormControl,
   FormMessage,
 } from '~/components/ui/form';
-import { Calendar, Camera, CheckCircle, Instagram, Linkedin, Mail, Phone, SaveIcon, XIcon } from 'lucide-react';
+import { Calendar, Camera, CheckCircle, Instagram, Linkedin, Mail, Minus, Phone, SaveIcon, XIcon } from 'lucide-react';
 import { UserContext } from '~/context/UserContext';
 import { PaymentFailedDialog, PaymentSuccessDialog } from '../PaymentDialog/PaymentDialog';
 import { getCentres, getCohorts, getCurrentStudent, getPrograms, payApplicationFee, submitApplication, verifyApplicationFeePayment } from '~/utils/studentAPI';
@@ -23,6 +23,7 @@ import { Badge } from '~/components/ui/badge';
 import { Dialog, DialogContent } from '~/components/ui/dialog';
 import VerifyOTP from '~/components/organisms/VerifyOTP/VerifyOTP';
 import { verifyNumber } from '~/utils/authAPI';
+import { format } from 'date-fns';
 
 type ExperienceType = 'Working Professional' | 'Business Owner' | 'Freelancer' | 'Consultant';
 
@@ -54,75 +55,98 @@ const formSchema = z.object({
     experienceType: z.enum(['', 'Working Professional', 'Business Owner', 'Freelancer', 'Consultant']).optional(),
     nameOfCompany: z.string().optional(),
     duration: z.string().optional(),
+    durationFrom: z.string().optional(),
+    durationTo: z.string().optional(),
     jobDescription: z.string().optional(),
     emergencyFirstName: z.string().nonempty("Emergency contact's first name is required"),
     emergencyLastName: z.string().nonempty("Emergency contact's last name is required"),
     emergencyContact: z.string().min(10, "Emergency contact number is required"),
     relationship: z.string().nonempty("Relationship is required"),
-    fatherFirstName: z.string().nonempty("Father's first name is required"),
-    fatherLastName: z.string().nonempty("Father's last name is required"),
-    fatherContact: z.string().min(10, "Father's contact number is required"),
-    fatherOccupation: z.string().nonempty("Father's occupation is required"),
-    fatherEmail: z.string()
-      .email("Email format is invalid")
-      .refine((email) => email.length > 0, { message: "Father's email is required" }),
-    motherFirstName: z.string().nonempty("Mother's first name is required"),
-    motherLastName: z.string().nonempty("Mother's last name is required"),
-    motherContact: z.string().min(10, "Mother's contact number is required"),
-    motherOccupation: z.string().nonempty("Mother's occupation is required"),
-    motherEmail: z.string()
-      .email("Email format is invalid")
-      .refine((email) => email.length > 0, { message: "Mother's email is required" }), 
+    fatherFirstName: z.string().optional(),
+    fatherLastName: z.string().optional(),
+    fatherContact: z.string().optional(),
+    fatherOccupation: z.string().optional(),
+    fatherEmail: z
+      .string()
+      .optional(),
+    motherFirstName: z.string().optional(),
+    motherLastName: z.string().optional(),
+    motherContact: z.string().optional(),
+    motherOccupation: z.string().optional(),
+    motherEmail: z
+    .string()
+    .optional(),
     financiallyDependent: z.boolean(),
     appliedForFinancialAid: z.boolean(),
-  })
-}).refine(
+  }),
+})
+.refine(
+  (data) =>
+    // Ensure at least one parent's details are filled
+    (data.applicationData.fatherFirstName &&
+      data.applicationData.fatherLastName &&
+      data.applicationData.fatherContact &&
+      data.applicationData.fatherOccupation &&
+      data.applicationData.fatherEmail) ||
+    (data.applicationData.motherFirstName &&
+      data.applicationData.motherLastName &&
+      data.applicationData.motherContact &&
+      data.applicationData.motherOccupation &&
+      data.applicationData.motherEmail),
+  {
+    message: "Either mother's or father's details must be provided.",
+    path: ["applicationData.motherOccupation"], 
+  }
+).refine(
   (data) => data.applicationData.emergencyContact !== data.studentData.contact,
   {
     message: "Emergency contact and your contact must be different.",
-    path: ["emergencyContact"], // Error for emergencyContact
+    path: ["applicationData.emergencyContact"], // Error for emergencyContact
   }
 )
 .refine(
   (data) => data.applicationData.fatherContact !== data.studentData.contact,
   {
     message: "Father's contact and your contact must be different.",
-    path: ["fatherContact"], // Error for fatherContact
+    path: ["applicationData.fatherContact"], // Error for fatherContact
   }
 )
 .refine(
   (data) => data.applicationData.motherContact !== data.studentData.contact,
   {
     message: "Mother's contact and your contact must be different.",
-    path: ["motherContact"], // Error for motherContact
+    path: ["applicationData.motherContact"], // Error for motherContact
   }
 )
 .refine(
-  (data) => data.applicationData.fatherContact !== data.applicationData.motherContact,
+  (data) => (data.applicationData.fatherContact !== data.applicationData.motherContact &&
+    data.applicationData.fatherContact !== ''),
   {
     message: "Father's contact and mother's contact must be different.",
-    path: ["motherContact"], // Error for motherContact
+    path: ["applicationData.motherContact"], // Error for motherContact
   }
 )
 .refine(
   (data) => data.applicationData.fatherEmail !== data.studentData.email,
   {
     message: "Father's email and your email must be different.",
-    path: ["fatherEmail"], // Error for Father's email
+    path: ["applicationData.fatherEmail"], // Error for Father's email
   }
 )
 .refine(
   (data) => data.studentData.email !== data.applicationData.motherEmail,
   {
     message: "Mother's email and your email must be different.",
-    path: ["motherEmail"], // Error for mother's email
+    path: ["applicationData.motherEmail"], // Error for mother's email
   }
 )
 .refine(
-  (data) => data.applicationData.fatherEmail !== data.applicationData.motherEmail,
+  (data) => (data.applicationData.fatherEmail !== data.applicationData.motherEmail &&
+    data.applicationData.fatherEmail !== ''
+  ),
   {
     message: "Father's email and mother's email must be different.",
-    path: ["motherEmail"], // Error for mother's email
+    path: ["applicationData.motherEmail"], // Error for mother's email
   }
 );
 
@@ -136,15 +160,16 @@ const ApplicationDetailsForm: React.FC = () => {
   const [failedDialogOpen, setFailedDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [programs, setPrograms] = useState<any[]>([]);
   const [ centres, setCentres] = useState<any[]>([]);
   const [interest, setInterest] = useState<any[]>([]); 
   const [cohorts, setCohorts] = useState<any[]>([]); 
   const [contactInfo, setContactInfo] = useState<string>('');
   const [imagePreview, setImagePreview] = useState<File | null>(null);
-
+  const [isSaved, setIsSaved] = useState((studentData?.applicationDetails !== undefined));
+  const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string>(studentData?.profileUrl || '');
-
 
   const [fetchedStudentData, setFetchedStudentData] = useState<any>(null);
 
@@ -189,6 +214,9 @@ const ApplicationDetailsForm: React.FC = () => {
         institutionName: '',
         graduationYear: '',
         isExperienced: false,
+        durationFrom: '',
+        durationTo: '',
+        duration: '',
         emergencyFirstName: '',
         emergencyLastName: '',
         emergencyContact: '',
@@ -209,13 +237,20 @@ const ApplicationDetailsForm: React.FC = () => {
     },
   });
 
-  const { control, handleSubmit, formState: { errors }, reset, watch } = form;
+  const { control, handleSubmit, formState: { errors }, reset, setValue, watch } = form;
 
   useEffect(() => {
     const fetchStudentData = async () => {
       try {
         const student = await getCurrentStudent(studentData._id);
         const sData = student.data?.studentDetails;
+          if (student.data?.applicationDetails !== undefined) {
+            setIsSaved(true);
+          } else {
+            setIsSaved(false); 
+          }
+          if(student.data?.applicationDetails?.applicationFeeDetail?.status === 'paid')
+            setIsPaymentDone(true);
 
         // Once fetched, reset the form with the fetched data
         reset({
@@ -245,6 +280,8 @@ const ApplicationDetailsForm: React.FC = () => {
             || false,
           experienceType: sData?.experienceType || studentData?.qualification || '',
           nameOfCompany: sData?.nameOfCompany || '',
+          durationFrom: '',
+          durationTo: '',
           duration: sData?.duration || '',
           jobDescription: sData?.jobDescription || '',
           emergencyFirstName: sData?.emergencyContact?.firstName || '',
@@ -279,6 +316,24 @@ const ApplicationDetailsForm: React.FC = () => {
   // Watch fields for conditional rendering
   const watchHasWorkExperience = watch('applicationData.isExperienced');
   const watchExperienceType = watch('applicationData.experienceType');
+
+  const formatMonthYear = (dateStr: any) => {
+    const [year, month] = dateStr.split('-');
+    return `${month}/${year}`;
+  };
+
+  useEffect(() => {
+    const durationFrom = watch('applicationData.durationFrom');
+    const durationTo = watch('applicationData.durationTo');
+
+    if (durationFrom && durationTo) {
+      const formattedFrom = formatMonthYear(durationFrom);
+      const formattedTo = formatMonthYear(durationTo);
+      setValue('applicationData.duration', `${formattedFrom} - ${formattedTo}`);
+    } else {
+      setValue('applicationData.duration', '');
+    }
+  }, [watch('applicationData.durationFrom'), watch('applicationData.durationTo'), setValue]);
 
 
   useEffect(() => {
@@ -423,6 +478,7 @@ const ApplicationDetailsForm: React.FC = () => {
             console.log("Payment verification response:", verifyResponse);
   
             if (verifyResponse.status === 'ok') {
+              setIsPaymentDone(true);
               setSuccessDialogOpen(true);
             } else {
               setFailedDialogOpen(true);
@@ -463,12 +519,7 @@ const ApplicationDetailsForm: React.FC = () => {
   };
   
 
-  const validateBeforeSubmit = () => {
-    if (!studentData?.profileUrl) {
-      return "Profile image is required.";
-    }
-    console.log("image",imagePreview);
-    
+  const validateBeforeSubmit = () => {    
     // if (!studentData?.isMobileVerified) {
     //   return "Mobile number verification is required.";
     // }
@@ -486,15 +537,15 @@ const ApplicationDetailsForm: React.FC = () => {
       studentData: {
         firstName: studentData?.firstName || '',
         lastName: studentData?.lastName || '',
-        mobileNumber: studentData?.mobileNumber || '',
+        mobileNumber: data?.studentData?.contact || studentData?.mobileNumber,
         isMobileVerified: studentData?.isMobileVerified || false,
         email: studentData?.email || '',
-        qualification: studentData?.qualification || '',
-        program: studentData?.program || '',
-        cohort: studentData?.cohort || '',
+        qualification: data?.studentData?.currentStatus || studentData?.qualification,
+        program: data?.studentData?.courseOfInterest || studentData?.program,
+        cohort: data?.studentData?.cohort || studentData?.cohort,
         gender: data.studentData.gender,
         isVerified: studentData?.isVerified || false,
-        dateOfBirth: new Date(studentData?.dateOfBirth || Date.now()), 
+        dateOfBirth: new Date(data?.studentData?.dob || studentData?.dateOfBirth), 
         linkedInUrl: data.studentData.linkedInUrl || "",
         instagramUrl: data.studentData.instagramUrl || "",
       },
@@ -548,110 +599,22 @@ const ApplicationDetailsForm: React.FC = () => {
       },
     };
 
-    const buildFormData = (apiPayload: any) => {
-  const formData = new FormData();
-
-  const studentData = apiPayload.studentData;
-  formData.append("studentData.firstName", studentData.firstName || "");
-  formData.append("studentData.lastName", studentData.lastName || "");
-  formData.append("studentData.mobileNumber", studentData.mobileNumber);
-  formData.append("studentData.isMobileVerified", String(studentData.isMobileVerified));
-  formData.append("studentData.email", studentData.email || "");
-  formData.append("studentData.qualification", studentData.qualification || "");
-  formData.append("studentData.program", studentData.program || "");
-  formData.append("studentData.cohort", studentData.cohort || "");
-  formData.append("studentData.gender", studentData.gender);
-  formData.append("studentData.isVerified", String(studentData.isVerified || false));
-  formData.append("studentData.dateOfBirth", studentData.dateOfBirth ? new Date(studentData.dateOfBirth).toISOString() : "");
-  formData.append("studentData.linkedInUrl", studentData.linkedInUrl || "");
-  formData.append("studentData.instagramUrl", studentData.instagramUrl || "");
-
-  // Append profile image
-  if (apiPayload.profileImage) {
-    formData.append("profileImage", apiPayload.profileImage);
-  }
-
-  // Application Data
-  const applicationData = apiPayload.applicationData;
-
-  // Current Address
-  const currentAddress = applicationData.currentAddress;
-  formData.append("applicationData.currentAddress.streetAddress", currentAddress.streetAddress);
-  formData.append("applicationData.currentAddress.city", currentAddress.city);
-  formData.append("applicationData.currentAddress.state", currentAddress.state || "");
-  formData.append("applicationData.currentAddress.postalCode", currentAddress.postalCode);
-
-  // Previous Education
-  const previousEducation = applicationData.previousEducation;
-  formData.append("applicationData.previousEducation.highestLevelOfEducation", previousEducation.highestLevelOfEducation);
-  formData.append("applicationData.previousEducation.fieldOfStudy", previousEducation.fieldOfStudy);
-  formData.append("applicationData.previousEducation.nameOfInstitution", previousEducation.nameOfInstitution);
-  formData.append("applicationData.previousEducation.yearOfGraduation", String(previousEducation.yearOfGraduation));
-
-  // Work Experience
-  formData.append("applicationData.workExperience.isExperienced", String(applicationData.isExperienced));
-  if (applicationData.isExperienced) {
-    formData.append("applicationData.workExperience.experienceType", applicationData.workExperience.experienceType || "");
-    formData.append("applicationData.workExperience.nameOfCompany", applicationData.workExperience.nameOfCompany || "");
-    formData.append("applicationData.workExperience.duration", applicationData.workExperience.duration || "");
-    formData.append("applicationData.workExperience.jobDescription", applicationData.workExperience.jobDescription || "");
-  }
-
-  // Emergency Contact
-  const emergencyContact = applicationData.emergencyContact;
-  formData.append("applicationData.emergencyContact.firstName", emergencyContact.firstName);
-  formData.append("applicationData.emergencyContact.lastName", emergencyContact.lastName);
-  formData.append("applicationData.emergencyContact.contactNumber", emergencyContact.contactNumber);
-  formData.append("applicationData.emergencyContact.relationshipWithStudent", emergencyContact.relationshipWithStudent);
-
-  // Parent Information
-  const parentInformation = applicationData.parentInformation;
-
-  // Father
-  const father = parentInformation.father;
-  formData.append("applicationData.parentInformation.father.firstName", father.firstName);
-  formData.append("applicationData.parentInformation.father.lastName", father.lastName);
-  formData.append("applicationData.parentInformation.father.contactNumber", father.contactNumber);
-  formData.append("applicationData.parentInformation.father.occupation", father.occupation);
-  formData.append("applicationData.parentInformation.father.email", father.email);
-
-  // Mother
-  const mother = parentInformation.mother;
-  formData.append("applicationData.parentInformation.mother.firstName", mother.firstName);
-  formData.append("applicationData.parentInformation.mother.lastName", mother.lastName);
-  formData.append("applicationData.parentInformation.mother.contactNumber", mother.contactNumber);
-  formData.append("applicationData.parentInformation.mother.occupation", mother.occupation);
-  formData.append("applicationData.parentInformation.mother.email", mother.email);
-
-  // Financial Information
-  const financialInformation = applicationData.financialInformation;
-  formData.append("applicationData.financialInformation.isFinanciallyIndependent", String(financialInformation.isFinanciallyIndependent));
-  formData.append("applicationData.financialInformation.hasAppliedForFinancialAid", String(financialInformation.hasAppliedForFinancialAid));
-
-  return formData;
-};
-
-
-const formData = buildFormData(apiPayload);
-
-    
-  // Append the image file if available
-  // if (studentData?.profileUrl) {
-  //   formData.append('profileImage', imagePreview);
-  // }
-
-  // Append apiPayload as a JSON string
-  // formData.append('apiPayload', JSON.stringify(apiPayload));
-
   try {
     setLoading(true);
     console.log("dssd",apiPayload);
     
-    const response = await submitApplication(apiPayload);
+    const response = await fetch('https://myfashionfind.shop/student/submit-application', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(apiPayload), 
+    });
 
-    if (response.success===true) {
+    if (response.ok) {
       // Handle success response
       console.log('Form submitted successfully', response);
+      setIsPaymentDialogOpen(true);
       setIsSaved(true);
     } else {
       // Handle error response
@@ -665,17 +628,6 @@ const formData = buildFormData(apiPayload);
       setLoading(false);
     }
   };
-
-  const [isSaved, setIsSaved] = useState((studentData?.applicationDetails !== undefined));
-  useEffect(() => {
-    if (studentData?.applicationDetails !== undefined) {
-      setIsSaved(true);
-    } else {
-      setIsSaved(false); 
-    }
-    console.log("ssvsdvefs",isSaved);
-
-  }, [studentData]);
 
   const onSubmit = async (data: FormData) => {
       console.log("save",studentData?.applicationDetails, isSaved);
@@ -695,7 +647,7 @@ const formData = buildFormData(apiPayload);
       <Badge size="xl" className='flex-1 bg-[#00A3FF]/[0.2] text-[#00A3FF] text-center '>Personal Details</Badge>
         <div className="grid sm:flex gap-6">
           {/* Image Upload */}
-          <div className="w-full sm:w-[232px] h-[308px] bg-[#1F1F1F] flex flex-col items-center justify-center rounded-xl text-sm space-y-4">
+          {/* <div className="w-full sm:w-[232px] h-[308px] bg-[#1F1F1F] flex flex-col items-center justify-center rounded-xl text-sm space-y-4">
       {previewUrl ? (
         <div className="w-full h-full relative">
           <img
@@ -748,7 +700,7 @@ const formData = buildFormData(apiPayload);
         </label>
         </>
       )}
-    </div>
+    </div> */}
 
 
           {/* Form Fields */}
@@ -761,7 +713,7 @@ const formData = buildFormData(apiPayload);
                 <FormItem className='flex-1 space-y-1'>
                   <Label className="text-base font-normal pl-3">Full Name</Label>
                   <FormControl>
-                    <Input id="fullName" defaultValue={((studentData?.firstName || "-")+' '+(studentData?.lastName || "-"))} placeholder="John Doe" />
+                    <Input id="fullName" defaultValue={((studentData?.firstName || "-")+' '+(studentData?.lastName || "-"))} placeholder="John Doe" disabled/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -805,12 +757,13 @@ const formData = buildFormData(apiPayload);
                     }
                     <Label className="text-base font-normal pl-3">Contact No.</Label>
                     <FormControl>
-                      <Input
+                      <Input disabled={isSaved}
                         id="contact"
                         type="tel"
                         placeholder="+91 95568 97688"
                         className='pl-10'
-                        defaultValue={studentData?.mobileNumber || "--"}
+                        defaultValue={studentData?.mobileNumber}
+                        {...field}
                       />
                     </FormControl>
                     {studentData?.isMobileVerified ?
@@ -819,7 +772,15 @@ const formData = buildFormData(apiPayload);
                         Verify
                       </Button>
                     }
-                    <FormMessage />
+                    {errors?.studentData?.contact ? (
+                      <FormMessage />
+                    ) : (
+                      !studentData?.isMobileVerified && (
+                        <div className="text-red-500 text-sm font-medium pl-3">
+                          Please verify your mobile number before submitting.
+                        </div>
+                      )
+                    )}
                   </FormItem>
                 )}
               />
@@ -831,16 +792,31 @@ const formData = buildFormData(apiPayload);
               <FormField
                 control={control}
                 name="studentData.dob"
-                render={({ field }) => (
-                  <FormItem className="flex-1 space-y-1 relative">
+                render={({ field }) => {
+                  const maxDate = new Date();
+                  maxDate.setFullYear(maxDate.getFullYear() - 16); // Subtract 16 years from today's date
+                  const maxDateString = maxDate.toISOString().split('T')[0];
+                  return (
+                  <FormItem className="flex-1 flex flex-col space-y-1 relative">
                     <Label className="text-base font-normal pl-3">Date of Birth</Label>
                     <FormControl>
-                      <Input id="dob" type="text" placeholder="08 March, 2000" defaultValue={formatDate(studentData?.dateOfBirth)}/>
+                    <input
+                      type="date"
+                      disabled={isSaved}
+                      className="!h-[64px] bg-[#09090B] px-3 uppercase rounded-xl border"
+                      id="dob"
+                      name="dateOfBirth"
+                      defaultValue={studentData?.dateOfBirth ? format(new Date(studentData.dateOfBirth || field.value), "yyyy-MM-dd") : ""}
+                      onChange={(e) => {
+                        const date = e.target.value;
+                        field.onChange(date);
+                      }}
+                      max={maxDateString}
+                    />
                     </FormControl>
-                    <Calendar className="absolute right-3 top-[46px] w-5 h-5" />
                     <FormMessage />
                   </FormItem>
-                )}
+                )}}
               />
               {/* Currently a */}
               <FormField
@@ -850,7 +826,7 @@ const formData = buildFormData(apiPayload);
                   <FormItem className='flex-1 space-y-1'>
                     <Label className="text-base font-normal pl-3">You are Currently a</Label>
                     <FormControl>
-                      <Select value={field.value} onValueChange={field.onChange}>
+                      <Select disabled={isSaved} value={field.value} onValueChange={field.onChange}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select" />
                         </SelectTrigger>
@@ -884,7 +860,7 @@ const formData = buildFormData(apiPayload);
               <FormItem className='flex-1 space-y-1'>
                 <Label className='text-base font-normal pl-3'>Course of Interest</Label>
                 <FormControl>
-                  <Select
+                  <Select disabled={isSaved}
                   onValueChange={(value) => { field.onChange(value); (value); }} 
                   value={field.value}
                   >
@@ -916,7 +892,7 @@ const formData = buildFormData(apiPayload);
               <FormItem className='flex-1 space-y-1'>
                 <Label className='text-base font-normal pl-3'>Select Cohort</Label>
                 <FormControl>
-                  <Select
+                  <Select disabled={isSaved}
                     onValueChange={(value) => { field.onChange(value); (value); }} 
                     value={field.value}
                   >
@@ -951,7 +927,7 @@ const formData = buildFormData(apiPayload);
                   onChange={(e) => {
                     const newValue = e.target.value.replace(/\s/g, "");
                     field.onChange(newValue);
-                  }}/>
+                  }} disabled={isSaved}/>
                 </FormControl>
                 <Linkedin className="absolute right-3 top-[46px] w-5 h-5" />
                 <FormMessage />
@@ -970,7 +946,7 @@ const formData = buildFormData(apiPayload);
                   onChange={(e) => {
                     const newValue = e.target.value.replace(/\s/g, "");
                     field.onChange(newValue);
-                  }}/>
+                  }} disabled={isSaved}/>
                 </FormControl>
                 <Instagram className="absolute right-3 top-[46px] w-5 h-5" />
                 <FormMessage />
@@ -987,7 +963,7 @@ const formData = buildFormData(apiPayload);
             <FormItem className='flex-1 space-y-1 pl-3'>
               <Label className="text-base font-normal">Select Your Gender</Label>
               <FormControl>
-                <RadioGroup
+                <RadioGroup disabled={isSaved}
                   onValueChange={field.onChange}
                   value={field.value}
                   className="flex space-x-6 mt-2"
@@ -1019,7 +995,7 @@ const formData = buildFormData(apiPayload);
             <FormItem className='flex-1 space-y-1'>
               <Label htmlFor="address" className="text-base font-normal pl-3">Your Current Address</Label>
               <FormControl>
-                <Input id="address" placeholder="Street Address" {...field} />
+                <Input id="address" placeholder="Street Address" {...field} disabled={isSaved} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -1036,7 +1012,7 @@ const formData = buildFormData(apiPayload);
               <FormItem className='flex-1 space-y-1'>
                 <Label htmlFor="city" className="text-base font-normal pl-3">City, State</Label>
                 <FormControl>
-                  <Input id="city" placeholder="City, State" {...field} />
+                  <Input id="city" placeholder="City, State" {...field} disabled={isSaved} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -1055,7 +1031,7 @@ const formData = buildFormData(apiPayload);
                     const target = e.target as HTMLInputElement;
                     target.value = target.value.replace(/[^0-9+ ]/g, '');
                     field.onChange(target.value);
-                  }}/>
+                  }} disabled={isSaved}/>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -1076,7 +1052,7 @@ const formData = buildFormData(apiPayload);
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="educationLevel" className="text-base font-normal pl-3">Highest Level of Education Attained</Label>
                 <FormControl>
-                  <Select
+                  <Select disabled={isSaved}
                     onValueChange={field.onChange}
                     value={field.value}
                   >
@@ -1102,7 +1078,7 @@ const formData = buildFormData(apiPayload);
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="fieldOfStudy" className="text-base font-normal pl-3">Field of Study (Your Major)</Label>
                 <FormControl>
-                  <Input id="fieldOfStudy" placeholder="Type here" {...field} />
+                  <Input id="fieldOfStudy" placeholder="Type here" {...field} disabled={isSaved} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -1120,7 +1096,7 @@ const formData = buildFormData(apiPayload);
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="institutionName" className="text-base font-normal pl-3">Name of Institution</Label>
                 <FormControl>
-                  <Input id="institutionName" placeholder="Type here" {...field} />
+                  <Input id="institutionName" placeholder="Type here" {...field} disabled={isSaved} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -1138,7 +1114,7 @@ const formData = buildFormData(apiPayload);
                     placeholder="MM YYYY"
                     type="month"
                     className="!h-[64px] bg-[#09090B] px-3 rounded-xl border"
-                    id="graduationYear" {...field} />
+                    id="graduationYear" {...field} disabled={isSaved} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -1155,7 +1131,7 @@ const formData = buildFormData(apiPayload);
               <div className="flex-1 space-y-1 pl-3">
                 <Label className="text-base font-normal">Do you have any work experience?</Label>
                 <FormControl>
-                  <RadioGroup
+                  <RadioGroup disabled={isSaved}
                     className="flex space-x-6 mt-2"
                     onValueChange={(value) => {
                       const booleanValue = value === 'yes';
@@ -1193,24 +1169,7 @@ const formData = buildFormData(apiPayload);
                   <FormItem className="flex-1 space-y-1">
                     <Label htmlFor="experienceType" className="text-base font-normal pl-3">Select Your Latest Work Experience Type</Label>
                     <FormControl>
-                      {/* <Select
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                          setExperienceType(value as ExperienceType);
-                        }}
-                        value={field.value}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="employee">Employee</SelectItem>
-                          <SelectItem value="business">Business Owner</SelectItem>
-                          <SelectItem value="freelancer">Freelancer</SelectItem>
-                          <SelectItem value="consultant">Consultant</SelectItem>
-                        </SelectContent>
-                      </Select> */}
-                      <Select value={field.value}
+                      <Select value={field.value} disabled={isSaved}
                           onValueChange={(value) => {
                             field.onChange(value);
                             setExperienceType(value as ExperienceType);
@@ -1238,7 +1197,7 @@ const formData = buildFormData(apiPayload);
                   <FormItem className="flex-1 space-y-1">
                     <Label htmlFor="jobDescription" className="text-base font-normal pl-3">Latest Job/Service Description</Label>
                     <FormControl>
-                      <Input id="jobDescription" placeholder="Type here" {...field} />
+                      <Input id="jobDescription" placeholder="Type here" {...field} disabled={isSaved} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -1257,32 +1216,66 @@ const formData = buildFormData(apiPayload);
                     <FormItem className="flex-1 space-y-1">
                       <Label htmlFor="companyName" className="text-base font-normal pl-3">Name of Company (Latest or Current)</Label>
                       <FormControl>
-                        <Input id="companyName" placeholder="Type here" {...field} />
+                        <Input id="companyName" placeholder="Type here" {...field} disabled={isSaved} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
                 {/* Work Duration */}
-                <FormField
-                  control={control}
-                  name="applicationData.duration"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 flex flex-col space-y-1">
-                      <Label htmlFor="workDuration" className="text-base font-normal pl-3">Approximate Duration of Work</Label>
-                      <FormControl>
-                        <input 
-                          placeholder="MM/YYYY - MM/YYYY" 
-                          type="month"
-                          className="!h-[64px] bg-[#09090B] px-3 rounded-xl border"
-                          id="workDuration" {...field} />
-                          
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className='flex-1 space-y-1'>
+                <Label htmlFor="duration" className="text-base font-normal pl-3">Apx. Duration of Work</Label>
+                  <div className="flex flex-1 items-center gap-2">
+                  <FormField
+                    control={control}
+                    name="applicationData.durationFrom"
+                    render={({ field }) => (
+                      <FormItem className="flex-1 flex flex-col space-y-1">
+                        <FormControl>
+                          <Input
+                            type="month"
+                            id="durationFrom"
+                            {...field}
+                            disabled={isSaved}
+                            className="!h-[64px] bg-[#09090B] px-3 rounded-xl border text-white"
+                          />
+                        </FormControl>
+                        <FormMessage>
+                          {errors.applicationData?.durationFrom && (
+                            <span className="text-red-500">{errors.applicationData.durationFrom.message}</span>
+                          )}
+                        </FormMessage>
+                      </FormItem>
+                    )}
+                  />
+
+                  <Minus className='w-4 h-4'/>
+
+                  <FormField
+                    control={control}
+                    name="applicationData.durationTo"
+                    render={({ field }) => (
+                      <FormItem className="flex-1 flex flex-col space-y-1">
+                        <FormControl>
+                          <Input
+                            type="month"
+                            id="durationTo"
+                            {...field}
+                            disabled={isSaved}
+                            className="!h-[64px] bg-[#09090B] px-3 rounded-xl border text-white"
+                          />
+                        </FormControl>
+                        <FormMessage>
+                          {errors.applicationData?.durationTo && (
+                            <span className="text-red-500">{errors.applicationData.durationTo.message}</span>
+                          )}
+                        </FormMessage>
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
+            </div>  
             )}
 
             {watchExperienceType === 'Business Owner' && (
@@ -1295,7 +1288,7 @@ const formData = buildFormData(apiPayload);
                     <FormItem className="flex-1 space-y-1">
                       <Label htmlFor="companyName" className="text-base font-normal pl-3">Name of Company</Label>
                       <FormControl>
-                        <Input id="companyName" placeholder="Type here" {...field} />
+                        <Input id="companyName" placeholder="Type here" {...field} disabled={isSaved} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -1313,7 +1306,7 @@ const formData = buildFormData(apiPayload);
                           placeholder="MM/YYYY" 
                           type="month"
                           className="!h-[64px] bg-[#09090B] px-3 rounded-xl border"
-                          id="companyStartDate" {...field} />
+                          id="companyStartDate" {...field} disabled={isSaved} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -1325,47 +1318,117 @@ const formData = buildFormData(apiPayload);
             {watchExperienceType === 'Freelancer' && (
               <div className="flex flex-col sm:flex-row gap-2">
                 {/* Duration of Work */}
-                <FormField
-                  control={control}
-                  name="applicationData.duration"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 flex flex-col space-y-1">
-                      <Label htmlFor="durationOfWork" className="text-base font-normal pl-3">Approximate Duration of Work</Label>
-                      <FormControl>
-                        <input 
-                          placeholder="MM/YYYY - MM/YYYY" 
-                          type="month"
-                          className="!h-[64px] bg-[#09090B] px-3 rounded-xl border"
-                          id="durationOfWork" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className='flex-1 space-y-1'>
+                <Label htmlFor="duration" className="text-base font-normal pl-3">Apx. Duration of Work</Label>
+                  <div className="flex flex-1 items-center gap-2">
+                  <FormField
+                    control={control}
+                    name="applicationData.durationFrom"
+                    render={({ field }) => (
+                      <FormItem className="flex-1 flex flex-col space-y-1">
+                        <FormControl>
+                          <Input
+                            type="month"
+                            id="durationFrom"
+                            {...field}
+                            disabled={isSaved}
+                            className="!h-[64px] bg-[#09090B] px-3 rounded-xl border text-white"
+                          />
+                        </FormControl>
+                        <FormMessage>
+                          {errors.applicationData?.durationFrom && (
+                            <span className="text-red-500">{errors.applicationData.durationFrom.message}</span>
+                          )}
+                        </FormMessage>
+                      </FormItem>
+                    )}
+                  />
+
+                  <Minus className='w-4 h-4'/>
+
+                  <FormField
+                    control={control}
+                    name="applicationData.durationTo"
+                    render={({ field }) => (
+                      <FormItem className="flex-1 flex flex-col space-y-1">
+                        <FormControl>
+                          <Input
+                            type="month"
+                            id="durationTo"
+                            {...field}
+                            disabled={isSaved}
+                            className="!h-[64px] bg-[#09090B] px-3 rounded-xl border text-white"
+                          />
+                        </FormControl>
+                        <FormMessage>
+                          {errors.applicationData?.durationTo && (
+                            <span className="text-red-500">{errors.applicationData.durationTo.message}</span>
+                          )}
+                        </FormMessage>
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
+            </div>
             )}
 
             {watchExperienceType === 'Consultant' && (
               <div className="flex flex-col sm:flex-row gap-2">
                 {/* Duration of Work */}
-                <FormField
-                  control={control}
-                  name="applicationData.duration"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 flex flex-col space-y-1">
-                      <Label htmlFor="durationOfWork" className="text-base font-normal pl-3">Approximate Duration of Work</Label>
-                      <FormControl>
-                        <input 
-                          placeholder="MM/YYYY - MM/YYYY" 
-                          type="month"
-                          className="!h-[64px] bg-[#09090B] px-3 rounded-xl border"
-                          id="durationOfWork" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className='flex-1 space-y-1'>
+                <Label htmlFor="duration" className="text-base font-normal pl-3">Apx. Duration of Work</Label>
+                  <div className="flex flex-1 items-center gap-2">
+                  <FormField
+                    control={control}
+                    name="applicationData.durationFrom"
+                    render={({ field }) => (
+                      <FormItem className="flex-1 flex flex-col space-y-1">
+                        <FormControl>
+                          <Input
+                            type="month"
+                            id="durationFrom"
+                            {...field}
+                            disabled={isSaved}
+                            className="!h-[64px] bg-[#09090B] px-3 rounded-xl border text-white"
+                          />
+                        </FormControl>
+                        <FormMessage>
+                          {errors.applicationData?.durationFrom && (
+                            <span className="text-red-500">{errors.applicationData.durationFrom.message}</span>
+                          )}
+                        </FormMessage>
+                      </FormItem>
+                    )}
+                  />
+
+                  <Minus className='w-4 h-4'/>
+
+                  <FormField
+                    control={control}
+                    name="applicationData.durationTo"
+                    render={({ field }) => (
+                      <FormItem className="flex-1 flex flex-col space-y-1">
+                        <FormControl>
+                          <Input
+                            type="month"
+                            id="durationTo"
+                            {...field}
+                            disabled={isSaved}
+                            className="!h-[64px] bg-[#09090B] px-3 rounded-xl border text-white"
+                          />
+                        </FormControl>
+                        <FormMessage>
+                          {errors.applicationData?.durationTo && (
+                            <span className="text-red-500">{errors.applicationData.durationTo.message}</span>
+                          )}
+                        </FormMessage>
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
+            </div>
             )}
           </>
         )}
@@ -1383,7 +1446,7 @@ const formData = buildFormData(apiPayload);
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="emergencyFirstName" className="text-base font-normal pl-3">First Name</Label>
                 <FormControl>
-                  <Input id="emergencyFirstName" placeholder="John" {...field} />
+                  <Input id="emergencyFirstName" placeholder="John" {...field} disabled={isSaved} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -1397,7 +1460,7 @@ const formData = buildFormData(apiPayload);
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="emergencyLastName" className="text-base font-normal pl-3">Last Name</Label>
                 <FormControl>
-                  <Input id="emergencyLastName" placeholder="Doe" {...field} />
+                  <Input id="emergencyLastName" placeholder="Doe" {...field} disabled={isSaved} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -1420,7 +1483,7 @@ const formData = buildFormData(apiPayload);
                     const target = e.target as HTMLInputElement;
                     target.value = target.value.replace(/[^0-9+ ]/g, '');
                     field.onChange(target.value);
-                  }}/>
+                  }} disabled={isSaved}/>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -1434,7 +1497,7 @@ const formData = buildFormData(apiPayload);
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="relationship" className="text-base font-normal pl-3">Relationship with Contact</Label>
                 <FormControl>
-                  <Input id="relationship" placeholder="Father/Mother/Sibling" {...field} />
+                  <Input id="relationship" placeholder="Father/Mother/Sibling" {...field} disabled={isSaved} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -1456,7 +1519,7 @@ const formData = buildFormData(apiPayload);
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="fatherFirstName" className="text-base font-normal pl-3">Father's First Name</Label>
                 <FormControl>
-                  <Input id="fatherFirstName" placeholder="John" {...field} />
+                  <Input id="fatherFirstName" placeholder="John" {...field} disabled={isSaved} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -1470,7 +1533,7 @@ const formData = buildFormData(apiPayload);
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="fatherLastName" className="text-base font-normal pl-3">Father's Last Name</Label>
                 <FormControl>
-                  <Input id="fatherLastName" placeholder="Doe" {...field} />
+                  <Input id="fatherLastName" placeholder="Doe" {...field} disabled={isSaved} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -1493,7 +1556,7 @@ const formData = buildFormData(apiPayload);
                     const target = e.target as HTMLInputElement;
                     target.value = target.value.replace(/[^0-9+ ]/g, '');
                     field.onChange(target.value);
-                  }}/>
+                  }} disabled={isSaved}/>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -1507,7 +1570,7 @@ const formData = buildFormData(apiPayload);
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="fatherOccupation" className="text-base font-normal pl-3">Father's Occupation</Label>
                 <FormControl>
-                  <Input id="fatherOccupation" placeholder="Type here" {...field} />
+                  <Input id="fatherOccupation" placeholder="Type here" {...field} disabled={isSaved} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -1524,7 +1587,7 @@ const formData = buildFormData(apiPayload);
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="fatherEmail" className="text-base font-normal pl-3">Father's Email</Label>
                 <FormControl>
-                  <Input id="fatherEmail" placeholder="Doe" {...field} />
+                  <Input id="fatherEmail" placeholder="Doe" {...field} disabled={isSaved} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -1537,7 +1600,7 @@ const formData = buildFormData(apiPayload);
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="motherFirstName" className="text-base font-normal pl-3">Mother's First Name</Label>
                 <FormControl>
-                  <Input id="motherFirstName" placeholder="John" {...field} />
+                  <Input id="motherFirstName" placeholder="John" {...field} disabled={isSaved} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -1554,7 +1617,7 @@ const formData = buildFormData(apiPayload);
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="motherLastName" className="text-base font-normal pl-3">Mother's Last Name</Label>
                 <FormControl>
-                  <Input id="motherLastName" placeholder="Doe" {...field} />
+                  <Input id="motherLastName" placeholder="Doe" {...field} disabled={isSaved} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -1574,7 +1637,7 @@ const formData = buildFormData(apiPayload);
                     const target = e.target as HTMLInputElement;
                     target.value = target.value.replace(/[^0-9+ ]/g, '');
                     field.onChange(target.value);
-                  }}/>
+                  }} disabled={isSaved}/>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -1591,7 +1654,7 @@ const formData = buildFormData(apiPayload);
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="motherOccupation" className="text-base font-normal pl-3">Mother's Occupation</Label>
                 <FormControl>
-                  <Input id="motherOccupation" placeholder="Type here" {...field} />
+                  <Input id="motherOccupation" placeholder="Type here" {...field} disabled={isSaved} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -1605,7 +1668,7 @@ const formData = buildFormData(apiPayload);
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="motherEmail" className="text-base font-normal pl-3">Mother's Email</Label>
                 <FormControl>
-                  <Input id="motherEmail" placeholder="John" {...field} />
+                  <Input id="motherEmail" placeholder="John" {...field} disabled={isSaved} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -1624,7 +1687,7 @@ const formData = buildFormData(apiPayload);
               <FormItem className="flex-1 space-y-1 p-6 bg-[#27272A]/[0.6] rounded-2xl">
                 <Label className="text-base font-normal">Are you financially dependent on your Parents?</Label>
                 <FormControl>
-                  <RadioGroup
+                  <RadioGroup disabled={isSaved}
                     className="flex space-x-6 mt-2"
                     onValueChange={(value) => field.onChange(value === 'yes')}
                     value={field.value ? 'yes' : 'no'}
@@ -1651,7 +1714,7 @@ const formData = buildFormData(apiPayload);
               <FormItem className="flex-1 space-y-1 p-6 bg-[#27272A]/[0.6] rounded-2xl">
                 <Label className="text-base font-normal">Have you tried applying for financial aid earlier?</Label>
                 <FormControl>
-                  <RadioGroup
+                  <RadioGroup disabled={isSaved}
                     className="flex space-x-6 mt-2"
                     onValueChange={(value) => field.onChange(value === 'yes')}
                     value={field.value ? 'yes' : 'no'}
@@ -1671,25 +1734,20 @@ const formData = buildFormData(apiPayload);
             )}
           />
           </div>
-
-          {(!studentData?.profileUrl || !studentData?.isMobileVerified) && (
-            <div className="text-red-500 text-sm font-medium pl-3">
-              {studentData?.profileUrl
-                ? null
-                : "Please upload your profile image before submitting."}<br></br>
-              {!studentData?.isMobileVerified &&
-                " Please verify your mobile number before submitting."}
-            </div>
-          )}
-
         </div>
  
         <div className="flex justify-between items-center mt-10">
           <Button variant="link" type='button' onClick={() => form.reset() }>Clear Form</Button>
-          {isSaved ?
+          {isPaymentDone ?
+          <Button size="xl" className='px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90' type="button" onClick={() => handleContinueToDashboard()} disabled={loading}>
+            <div className='flex items-center gap-2'>
+              {loading ? 'Redirecting...' : 'Continue to Dashboard'}
+            </div>
+          </Button> :
+          isSaved ?
           <Button size="xl" className='px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90' type="button" onClick={() => handlePayment()} disabled={loading}>
             <div className='flex items-center gap-2'>
-              {loading ? 'Initializing Payment...' : 'Pay INR 500.00'}
+              {loading ? 'Initializing Payment...' : 'Pay INR ₹500.00'}
             </div>
           </Button> :
           <Button size="xl" className='px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90' type="submit" disabled={loading}>
@@ -1709,6 +1767,24 @@ const formData = buildFormData(apiPayload);
           setIsDialogOpen={setIsDialogOpen}
         />
       </DialogContent>
+    </Dialog>
+    <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+    <DialogContent className="max-w-[500px] mx-4 bg-[#09090b] text-white rounded-lg px-8 py-16 text-center shadow-[0px_4px_32px_0px_rgba(0,0,0,0.75)]">
+      <img src='/assets/images/make-payment.svg' className="mx-auto mb-8" />
+      <div>
+        <div className="text-2xl font-semibold ">Admission Fee Payment</div>
+        <div className="mt-2 text-base font-normal text-center">
+          Make an admission fee payment of INR 500 to move to the next step of your admission process
+        </div>
+      </div>
+      <div className="flex flex-col gap-3">
+        <Button size="xl" className='px-4 mx-auto bg-[#00AB7B] hover:bg-[#00AB7B]/90' type="button" onClick={() => handlePayment()} disabled={loading}>
+          <div className='flex items-center gap-2'>
+            {loading ? 'Initializing Payment...' : 'Make Payment'}
+          </div>
+        </Button>
+      </div>
+    </DialogContent>
     </Dialog>
     <PaymentSuccessDialog open={successDialogOpen} setOpen={setSuccessDialogOpen} type='step1' mail={studentData?.email || 'your email'} onContinue={handleContinueToDashboard}/>
     <PaymentFailedDialog open={failedDialogOpen} setOpen={setFailedDialogOpen} type='step1' mail={studentData?.email || 'your email'} onContinue={handleRetry}/>

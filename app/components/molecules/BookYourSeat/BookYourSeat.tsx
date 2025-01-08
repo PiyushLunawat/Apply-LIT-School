@@ -11,6 +11,7 @@ interface Seat {
 
 interface FeedbackProps {
   booked: number;
+  setIsPaymentVerified: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 const generateSeats = (booked: number) => {
@@ -57,7 +58,7 @@ const CURVE_INTENSITY = 150;
 const BASE_CURVE_MULTIPLIER = 1.5;
 
 
-const BookYourSeat: React.FC<FeedbackProps> = ({ booked }) => {
+const BookYourSeat: React.FC<FeedbackProps> = ({ booked, setIsPaymentVerified }) => {
 
   console.log("booked",booked);
   
@@ -187,7 +188,7 @@ const BookYourSeat: React.FC<FeedbackProps> = ({ booked }) => {
         </Button>
       </div>
     </div>
-    <TokenPaymentDialog open={PaymentDialogOpen} setOpen={setPaymentDialogOpen} />
+    <TokenPaymentDialog open={PaymentDialogOpen} setOpen={setPaymentDialogOpen} setIsPaymentVerified={setIsPaymentVerified}/>
   </>  
   );
 };

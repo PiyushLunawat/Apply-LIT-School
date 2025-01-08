@@ -10,9 +10,10 @@ interface FeedbackProps {
   feedbackList: any;
   setPass: React.Dispatch<React.SetStateAction<boolean>>;
   booked: number;
+  setIsPaymentVerified: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
-const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass, booked }) => {
+const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass, booked, setIsPaymentVerified }) => {
   const [student, setStudent] = useState<any>([]);
   const navigate = useNavigate();
   const { studentData } = useContext(UserContext);
@@ -91,7 +92,8 @@ const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass, book
       </Button>
     </div>}
 
-    {status === "accepted" && <BookYourSeat booked={booked}/>}
+    {status === "accepted" && <BookYourSeat booked={booked} setIsPaymentVerified={setIsPaymentVerified}
+    />}
 
   </div>
   );

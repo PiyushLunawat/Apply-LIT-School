@@ -11,9 +11,10 @@ import { submitTokenReceipt } from '~/utils/studentAPI';
 interface TokenPaymentDialogProps {
   open: boolean;
   setOpen: (open: boolean) => void;
+  setIsPaymentVerified: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
-const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({ open, setOpen }) => {
+const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({ open, setOpen, setIsPaymentVerified }) => {
   const navigate = useNavigate();
   const [selectedPayment, setSelectedPayment] = useState<'cash' | 'bank transfer'>('cash');
   const [secondDialogOpen, setSecondDialogOpen] = useState(false);
@@ -72,7 +73,7 @@ const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({ open, setOpen }
       const response = await submitTokenReceipt(formData);
 
       console.log('Receipt uploaded successfully:', response);
-      navigate('../dashboard');
+      setIsPaymentVerified('pending');
     } catch (error) {
       setUploadError('Error uploading receipt. Please try again.');
       console.error('Error uploading receipt:', error);
