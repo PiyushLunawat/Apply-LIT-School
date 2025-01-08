@@ -119,8 +119,8 @@ const formSchema = z.object({
   }
 )
 .refine(
-  (data) => (data.applicationData.fatherContact !== data.applicationData.motherContact &&
-    data.applicationData.fatherContact !== ''),
+  (data) => (data.applicationData.fatherContact !== data.applicationData.motherContact ||
+    !data.applicationData.fatherContact),
   {
     message: "Father's contact and mother's contact must be different.",
     path: ["applicationData.motherContact"], // Error for motherContact
@@ -141,8 +141,8 @@ const formSchema = z.object({
   }
 )
 .refine(
-  (data) => (data.applicationData.fatherEmail !== data.applicationData.motherEmail &&
-    data.applicationData.fatherEmail !== ''
+  (data) => (data.applicationData.fatherEmail !== data.applicationData.motherEmail ||
+    !data.applicationData.fatherEmail
   ),
   {
     message: "Father's email and mother's email must be different.",
@@ -603,7 +603,7 @@ const ApplicationDetailsForm: React.FC = () => {
     setLoading(true);
     console.log("dssd",apiPayload);
     
-    const response = await fetch('https://myfashionfind.shop/student/submit-application', {
+    const response = await fetch('http://localhost:4000/student/submit-application', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -618,7 +618,7 @@ const ApplicationDetailsForm: React.FC = () => {
       setIsSaved(true);
     } else {
       // Handle error response
-      console.error('Form submission failed');
+      console.error('Form submission failed',response);
     }
   
     } catch (error) {
