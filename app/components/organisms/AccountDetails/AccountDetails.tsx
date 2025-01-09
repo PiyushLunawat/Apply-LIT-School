@@ -154,9 +154,11 @@ const AccountDetails = () => {
             </div>
             <div className="flex-1 space-y-2">
               <div className="text-sm ">Blood Group</div>
-              {details?.gender ?
+              {details?.bloodGroup ?
                 <div className="text-xl text-white">{details?.gender}</div> : 
-                <div className="flex justify-between "
+                <div className="flex justify-between ">
+                  
+                </div>
               }
             </div>
           </div>
