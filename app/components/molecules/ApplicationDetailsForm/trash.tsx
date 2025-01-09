@@ -18,7 +18,7 @@ import {
 import { Calendar, Camera, CheckCircle, Instagram, Linkedin, Mail, Phone, SaveIcon, XIcon } from 'lucide-react';
 import { UserContext } from '~/context/UserContext';
 import { PaymentFailedDialog, PaymentSuccessDialog } from '../PaymentDialog/PaymentDialog';
-import { getCentres, getCohorts, getCurrentStudent, getPrograms, submitApplication } from '~/utils/studentAPI';
+import { getCentres, getCohorts, getCurrentStudent, getPrograms, payApplicationFee, submitApplication, verifyApplicationFeePayment } from '~/utils/studentAPI';
 import { Badge } from '~/components/ui/badge';
 import { Dialog, DialogContent } from '~/components/ui/dialog';
 import VerifyOTP from '~/components/organisms/VerifyOTP/VerifyOTP';
@@ -27,13 +27,16 @@ import { verifyNumber } from '~/utils/authAPI';
 type ExperienceType = 'Working Professional' | 'Business Owner' | 'Freelancer' | 'Consultant';
 
 const formSchema = z.object({
-  fullName: z.string().optional(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
   email: z.string().optional(),
   contact: z.string().optional(),
   dob: z.string().optional(),
   currentStatus: z.string().optional(),
   courseOfInterest: z.string().optional(),
   cohort: z.string().optional(),
+  linkedInUrl: z.string().optional(),
+  instagramUrl: z.string().optional(),
   profileUrl: z.any().optional(),
   isMobileVerified: z.boolean().optional(),
   linkedin: z.string().optional(),
@@ -50,28 +53,43 @@ const formSchema = z.object({
   experienceType: z.enum(['', 'Working Professional', 'Business Owner', 'Freelancer', 'Consultant']).optional(),
   nameOfCompany: z.string().optional(),
   duration: z.string().optional(),
+  durationFrom: z.string().optional(),
+  durationTo: z.string().optional(),
   jobDescription: z.string().optional(),
   emergencyFirstName: z.string().nonempty("Emergency contact's first name is required"),
   emergencyLastName: z.string().nonempty("Emergency contact's last name is required"),
   emergencyContact: z.string().min(10, "Emergency contact number is required"),
   relationship: z.string().nonempty("Relationship is required"),
-  fatherFirstName: z.string().nonempty("Father's first name is required"),
-  fatherLastName: z.string().nonempty("Father's last name is required"),
-  fatherContact: z.string().min(10, "Father's contact number is required"),
-  fatherOccupation: z.string().nonempty("Father's occupation is required"),
-  fatherEmail: z.string()
-    .email("Email format is invalid")
-    .refine((email) => email.length > 0, { message: "Father's email is required" }),
-  motherFirstName: z.string().nonempty("Mother's first name is required"),
-  motherLastName: z.string().nonempty("Mother's last name is required"),
-  motherContact: z.string().min(10, "Mother's contact number is required"),
-  motherOccupation: z.string().nonempty("Mother's occupation is required"),
-  motherEmail: z.string()
-    .email("Email format is invalid")
-    .refine((email) => email.length > 0, { message: "Mother's email is required" }), 
+  fatherFirstName: z.string().optional(),
+  fatherLastName: z.string().optional(),
+  fatherContact: z.string().optional(),
+  fatherOccupation: z.string().optional(),
+  fatherEmail: z.string().optional(),
+  motherFirstName: z.string().optional(),
+  motherLastName: z.string().optional(),
+  motherContact: z.string().optional(),
+  motherOccupation: z.string().optional(),
+  motherEmail: z.string().optional(),
   financiallyDependent: z.boolean(),
   appliedForFinancialAid: z.boolean(),
-}).refine(
+})
+.refine(
+  (data) =>
+    (data.fatherFirstName &&
+      data.fatherLastName &&
+      data.fatherContact &&
+      data.fatherOccupation &&
+      data.fatherEmail) ||
+    (data.motherFirstName &&
+      data.motherLastName &&
+      data.motherContact &&
+      data.motherOccupation &&
+      data.motherEmail),
+  {
+    message: "Either mother's or father's details must be provided.",
+    path: ["motherOccupation"], // Add error to the root of applicationData
+  }
+).refine(
   (data) => data.emergencyContact !== data.contact,
   {
     message: "Emergency contact and your contact must be different.",
@@ -131,15 +149,14 @@ const ApplicationDetailsForm: React.FC = () => {
   const [failedDialogOpen, setFailedDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [programs, setPrograms] = useState<any[]>([]);
   const [ centres, setCentres] = useState<any[]>([]);
   const [interest, setInterest] = useState<any[]>([]); 
   const [cohorts, setCohorts] = useState<any[]>([]); 
   const [contactInfo, setContactInfo] = useState<string>('');
-  const [imagePreview, setImagePreview] = useState<File[]>([]);
-
-  const [previewUrl, setPreviewUrl] = useState<string>(studentData?.profileUrl || '');
-
+  const [isSaved, setIsSaved] = useState((studentData?.applicationDetails !== undefined));
+  const [isPaymentDone, setIsPaymentDone] = useState(false);
 
   const [fetchedStudentData, setFetchedStudentData] = useState<any>(null);
 
@@ -149,7 +166,6 @@ const ApplicationDetailsForm: React.FC = () => {
       try {
         const student = await getCurrentStudent(studentData._id); // Pass the actual student ID here
         setFetchedStudentData(student.data?.studentDetails); // Store the fetched data in state
-        console.log("csc",fetchedStudentData?.currentAddress?.streetAddress);
         
       } catch (error) {
         console.error("Failed to fetch student data:", error);
@@ -161,14 +177,17 @@ const ApplicationDetailsForm: React.FC = () => {
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      fullName: '',
-      email: '',
-      contact: '',
-      dob: '',
-      currentStatus: '',
-      courseOfInterest: '',
-      cohort: '',
-      // ... include all other default fields with empty strings or false as necessary
+      firstName: studentData?.firstName || '',
+        lastName: studentData?.lastName || '',
+        email: studentData?.email || '',
+        contact: studentData?.mobileNumber || '',
+        dob: studentData?.dateOfBirth || '',
+        currentStatus: studentData?.qualification || '',
+        courseOfInterest: studentData?.program || '',
+        cohort: studentData?.cohort || '',
+        linkedInUrl: studentData?.linkedInUrl || '',
+        instagramUrl: studentData?.instagramUrl || '',
+        profileUrl: studentData?.profileUrl || "",
       gender: "Male",
       address: '',
       city: '',
@@ -181,6 +200,8 @@ const ApplicationDetailsForm: React.FC = () => {
       experienceType: '',
       nameOfCompany: '',
       duration: '',
+      durationFrom: '',
+      durationTo: '',
       jobDescription: '',
       emergencyFirstName: '',
       emergencyLastName: '',
@@ -201,23 +222,33 @@ const ApplicationDetailsForm: React.FC = () => {
     },
   });
 
-  const { control, handleSubmit, formState: { errors }, reset, watch } = form;
+  const { control, handleSubmit, formState: { errors }, reset, setValue, watch } = form;
 
   useEffect(() => {
     const fetchStudentData = async () => {
       try {
         const student = await getCurrentStudent(studentData._id);
         const sData = student.data?.studentDetails;
+        if (student.data?.applicationDetails !== undefined) {
+          setIsSaved(true);
+        } else {
+          setIsSaved(false); 
+        }
+        if(student.data?.applicationDetails?.applicationFeeDetail?.status === 'paid')
+          setIsPaymentDone(true);
 
         // Once fetched, reset the form with the fetched data
         reset({
-          fullName: `${studentData?.firstName || ''} ${studentData?.lastName || ''}`,
+          firstName: studentData?.firstName || '',
+          lastName: studentData?.lastName || '',
           email: studentData?.email || '',
           contact: studentData?.mobileNumber || '',
           dob: studentData?.dateOfBirth ? studentData.dateOfBirth.split('T')[0] : '',
           currentStatus: studentData?.qualification || '',
           courseOfInterest: studentData?.program || '',
           cohort: studentData?.cohort || '',
+          linkedInUrl: student.data?.linkedInUrl || '',
+          instagramUrl: student.data?.instagramUrl || '',
           gender: studentData?.gender || "Male",
           address: sData?.currentAddress?.streetAddress || '',
           city: sData?.currentAddress?.city || '',
@@ -229,8 +260,10 @@ const ApplicationDetailsForm: React.FC = () => {
           isExperienced: sData?.workExperience || 
             ["Working Professional", "Freelancer", "Business Owner", "Consultant",].includes(studentData?.qualification) 
             || false,
-          experienceType: sData?.experienceType || '',
+          experienceType: sData?.experienceType || studentData?.qualification || '',
           nameOfCompany: sData?.nameOfCompany || '',
+          durationFrom: '',
+          durationTo: '',
           duration: sData?.duration || '',
           jobDescription: sData?.jobDescription || '',
           emergencyFirstName: sData?.emergencyContact?.firstName || '',
@@ -265,6 +298,25 @@ const ApplicationDetailsForm: React.FC = () => {
   const watchHasWorkExperience = watch('isExperienced');
   const watchExperienceType = watch('experienceType');
 
+  const formatMonthYear = (dateStr: any) => {
+    const [year, month] = dateStr.split('-');
+    return `${month}/${year}`;
+  };
+
+  useEffect(() => {
+      const durationFrom = watch('durationFrom');
+      const durationTo = watch('durationTo');
+
+      if (durationFrom && durationTo) {
+        const formattedFrom = formatMonthYear(durationFrom);
+        const formattedTo = formatMonthYear(durationTo);
+        setValue('duration', `${formattedFrom} - ${formattedTo}`);
+      } else {
+        setValue('duration', '');
+      }
+    }, [watch('durationFrom'), watch('durationTo'), setValue]);
+
+
   useEffect(() => {
      async function fetchCohorts() {
        try {
@@ -275,7 +327,6 @@ const ApplicationDetailsForm: React.FC = () => {
          const cohortsData = await getCohorts();
          const openCohorts = cohortsData.data.filter((cohort: any) => cohort.status === "Open");
          setInterest(openCohorts);
-         console.log("vss");
          
        } catch (error) {
          console.error('Error fetching cohorts:', error);
@@ -285,15 +336,13 @@ const ApplicationDetailsForm: React.FC = () => {
    }, []);
 
   const handleVerifyClick = async (contact: string) => {
-    const formattedContact = studentData?.mobileNumber.replace('+91 ', '') || '';
-    console.log("xxdv",formattedContact)
     try {
-      const response = await verifyNumber({ phone: formattedContact });
+      const response = await verifyNumber({ phone: contact });
       console.log('Verification initiated:', response);
     } catch (error) {
       console.error('Error verifying number:', error);
     }
-    setContactInfo(formattedContact);
+    setContactInfo(contact);
     setIsDialogOpen(true);
   };
 
@@ -306,6 +355,17 @@ const ApplicationDetailsForm: React.FC = () => {
       year: 'numeric',
     });
   };
+
+  useEffect(() => {
+    // Filter cohorts by selected program
+    if (form.watch("courseOfInterest")) {
+      const filteredCohorts = interest.filter(
+        (interest) => interest?.programDetail === form.watch("courseOfInterest")
+      );
+      setCohorts(filteredCohorts);
+    }
+  }, [form.watch("courseOfInterest"), interest]);
+    
   
   const getProgramName = (programId: string) => {
     const program = programs.find((p) => p._id === programId);
@@ -316,7 +376,6 @@ const ApplicationDetailsForm: React.FC = () => {
     const center = centres.find((c) => c._id === centerId);
     return center ? center.name : "--";
   };
-
 
   const getCohortName = (cohortId: string) => {
     const cohort = cohorts.find((c) => c._id === cohortId);
@@ -344,137 +403,99 @@ const ApplicationDetailsForm: React.FC = () => {
     });
   };
 
-  // Handle payment process
   const handlePayment = async () => {
-    // Load the Razorpay script
-
-    setLoading(true);
-
-    const res = await loadScript('https://checkout.razorpay.com/v1/checkout.js');
-
-    if (!res) {
-      alert('Razorpay SDK failed to load. Are you online?');
-      return;
-    }
-
-    const apiPayload = {
-      appFeeData:{
-        "currency":"INR",
-        "amount":(fetchedStudentData?.cohort?.cohortFeesDetail?.applicationFee || 500) * 100,
-        "receipt":""
+    try {
+      // Show loading
+      setLoading(true);
+  
+      // Load the Razorpay script
+      const razorpayLoaded = await loadScript('https://checkout.razorpay.com/v1/checkout.js');
+      if (!razorpayLoaded) {
+        alert('Razorpay SDK failed to load. Are you online?');
+        setLoading(false);
+        return;
       }
-    }
-
-    const data = await fetch(
-      "https://myfashionfind.shop/student/pay-application-fee",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          appFeeData: {
-            currency: "INR",
-            amount: 500 * 100,
-            receipt: "",
-          },
-        }),
-      }
-    )
-      .then((response) => response.json())
-      .catch((error) => console.error("Error:", error));
-
-      console.log("respose data",data);
-      
-
-    // Configure Razorpay options
-    const options = {
-      key: 'rzp_test_1wAgBK19fS5nhr', // Replace with your Razorpay API key
-      amount: data.data.amount, // Amount from server in currency subunits
-      currency: data.data.currency,
-      name: 'The LIT School',
-      description: 'Application Fee',
-      image: 'https://example.com/your_logo', // Replace with your logo URL
-      order_id: data.data.id, // Use the order ID returned from the server
-      handler: function (response: any) {
-        console.log('Payment successful:', response);
-
-        // Verify the payment on the server
-        fetch('https://myfashionfind.shop/student/verify-application-fee-payement', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
+  
+      // Fetch application fee amount
+      const applicationFee = fetchedStudentData?.cohort?.cohortFeesDetail?.applicationFee || 500;
+  
+      // Call the API to create an order
+      const feeResponse = await payApplicationFee(applicationFee, "INR");
+      console.log("Fee payment response:", feeResponse);
+  
+      // Configure Razorpay options
+      const options = {
+        key: 'rzp_test_1wAgBK19fS5nhr', // Replace with your Razorpay API key
+        amount: feeResponse.data.amount, // Amount in currency subunits
+        currency: feeResponse.data.currency,
+        name: 'The LIT School',
+        description: 'Application Fee',
+        image: 'https://example.com/your_logo', // Replace with your logo URL
+        order_id: feeResponse.data.id, // Use the order ID returned from the server
+        handler: async function (response: any) {
+          console.log('Payment successful:', response);
+  
+          // Prepare payload for payment verification
+          const verifyPayload = {
             appFeeData: {
-                currency: "INR",
-                amount: 500, 
-                receipt: "", 
-              },
-              studentId: studentData._id,
-              cohortId: studentData.cohort,
+              currency: "INR",
+              amount: applicationFee,
+              receipt: "",
+            },
+            studentId: studentData._id,
+            cohortId: studentData.cohort,
             razorpay_order_id: response.razorpay_order_id,
             razorpay_payment_id: response.razorpay_payment_id,
             razorpay_signature: response.razorpay_signature,
-          }),
-        })
-          .then((res) => res.json())
-          .then((verifyData) => {
-            if (verifyData.status === 'ok') {
-              setSuccessDialogOpen(true); 
+          };
+  
+          // Verify the payment on the server
+          try {
+            const verifyResponse = await verifyApplicationFeePayment(verifyPayload);
+            console.log("Payment verification response:", verifyResponse);
+  
+            if (verifyResponse.status === 'ok') {
+              setIsPaymentDone(true);
+              setSuccessDialogOpen(true);
             } else {
               setFailedDialogOpen(true);
             }
-          })
-          .catch((error) => {
-            console.error('Error verifying payment:', error);
-            setFailedDialogOpen(true); 
-          });
-      },
-      prefill: {
-        name: studentData?.firstName + ' ' + studentData?.lastName,
-        email: studentData?.email,
-        contact: studentData?.mobileNumber,
-      },
-      notes: {
-        address: 'Corporate Office',
-      },
-      theme: {
-        color: '#3399cc',
-      },
-    };
-    setLoading(false);
-    const paymentObject = new (window as any).Razorpay(options);
-    paymentObject.open();
-    
-    paymentObject.on('payment.failed', function (response: any) {
-      console.error('Payment failed:', response);
-      setFailedDialogOpen(true); // Open failed dialog
-    });
-
-  };
-
-  const validateBeforeSubmit = () => {
-    if (!studentData?.profileUrl) {
-      return "Profile image is required.";
-    }
-    console.log("image",imagePreview[0]);
-    
-    // if (!studentData?.isMobileVerified) {
-    //   return "Mobile number verification is required.";
-    // }
-    return null;
-  };
-
-  // Handle form submission
-  const saveData = async (data: FormData) => {
-    const validationError = validateBeforeSubmit();
-    if (validationError) {
-      return;
-    }
-    
+          } catch (verificationError) {
+            console.error('Error verifying payment:', verificationError);
+            setFailedDialogOpen(true);
+          }
+        },
+        prefill: {
+          name: `${studentData?.firstName} ${studentData?.lastName}`,
+          email: studentData?.email,
+          contact: studentData?.mobileNumber,
+        },
+        notes: {
+          address: 'Corporate Office',
+        },
+        theme: {
+          color: '#3399cc',
+        },
+      };
   
- 
+      // Stop loading and open Razorpay payment popup
+      setLoading(false);
+      const paymentObject = new (window as any).Razorpay(options);
+      paymentObject.open();
+  
+      // Handle payment failure
+      paymentObject.on('payment.failed', function (response: any) {
+        console.error('Payment failed:', response);
+        setFailedDialogOpen(true); // Open failed dialog
+      });
+    } catch (error) {
+      console.error('Error during payment:', error);
+      setLoading(false);
+      setFailedDialogOpen(true);
+    }
+  };
+
+  const onSubmit = async (data: FormData) => {
     const apiPayload = {
       studentData: {
         firstName: studentData?.firstName || '',
@@ -488,7 +509,7 @@ const ApplicationDetailsForm: React.FC = () => {
         gender: data.gender,
         isVerified: studentData?.isVerified || false,
         dateOfBirth: new Date(studentData?.dateOfBirth || Date.now()), 
-        profileImage: imagePreview[0],
+        profileImage: [],
         linkedInUrl: data.linkedin || "",
         instagramUrl: data.instagram || "",
       },
@@ -496,7 +517,7 @@ const ApplicationDetailsForm: React.FC = () => {
         currentAddress: {
           streetAddress: data.address,
           city: data.city,
-          state: "", // Optional: Add state if available
+          state: "",
           postalCode: data.zipcode,
         },
         previousEducation: {
@@ -543,9 +564,9 @@ const ApplicationDetailsForm: React.FC = () => {
 
   try {
     setLoading(true);
-    console.log("dssd",apiPayload);
+    console.log("API Payload",apiPayload);
     
-    const response = await fetch('https://myfashionfind.shop/student/submit-application', {
+    const response = await fetch('http://localhost:4000/student/submit-application', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -554,11 +575,10 @@ const ApplicationDetailsForm: React.FC = () => {
     });
 
     if (response.ok) {
-      // Handle success response
       console.log('Form submitted successfully', response);
+      setIsPaymentDialogOpen(true);
       setIsSaved(true);
     } else {
-      // Handle error response
       console.error('Form submission failed');
     }
   
@@ -569,29 +589,9 @@ const ApplicationDetailsForm: React.FC = () => {
       setLoading(false);
     }
   };
-
-  const [isSaved, setIsSaved] = useState((studentData?.applicationDetails !== undefined));
-  useEffect(() => {
-    if (studentData?.applicationDetails !== undefined) {
-      setIsSaved(true);
-    } else {
-      setIsSaved(false); 
-    }
-  }, [studentData]);
-
-  const onSubmit = async (data: FormData) => {
-    if (isSaved) {
-      console.log("pay",studentData?.applicationDetails, isSaved);
-      handlePayment();
-    } else {
-      console.log("save",studentData?.applicationDetails, isSaved);
-      await saveData(data);
-    }
-  };
-  
   
   const handleRetry = () => {
-    setFailedDialogOpen(false); // Close the dialog
+    setFailedDialogOpen(false);
     handlePayment();
   };
 
@@ -601,74 +601,15 @@ const ApplicationDetailsForm: React.FC = () => {
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 mt-8">
       <Badge size="xl" className='flex-1 bg-[#00A3FF]/[0.2] text-[#00A3FF] text-center '>Personal Details</Badge>
         <div className="grid sm:flex gap-6">
-          {/* Image Upload */}
-          <div className="w-full sm:w-[232px] h-[308px] bg-[#1F1F1F] flex flex-col items-center justify-center rounded-xl text-sm space-y-4">
-      {previewUrl ? (
-        <div className="w-full h-full relative">
-          <img
-            src={previewUrl}
-            alt="Passport Preview"
-            className="w-full h-full object-cover rounded-lg"
-          />
-          <div className="absolute top-2 right-2 flex space-x-2">
-            <button
-              className="p-2 bg-white/10 mix-blend-difference border border-white rounded-full hover:bg-white/20"
-              onClick={() => {
-                setImagePreview([]);
-                setPreviewUrl('')
-              }}
-            >
-              <XIcon className="w-5 h-5 text-white" />
-            </button>
-          </div>
-        </div>
-      ) : (
-        <>
-        <label
-          htmlFor="passport-input"
-          className="cursor-pointer flex flex-col items-center justify-center items-center bg-[#1F1F1F] px-6 rounded-xl border-[#2C2C2C] w-full h-[220px]"
-        >
-          <div className="text-center my-auto text-muted-foreground">
-            <Camera className="mx-auto mb-2 w-8 h-8" />
-            <div className="text-wrap">
-              Upload a Passport size Image of Yourself. Ensure that your face covers
-              60% of this picture.
-            </div>
-          </div>
-          <input
-            id="passport-input"
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files;
-              if (file) {
-                let fileArray = Array.from(file);
-                const newFiles = [...file, ...fileArray];
-                const imageUrl = URL.createObjectURL(file?.[0]);
-                setImagePreview(newFiles);
-                setPreviewUrl(imageUrl);
-                setStudentData({ ...studentData, profileUrl: file });
-              }
-            }}
-          />
-        </label>
-        </>
-      )}
-    </div>
-
-
-          {/* Form Fields */}
           <div className="flex-1 space-y-4">
-            {/* Full Name */}
             <FormField
               control={control}
-              name="fullName"
+              name="firstName"
               render={({ field }) => (
                 <FormItem className='flex-1 space-y-1'>
                   <Label className="text-base font-normal pl-3">Full Name</Label>
                   <FormControl>
-                    <Input id="fullName" defaultValue={((studentData?.firstName || "-")+' '+(studentData?.lastName || "-"))} placeholder="John Doe" />
+                    <Input id="fullName" defaultValue={((studentData?.firstName || "-")+' '+(studentData?.lastName || "-"))} placeholder="John Doe" disabled/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -1577,43 +1518,58 @@ const ApplicationDetailsForm: React.FC = () => {
             )}
           />
           </div>
-
-          {(!studentData?.profileUrl || !studentData?.isMobileVerified) && (
-            <div className="text-red-500 text-sm font-medium pl-3">
-              {studentData?.profileUrl
-                ? null
-                : "Please upload your profile image before submitting."}<br></br>
-              {!studentData?.isMobileVerified &&
-                " Please verify your mobile number before submitting."}
-            </div>
-          )}
-
         </div>
  
         <div className="flex justify-between items-center mt-10">
-          <Button variant="link" type='button' onClick={() => form.reset() }>Clear Form</Button>
-          <Button size="xl" className='px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90' type="submit" disabled={loading}>
-            <div className='flex items-center gap-2'>
-              {isSaved ? (
-                <>{loading ? 'Initializing Payment...' : 'Pay INR 500.00'}</> 
-              ) : (
-                 <> <SaveIcon className='w-5 h-5' />{loading ? 'Submitting...' : 'Submit'}</>
-              ) }
-            </div>
-          </Button>
-        </div>
-      </form>
-    </Form>
-    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-      <DialogContent className='max-w-4xl !p-0'>
-        <VerifyOTP
-          verificationType="contact" 
-          contactInfo={contactInfo}
-          errorMessage="Oops! Looks like you got the OTP wrong, Please Retry."
-          setIsDialogOpen={setIsDialogOpen}
-        />
-      </DialogContent>
-    </Dialog>
+                  <Button variant="link" type='button' onClick={() => form.reset() }>Clear Form</Button>
+                  {isPaymentDone ?
+                  <Button size="xl" className='px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90' type="button" onClick={() => handleContinueToDashboard()} disabled={loading}>
+                    <div className='flex items-center gap-2'>
+                      {loading ? 'Redirecting...' : 'Continue to Dashboard'}
+                    </div>
+                  </Button> :
+                  isSaved ?
+                  <Button size="xl" className='px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90' type="button" onClick={() => handlePayment()} disabled={loading}>
+                    <div className='flex items-center gap-2'>
+                      {loading ? 'Initializing Payment...' : 'Pay INR ₹500.00'}
+                    </div>
+                  </Button> :
+                  <Button size="xl" className='px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90' type="submit" disabled={loading}>
+                  <div className='flex items-center gap-2'>
+                    <SaveIcon className='w-5 h-5' />{loading ? 'Submitting...' : 'Submit'}
+                  </div>
+                </Button>}
+                </div>
+              </form>
+            </Form>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogContent className='max-w-4xl !p-0'>
+                <VerifyOTP
+                  verificationType="contact" 
+                  contactInfo={contactInfo}
+                  errorMessage="Oops! Looks like you got the OTP wrong, Please Retry."
+                  setIsDialogOpen={setIsDialogOpen}
+                />
+              </DialogContent>
+            </Dialog>
+            <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+            <DialogContent className="max-w-[500px] mx-4 bg-[#1C1C1C] text-white rounded-lg px-8 py-16 text-center shadow-[0px_4px_32px_0px_rgba(0,0,0,0.75)]">
+              <img src='/assets/images/make-payment.svg' className="mx-auto mb-8" />
+              <div>
+                <div className="text-2xl font-semibold ">Admission Fee Payment</div>
+                <div className="mt-2 text-base font-normal text-center">
+                  Make an admission fee payment of INR 500 to move to the next step of your admission process
+                </div>
+              </div>
+              <div className="flex flex-col gap-3">
+                <Button size="xl" className='px-4 mx-auto bg-[#00AB7B] hover:bg-[#00AB7B]/90' type="button" onClick={() => handlePayment()} disabled={loading}>
+                  <div className='flex items-center gap-2'>
+                    {loading ? 'Initializing Payment...' : 'Make Payment'}
+                  </div>
+                </Button>
+              </div>
+            </DialogContent>
+            </Dialog>
     <PaymentSuccessDialog open={successDialogOpen} setOpen={setSuccessDialogOpen} type='step1' mail={studentData?.email || 'your email'} onContinue={handleContinueToDashboard}/>
     <PaymentFailedDialog open={failedDialogOpen} setOpen={setFailedDialogOpen} type='step1' mail={studentData?.email || 'your email'} onContinue={handleRetry}/>
     </>

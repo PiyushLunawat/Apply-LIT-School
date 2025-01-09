@@ -24,6 +24,8 @@ import { Dialog, DialogContent } from '~/components/ui/dialog';
 import VerifyOTP from '~/components/organisms/VerifyOTP/VerifyOTP';
 import { verifyNumber } from '~/utils/authAPI';
 import { format } from 'date-fns';
+import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
+import { auth } from 'firebase.config';
 
 type ExperienceType = 'Working Professional' | 'Business Owner' | 'Freelancer' | 'Consultant';
 
@@ -81,6 +83,64 @@ const formSchema = z.object({
   }),
 })
 .refine(
+  (data) => !data.applicationData.isExperienced || (data.applicationData.experienceType),
+  {
+    message: "Experience Type is required.",
+    path: ["applicationData.experienceType"], 
+  }
+)
+.refine(
+  (data) => !data.applicationData.isExperienced || (data.applicationData.jobDescription),
+  {
+    message: "Job Description is required.",
+    path: ["applicationData.jobDescription"], 
+  }
+)
+.refine(
+  (data) => !data.applicationData.isExperienced || (data.applicationData.experienceType),
+  {
+    message: "Experience Type is required.",
+    path: ["applicationData.experienceType"], 
+  }
+)
+.refine(
+  (data) => (data.applicationData.isExperienced === true),
+  {
+    message: "Experienced is required.",
+    path: ["applicationData.experienceType"],
+  }
+)
+.refine(
+  (data) =>
+    !data.applicationData.isExperienced ||
+    !['Working Professional', 'Business Owner', 'Consultant'].includes(data.applicationData.experienceType || '') ||
+    data.applicationData.nameOfCompany,
+  {
+    message: "Company name is required.",
+    path: ["applicationData.nameOfCompany"],
+  }
+)
+.refine(
+  (data) =>
+    !data.applicationData.isExperienced ||
+    !['Business Owner'].includes(data.applicationData.experienceType || '') ||
+    data.applicationData.duration,
+  {
+    message: "Duration is required.",
+    path: ["applicationData.duration"],
+  }
+)
+.refine(
+  (data) =>
+    !data.applicationData.isExperienced ||
+    !["Working Professional", "Freelancer", "Consultant"].includes(data.applicationData.experienceType || '') ||
+    data.applicationData.duration,
+  {
+    message: "Duration is required.",
+    path: ["applicationData.durationFrom"],
+  }
+)
+.refine(
   (data) =>
     // Ensure at least one parent's details are filled
     (data.applicationData.fatherFirstName &&
@@ -95,7 +155,7 @@ const formSchema = z.object({
       data.applicationData.motherEmail),
   {
     message: "Either mother's or father's details must be provided.",
-    path: ["applicationData.motherOccupation"], 
+    path: ["applicationData.motherOccupation"], // Add error to the root of applicationData
   }
 ).refine(
   (data) => data.applicationData.emergencyContact !== data.studentData.contact,
@@ -120,7 +180,8 @@ const formSchema = z.object({
 )
 .refine(
   (data) => (data.applicationData.fatherContact !== data.applicationData.motherContact ||
-    !data.applicationData.fatherContact),
+    !data.applicationData.fatherContact
+  ),
   {
     message: "Father's contact and mother's contact must be different.",
     path: ["applicationData.motherContact"], // Error for motherContact
@@ -141,7 +202,7 @@ const formSchema = z.object({
   }
 )
 .refine(
-  (data) => (data.applicationData.fatherEmail !== data.applicationData.motherEmail ||
+  (data) => (data.applicationData.fatherEmail !== data.applicationData.motherEmail || 
     !data.applicationData.fatherEmail
   ),
   {
@@ -169,7 +230,13 @@ const ApplicationDetailsForm: React.FC = () => {
   const [imagePreview, setImagePreview] = useState<File | null>(null);
   const [isSaved, setIsSaved] = useState((studentData?.applicationDetails !== undefined));
   const [isPaymentDone, setIsPaymentDone] = useState(false);
+
+  const [otp, setOtp] = useState("");
+  const [verificationId, setVerificationId] = useState("");
+  const [isVerified, setIsVerified] = useState(false);
+
   const [previewUrl, setPreviewUrl] = useState<string>(studentData?.profileUrl || '');
+
 
   const [fetchedStudentData, setFetchedStudentData] = useState<any>(null);
 
@@ -204,7 +271,7 @@ const ApplicationDetailsForm: React.FC = () => {
         instagramUrl: studentData?.instagramUrl || '',
         gender: "Male",
       },
-      profileUrl: studentData?.profileUrl || null,
+      profileUrl: studentData?.profileUrl || "",
       applicationData: {
         address: '',
         city: '',
@@ -275,15 +342,15 @@ const ApplicationDetailsForm: React.FC = () => {
           fieldOfStudy: sData?.previousEducation?.fieldOfStudy || '',
           institutionName: sData?.previousEducation?.nameOfInstitution || '',
           graduationYear: sData?.previousEducation?.yearOfGraduation || '',
-          isExperienced: sData?.workExperience || 
+          isExperienced: sData?.workExperience?.isExperienced || 
             ["Working Professional", "Freelancer", "Business Owner", "Consultant",].includes(studentData?.qualification) 
             || false,
-          experienceType: sData?.experienceType || studentData?.qualification || '',
-          nameOfCompany: sData?.nameOfCompany || '',
+          experienceType: sData?.workExperience?.experienceType || studentData?.qualification || '',
+          nameOfCompany: sData?.workExperience?.nameOfCompany || '',
           durationFrom: '',
           durationTo: '',
-          duration: sData?.duration || '',
-          jobDescription: sData?.jobDescription || '',
+          duration: sData?.workExperience?.duration || '',
+          jobDescription: sData?.workExperience?.jobDescription || '',
           emergencyFirstName: sData?.emergencyContact?.firstName || '',
           emergencyLastName: sData?.emergencyContact?.lastName || '',
           emergencyContact: sData?.emergencyContact?.contactNumber || '',
@@ -355,17 +422,32 @@ const ApplicationDetailsForm: React.FC = () => {
     fetchCohorts();
   }, []);
 
-  const handleVerifyClick = async (contact: string) => {
-    const formattedContact = studentData?.mobileNumber.replace('+91 ', '') || '';
-    console.log("xxdv",formattedContact)
+ const handleVerifyClick = async (contact: string) => {
+    const recaptchaVerifier = new RecaptchaVerifier(
+      auth,
+      "recaptcha-container", 
+      { size: "invisible",}   
+
+    );
+console.log("ad",contact);
+
     try {
-      const response = await verifyNumber({ phone: formattedContact });
-      console.log('Verification initiated:', response);
-    } catch (error) {
+      const confirmationResult = await signInWithPhoneNumber(
+        auth,
+        contact,
+        recaptchaVerifier
+      );
+      setVerificationId(confirmationResult.verificationId);
+      setContactInfo(contact);
+      setIsDialogOpen(true);
+      console.log('Verification initiated:', confirmationResult);
+    } catch (error: any) {
       console.error('Error verifying number:', error);
+      form.setError('studentData.contact', {
+        type: 'manual',
+        message: error || 'Failed to send OTP. Please try again.',
+      });
     }
-    setContactInfo(formattedContact);
-    setIsDialogOpen(true);
   };
 
   const formatDate = (isoDate: string | number | Date) => {
@@ -537,19 +619,19 @@ const ApplicationDetailsForm: React.FC = () => {
       studentData: {
         firstName: studentData?.firstName || '',
         lastName: studentData?.lastName || '',
-        mobileNumber: data?.studentData?.contact || studentData?.mobileNumber,
+        mobileNumber: studentData?.mobileNumber || '',
         isMobileVerified: studentData?.isMobileVerified || false,
         email: studentData?.email || '',
-        qualification: data?.studentData?.currentStatus || studentData?.qualification,
-        program: data?.studentData?.courseOfInterest || studentData?.program,
-        cohort: data?.studentData?.cohort || studentData?.cohort,
+        qualification: studentData?.qualification || '',
+        program: studentData?.program || '',
+        cohort: studentData?.cohort || '',
         gender: data.studentData.gender,
         isVerified: studentData?.isVerified || false,
-        dateOfBirth: new Date(data?.studentData?.dob || studentData?.dateOfBirth), 
+        dateOfBirth: new Date(studentData?.dateOfBirth || Date.now()), 
+        profileImage: [],
         linkedInUrl: data.studentData.linkedInUrl || "",
         instagramUrl: data.studentData.instagramUrl || "",
       },
-      profileImage: imagePreview,
       applicationData: {
         currentAddress: {
           streetAddress: data.applicationData.address,
@@ -599,6 +681,7 @@ const ApplicationDetailsForm: React.FC = () => {
       },
     };
 
+
   try {
     setLoading(true);
     console.log("dssd",apiPayload);
@@ -612,13 +695,12 @@ const ApplicationDetailsForm: React.FC = () => {
     });
 
     if (response.ok) {
-      // Handle success response
       console.log('Form submitted successfully', response);
       setIsPaymentDialogOpen(true);
       setIsSaved(true);
     } else {
       // Handle error response
-      console.error('Form submission failed',response);
+      console.error('Form submission failed');
     }
   
     } catch (error) {
@@ -762,25 +844,25 @@ const ApplicationDetailsForm: React.FC = () => {
                         type="tel"
                         placeholder="+91 95568 97688"
                         className='pl-10'
-                        defaultValue={studentData?.mobileNumber}
+                        defaultValue={studentData?.mobileNumber || "--"}
                         {...field}
                       />
                     </FormControl>
                     {studentData?.isMobileVerified ?
                       <Phone className="absolute right-3 top-[46px] w-5 h-5" /> : 
-                      <Button size='sm' className='absolute right-3 top-10 rounded-full px-4 bg-[#00CC92]' onClick={() => handleVerifyClick(studentData?.mobileNumber)} type="button">
+                      <Button size='sm' className='absolute right-3 top-10 rounded-full px-4 bg-[#00CC92]' onClick={() => handleVerifyClick(field.value || studentData?.mobileNumber)} type="button">
                         Verify
                       </Button>
                     }
-                    {errors?.studentData?.contact ? (
-                      <FormMessage />
-                    ) : (
-                      !studentData?.isMobileVerified && (
-                        <div className="text-red-500 text-sm font-medium pl-3">
-                          Please verify your mobile number before submitting.
-                        </div>
-                      )
-                    )}
+                      {errors?.studentData?.contact ? (
+                        <FormMessage />
+                      ) : (
+                        !studentData?.isMobileVerified && (
+                          <div className="text-red-500 text-sm font-medium pl-3">
+                            Please verify your mobile number before submitting.
+                          </div>
+                        )
+                      )}
                   </FormItem>
                 )}
               />
@@ -1765,11 +1847,12 @@ const ApplicationDetailsForm: React.FC = () => {
           contactInfo={contactInfo}
           errorMessage="Oops! Looks like you got the OTP wrong, Please Retry."
           setIsDialogOpen={setIsDialogOpen}
+          verificationId={verificationId}
         />
       </DialogContent>
     </Dialog>
     <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
-    <DialogContent className="max-w-[500px] mx-4 bg-[#09090b] text-white rounded-lg px-8 py-16 text-center shadow-[0px_4px_32px_0px_rgba(0,0,0,0.75)]">
+    <DialogContent className="max-w-[500px] mx-4 bg-[#1C1C1C] text-white rounded-lg px-8 py-16 text-center shadow-[0px_4px_32px_0px_rgba(0,0,0,0.75)]">
       <img src='/assets/images/make-payment.svg' className="mx-auto mb-8" />
       <div>
         <div className="text-2xl font-semibold ">Admission Fee Payment</div>
@@ -1788,6 +1871,9 @@ const ApplicationDetailsForm: React.FC = () => {
     </Dialog>
     <PaymentSuccessDialog open={successDialogOpen} setOpen={setSuccessDialogOpen} type='step1' mail={studentData?.email || 'your email'} onContinue={handleContinueToDashboard}/>
     <PaymentFailedDialog open={failedDialogOpen} setOpen={setFailedDialogOpen} type='step1' mail={studentData?.email || 'your email'} onContinue={handleRetry}/>
+    <div id='recaptcha-container'>
+
+    </div>
     </>
   );
 };

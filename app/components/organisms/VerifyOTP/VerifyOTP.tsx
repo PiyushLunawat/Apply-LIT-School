@@ -20,6 +20,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { UserContext } from '~/context/UserContext';
 import { getCurrentStudent } from '~/utils/studentAPI';
+import { PhoneAuthProvider, signInWithCredential } from 'firebase/auth';
+import { auth } from 'firebase.config';
 
 const formSchema = z.object({
   otp: z
@@ -35,6 +37,7 @@ interface VerifyOTPProps {
   errorMessage?: string;
   setIsDialogOpen?: (isOpen: boolean) => void;
   onVerificationSuccess?: () => void;
+  verificationId: string;
   back?: string;
 }
 
@@ -44,6 +47,7 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
   errorMessage,
   setIsDialogOpen,
   onVerificationSuccess,
+  verificationId,
   back
 }) => {
     const navigate = useNavigate();
@@ -113,16 +117,28 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
       }
 
       if(verificationType === 'contact'){
-        const res = await verifyMobileOTP({ mobileNumber: contactInfo, otp: data.otp });
-
-        if (res?.data) {
-          localStorage.setItem('studentData', JSON.stringify(res.data));
-          setStudentData(res.data); 
+        const fullOtp = otp.join('');
+        const credential = PhoneAuthProvider.credential(verificationId, fullOtp);
+        try {
+          const data = await signInWithCredential(auth, credential);
+          // setIsVerified(true);
+          console.log(data, "dtaa");
           if (setIsDialogOpen) { // Ensure it's defined
             setIsDialogOpen(false); 
           }
-          console.log('Mobile number verified successfully.');
+        } catch (error) {
+          console.error("Error verifying OTP:", error);
+          alert("Invalid OTP. Please try again.");
         }
+
+        // if (res?.data) {
+        //   localStorage.setItem('studentData', JSON.stringify(res.data));
+        //   setStudentData(res.data); 
+        //   if (setIsDialogOpen) { // Ensure it's defined
+        //     setIsDialogOpen(false); 
+        //   }
+        //   console.log('Mobile number verified successfully.');
+        // }
       }
       
     } catch (error) {

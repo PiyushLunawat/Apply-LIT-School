@@ -16,6 +16,7 @@ import { UserContext } from '~/context/UserContext';
 import { Skeleton } from '../ui/skeleton';
 import ApplicationDetailsForm from '../molecules/ApplicationDetailsForm/OneTimeSetup';
 // import ApplicationDetailsForm from '../molecules/ApplicationDetailsForm/ApplicationDetailsForm';
+// import ApplicationDetailsForm from '../molecules/ApplicationDetailsForm/trash';
 import ApplicationTaskForm from '../molecules/ApplicationTaskForm/trash';
 // import ApplicationTaskForm from '../molecules/ApplicationTaskForm/ApplicationTaskForm';
 

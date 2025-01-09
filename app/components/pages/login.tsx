@@ -21,7 +21,7 @@ export const SignUp: React.FC = () => {
           <div className='max-w-[840px] mx-auto'>
             <div className="gap-4 sm:gap-6 flex flex-col text-center">
               <div className="text-xl sm:text-3xl font-semibold ">Join the Education Revolution!</div>
-              <div className="text-sm sm:text-base font-semibold ">Access your dashboard by verifying your contact number</div>
+              <div className="text-sm sm:text-base font-semibold ">Access your dashboard by verifying your Email</div>
             </div>
             <LoginForm setShowOtp={setShowOtp} setEmail={setEmail}/>
             </div>

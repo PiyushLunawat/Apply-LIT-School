@@ -1,20 +1,19 @@
-// Import the required Firebase modules
-import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
 
-// Firebase Configuration
+// Firebase configuration (replace with your project details)
 const firebaseConfig = {
-  apiKey: process.env.FIREBASE_API_KEY,
-  authDomain: process.env.FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.FIREBASE_PROJECT_ID,
-  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.FIREBASE_APP_ID,
-  measurementId: process.env.FIREBASE_MEASUREMENT_ID,
+  apiKey: "AIzaSyDEzuKZKyMCzwAOGe4Pj0gi9wJI1OVuAsg",
+  authDomain: "lit-application-portal-e53df.firebaseapp.com",
+  projectId: "lit-application-portal-e53df",
+  storageBucket: "lit-application-portal-e53df.firebasestorage.app",
+  messagingSenderId: "983858968291",
+  appId: "1:983858968291:web:d1f2498080a917e081f7d6",
+  measurementId: "G-YWEXXYCP4Y",
 };
 
 // Initialize Firebase App
 const app = initializeApp(firebaseConfig);
 
-// Export Firebase Auth instance
-export const auth = getAuth(app);
+// Export the Firebase Auth instance
+export const auth = getAuth(app);
