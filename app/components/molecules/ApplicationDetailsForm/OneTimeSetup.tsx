@@ -684,7 +684,7 @@ const ApplicationDetailsForm: React.FC = () => {
     setLoading(true);
     console.log("dssd",apiPayload);
     
-    const response = await fetch('http://51.21.131.240:4000/student/submit-application', {
+    const response = await fetch('https://myfashionfind.shop/student/submit-application', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
