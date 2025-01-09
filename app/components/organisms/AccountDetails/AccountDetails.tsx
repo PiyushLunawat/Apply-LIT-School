@@ -12,6 +12,7 @@ import { getCurrentStudent } from "~/utils/studentAPI";
 
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { Input } from "postcss";
 
 interface UserDetails {
   fullName: string;
@@ -153,7 +154,10 @@ const AccountDetails = () => {
             </div>
             <div className="flex-1 space-y-2">
               <div className="text-sm ">Blood Group</div>
-              <div className="text-xl text-white">O+</div>
+              {details?.gender ?
+                <div className="text-xl text-white">{details?.gender}</div> : 
+                <div className="flex justify-between "
+              }
             </div>
           </div>
 
@@ -216,7 +220,6 @@ const AccountDetails = () => {
             </div>
           </div>
 
-          {/* Download Button: Generate PDF of the ID */}
           <Button
             size="xl"
             variant="outline"
@@ -228,8 +231,6 @@ const AccountDetails = () => {
           </Button>
         </Card>
 
-        {/* 3) Hidden Container for PDF Generation */}
-        {/*    This container includes both the front and back sides of the ID. */}
         <div className="hidden" ref={pdfRef} id="pdf-content">
           <div className="flex flex-col gap-6 items-center justify-center p-4">
             <LitIdFront data={details} ImageUrl="https://github.com/shadcn.png" />
@@ -237,7 +238,6 @@ const AccountDetails = () => {
           </div>
         </div>
 
-        {/* 4) Dialog to Preview the Full ID Card */}
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogContent className="max-w-4xl py-2 px-6 h-[90vh] overflow-y-auto">
             <div className="flex gap-4 items-center justify-center">

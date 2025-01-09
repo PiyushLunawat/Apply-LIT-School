@@ -429,8 +429,6 @@ const ApplicationDetailsForm: React.FC = () => {
       { size: "invisible",}   
 
     );
-console.log("ad",contact);
-
     try {
       const confirmationResult = await signInWithPhoneNumber(
         auth,
@@ -686,7 +684,7 @@ console.log("ad",contact);
     setLoading(true);
     console.log("dssd",apiPayload);
     
-    const response = await fetch('http://localhost:4000/student/submit-application', {
+    const response = await fetch('http://51.21.131.240:4000/student/submit-application', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
