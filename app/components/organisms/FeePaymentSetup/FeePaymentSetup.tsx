@@ -282,13 +282,13 @@ export default function FeePaymentSetup() {
           <div className="flex h-5 items-center space-x-4 text-base">
             <div>Token Amount paid</div>
             <Separator orientation="vertical" />
-            <div>3 Nov, 2024</div>
+            <div>{new Date(student?.cousrseEnrolled?.[student.cousrseEnrolled?.length - 1]?.tokenFeeDetails?.updatedAt).toLocaleDateString()}</div>
           </div>
         </div>
         <div className="flex h-5 items-center gap-2">
           <div>Base Fee: ₹22,000</div>
           <Separator orientation="vertical" />
-          <div>GST: ₹3,000</div>
+          {/* <div>GST: ₹3,000</div> */}
         </div>
       </div>
 
@@ -340,7 +340,7 @@ export default function FeePaymentSetup() {
                       </Badge>
                       <div className="flex flex-col sm:flex-row sm:gap-4 text-right">
                         <Badge className="bg-[#64748B1F]/20 border-[#2C2C2C] text-base text-white px-4 py-2">
-                          ₹{instal.baseFee.toLocaleString()}
+                          ₹{instal.amountPayable.toLocaleString()}
                         </Badge>
                         <Badge className="bg-[#64748B1F]/20 border-[#2C2C2C] text-base text-white px-4 py-2">
                           Due:{" "}

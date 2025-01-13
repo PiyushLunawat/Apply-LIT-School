@@ -97,20 +97,6 @@ const formSchema = z.object({
   }
 )
 .refine(
-  (data) => !data.applicationData.isExperienced || (data.applicationData.experienceType),
-  {
-    message: "Experience Type is required.",
-    path: ["applicationData.experienceType"], 
-  }
-)
-.refine(
-  (data) => (data.applicationData.isExperienced === true),
-  {
-    message: "Experienced is required.",
-    path: ["applicationData.experienceType"],
-  }
-)
-.refine(
   (data) =>
     !data.applicationData.isExperienced ||
     !['Working Professional', 'Business Owner', 'Consultant'].includes(data.applicationData.experienceType || '') ||
@@ -284,6 +270,9 @@ const ApplicationDetailsForm: React.FC = () => {
         durationFrom: '',
         durationTo: '',
         duration: '',
+        experienceType: '',
+        nameOfCompany: '',
+        jobDescription: '',
         emergencyFirstName: '',
         emergencyLastName: '',
         emergencyContact: '',
@@ -345,7 +334,9 @@ const ApplicationDetailsForm: React.FC = () => {
           isExperienced: sData?.workExperience?.isExperienced || 
             ["Working Professional", "Freelancer", "Business Owner", "Consultant",].includes(studentData?.qualification) 
             || false,
-          experienceType: sData?.workExperience?.experienceType || studentData?.qualification || '',
+          experienceType: sData?.workExperience?.experienceType || (
+            ['Working Professional', 'Business Owner', 'Freelancer', 'Consultant'].includes(studentData?.qualification) 
+              ? studentData?.qualification : ''),
           nameOfCompany: sData?.workExperience?.nameOfCompany || '',
           durationFrom: '',
           durationTo: '',

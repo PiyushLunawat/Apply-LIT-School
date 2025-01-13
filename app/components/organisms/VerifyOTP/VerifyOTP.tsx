@@ -82,10 +82,9 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
     try {
       setLoading(true);
 
-
       if(verificationType === 'email'){
         const res = await verifyOtp({ email: contactInfo, otp: data.otp });
-        Cookies.set('user-token', res.token);
+        Cookies.set('user-token', res.token, { expires: 2});
         // Store studentData in localStorage
         if (res.studentData) {
           localStorage.setItem('studentData', JSON.stringify(res.studentData));
@@ -117,18 +116,29 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
       }
 
       if(verificationType === 'contact'){
-        const fullOtp = otp.join('');
-        const credential = PhoneAuthProvider.credential(verificationId, fullOtp);
+        // const fullOtp = otp.join('');
+        console.log("otp",data.otp);
+        console.log("verificationId",verificationId);
+        
+        const credential = PhoneAuthProvider.credential(verificationId, data.otp);
         try {
           const data = await signInWithCredential(auth, credential);
           // setIsVerified(true);
-          console.log(data, "dtaa");
-          if (setIsDialogOpen) { // Ensure it's defined
+          console.log(data.user.phoneNumber, "dtaa");
+
+          if (studentData) {
+            setStudentData({
+              ...studentData,
+              isMobileVerified: true,
+              mobileNumber: contactInfo,
+            });
+          }
+
+          if (setIsDialogOpen) { 
             setIsDialogOpen(false); 
           }
         } catch (error) {
           console.error("Error verifying OTP:", error);
-          alert("Invalid OTP. Please try again.");
         }
 
         // if (res?.data) {

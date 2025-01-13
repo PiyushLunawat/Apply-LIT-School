@@ -6,9 +6,12 @@ export const RegisterInterceptor = () => {
     fetchIntercept.register({
         request: function (url, config = {}) {
             // console.log('Request Intercepted:', { url, config });
+        
 
             // Get token from cookies
             const token = Cookies.get('user-token');
+
+            if(!token) 
 
             // Ensure config.headers exists
             config.headers = {

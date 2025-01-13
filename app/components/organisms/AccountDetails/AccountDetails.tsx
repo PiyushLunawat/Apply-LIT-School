@@ -4,7 +4,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { Card, CardHeader, CardFooter, CardContent } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Dialog, DialogContent } from "~/components/ui/dialog";
-import { Eye, Download, CheckCircle, Pencil } from "lucide-react";
+import { Eye, Download, CheckCircle, Pencil, XIcon, Camera, SaveIcon } from "lucide-react";
 import LitIdFront from "~/components/molecules/LitId/LitIdFront";
 import LitIdBack from "~/components/molecules/LitId/LitIdBack";
 import { UserContext } from "~/context/UserContext";
@@ -14,35 +14,18 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { Input } from "postcss";
 
-interface UserDetails {
-  fullName: string;
-  email: string;
-  contactNumber: string;
-  instituteName: string;
-  dateOfBirth: string;
-  gender: string;
-  bloodGroup: string;
-  linkedinID: string;
-}
 
 const AccountDetails = () => {
   const [open, setOpen] = useState(false);
-  const [userDetails, setUserDetails] = useState<UserDetails>({
-    fullName: "John Doe",
-    email: "johndoe~gmail.com",
-    contactNumber: "+91 95568 97688",
-    instituteName: "LIT School",
-    dateOfBirth: "08 March, 2000",
-    gender: "Male",
-    bloodGroup: "O+",
-    linkedinID: "John Doe",
-  });
-
-  const { studentData } = useContext(UserContext);
+  const { studentData, setStudentData } = useContext(UserContext);
   const [details, setDetails] = useState<any>();
   const [loading, setLoading] = useState(false);  
 
-  // Reference to the container that holds both LitIdFront and LitIdBack
+  const [imagePreview, setImagePreview] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>("");
+
+  const [bloodGroupInput, setBloodGroupInput] = useState<string>("");
+
   const pdfRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -50,17 +33,16 @@ const AccountDetails = () => {
       try {
         const student = await getCurrentStudent(studentData._id);
         setDetails(student.data);
+        setBloodGroupInput(student.data.bloodGroup || "");
       } catch (error) {
         console.error("Failed to fetch student data:", error);
       }
     };
     fetchStudentData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [studentData]);
 
-  /**
-   * Capture the LitId container (both front/back) and export to PDF.
-   */
+
+  // Capture the LitId container (both front/back) and export to PDF.
   const handleDownloadPDF = async () => {
     if (!pdfRef.current) return;
 
@@ -76,9 +58,13 @@ const AccountDetails = () => {
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
 
+      // Calculate image dimensions to fit A4
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfImgWidth = pdfWidth;
+      const pdfImgHeight = (imgProps.height * pdfImgWidth) / imgProps.width;
+
       // Add captured image to PDF
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, 0); 
-      // The last argument '0' for height means auto-scale the image within the PDF width.
+      pdf.addImage(imgData, "PNG", 0, 0, pdfImgWidth, pdfImgHeight);
 
       // Save PDF
       pdf.save("LitID.pdf");
@@ -87,36 +73,173 @@ const AccountDetails = () => {
     }
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImagePreview(file);
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+    }
+  };
+
+  /**
+   * Handle saving the selected image
+   */
+  const handleImageSave = async () => {
+    if (!imagePreview) {
+      alert("Please select an image to upload.");
+      return;
+    }
+    setLoading(true);
+    try {
+      // Assuming the API expects form-data for image uploads
+      const formData = new FormData();
+      formData.append("profileImage", imagePreview);
+
+      const response = await updateStudentData(studentData._id, formData); // Implement this function in studentAPI
+
+      if (response.success) {
+        // Update context with new profileUrl
+        setStudentData({ ...studentData, profileUrl: response.data.profileUrl });
+        setDetails(response.data);
+        alert("Profile image updated successfully.");
+        // Clean up
+        setImagePreview(null);
+        setPreviewUrl("");
+      } else {
+        alert("Failed to update profile image.");
+      }
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      alert("An error occurred while uploading the image.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Handle blood group save
+   */
+  const handleBloodGroup = async () => {
+    if (!bloodGroupInput) {
+      alert("Please enter your blood group.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await updateStudentData(studentData._id, { bloodGroup: bloodGroupInput }); // Implement this function in studentAPI
+
+      if (response.success) {
+        setDetails(response.data);
+        setStudentData({ ...studentData, bloodGroup: response.data.bloodGroup });
+        alert("Blood group updated successfully.");
+      } else {
+        alert("Failed to update blood group.");
+      }
+    } catch (error) {
+      console.error("Error updating blood group:", error);
+      alert("An error occurred while updating the blood group.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="p-8 space-y-6 text-white">
       {/* 1) User Details Card */}
       <Card className="bg-[#64748B1F] rounded-xl text-white">
         <CardContent className="p-6 space-y-4">
-          {/* Full Name */}
-          <div className="flex justify-between items-center border-b border-gray-700 pb-2">
-            <div className="flex flex-col gap-2">
-              <div className="text-sm font-normal">Full Name</div>
-              <div className="text-xl">
-                {details?.firstName + " " + details?.lastName || "--"}
+          <div className="flex gap-4">
+             <div className="w-full sm:w-[232px] h-[308px] bg-[#1F1F1F] flex flex-col items-center justify-center rounded-xl text-sm space-y-4">
+              {previewUrl ? (
+                <div className="w-full h-full relative">
+                  <img
+                    src={previewUrl}
+                    alt="Passport Preview"
+                    className="w-full h-full object-cover rounded-lg"
+                  />
+                  <div className="absolute top-2 right-2 flex space-x-2">
+                    <button
+                      className="p-2 bg-white/10 mix-blend-difference border border-white rounded-full hover:bg-white/20"
+                      onClick={() => {
+                        setImagePreview(null);
+                        setPreviewUrl('')
+                      }}
+                    >
+                      <XIcon className="w-5 h-5 text-white" />
+                    </button>
+                  </div>
+                  <div className="absolute bottom-2 right-2 flex space-x-2">
+                    <button
+                      className="flex gap-1 items-center p-2 bg-white/10 mix-blend-difference border border-white rounded-full hover:bg-white/20"
+                      onClick={() => {handleImageSave()
+                      }}
+                    >
+                      <SaveIcon className="w-5 h-5 text-white" />Save
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                <label
+                  htmlFor="passport-input"
+                  className="cursor-pointer flex flex-col items-center justify-center items-center bg-[#1F1F1F] px-6 rounded-xl border-[#2C2C2C] w-full h-[220px]"
+                >
+                  <div className="text-center my-auto text-muted-foreground">
+                    <Camera className="mx-auto mb-2 w-8 h-8" />
+                    <div className="text-wrap">
+                      Upload a Passport size Image of Yourself. Ensure that your face covers
+                      60% of this picture.
+                    </div>
+                  </div>
+                  <input
+                    id="passport-input"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setImagePreview(file);
+                        // setPreviewUrl(imageUrl);
+                        setStudentData({ ...studentData, profileUrl: file });
+                      }
+                    }}
+                  />
+                </label>
+                </>
+              )}
+            </div>
+            <div className="">
+              {/* Full Name */}
+              <div className="flex justify-between items-center border-b border-gray-700 pb-2">
+                <div className="flex flex-col gap-2">
+                  <div className="text-sm font-normal">Full Name</div>
+                  <div className="text-xl">
+                    {details?.firstName + " " + details?.lastName || "--"}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
 
-          {/* Email */}
-          <div className="flex flex-col gap-2">
-            <div className="text-sm ">Email</div>
-            <div className="flex justify-between items-center border-b border-gray-700 pb-2">
-              <div className="text-xl">{details?.email || "--"}</div>
-              <CheckCircle className="h-4 w-4 text-[#00CC92]" />
-            </div>
-          </div>
+              {/* Email */}
+              <div className="flex flex-col gap-2">
+                <div className="text-sm ">Email</div>
+                <div className="flex justify-between items-center border-b border-gray-700 pb-2">
+                  <div className="text-xl">{details?.email || "--"}</div>
+                  <CheckCircle className="h-4 w-4 text-[#00CC92]" />
+                </div>
+              </div>
 
-          {/* Contact No. */}
-          <div className="flex flex-col gap-2">
-            <div className="text-sm ">Contact No.</div>
-            <div className="flex justify-between items-center border-b border-gray-700 pb-2">
-              <div className="text-xl">{details?.mobileNumber || "--"}</div>
-              <CheckCircle className="h-4 w-4 text-[#00CC92]" />
+              {/* Contact No. */}
+              <div className="flex flex-col gap-2">
+                <div className="text-sm ">Contact No.</div>
+                <div className="flex justify-between items-center border-b border-gray-700 pb-2">
+                  <div className="text-xl">{details?.mobileNumber || "--"}</div>
+                  <CheckCircle className="h-4 w-4 text-[#00CC92]" />
+                </div>
+              </div>
             </div>
           </div>
 
@@ -156,8 +279,9 @@ const AccountDetails = () => {
               <div className="text-sm ">Blood Group</div>
               {details?.bloodGroup ?
                 <div className="text-xl text-white">{details?.gender}</div> : 
-                <div className="flex justify-between ">
-                  
+                <div className="flex justify-between items-center">
+                  <input className="border-none"/>
+                  <Button size={'sm'} className="" onClick={()=> handleBloodGroup()}>Save</Button>
                 </div>
               }
             </div>

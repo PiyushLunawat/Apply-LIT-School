@@ -286,3 +286,35 @@ export async function submitApplicationTask(formData: FormData) {
     return response;
   }
   
+  export async function updateStudentData(
+    studentId: string,
+    data: FormData | Partial<{ bloodGroup: string; linkedInUrl: string; instagramUrl: string }>
+  ): Promise<any> {
+    try {
+      const response = await fetch(`${CONST_API}/admin/student/${studentId}`, {
+        method: "PATCH", // Using PATCH for partial updates
+        headers:
+          data instanceof FormData
+            ? {} // Let the browser set the Content-Type for FormData
+            : { "Content-Type": "application/json" }, // Set Content-Type for JSON data
+        body: data instanceof FormData ? data : JSON.stringify(data),
+      });
+  
+      if (!response.ok) {
+        const errorDetails = await response.json().catch(() => null); // Handle non-JSON responses
+        throw new Error(
+          `${
+            errorDetails
+              ? errorDetails.message || JSON.stringify(errorDetails)
+              : "Failed to update student data."
+          }`
+        );
+      }
+  
+      return response.json(); // Return the updated student data
+    } catch (error: any) {
+      console.error("updateStudentData error:", error.message);
+      throw new Error(`Update failed: ${error.message}`);
+    }
+  }
+  

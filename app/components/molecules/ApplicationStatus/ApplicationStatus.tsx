@@ -125,7 +125,7 @@ const StatusMessage: React.FC<StatusMessageProps> = ({
           {(messageType === 'under review' || messageType === 'concluded') && (
           <div className='space-y-2'>  
             <div
-              className={`mx-auto w-fit flex justify-center items-center gap-2 px-6 py-2 sm:py-4 border ${
+              className={`mx-auto w-fit flex justify-center items-center gap-2 px-6 py-2 sm:py-4 border-2 ${
                 countdown === '00:00:00' ? 'border-[#FF503D]' : 'border-[#00A3FF]'
               } bg-[#FFFFFF33] rounded-full text-sm sm:text-2xl`}
             >
