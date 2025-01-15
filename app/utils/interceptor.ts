@@ -1,7 +1,9 @@
+import { redirect, useNavigate } from '@remix-run/react';
 import fetchIntercept from 'fetch-intercept';
 import Cookies from 'js-cookie';
 
 export const RegisterInterceptor = () => {
+
     // console.log('RegisterInterceptor initialized'); // Logs when the interceptor is registered
     fetchIntercept.register({
         request: function (url, config = {}) {
@@ -11,8 +13,11 @@ export const RegisterInterceptor = () => {
             // Get token from cookies
             const token = Cookies.get('user-token');
 
-            if(!token) 
-
+            // if(!token) {
+            //     Cookies.remove('user-token');
+            //     localStorage.removeItem('studentData');
+            //     // window.location.href = '/login' || '/register';
+            // }
             // Ensure config.headers exists
             config.headers = {
                 ...config.headers, // Preserve existing headers if any
