@@ -14,7 +14,7 @@ import { redirect, useNavigate } from '@remix-run/react';
 import { getCurrentStudent, getStudents } from '~/utils/studentAPI';
 import { UserContext } from '~/context/UserContext';
 import { Skeleton } from '../ui/skeleton';
-import ApplicationDetailsForm from '../molecules/ApplicationDetailsForm/OneTimeSetup';
+// import ApplicationDetailsForm from '../molecules/ApplicationDetailsForm/OneTimeSetup';
 // import ApplicationDetailsForm from '../molecules/ApplicationDetailsForm/ApplicationDetailsForm';
 // import ApplicationDetailsForm from '../molecules/ApplicationDetailsForm/trash';
 import ApplicationTaskForm from '../molecules/ApplicationTaskForm/trash';
@@ -26,6 +26,12 @@ declare global {
     Razorpay: any;
   }
 }
+
+import dynamic from 'next/dynamic';
+
+const ApplicationDetailsForm = dynamic(() => import('../molecules/ApplicationDetailsForm/OneTimeSetup'), {
+  ssr: false,
+});
 
 export const ApplicationStep1: React.FC = () => {
   const [studentData, setStudentData] = useState<any>(null);

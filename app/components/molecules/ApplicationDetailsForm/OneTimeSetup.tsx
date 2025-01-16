@@ -1,4 +1,5 @@
 // Import necessary modules and components
+"use client";
 import React, { useContext, useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm, Controller } from "react-hook-form";
@@ -413,31 +414,46 @@ const ApplicationDetailsForm: React.FC = () => {
     fetchCohorts();
   }, []);
 
- const handleVerifyClick = async (contact: string) => {
+const handleVerifyClick = async (contact: string) => {
+  if (typeof window === 'undefined') {
+    // Ensure code only runs on the client
+    return;
+  }
+
+  try {
+    // Lazy load the RecaptchaVerifier when the button is clicked
     const recaptchaVerifier = new RecaptchaVerifier(
       auth,
       "recaptcha-container", 
       { size: "invisible",}   
-
     );
-    try {
-      const confirmationResult = await signInWithPhoneNumber(
-        auth,
-        contact,
-        recaptchaVerifier
-      );
-      setVerificationId(confirmationResult.verificationId);
-      setContactInfo(contact);
-      setIsDialogOpen(true);
-      console.log('Verification initiated:', confirmationResult);
-    } catch (error: any) {
-      console.error('Error verifying number:', error);
-      form.setError('studentData.contact', {
-        type: 'manual',
-        message: error || 'Failed to send OTP. Please try again.',
-      });
+
+    const confirmationResult = await signInWithPhoneNumber(auth, contact, recaptchaVerifier);
+    setVerificationId(confirmationResult.verificationId);
+    setContactInfo(contact);
+    setIsDialogOpen(true);
+    console.log('Verification initiated:', confirmationResult);
+  } catch (error: any) {
+    console.error('Error verifying number:', error);
+    form.setError('studentData.contact', {
+      type: 'manual',
+      message: error.message || 'Failed to send OTP. Please try again.',
+    });
+  }
+};
+
+// useEffect to ensure RecaptchaVerifier is initialized on the client side
+useEffect(() => {
+  if (typeof window !== 'undefined') {
+    // Ensure recaptcha container exists for Firebase RecaptchaVerifier
+    const recaptchaContainer = document.getElementById('recaptcha-container');
+    if (!recaptchaContainer) {
+      const div = document.createElement('div');
+      div.id = 'recaptcha-container';
+      document.body.appendChild(div);
     }
-  };
+  }
+}, []);
 
   const formatDate = (isoDate: string | number | Date) => {
     if (!isoDate) return ''; // Handle cases where date is undefined
