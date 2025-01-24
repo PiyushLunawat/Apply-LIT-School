@@ -70,7 +70,7 @@ export default function ApplicationDashboard() {
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>
           <h1 className="text-4xl font-normal">
-            👋 Hey {studentData?.firstName+' '+studentData?.lastName},
+            👋 Hey {student?.firstName+' '+student?.lastName},
             <div className="">welcome to your LIT portal</div>
           </h1>
         </div>

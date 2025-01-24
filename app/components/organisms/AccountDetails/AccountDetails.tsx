@@ -4,27 +4,27 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { Card, CardHeader, CardFooter, CardContent } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Dialog, DialogContent } from "~/components/ui/dialog";
-import { Eye, Download, CheckCircle, Pencil, XIcon, Camera, SaveIcon } from "lucide-react";
+import { Eye, Download, CheckCircle, Pencil, Camera } from "lucide-react";
 import LitIdFront from "~/components/molecules/LitId/LitIdFront";
 import LitIdBack from "~/components/molecules/LitId/LitIdBack";
 import { UserContext } from "~/context/UserContext";
-import { getCurrentStudent } from "~/utils/studentAPI";
+import { getCurrentStudent, updateStudentData } from "~/utils/studentAPI";
 
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import { Input } from "postcss";
-
+import { Input } from "~/components/ui/input";
 
 const AccountDetails = () => {
   const [open, setOpen] = useState(false);
   const { studentData, setStudentData } = useContext(UserContext);
   const [details, setDetails] = useState<any>();
-  const [loading, setLoading] = useState(false);  
-
-  const [imagePreview, setImagePreview] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const [bloodGroupInput, setBloodGroupInput] = useState<string>("");
+  const [linkedInInput, setLinkedInInput] = useState<string>("");
+  const [instagramInput, setInstagramInput] = useState<string>("");
 
   const pdfRef = useRef<HTMLDivElement>(null);
 
@@ -32,6 +32,7 @@ const AccountDetails = () => {
     const fetchStudentData = async () => {
       try {
         const student = await getCurrentStudent(studentData._id);
+        setStudentData(student.data);
         setDetails(student.data);
         setBloodGroupInput(student.data.bloodGroup || "");
       } catch (error) {
@@ -41,102 +42,105 @@ const AccountDetails = () => {
     fetchStudentData();
   }, [studentData]);
 
-
-  // Capture the LitId container (both front/back) and export to PDF.
   const handleDownloadPDF = async () => {
     if (!pdfRef.current) return;
-
+    setIsGeneratingPDF(true); // Optional: For loading state
     try {
-      // Capture DOM element as Canvas
-      const canvas = await html2canvas(pdfRef.current, {
-        scale: 2, // Increase scale for better resolution
+      // Capture LitIdFront
+      const frontElement = pdfRef.current.querySelector('#front') as HTMLElement;
+      if (!frontElement) {
+        throw new Error('Front element not found');
+      }
+      const frontCanvas = await html2canvas(frontElement, {
+        scale: 1, 
+        useCORS: true, 
+        logging: true, 
       });
-      const imgData = canvas.toDataURL("image/png");
-
-      // Create PDF
-      const pdf = new jsPDF("p", "mm", "a4");
+      const frontImgData = frontCanvas.toDataURL('image/png');
+  
+      // Capture LitIdBack
+      const backElement = pdfRef.current.querySelector('#back') as HTMLElement;
+      if (!backElement) {
+        throw new Error('Back element not found');
+      }
+      const backCanvas = await html2canvas(backElement, {
+        scale: 2,
+        useCORS: true,
+        logging: true,
+      });
+      const backImgData = backCanvas.toDataURL('image/png');
+  
+      // Initialize jsPDF
+      const pdf = new jsPDF('portrait', 'mm', 'a4');
+  
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-
-      // Calculate image dimensions to fit A4
-      const imgProps = pdf.getImageProperties(imgData);
-      const pdfImgWidth = pdfWidth;
-      const pdfImgHeight = (imgProps.height * pdfImgWidth) / imgProps.width;
-
-      // Add captured image to PDF
-      pdf.addImage(imgData, "PNG", 0, 0, pdfImgWidth, pdfImgHeight);
-
-      // Save PDF
-      pdf.save("LitID.pdf");
+  
+      // Add LitIdFront to PDF
+      const imgPropsFront = pdf.getImageProperties(frontImgData);
+      const frontPdfHeight = (imgPropsFront.height * pdfWidth) / imgPropsFront.width;
+      pdf.addImage(frontImgData, 'PNG', 0, 0, pdfWidth, frontPdfHeight);
+  
+      // Add LitIdBack as a new page
+      pdf.addPage();
+      const imgPropsBack = pdf.getImageProperties(backImgData);
+      const backPdfHeight = (imgPropsBack.height * pdfWidth) / imgPropsBack.width;
+      pdf.addImage(backImgData, 'PNG', 0, 0, pdfWidth, backPdfHeight);
+  
+      // Save the PDF
+      pdf.save('LitID.pdf');
     } catch (err) {
-      console.error("Failed to generate PDF:", err);
-    }
-  };
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImagePreview(file);
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
-    }
-  };
-
-  /**
-   * Handle saving the selected image
-   */
-  const handleImageSave = async () => {
-    if (!imagePreview) {
-      alert("Please select an image to upload.");
-      return;
-    }
-    setLoading(true);
-    try {
-      // Assuming the API expects form-data for image uploads
-      const formData = new FormData();
-      formData.append("profileImage", imagePreview);
-
-      const response = await updateStudentData(studentData._id, formData); // Implement this function in studentAPI
-
-      if (response.success) {
-        // Update context with new profileUrl
-        setStudentData({ ...studentData, profileUrl: response.data.profileUrl });
-        setDetails(response.data);
-        alert("Profile image updated successfully.");
-        // Clean up
-        setImagePreview(null);
-        setPreviewUrl("");
-      } else {
-        alert("Failed to update profile image.");
-      }
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      alert("An error occurred while uploading the image.");
+      console.error('Failed to generate PDF:', err);
+      alert('An error occurred while generating the PDF.');
     } finally {
-      setLoading(false);
+      setIsGeneratingPDF(false);
+    }
+  };
+  
+
+  const handleEditImage = () => {
+    document.getElementById("passport-input")?.click();
+  };
+
+  const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      const file = event.target.files[0];
+      setLoading(true);
+
+      try {
+        const formData = new FormData();
+        formData.append("profileImage", file);
+        const response = await updateStudentData(formData);
+
+        if (response.status) {
+          setStudentData(response.data);
+        }
+      } catch (error) {
+        console.error("Error uploading image:", error);
+        alert("An error occurred while uploading the image.");
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
-  /**
-   * Handle blood group save
-   */
+  // Handle blood group save
   const handleBloodGroup = async () => {
-    if (!bloodGroupInput) {
-      alert("Please enter your blood group.");
+    const validBloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+    if (!validBloodGroups.includes(bloodGroupInput.toUpperCase())) {
+      alert("Please enter a valid blood group (e.g., A+, O-, AB+).");
       return;
     }
-
     setLoading(true);
-
     try {
-      const response = await updateStudentData(studentData._id, { bloodGroup: bloodGroupInput }); // Implement this function in studentAPI
+      const formData = new FormData();
+      formData.append("bloodGroup", bloodGroupInput.toUpperCase());
+      const response = await updateStudentData(formData);
+      console.log(response, "response blood");
 
-      if (response.success) {
+      if (response.status) {
         setDetails(response.data);
         setStudentData({ ...studentData, bloodGroup: response.data.bloodGroup });
-        alert("Blood group updated successfully.");
-      } else {
-        alert("Failed to update blood group.");
       }
     } catch (error) {
       console.error("Error updating blood group:", error);
@@ -146,52 +150,86 @@ const AccountDetails = () => {
     }
   };
 
+  const handleLinkedInSave = async () => {
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("linkedInUrl", linkedInInput);
+      const response = await updateStudentData(formData);
+  
+      if (response.status) {
+        setStudentData({ ...studentData, linkedInUrl: linkedInInput });
+        setLinkedInInput("");
+      }
+    } catch (error) {
+      console.error("Error updating LinkedIn URL:", error);
+      alert("Failed to update LinkedIn URL.");
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const handleInstagramSave = async () => {
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("instagramUrl", instagramInput);
+      const response = await updateStudentData(formData);
+  
+      if (response.status) {
+        setStudentData({ ...studentData, instagramUrl: instagramInput });
+        setInstagramInput("");
+      }
+    } catch (error) {
+      console.error("Error updating Instagram URL:", error);
+      alert("Failed to update Instagram URL.");
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+
   return (
     <div className="p-8 space-y-6 text-white">
       {/* 1) User Details Card */}
       <Card className="bg-[#64748B1F] rounded-xl text-white">
         <CardContent className="p-6 space-y-4">
           <div className="flex gap-4">
-             <div className="w-full sm:w-[232px] h-[308px] bg-[#1F1F1F] flex flex-col items-center justify-center rounded-xl text-sm space-y-4">
-              {previewUrl ? (
+            <div className="w-full sm:w-[300px] h-[325px] bg-[#1F1F1F] flex flex-col items-center justify-center rounded-xl text-sm space-y-4">
+              {studentData?.profileUrl || selectedImage ? (
                 <div className="w-full h-full relative">
                   <img
-                    src={previewUrl}
-                    alt="Passport Preview"
+                    src={selectedImage || studentData?.profileUrl}
+                    alt="Profile Image"
                     className="w-full h-full object-cover rounded-lg"
                   />
-                  <div className="absolute top-2 right-2 flex space-x-2">
-                    <button
-                      className="p-2 bg-white/10 mix-blend-difference border border-white rounded-full hover:bg-white/20"
-                      onClick={() => {
-                        setImagePreview(null);
-                        setPreviewUrl('')
-                      }}
+                  <div className="absolute top-3 right-2 flex space-x-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="w-8 h-8 bg-white/[0.2] border border-white rounded-full shadow hover:bg-white/[0.4]"
+                      onClick={handleEditImage}
                     >
-                      <XIcon className="w-5 h-5 text-white" />
-                    </button>
-                  </div>
-                  <div className="absolute bottom-2 right-2 flex space-x-2">
-                    <button
-                      className="flex gap-1 items-center p-2 bg-white/10 mix-blend-difference border border-white rounded-full hover:bg-white/20"
-                      onClick={() => {handleImageSave()
-                      }}
-                    >
-                      <SaveIcon className="w-5 h-5 text-white" />Save
-                    </button>
+                      <Pencil className="w-4 h-4" />
+                      <input
+                        id="passport-input"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleImageChange}
+                      />
+                    </Button>
                   </div>
                 </div>
               ) : (
-                <>
                 <label
                   htmlFor="passport-input"
-                  className="cursor-pointer flex flex-col items-center justify-center items-center bg-[#1F1F1F] px-6 rounded-xl border-[#2C2C2C] w-full h-[220px]"
+                  className="cursor-pointer flex flex-col items-center justify-center bg-[#1F1F1F] px-6 rounded-xl border-[#2C2C2C] w-full h-[220px]"
                 >
                   <div className="text-center my-auto text-muted-foreground">
                     <Camera className="mx-auto mb-2 w-8 h-8" />
                     <div className="text-wrap">
-                      Upload a Passport size Image of Yourself. Ensure that your face covers
-                      60% of this picture.
+                      {loading ? 'Uploading...' : 'Upload a Passport size Image of Yourself. Ensure that your face covers 60% of this picture.'}
                     </div>
                   </div>
                   <input
@@ -199,26 +237,18 @@ const AccountDetails = () => {
                     type="file"
                     accept="image/*"
                     className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setImagePreview(file);
-                        // setPreviewUrl(imageUrl);
-                        setStudentData({ ...studentData, profileUrl: file });
-                      }
-                    }}
+                    onChange={handleImageChange}
                   />
                 </label>
-                </>
               )}
             </div>
-            <div className="">
+            <div className="w-full">
               {/* Full Name */}
               <div className="flex justify-between items-center border-b border-gray-700 pb-2">
                 <div className="flex flex-col gap-2">
                   <div className="text-sm font-normal">Full Name</div>
                   <div className="text-xl">
-                    {details?.firstName + " " + details?.lastName || "--"}
+                    {studentData?.firstName + " " + studentData?.lastName || "--"}
                   </div>
                 </div>
               </div>
@@ -227,7 +257,7 @@ const AccountDetails = () => {
               <div className="flex flex-col gap-2">
                 <div className="text-sm ">Email</div>
                 <div className="flex justify-between items-center border-b border-gray-700 pb-2">
-                  <div className="text-xl">{details?.email || "--"}</div>
+                  <div className="text-xl">{studentData?.email || "--"}</div>
                   <CheckCircle className="h-4 w-4 text-[#00CC92]" />
                 </div>
               </div>
@@ -236,35 +266,32 @@ const AccountDetails = () => {
               <div className="flex flex-col gap-2">
                 <div className="text-sm ">Contact No.</div>
                 <div className="flex justify-between items-center border-b border-gray-700 pb-2">
-                  <div className="text-xl">{details?.mobileNumber || "--"}</div>
+                  <div className="text-xl">{studentData?.mobileNumber || "--"}</div>
                   <CheckCircle className="h-4 w-4 text-[#00CC92]" />
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* Institute Name */}
-          <div className="flex flex-col gap-2">
-            <div className="text-sm ">Institute Name</div>
-            <div className="flex justify-between items-center border-b border-gray-700 pb-2">
-              <div className="text-xl">
-                {
-                  details?.applicationDetails?.studenDetails?.previousEducation
-                    ?.nameOfInstitution || "--"
-                }
+              {/* Institute Name */}
+              <div className="flex flex-col gap-2">
+                <div className="text-sm ">Institute Name</div>
+                <div className="flex justify-between items-center border-b border-gray-700 pb-2">
+                  <div className="text-xl">
+                    {studentData?.applicationDetails?.studenDetails?.previousEducation?.nameOfInstitution || "--"}
+                  </div>
+                  <CheckCircle className="h-4 w-4 text-[#00CC92]" />
+                </div>
               </div>
-              <CheckCircle className="h-4 w-4 text-[#00CC92]" />
-            </div>
-          </div>
 
-          {/* Date of Birth */}
-          <div className="flex justify-between items-center border-b border-gray-700 pb-2">
-            <div className="flex flex-col gap-2">
-              <div className="text-sm ">Date of Birth</div>
-              <div className="text-xl">
-                {details?.dateOfBirth
-                  ? new Date(details?.dateOfBirth).toDateString()
-                  : "--"}
+              {/* Date of Birth */}
+              <div className="flex justify-between items-center border-b border-gray-700 pb-2">
+                <div className="flex flex-col gap-2">
+                  <div className="text-sm ">Date of Birth</div>
+                  <div className="text-xl">
+                    {studentData?.dateOfBirth
+                      ? new Date(studentData?.dateOfBirth).toLocaleDateString()
+                      : "--"}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -272,47 +299,101 @@ const AccountDetails = () => {
           {/* Gender & Blood Group */}
           <div className="flex items-center gap-2 border-b border-gray-700 pb-2">
             <div className="flex-1 space-y-2">
-              <div className="text-sm ">Gender</div>
-              <div className="text-xl text-white">{details?.gender || "--"}</div>
+              <div className="text-sm">Gender</div>
+              <div className="text-xl text-white">{studentData?.gender || "--"}</div>
             </div>
-            <div className="flex-1 space-y-2">
-              <div className="text-sm ">Blood Group</div>
-              {details?.bloodGroup ?
-                <div className="text-xl text-white">{details?.gender}</div> : 
-                <div className="flex justify-between items-center">
-                  <input className="border-none"/>
-                  <Button size={'sm'} className="" onClick={()=> handleBloodGroup()}>Save</Button>
+            <div className="flex-1  flex items-center">
+              {studentData?.bloodGroup ? (
+                <div className="flex-1 space-y-2 justify-between items-center">
+                  <div className="text-sm">Blood Group</div>
+                  <div className="text-xl text-white">{studentData?.bloodGroup}</div>
                 </div>
-              }
+              ) : (
+                <div className="flex-1 space-y-2 w-full items-center gap-2">
+                  <div className="text-sm">Blood Group</div>
+                  <input
+                    type="text"
+                    value={bloodGroupInput}
+                    onChange={(e) => setBloodGroupInput(e.target.value)}
+                    placeholder="O+"
+                    className="bg-transparent text-xl focus-visible:none border-none focus-visible:outline-none focus-border-none w-full"
+                  />
+                </div>
+              )}
+                  {!studentData?.bloodGroup &&
+                  <Button size={'lg'} className="rounded-lg" onClick={handleBloodGroup}>
+                    Save
+                  </Button>}
             </div>
           </div>
 
           {/* LinkedIn ID + Instagram ID */}
           <div className="flex justify-between items-center gap-2 border-b border-gray-700 pb-2">
+            {/* LinkedIn URL */}
             <div className="flex flex-1 justify-between items-center">
               <div className="flex flex-col">
-                <div className="text-sm ">LinkedIn ID</div>
-                <div className="text-xl">{details?.linkedInUrl || "--"}</div>
+                <div className="text-sm">LinkedIn ID</div>
+                {linkedInInput === "" ? (
+                  <div className="text-xl">{studentData?.linkedInUrl || "--"}</div>
+                ) : (
+                  <input
+                    value={linkedInInput}
+                    onChange={(e) => setLinkedInInput(e.target.value)}
+                    placeholder="Enter LinkedIn URL"
+                    className="bg-transparent text-muted-foreground text-xl focus-visible:none border-none focus-visible:outline-none focus-border-none w-full"
+                  />
+                )}
               </div>
               <Button
-                className="bg-transparent rounded-md"
-                variant="ghost"
-                size="icon"
+                className={`${linkedInInput === "" ? "bg-transparent" : ""} rounded-lg`}
+                size={linkedInInput === "" ? "icon" : "lg"}
+                onClick={() => {
+                  if (linkedInInput === "") {
+                    setLinkedInInput(studentData?.linkedInUrl || "");
+                  } else {
+                    handleLinkedInSave();
+                  }
+                }}
               >
-                <Pencil className="h-4 w-4 text-white" />
+                {linkedInInput === "" ? (
+                  <Pencil className="h-4 w-4 text-white" />
+                ) : (
+                  'Save'
+                )}
               </Button>
             </div>
+
+            {/* Instagram URL */}
             <div className="flex flex-1 justify-between items-center">
               <div className="flex flex-col">
-                <div className="text-sm ">Instagram ID</div>
-                <div className="text-xl">{details?.instagramUrl || "--"}</div>
+                <div className="text-sm">Instagram ID</div>
+                {instagramInput === "" ? (
+                  <div className="text-xl">{studentData?.instagramUrl || "--"}</div>
+                ) : (
+                  <input
+                    value={instagramInput}
+                    onChange={(e) => setInstagramInput(e.target.value)}
+                    placeholder="Enter Instagram URL"
+                    className="bg-transparent text-muted-foreground text-xl focus-visible:none border-none focus-visible:outline-none focus-border-none w-full"
+                  />
+                )}
               </div>
               <Button
-                className="bg-transparent rounded-md"
-                variant="ghost"
-                size="icon"
+                className={`${instagramInput === "" ? "bg-transparent" : ""} rounded-lg`}
+                size={instagramInput === "" ? "icon" : "lg"}
+                onClick={() => {
+                  if (instagramInput === "") {
+                    setInstagramInput(studentData?.instagramUrl || "");
+                  } else {
+                    handleInstagramSave();
+                  }
+                }}
               >
-                <Pencil className="h-4 w-4 text-white" />
+                {instagramInput === "" ? (
+                  <Pencil className="h-4 w-4 text-white" />
+                ) : (
+                  'Save'
+                )}
               </Button>
             </div>
           </div>
@@ -340,8 +421,7 @@ const AccountDetails = () => {
             <div>
               <h4 className="text-2xl font-medium">LIT ID Card</h4>
               <p className="text-base">
-                Carry your identity as a creator, innovator, and learner wherever
-                you go.
+                Carry your identity as a creator, innovator, and learner wherever you go.
               </p>
             </div>
           </div>
@@ -353,31 +433,43 @@ const AccountDetails = () => {
             onClick={handleDownloadPDF}
           >
             <Download className="h-4 w-4" />
-            Download
+            {isGeneratingPDF? 'Downloading...' : 'Download'}
           </Button>
         </Card>
 
-        <div className="hidden" ref={pdfRef} id="pdf-content">
-          <div className="flex flex-col gap-6 items-center justify-center p-4">
-            <LitIdFront data={details} ImageUrl="https://github.com/shadcn.png" />
-            <LitIdBack data={details} ScanUrl="" />
-          </div>
-        </div>
+        {/* Hidden PDF Content */}
+        <div
+  style={{
+    position: 'absolute',
+    top: '-10000px',
+    left: '-10000px',
+    width: '400px',
+  }}
+  ref={pdfRef}
+  id="pdf-content"
+>
+  <div className="flex flex-col gap-6 items-center justify-center p-4">
+    <div id="front">
+      <LitIdFront data={details} />
+    </div>
+    <div id="back">
+      <LitIdBack data={details} ScanUrl="" />
+    </div>
+  </div>
+</div>
+
 
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogContent className="max-w-4xl py-2 px-6 h-[90vh] overflow-y-auto">
             <div className="flex gap-4 items-center justify-center">
               <div className="w-1/2">
-                <LitIdFront
-                  data={details}
-                  ImageUrl="https://github.com/shadcn.png"
-                />
+                <LitIdFront data={details} />
               </div>
               <div className="w-1/2">
                 <LitIdBack data={details} ScanUrl="" />
               </div>
             </div>
-            {/* If you also want a Download Button inside the dialog */}
+            {/* Download Button Inside Dialog */}
             <Button
               size="xl"
               variant="outline"
@@ -385,7 +477,7 @@ const AccountDetails = () => {
               onClick={handleDownloadPDF}
             >
               <Download className="h-4 w-4" />
-              Download
+              {isGeneratingPDF? 'Downloading...' : 'Download'}
             </Button>
           </DialogContent>
         </Dialog>

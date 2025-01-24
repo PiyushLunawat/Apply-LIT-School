@@ -13,7 +13,6 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ subtitle, submessage, classn }) => {
     const navigate = useNavigate();
-
     const { studentData, setStudentData } = useContext(UserContext);
 
     const handleLogout = () => {

@@ -216,7 +216,7 @@ const ApplicationTaskForm: React.FC = () => {
       console.log('Submission success => ', res);
 
       // Redirect upon successful submission
-      navigate('/dashboard/application-step-2');
+      navigate('/application/step-2');
     } catch (err) {
       console.error('Failed to submit application task:', err);
     } finally {

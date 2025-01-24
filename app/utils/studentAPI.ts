@@ -1,6 +1,6 @@
-// const CONST_API = "http://localhost:4000";
+const CONST_API = "http://localhost:4000";
 // const CONST_API = "http://51.21.131.240:4000";
-const CONST_API = "https://myfashionfind.shop";
+// const CONST_API = "https://myfashionfind.shop";
 
 // Fetch all cohorts
 export async function getCohorts() {
@@ -257,17 +257,9 @@ export async function submitApplicationTask(formData: FormData) {
     return response.json();
   }
   
-  export async function uploadFeeReceipt(data: {
-    recieptImage: File;
-    semester: number;
-    installment: number;
-  }) {  
-    const formData = new FormData();
-    formData.append("recieptImage", data.recieptImage);
-    formData.append("semester", data.semester.toString());
-    formData.append("installment", data.installment.toString());
+  export async function uploadFeeReceipt(formData: any) {  
   
-    const response = await fetch(`${CONST_API}/student/upload-fee-receipt`, {
+    const response = await fetch(`${CONST_API}/student/upload-semester-fee-installments`, {
       method: "POST",
       // FormData automatically sets the proper `Content-Type` headers
       body: formData,
@@ -287,12 +279,11 @@ export async function submitApplicationTask(formData: FormData) {
   }
   
   export async function updateStudentData(
-    studentId: string,
-    data: FormData | Partial<{ bloodGroup: string; linkedInUrl: string; instagramUrl: string }>
+    data: FormData | Partial<{ profileImage: File; bloodGroup: string; linkedInUrl: string; instagramUrl: string }>
   ): Promise<any> {
     try {
-      const response = await fetch(`${CONST_API}/admin/student/${studentId}`, {
-        method: "PATCH", // Using PATCH for partial updates
+      const response = await fetch(`${CONST_API}/student/student-data`, {
+        method: "POST", // Using PATCH for partial updates
         headers:
           data instanceof FormData
             ? {} // Let the browser set the Content-Type for FormData

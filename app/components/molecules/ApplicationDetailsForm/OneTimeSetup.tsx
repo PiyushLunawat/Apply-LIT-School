@@ -498,7 +498,7 @@ useEffect(() => {
 
 
   const handleContinueToDashboard = () => {
-    window.location.href = '/dashboard/application-step-1';
+    window.location.href = '/application/step-1';
     setSuccessDialogOpen(false);
   };
 

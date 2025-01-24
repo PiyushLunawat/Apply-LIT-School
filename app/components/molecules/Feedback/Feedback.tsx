@@ -31,7 +31,7 @@ const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass, book
   }, []);
 
   const handleReviseApplication = () => {
-    navigate('../dashboard/application-step-1');
+    navigate('../application/step-1');
   };
 
   const handleScheduleInterview = () => {

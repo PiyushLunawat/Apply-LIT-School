@@ -1,17 +1,10 @@
-import ApplicationHome from "~/components/pages/application";
-import { Link } from "@remix-run/react";
-import { Clock, ClockArrowUp, FileText, FolderClosed, ReceiptIndianRupee, UserIcon } from "lucide-react";
-import Header from "../organisms/Header/Header";
-import Sidebar from "../organisms/Sidebar/Sidebar";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
-import PersonalDocuments from "../organisms/PersonalDocuments/PersonalDocuments";
 import { getCurrentStudent } from "~/utils/studentAPI";
 import { UserContext } from "~/context/UserContext";
 import { useContext, useEffect, useState } from "react";
+import { Badge } from "~/components/ui/badge";
+import ApplicationDocuments from "~/components/organisms/ApplicationDocuments/ApplicationDocuments";
 
-export default function PersonalDocumentsDashboard() {
+export default function ApplicationDocumentsDashboard() {
   const { studentData } = useContext(UserContext);
   const [student, setStudent] = useState<any>([]);
   useEffect(() => {
@@ -28,11 +21,11 @@ export default function PersonalDocumentsDashboard() {
 
   return (
   <>
-      <div className="flex justify-between items-end p-[52px] bg-[#00CC921A] border-b">
+      <div className="flex justify-between items-end p-[52px] bg-[#FF791F1A] border-b">
         <div className="space-y-8">
           <div className="flex items-center gap-4 mb-2">
-            <Badge className="text-sm border-[#00CC92] text-[#00CC92] bg-[#00CC92]/10">
-              Personal Documents
+            <Badge className="text-sm border-[#FF791F] text-[#FF791F] bg-[#FF791F]/10">
+              Application Documents
             </Badge>
           </div>
           <h1 className="text-4xl font-normal">
@@ -41,10 +34,10 @@ export default function PersonalDocumentsDashboard() {
           </h1>
         </div>
         <p className="max-w-[360px] w-full text-base ">
-        Maintain all your personal Identification Documents for this course.
+          Access all your submission documents, task reports and personal information forms 
         </p>
       </div>
-      <PersonalDocuments />
+      <ApplicationDocuments />
   </>
   );
 }

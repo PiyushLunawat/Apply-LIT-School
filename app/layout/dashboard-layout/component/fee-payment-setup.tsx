@@ -1,10 +1,8 @@
-import Header from "../organisms/Header/Header";
-import Sidebar from "../organisms/Sidebar/Sidebar";
-import { Badge } from "../ui/badge";
-import FeePaymentSetup from "../organisms/FeePaymentSetup/FeePaymentSetup";
 import { getCurrentStudent } from "~/utils/studentAPI";
 import { UserContext } from "~/context/UserContext";
 import { useContext, useEffect, useState } from "react";
+import { Badge } from "~/components/ui/badge";
+import FeePaymentSetup from "~/components/organisms/FeePaymentSetup/FeePaymentSetup";
 
 type FeePaymentData = {
     paymentMode: string;
@@ -54,7 +52,7 @@ export default function FeePaymentSetupDashboard() {
 
   return (
   <>
-      <div className="flex justify-between items-end p-[52px] bg-[#3698FB1A] border-b">
+    <div className="flex justify-between items-end p-[52px] bg-[#3698FB1A] border-b">
         <div className="space-y-8">
           <div className="flex items-center gap-4 mb-2">
             <Badge className="text-sm border-[#3698FB] text-[#3698FB] bg-[#3698FB]/10">

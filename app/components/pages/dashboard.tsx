@@ -35,10 +35,7 @@ const DashboardCard = ({ title, description, icon, to, bgColor, border }: Dashbo
 );
 
 export default function ApplicationDashboard() {
-  const user = {
-    name: "John Walker",
-    school: "LIT School"
-  };
+
   const { studentData } = useContext(UserContext);
   const [student, setStudent] = useState<any>([]);
   const navigate = useNavigate();
@@ -64,19 +61,19 @@ export default function ApplicationDashboard() {
   };
 
   const handleFeePaymentClick = () => {
-    navigate('/Dashboard/fee-payment-setup');
+    navigate('/dashboard/fee-payment-setup');
   };
 
   return (
   <>
   <Header subtitle="" classn="drop-shadow-lg" />
   <div className="flex">
-    <Sidebar student={student}/>
+    <Sidebar />
     <div className="overflow-y-auto" style={{ height: `calc(100vh - 52px)`}}>
       <div className="flex justify-between items-end p-[52px] bg-[#64748B1A] border-b">
         <div className="space-y-8">
           <Avatar className="w-32 h-32">
-            <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+            <AvatarImage src={studentData?.profileUrl} className="object-cover" alt="@shadcn" />
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>
           <h1 className="text-4xl font-normal">

@@ -8,12 +8,8 @@ export const RegisterInterceptor = () => {
     fetchIntercept.register({
         request: function (url, config = {}) {
             // console.log('Request Intercepted:', { url, config });
-        console.log("interceptorrrrr",url);
-        
-
             // Get token from cookies
             const token = Cookies.get('user-token');
-
             // if(!token) {
             //     Cookies.remove('user-token');
             //     localStorage.removeItem('studentData');

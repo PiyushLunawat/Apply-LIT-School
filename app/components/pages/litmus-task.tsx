@@ -52,7 +52,7 @@ export default function LitmusTask() {
   <>
   <Header subtitle="" classn="" />
   <div className="flex">
-    <Sidebar student={student}/>
+    <Sidebar />
     <div className="w-full overflow-y-auto" style={{ height: `calc(100vh - 52px)`}}>
       <div className="flex justify-between items-end p-[52px] bg-[#3698FB1A] border-b">
         <div className="space-y-8">

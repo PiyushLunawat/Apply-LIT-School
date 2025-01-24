@@ -63,7 +63,7 @@ export const ApplicationStep1: React.FC = () => {
             if(res.data?.applicationDetails?.applicationStatus === 'under review'
                || res.data?.applicationDetails?.applicationStatus === 'accepted'
                || res.data?.applicationDetails?.applicationStatus === 'rejected')
-               navigate("/dashboard/application-step-2");
+               navigate("/application/step-2");
             if(res.data?.applicationDetails?.applicationStatus === 'initiated' || res.data?.applicationDetails?.applicationStatus === 'on hold')
               setSecond(true)
       } catch (error) {

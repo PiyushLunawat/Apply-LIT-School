@@ -15,12 +15,12 @@ import { useNavigate } from '@remix-run/react';
 import { Badge } from '~/components/ui/badge';
 
 const getColor = (index: number) => {
-  const colors = [ 'text-emerald-600', 'text-[#3698FB]', 'text-orange-600', 'text-[#FA69E5]'];
+  const colors = [ 'text-emerald-600', 'text-[#3698FB]', 'text-[#FA69E5]', 'text-orange-600'];
   return colors[index % 4];
 };
 
 const getBgColor = (index: number) => {
-  const colors = ['bg-emerald-600/20', 'bg-[#3698FB]/20', 'bg-orange-600/20', 'bg-[#FA69E5]/20' ];
+  const colors = ['bg-emerald-600/20', 'bg-[#3698FB]/20', 'bg-[#FA69E5]/20', 'bg-orange-600/20'];
   return colors[index % 4];
 };
 

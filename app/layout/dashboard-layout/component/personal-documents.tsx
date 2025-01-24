@@ -1,15 +1,8 @@
-import ApplicationHome from "~/components/pages/application";
-import { Link } from "@remix-run/react";
-import { Clock, ClockArrowUp, FileText, FolderClosed, ReceiptIndianRupee, UserIcon } from "lucide-react";
-import Header from "../organisms/Header/Header";
-import Sidebar from "../organisms/Sidebar/Sidebar";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
-import PersonalDocuments from "../organisms/PersonalDocuments/PersonalDocuments";
 import { getCurrentStudent } from "~/utils/studentAPI";
 import { UserContext } from "~/context/UserContext";
 import { useContext, useEffect, useState } from "react";
+import { Badge } from "~/components/ui/badge";
+import PersonalDocuments from "~/components/organisms/PersonalDocuments/PersonalDocuments";
 
 export default function PersonalDocumentsDashboard() {
   const { studentData } = useContext(UserContext);

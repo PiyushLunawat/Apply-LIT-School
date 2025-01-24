@@ -106,13 +106,13 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
                   console.log(' student data:', res.data?.applicationDetails?.applicationStatus);
                 if(res.data?.applicationDetails?.applicationStatus !== "initiated" &&
                   res.data?.applicationDetails?.applicationStatus !== undefined){
-                    navigate('/dashboard/application-step-2');
+                    navigate('/application/step-2');
                   }
                 else
-                  navigate('../dashboard/application-step-1');
+                  navigate('../application/step-1');
           }
       else
-        navigate('../dashboard/application-step-1');
+        navigate('../application/step-1');
       }
 
       if(verificationType === 'contact'){

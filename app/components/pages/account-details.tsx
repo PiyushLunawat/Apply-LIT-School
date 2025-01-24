@@ -30,10 +30,6 @@ export default function AccountDetailsDashboard() {
 
   return (
   <>
-  <Header subtitle="" classn="" />
-  <div className="flex">
-    <Sidebar student={student}/>
-    <div className="w-full overflow-y-auto" style={{ height: `calc(100vh - 52px)`}}>
       <div className="flex justify-between items-end p-[52px] bg-[#F8E0001A] border-b">
         <div className="space-y-8">
           <div className="flex items-center gap-4 mb-2">
@@ -51,9 +47,6 @@ export default function AccountDetailsDashboard() {
         </p>
       </div>
       <AccountDetails />
-
-    </div>
-    </div>
   </>
   );
 }

@@ -157,8 +157,8 @@ export default function FeePaymentSetup() {
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  <SelectItem value="one-shot-payment">One Shot Payment</SelectItem>
-                  <SelectItem value="installments">Installments</SelectItem>
+                  <SelectItem value="one shot payment">One Shot Payment</SelectItem>
+                  <SelectItem value="instalments">Instalments</SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>
@@ -285,13 +285,9 @@ export default function FeePaymentSetup() {
             <div>{new Date(student?.cousrseEnrolled?.[student.cousrseEnrolled?.length - 1]?.tokenFeeDetails?.updatedAt).toLocaleDateString()}</div>
           </div>
         </div>
-        <div className="flex h-5 items-center gap-2">
-          <div>Base Fee: ₹22,000</div>
-          <Separator orientation="vertical" />
-          {/* <div>GST: ₹3,000</div> */}
-        </div>
       </div>
 
+      {student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.feeSetup?.modeOfPayment === "bank transfer" && 
       <div className="p-4 border rounded-xl space-y-4">
         <Badge className="text-sm border-[#3698FB] text-[#3698FB] bg-[#3698FB]/10">
           LIT School Bank Details
@@ -301,10 +297,10 @@ export default function FeePaymentSetup() {
           IFSC Code: HDFC0001079 <br />
           Branch: Sadashivnagar
         </p>
-      </div>
+      </div>}
 
       <div className="space-y-4">
-        {student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.semesterFeeDetails.scholarshipDetails.map(
+        {student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.installmentDetails.map(
           (sem: any, semIndex: number) => (
             <div key={semIndex} className="border rounded-xl mb-6">
               {/* Semester Header */}
@@ -442,40 +438,50 @@ function FileUploadField({
   semester: number;
   installment: number;
 }) {
-  const [files, setFiles] = useState<File[]>([]);
+  const [reciptUrl, setReciptUrl] = useState("");
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = event.target.files;
-    if (!selectedFiles) return;
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      const file = event.target.files[0];
+      const reader = new FileReader();
 
-    const fileArray = Array.from(selectedFiles);
-    const newFiles = [...files, ...fileArray];
-    setFiles(newFiles);
-    setError(null);
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          setSelectedImage(e.target.result as string);
+        }
+      };
+
+      reader.readAsDataURL(file);
+      setReceiptFile(file); // Store the selected file for upload
+    }
   };
 
   const removeFile = (index: number) => {
-    const newFiles = [...files];
-    newFiles.splice(index, 1);
-    setFiles(newFiles);
+    setSelectedImage(null); 
+    setReceiptFile(null);
   };
 
   // Actually send the first file to the server
   const handleSubmit = async () => {
-    if (files.length === 0) {
-      setError("No file selected");
+    if (!receiptFile) {
+      alert('Please upload a receipt image.');
       return;
     }
+
+    console.log("feeee",receiptFile, semester, installment,);
+
+    const formData = new FormData();
+    formData.append("recieptImage", receiptFile);
+    formData.append("semesterNumber", semester.toString());
+    formData.append("installmentNumber", installment.toString());
+    
     try {
-      const response = await uploadFeeReceipt({
-        recieptImage: files[0], // use the first file
-        semester,
-        installment,
-      });
+      const response = await uploadFeeReceipt(formData);
       console.log("Receipt uploaded successfully:", response);
-      // optionally clear or handle success
-      setFiles([]);
+      setReceiptFile(null);
       setError(null);
     } catch (err: any) {
       console.error("Error uploading receipt:", err);
@@ -484,11 +490,11 @@ function FileUploadField({
   };
 
   return (
-    <div className="flex flex-col space-y-2 mt-2 border rounded-lg p-2 bg-[#1e1e1e]">
-      <h4 className="font-medium text-white">Upload Acknowledgement Receipt</h4>
+    <div className="flex flex-col space-y-3 mt-2 rounded-lg p-4 bg-[#09090B]">
+      <h4 className="font-medium text-white">Fee Acknowledgement</h4>
 
       {/* Display selected files */}
-      {files.map((file, index) => (
+      {/* {files.map((file, index) => (
         <div
           key={index}
           className="flex items-center bg-[#007AFF] h-[52px] text-white p-1.5 rounded-xl w-full"
@@ -507,18 +513,26 @@ function FileUploadField({
             </Button>
           </div>
         </div>
-      ))}
+      ))} */}
 
       {/* File upload input */}
-      <div className="flex items-center justify-between w-full h-16 border-2 border-dashed rounded-xl p-1.5">
+      {selectedImage ? 
+      <div className="relative bg-[#64748B33] rounded-xl border border-[#2C2C2C] w-full h-[200px]">
+      <img
+        src={selectedImage}
+        alt="Uploaded receipt"
+        className="mx-auto h-full object-contain"
+      />
+    </div> : 
+      (<div className="flex items-center justify-between w-full h-16 border-2 border-[#64748B] border-dashed rounded-xl p-1.5">
         <label className="w-full pl-3 text-muted-foreground">
           <input
             type="file"
             className="hidden"
             accept="image/*"
-            onChange={handleFileChange}
+            onChange={handleImageChange}
           />
-          <span className="cursor-pointer">Select file</span>
+          <span className="cursor-pointer">Upload Acknowledgement Receipt</span>
         </label>
         <Button
           className="flex gap-2 text-white px-6 py-6 rounded-xl"
@@ -528,10 +542,10 @@ function FileUploadField({
         >
           <UploadIcon className="w-4 h-4" /> Choose
         </Button>
-      </div>
+      </div>)}
 
-      <Button
-        className="bg-[#3698FB] text-white mt-2 w-full"
+      <Button size={'xl'} disabled={!receiptFile}
+        className="text-white w-fit"
         onClick={handleSubmit}
       >
         Submit

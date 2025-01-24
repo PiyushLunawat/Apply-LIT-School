@@ -49,7 +49,7 @@ const PersonalDocuments = () => {
       docType: "graduationMarkSheet"
     },
   ]);
-  const { studentData } = useContext(UserContext);
+  const { studentData, setStudentData } = useContext(UserContext);
   const [docs, setDocs] = useState<any>();
   const [loading, setLoading] = useState(false);  
   
@@ -57,6 +57,7 @@ const PersonalDocuments = () => {
     const fetchStudentData = async () => {
       try {
         const student = await getCurrentStudent(studentData._id);
+        setStudentData(student.data);
         setDocs(student.data?.personalDocsDetails);
         console.log("doc",student.data?.personalDocsDetails);
         
@@ -88,7 +89,7 @@ const PersonalDocuments = () => {
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
-  
+    setLoading(true);
     try {
       // Construct the FormData
       const formData = new FormData();
@@ -98,10 +99,12 @@ const PersonalDocuments = () => {
       // Call the API function with FormData
       const response = await uploadStudentDocuments(formData);
       console.log("Upload response:", response);
+      setDocs(response.data);
 
     } catch (error) {
       console.error("Error uploading file:", error);
     } finally {
+      setLoading(false)
       e.target.value = ""; // Reset the input field
     }
   };
@@ -128,43 +131,43 @@ const PersonalDocuments = () => {
               <h3 className="font-medium text-2xl text-white">{doc.name}</h3>
               <p className="text-base text-gray-400">
                 PDF •{" "}
-              {docs && docs[doc.docType] && docs[doc.docType].length > 0 ?
-                <><span
-                  className={`capitalize 
-                    ${docs[doc.docType][0].status === "updated"
-                      ? "text-white"
-                      : docs[doc.docType][0].status === "verified"
-                      ? "text-[#00CC92]"
-                      : "text-[#FF503D] underline"}
-                  `}
-                >
-                  {docs[doc.docType][0].status}
-                </span>  
-                  <span className="text-muted-foreground underline-0"> •{" "}{new Date(docs?.updatedAt).toLocaleDateString()}</span>
-                </> :
-                <span
-                  className={
-                    doc.description?.toLowerCase() === "mandatory"
-                      ? "text-[#00CC92]"
-                      : "text-[#F8E000]"
-                  }
-                >
-                  {doc.description}
-                </span>
-              }
+                {docs && docs[doc.docType] && docs[doc.docType].length > 0 ?
+                  <><span
+                    className={`capitalize 
+                      ${docs[doc.docType][docs[doc.docType].length-1].status === "updated"
+                        ? "text-white"
+                        : docs[doc.docType][docs[doc.docType].length-1].status === "verified"
+                        ? "text-[#00CC92]"
+                        : "text-[#FF503D] underline"}
+                    `}
+                  >
+                    {docs[doc.docType][docs[doc.docType].length-1].status}
+                  </span>  
+                    <span className="text-muted-foreground underline-0"> •{" "}{new Date(docs?.updatedAt).toLocaleDateString()}</span>
+                  </> :
+                  <span
+                    className={
+                      doc.description?.toLowerCase() === "mandatory"
+                        ? "text-[#00CC92]"
+                        : "text-[#F8E000]"
+                    }
+                  >
+                    {doc.description}
+                  </span>
+                }
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-4">
           {docs && docs[doc.docType] && docs[doc.docType].length > 0 && (
-            (docs[doc.docType][0].status === "verified" || docs[doc.docType][0].status === "updated") && (
+            (docs[doc.docType][docs[doc.docType].length-1].status === "verified" || docs[doc.docType][docs[doc.docType].length-1].status === "updated") && (
               <>
                 <Button
                   size="xl"
                   variant="ghost"
                   className="border bg-[#1B1B1C]"
-                  onClick={() => handleFileDownload(docs[doc.docType][0].url || "", doc.docType)}
+                  onClick={() => handleFileDownload(docs[doc.docType][docs[doc.docType].length-1].url || "", doc.docType)}
                 >
                   <Download className="h-4 w-4 mr-2" />
                   Download
@@ -190,7 +193,7 @@ const PersonalDocuments = () => {
               ))}
 
             {docs && docs[doc.docType] && docs[doc.docType].length > 0 && (
-            (docs[doc.docType][0].status === "flagged") && (
+            (docs[doc.docType][docs[doc.docType].length-1].status === "flagged") && (
               <>
                 <input
                   type="file"
@@ -200,19 +203,19 @@ const PersonalDocuments = () => {
                   onChange={(e) => handleFileChange(e, doc.id, doc.docType)}
                 />
                 <Button
-                  size="xl"
+                  size="xl" disabled={loading}
                   variant="default"
                   onClick={() =>
                     document.getElementById(`file-input-${doc.id}`)?.click()
                   }
                 >
                   <Upload className="h-4 w-4 mr-2" />
-                  Re-Upload File
+                  {loading ? 'Uploading...' : 'Re-Upload File'}
                 </Button>
               </>
             ))}
 
-            {((docs && docs[doc.docType] && docs[doc.docType].length === 0)) && (
+            {((docs === undefined || (docs[doc.docType] && docs[doc.docType].length === 0))) && (
               <>
                 <input
                   type="file"
@@ -222,14 +225,14 @@ const PersonalDocuments = () => {
                   onChange={(e) => handleFileChange(e, doc.id, doc.docType)}
                 />
                 <Button
-                  size="xl"
+                  size="xl" disabled={loading}
                   variant="default"
                   onClick={() =>
                     document.getElementById(`file-input-${doc.id}`)?.click()
                   }
                 >
                   <Upload className="h-4 w-4 mr-2" />
-                  Upload File
+                  {loading ? 'Uploading...' : 'Upload File'}
                 </Button>
               </>
             )}

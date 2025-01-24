@@ -1,74 +1,98 @@
 import { Link, NavLink } from "@remix-run/react";
 import { FileText, FolderClosed, House, ReceiptIndianRupee, UploadIcon, UserRound } from "lucide-react";
+import { useContext, useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
+import { UserContext } from "~/context/UserContext";
+import { getCurrentStudent } from "~/utils/studentAPI";
 
-interface SidebarProps {
-  student: any;
-}
+// interface SidebarProps {
+//   student: any;
+// }
 
 const navItems = [
   {
     title: "Home",
     icon: House,
     to: "/dashboard",
-    badge: null
+    badge: null,
+    textColor: null,
   },
   {
     title: "Application Documents",
     icon: FolderClosed,
     to: "/dashboard/application-documents",
     badge: 1,
-    bgColor: "bg-orange-600/20"
+    bgColor: "bg-orange-600/20",
+    textColor: "text-[#FF791F]"
   },
   {
     title: "Fee Payment",
     icon: ReceiptIndianRupee,
     to: "/dashboard/fee-payment-setup",
     badge: 1,
-    bgColor: "bg-blue-600/20"
+    bgColor: "bg-blue-600/20",
+    textColor: "text-[#1388FF]"
   },
   {
     title: "Account Details",
     icon: UserRound,
     to: "/dashboard/account-details",
     badge: 1,
-    bgColor: "bg-[#F8E000]/20"
+    bgColor: "bg-[#F8E000]/20",
+    textColor: "text-[#F8E000]"
   },
   {
     title: "Personal Documents",
     icon: FileText,
     to: "/dashboard/personal-documents",
     badge: 1,
-    bgColor: "bg-emerald-600/20"
+    bgColor: "bg-emerald-600/20",
+    textColor: "text-[#00CC92]"
   }
 ];
 
-export default function Sidebar({ student }: SidebarProps) {
+export default function Sidebar() {
+
+    const { studentData } = useContext(UserContext);
+    const [student, setStudent] = useState<any>([]);
+
+    useEffect(() => {
+      const fetchStudentData = async () => {
+        try {
+          const student = await getCurrentStudent(studentData._id); // Pass the actual student ID here
+          setStudent(student.data); // Store the fetched data in state
+        } catch (error) {
+          console.error("Failed to fetch student data:", error);
+        }
+      };
+      fetchStudentData();
+    }, [studentData]);
+
   return (
     <div className="max-w-[360px] w-full text-white flex flex-col border-r" style={{ height: `calc(100vh - 52px)`}}>
       {/* User Profile Section */}
       <div className="h-[200px] border-b border-[#2C2C2C]">
         <div className="flex flex-col gap-5 p-8 mt-5">
           <Avatar className="w-[60px] h-[60px]">
-            <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-            <AvatarFallback>CN</AvatarFallback>
+            <AvatarImage src={studentData?.profileUrl} className="object-cover" alt={studentData?.firstName[0]+studentData?.lastName[0]} />
+            <AvatarFallback>{studentData?.firstName[0]}{studentData?.lastName[0]}</AvatarFallback>
           </Avatar>
           <div>
-            <h2 className="text -base font-semibold">{student?.firstName}</h2>
+            <h2 className="text -base font-semibold">{studentData?.firstName}</h2>
             <p className="text-sm text-normal">{student?.studentDetails?.previousEducation?.nameOfInstitution}</p>
           </div>
         </div>
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex flex-col h-full flex-1 space-y-2 py-6">
+      <nav className="flex flex-col h-full flex-1   py-6">
         {navItems.map((item) => (
           <NavLink
             key={item.title}
             to={item.to}
             className={({ isActive }) =>
-              `flex items-center justify-between px-8 py-2 hover:bg-gray-900 transition-colors ${
-                isActive ? "bg-gray-800" : ""
+              `flex items-center justify-between px-8 py-4 hover:bg-gray-900 transition-colors ${
+                isActive ? `${item.textColor}` : ""
               }`
             }
           >
