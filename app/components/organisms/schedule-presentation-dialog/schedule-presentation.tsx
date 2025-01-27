@@ -76,7 +76,7 @@ export function SchedulePresentation({ interviewr }: SchedulePresentationProps) 
                                 onClick={() => handleSelect(interviewer)}
                             >
                                 <img src={`/assets/images/placeholder-image-${index%3+1}.svg`} alt={interviewer.email} className={`h-[200px] object-cover rounded-t-xl 
-                                ${ selectedInterviewer?.email === interviewer.email ? '' : 'opacity-50' }`} />
+                                ${ selectedInterviewer?.email === interviewer.email ? '' : 'opacity-75' }`} />
                                 <div className="flex flex-col gap-2 p-4">
                                     <div className={` text-base font-medium`}>
                                         {interviewer.email}
