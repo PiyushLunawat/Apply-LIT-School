@@ -31,7 +31,7 @@ export const RegisterInterceptor = () => {
       
             // If not public and no token, do a client redirect
             if (!isPublic && !token) {
-              window.location.href = "/login";
+            //   window.location.href = "/login";
               // optionally abort or let the request pass (depending on your needs)
               return [url, config];
             }
