@@ -3,6 +3,7 @@ import fetchIntercept from 'fetch-intercept';
 import Cookies from 'js-cookie';
 
 export const RegisterInterceptor = () => {
+    const navigate = useNavigate();
 
     fetchIntercept.register({
         request: function (url, config = {}) {
@@ -36,7 +37,7 @@ export const RegisterInterceptor = () => {
           // If it is NOT a public endpoint, but we have no token, redirect
           if (!isPublic && !token) {
             // For a Remix or React app, you can simply do:
-            window.location.href = "/login";
+            navigate("/login");
             // or: navigate("/login") if you have a router instance available
             // Then return, so the request doesn’t continue.
             return [url, config];
