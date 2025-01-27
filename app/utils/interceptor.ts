@@ -3,68 +3,49 @@ import fetchIntercept from 'fetch-intercept';
 import Cookies from 'js-cookie';
 
 export const RegisterInterceptor = () => {
-    const navigate = useNavigate();
-
-    fetchIntercept.register({
-        request: function (url, config = {}) {
-
+        fetchIntercept.register({
+          request: (url, config = {}) => {
+            // Skip Firebase endpoints
             if (
-                url.includes("googleapis.com") ||
-                url.includes("firebase") ||
-                url.includes("firebaseapp.com")
-              ) {
-                // Return without modifying headers or interfering
-                return [url, config];
-              }
-          // Define endpoints that do NOT need a token (public routes)
-          const publicEndpoints = [
-            "/auth/signup",
-            "/auth/login",
-            "/auth/resend-otp",
-            "/auth/verify-otp",
-            "/student/verify-mobile-number",
-            "/student/verify-otp-number",
-            "/login",        // <--- UI route
-            "/sign-up",  
-          ];
+              url.includes("googleapis.com") ||
+              url.includes("firebase") ||
+              url.includes("firebaseapp.com")
+            ) {
+              return [url, config];
+            }
       
-          // If this URL is in the public list, skip token checks
-          const isPublic = publicEndpoints.some((endpoint) => url.includes(endpoint));
+            const publicEndpoints = [
+              "/auth/signup",
+              "/auth/login",
+              "/auth/resend-otp",
+              "/auth/verify-otp",
+              "/student/verify-mobile-number",
+              "/student/verify-otp-number",
+              // The actual route used by your pages:
+              "/login",
+              "/sign-up"
+            ];
       
-          // Get token
-          const token = Cookies.get("user-token");
+            const isPublic = publicEndpoints.some((endpoint) => url.includes(endpoint));
+            const token = Cookies.get("user-token");
       
-          // If it is NOT a public endpoint, but we have no token, redirect
-          if (!isPublic && !token) {
-            // For a Remix or React app, you can simply do:
-            // navigate("/login");
-            // or: navigate("/login") if you have a router instance available
-            // Then return, so the request doesn’t continue.
+            // If not public and no token, do a client redirect
+            if (!isPublic && !token) {
+              window.location.href = "/login";
+              // optionally abort or let the request pass (depending on your needs)
+              return [url, config];
+            }
+      
+            // If not public but we do have a token, attach it
+            if (!isPublic && token) {
+              config.headers = {
+                ...config.headers,
+                authorization: `Bearer ${token}`,
+              };
+            }
             return [url, config];
-          }
+          },
       
-          // Otherwise, if not public and we *do* have a token, set the header
-          if (!isPublic && token) {
-            config.headers = {
-              ...config.headers,
-              authorization: `Bearer ${token}`,
-            };
-          }
-      
-          return [url, config];
-        },
-      
-        requestError: function (error) {
-          return Promise.reject(error);
-        },
-      
-        response: function (response) {
-          return response;
-        },
-      
-        responseError: function (error) {
-          return Promise.reject(error);
-        }
-      });
-      
+          response: (response) => response,
+        }); 
 };

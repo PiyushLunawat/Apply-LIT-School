@@ -423,7 +423,6 @@ const handleVerifyClick = async (contact: string) => {
       "recaptcha-container", 
       { size: "invisible",}   
     );
-
     const confirmationResult = await signInWithPhoneNumber(auth, contact, recaptchaVerifier);
     setVerificationId(confirmationResult.verificationId);
     setContactInfo(contact);
