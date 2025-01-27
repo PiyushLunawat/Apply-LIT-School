@@ -68,122 +68,123 @@ const ApplicationTaskForm: React.FC = () => {
   useEffect(() => {
     async function fetchData() {
       try {
-        // A) Get the cohorts
-        
-        // B) Get the student data
+        // Fetch the student's data
         const studentResp = await getCurrentStudent(studentData._id);
+  
+        // The first (or current) applicationTasks item:
         const sData =
-        studentResp.data?.applicationDetails?.applicationTasks?.[0]
-        ?.applicationTaskDetail?.applicationTasks?.[0];
+          studentResp.data?.applicationDetails?.applicationTasks?.[0]
+            ?.applicationTaskDetail?.applicationTasks?.[0];
+  
+        // Store the cohort for referencing later
         setCohort(studentResp.data?.cohort);
-        setFetchedStudentData(sData);
-
-
-        // D) If the cohort has an applicationFormDetail => tasks
+  
+        // The tasks array from the saved data, if any
+        // IMPORTANT: .tasks here is your custom array of tasks,
+        // each item containing { task: { text, links, images, ...}, feedback: ... }
+        const sDataTasks = sData?.tasks || []; // or []
+  
+        // The "application" tasks from the cohort structure
+        // (the config that tells us how many tasks, what type they are, etc.)
         const cohortTasks =
-        studentResp.data?.cohort?.applicationFormDetail?.[0]?.task || [];
-
-        // E) Build final tasks by merging the "cohort" config 
-        //    with the existing "sData.tasks"
-        let sDataTasks: any[] = sData?.tasks || [];
-        // sDataTasks might look like: [ { text: [...], images: [...], ... }, ... ]
-
+          studentResp.data?.cohort?.applicationFormDetail?.[0]?.task || [];
+  
+        // Build our final tasks array by merging the config from "cohortTasks"
+        // with the actual saved values from "sDataTasks".
         const finalTasks = cohortTasks.map((ct: any, tIndex: number) => {
-          // ct.config => array of { type, maxFiles, etc. }
-          // find the existing data in sDataTasks[tIndex] if it exists
-          const existing = sDataTasks[tIndex] || {};
-
+          // "sDataTasks[tIndex]?.task" holds the actual { text, images, files, links } object
+          const existingTask = sDataTasks[tIndex]?.task || {};
+  
           return {
             configItems: ct.config.map((configItem: any, cIndex: number) => {
-              let answer: any = "";
-
-              /** 
-               * Now check if existing data has something like:
-               * text, images, videos, links, files, etc. 
-               * Usually you'd match by "type" or index cIndex
-               */
+              let answer: any = '';
+  
               switch (configItem.type) {
-                case "long":
-                case "short":
-                  // If existing => text array => just pick the cIndex-th element
-                  // Or if your data structure stores text in "existing.text" array
-                  answer = existing?.text ? existing?.text[cIndex] || "" : "";
+                case 'long':
+                case 'short':
+                  // existingTask.text might be an array => e.g. ["some text", "some text2" ...]
+                  // If you keep 1 text per config item, pick the `[cIndex]`.
+                  answer =
+                    existingTask.text && existingTask.text[cIndex]
+                      ? existingTask.text[cIndex]
+                      : '';
                   break;
-
-                case "link":
-                  // existing.links might be an array
-                  // e.g. [ "http://some.com", "http://some2.com" ]
-                  answer = existing?.links || [];
+  
+                case 'link':
+                  // existingTask.links might be an array => e.g. ["https://...."]
+                  // If the config only expects 1 link, you might store it in answer[0].
+                  // Otherwise, store them as an array of strings.
+                  answer = existingTask.links || [];
                   break;
-
-                case "image":
-                case "video":
-                case "file":
-                  // existing might have existing.images, existing.videos, etc.
-                  if (configItem?.type === "image") {
-                    answer = existing?.images || [];
-                  } else if (configItem?.type === "video") {
-                    answer = existing?.videos || [];
-                  } else {
-                    answer = existing?.files || [];
-                  }
+  
+                case 'image':
+                  // existingTask.images => array of file URLs or files?
+                  answer = existingTask.images || [];
                   break;
-
+  
+                case 'video':
+                  answer = existingTask.videos || [];
+                  break;
+  
+                case 'file':
+                  answer = existingTask.files || [];
+                  break;
+  
                 default:
-                  // or do something else
-                  answer = "";
+                  answer = '';
                   break;
               }
-
+  
               return {
                 type: configItem.type,
                 maxFiles: configItem.maxFiles,
                 maxFileSize: configItem.maxFileSize,
-                // etc...
+                // etc.
                 answer,
               };
             }),
           };
         });
-
-        // F) Prepare the courseDive from sData
+  
+        // Prepare the courseDive data from the server if available
         const courseDiveData = {
-          interest: sData?.courseDive?.text1 || "",
-          goals: sData?.courseDive?.text2 || "",
+          interest: sData?.courseDive?.text1 || '',
+          goals: sData?.courseDive?.text2 || '',
         };
-
-        // G) Finally reset the entire form
+  
+        // Finally reset the entire form to these defaults
         reset({
           courseDive: courseDiveData,
           tasks: finalTasks,
         });
       } catch (err) {
-        console.error("Error fetching data:", err);
+        console.error('Error fetching data:', err);
       }
     }
-
+  
     fetchData();
   }, [studentData, reset]);
   
+  
   const tasks = cohort?.applicationFormDetail?.[0]?.task || [];
-  useEffect(() => {
-    if (tasks.length > 0) {
-      setValue(
-        'tasks',
-        tasks.map((task: any) => ({
-          configItems: task.config.map((configItem: any) => ({
-            type: configItem.type,
-            answer:
-              configItem.type === 'link'
-                ? Array(configItem.maxFiles || 1).fill('')
-                : configItem.type === 'file' || configItem.type === 'image' || configItem.type === 'video'
-                ? []
-                : '',
-          })),
-        }))
-      );
-    }
-  }, [tasks, setValue]);
+  // useEffect(() => {
+  //   if (tasks.length > 0) {
+  //     setValue(
+  //       'tasks',
+  //       tasks.map((task: any) => ({
+  //         configItems: task.config.map((configItem: any) => ({
+  //           type: configItem.type,
+  //           answer:
+  //             configItem.type === 'link'
+  //               ? Array(configItem.maxFiles || 1).fill('')
+  //               : configItem.type === 'file' || configItem.type === 'image' || configItem.type === 'video'
+  //               ? []
+  //               : '',
+  //         })),
+  //       }))
+  //     );
+  //   }
+  // }, [tasks, setValue]);
 
   const onSubmit = async (data: FormSchema) => {
     try {

@@ -13,6 +13,8 @@ import ScholarshipSlabCard from '~/components/molecules/scholarshipSlabCard/scho
 import JudgementCriteriaCard from '~/components/molecules/JudgementCriteriaCard/JudgementCriteriaCard';
 import { useNavigate } from '@remix-run/react';
 import { Badge } from '~/components/ui/badge';
+import { SchedulePresentation } from '../schedule-presentation-dialog/schedule-presentation';
+import { Dialog, DialogContent } from '~/components/ui/dialog';
 
 const getColor = (index: number) => {
   const colors = [ 'text-emerald-600', 'text-[#3698FB]', 'text-[#FA69E5]', 'text-orange-600'];
@@ -60,6 +62,7 @@ const LITMUSTest: React.FC = () => {
   const { studentData } = useContext(UserContext);
   const [cohorts, setCohorts] = useState<any[]>([]);
   const [stu, setStu] = useState("");
+  const [interviewOpen, setInterviewOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   
@@ -182,7 +185,7 @@ const LITMUSTest: React.FC = () => {
       // Submit the form data using the provided API function
       const response = await submitLITMUSTest(formData, stu);
       console.log('Submission successful:', response);
-      navigate('/Dashboard');
+      setInterviewOpen(true)
 
       // Handle success (e.g., show a success message or redirect)
     } catch (error) {
@@ -297,6 +300,12 @@ const LITMUSTest: React.FC = () => {
       ))}
     </div>
   </div>
+
+  <Dialog open={interviewOpen} onOpenChange={setInterviewOpen}>
+    <DialogContent className="max-w-2xl">
+      <SchedulePresentation interviewr={['evaluator']}/>
+    </DialogContent>
+  </Dialog>
   </>
   );
 };

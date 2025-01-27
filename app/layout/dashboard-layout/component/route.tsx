@@ -50,11 +50,11 @@ export default function ApplicationDashboard() {
   }, []);
   
   const handleExploreClick = () => {
-    navigate('/Dashboard/litmus-task');
+    navigate('/dashboard/litmus-task');
   };
 
   const handleDocumentClick = () => {
-    navigate('/Dashboard/personal-documents');
+    navigate('/dashboard/personal-documents');
   };
 
   const handleFeePaymentClick = () => {

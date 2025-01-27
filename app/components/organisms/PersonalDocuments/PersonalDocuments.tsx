@@ -3,7 +3,7 @@
 import { useContext, useEffect, useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "~/components/ui/dialog";
-import { File as FileIcon, Download, Upload, FilePenLine, FilePen } from "lucide-react";
+import { File as FileIcon, Download, Upload, FilePenLine, FilePen, Eye } from "lucide-react";
 import { getCurrentStudent, uploadStudentDocuments } from "~/utils/studentAPI"; // Ensure correct path
 import { UserContext } from "~/context/UserContext";
 
@@ -54,6 +54,7 @@ const PersonalDocuments = () => {
   const [loading, setLoading] = useState(false);  
   
   useEffect(() => {
+    setDocs(studentData?.personalDocsDetails);
     const fetchStudentData = async () => {
       try {
         const student = await getCurrentStudent(studentData._id);
@@ -259,6 +260,38 @@ const PersonalDocuments = () => {
           </div>
         </div>
       ))}
+      {docs?.adminUploadedocuments?.length > 0 && docs?.adminUploadedocuments.map((doc: any) => {
+            return (
+              <div
+          key={doc?._id}
+          className="flex items-center justify-between p-6 bg-[#64748B1F] border rounded-xl"
+        >
+          <div className="flex items-center gap-4">
+            <div className="cursor-pointer h-16 w-16 justify-center flex items-center rounded-full bg-[#00CC921F]">
+              DOC
+            </div>
+            <div>
+              <h3 className="font-medium text-2xl text-white capitalize">{doc?.documentName}</h3>
+              <p className="text-base text-gray-400">
+                DOC <span className="text-muted-foreground underline-0"> •{" "}{new Date(doc?.date).toLocaleDateString()}</span>
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+                <Button
+                  size="xl"
+                  variant="ghost"
+                  className="border bg-[#1B1B1C]"
+                  onClick={() => handleFileDownload(doc?.url || "", doc?.documentName)}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download
+                </Button>
+          </div>
+                </div>
+            );
+          })}
     </div>
   );
 };

@@ -1,6 +1,12 @@
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const CONST_API = process.env.API_BASE_URL
+
 // const CONST_API = "http://51.21.131.240:4000";
 // const CONST_API = "http://localhost:4000";
-const CONST_API = "https://myfashionfind.shop";
+// const CONST_API = "https://myfashionfind.shop";
 
 // Fetch all cohorts
 export async function getCohorts() {

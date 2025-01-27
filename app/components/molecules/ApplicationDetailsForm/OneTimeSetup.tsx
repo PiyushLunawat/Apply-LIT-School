@@ -214,15 +214,11 @@ const ApplicationDetailsForm: React.FC = () => {
   const [interest, setInterest] = useState<any[]>([]); 
   const [cohorts, setCohorts] = useState<any[]>([]); 
   const [contactInfo, setContactInfo] = useState<string>('');
-  const [imagePreview, setImagePreview] = useState<File | null>(null);
   const [isSaved, setIsSaved] = useState((studentData?.applicationDetails !== undefined));
   const [isPaymentDone, setIsPaymentDone] = useState(false);
 
   const [otp, setOtp] = useState("");
   const [verificationId, setVerificationId] = useState("");
-  const [isVerified, setIsVerified] = useState(false);
-
-  const [previewUrl, setPreviewUrl] = useState<string>(studentData?.profileUrl || '');
 
 
   const [fetchedStudentData, setFetchedStudentData] = useState<any>(null);
@@ -485,17 +481,10 @@ useEffect(() => {
     return center ? center.name : "--";
   };
 
-
-  const getCohortName = (cohortId: string) => {
-    const cohort = cohorts.find((c) => c._id === cohortId);
-    return cohort ? `${formatDateToMonthYear(cohort?.startDate)} (${cohort?.timeSlot}), ${getCenterName(cohort?.centerDetail)}` : "--";
-  };
-
   const formatDateToMonthYear = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleString('default', { month: 'long', year: 'numeric' });
   };
-
 
   const handleContinueToDashboard = () => {
     window.location.href = '/application/step-1';
@@ -733,63 +722,6 @@ useEffect(() => {
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 mt-8">
       <Badge size="xl" className='flex-1 bg-[#00A3FF]/[0.2] text-[#00A3FF] text-center '>Personal Details</Badge>
         <div className="grid sm:flex gap-6">
-          {/* Image Upload */}
-          {/* <div className="w-full sm:w-[232px] h-[308px] bg-[#1F1F1F] flex flex-col items-center justify-center rounded-xl text-sm space-y-4">
-      {previewUrl ? (
-        <div className="w-full h-full relative">
-          <img
-            src={previewUrl}
-            alt="Passport Preview"
-            className="w-full h-full object-cover rounded-lg"
-          />
-          <div className="absolute top-2 right-2 flex space-x-2">
-            <button
-              className="p-2 bg-white/10 mix-blend-difference border border-white rounded-full hover:bg-white/20"
-              onClick={() => {
-                setImagePreview(null);
-                setPreviewUrl('')
-              }}
-            >
-              <XIcon className="w-5 h-5 text-white" />
-            </button>
-          </div>
-        </div>
-      ) : (
-        <>
-        <label
-          htmlFor="passport-input"
-          className="cursor-pointer flex flex-col items-center justify-center items-center bg-[#1F1F1F] px-6 rounded-xl border-[#2C2C2C] w-full h-[220px]"
-        >
-          <div className="text-center my-auto text-muted-foreground">
-            <Camera className="mx-auto mb-2 w-8 h-8" />
-            <div className="text-wrap">
-              Upload a Passport size Image of Yourself. Ensure that your face covers
-              60% of this picture.
-            </div>
-          </div>
-          <input
-            id="passport-input"
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) {
-                const imageUrl = URL.createObjectURL(file);
-                console.log("fefs",imageUrl,file);
-                
-                setImagePreview(file);
-                setPreviewUrl(imageUrl);
-                setStudentData({ ...studentData, profileUrl: file });
-              }
-            }}
-          />
-        </label>
-        </>
-      )}
-    </div> */}
-
-
           {/* Form Fields */}
           <div className="flex-1 space-y-4">
             {/* Full Name */}

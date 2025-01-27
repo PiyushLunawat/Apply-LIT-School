@@ -61,7 +61,11 @@ const StatusMessage: React.FC<StatusMessageProps> = ({
         );
         break;
       case 'selected':
-        setHeadMessage(`Congratulations on clearing the interview!`);
+        setHeadMessage(
+          <>
+            <span className="text-[#00A3FF]">Congratulations!</span> on clearing the interview!
+          </>
+        );
         setSubMessage(
           'Reserve your seat for the Creator Marketer Cohort Scheduled for Oct 22, 2024 by completing the payment of your reservation fee.'
         );
@@ -73,7 +77,11 @@ const StatusMessage: React.FC<StatusMessageProps> = ({
         );
         break;
       case 'not qualified':
-        setHeadMessage(`Hey ${name}, you have not qualified for the upcoming Creator Marketer Cohort.`);
+        setHeadMessage(
+          <>
+            Hey {name}, you have <span className="text-[#FF503D]">not qualified</span> for the upcoming Creator Marketer Cohort.
+          </>
+        );
         setSubMessage(
           'Thank you for taking the counselling interview. You may choose to apply again for a different cohort and/or program of your choice.'
         );

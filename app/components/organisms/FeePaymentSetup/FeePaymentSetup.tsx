@@ -299,6 +299,101 @@ export default function FeePaymentSetup() {
         </p>
       </div>}
 
+      {student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.feeSetup?.installmentType === 'one shot payment' ? 
+      <div className="">
+        <div className="border rounded-xl mb-6">
+              {/* Semester Header */}
+              <div className="flex items-center justify-between text-2xl rounded-t-xl p-6 bg-[#64748B33] font-medium">
+                <h3 className="text-lg font-semibold">One Shot Payment</h3>
+                <h3 className="text-lg font-semibold">
+                  ₹{student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.oneShotPayment?.amountPayable.toLocaleString()}.00
+                </h3>
+              </div>
+              
+                  <div className="bg-[#64748B1F] p-6 border-b border-gray-700">
+                    <div className="flex justify-between items-center cursor-pointer">
+                      <Badge className="bg-[#3698FB]/20 border-[#3698FB] text-base text-white px-4 py-2 ">
+                        Installment 01
+                      </Badge>
+                      <div className="flex flex-col sm:flex-row sm:gap-4 text-right">
+                          <Badge className="bg-[#64748B1F]/20 border-[#2C2C2C] text-base text-white px-4 py-2">
+                          Due:{" "}
+                          {new Date(student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.oneShotPayment?.installmentDate).toLocaleDateString("en-GB", {
+                            day: "2-digit",
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </Badge>
+                      </div>
+                    </div>
+
+                      <div className="mt-4 space-y-4">
+                        {student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.oneShotPayment.feedback && student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.oneShotPayment.feedback.length > 0 && (
+                          <p>
+                            <strong>Feedback:</strong> {student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.oneShotPayment.feedback.join(", ")}
+                          </p>
+                        )}
+
+                        {student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.oneShotPayment.receiptUrls && student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.oneShotPayment.receiptUrls.length > 0 && (
+                          <p>
+                            <strong>Receipt:</strong>{" "}
+                            {student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.oneShotPayment.receiptUrls.map((url: string, urlIndex: number) => (
+                              <a
+                                key={urlIndex}
+                                href={url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-400 underline ml-2"
+                              >
+                                View Receipt {urlIndex + 1}
+                              </a>
+                            ))}
+                          </p>
+                        )}
+
+                        {/* Show File Upload + Fee Breakdown */}
+                        <FileUploadField
+                          semester={1}
+                          installment={1}
+                        />
+
+                        <div className="p-3 rounded-lg text-sm text-white/70 space-y-1">
+                          <p className="font-medium text-base text-white">Fee Breakdown</p>
+                          <div className="flex justify-between">
+                            <span>Base Fee</span>
+                            <span>
+                              ₹
+                              {(student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.oneShotPayment.baseFee).toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>GST</span>
+                            <span>
+                              ₹{(student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.oneShotPayment.baseFee * 0.18).toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-[#F53F3F]">
+                            <span>One Shot Payment Discount</span>
+                            <span>
+                              - ₹{(student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.oneShotPayment.OneShotPaymentAmount).toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-[#F53F3F]">
+                            <span>Scholarship Amount</span>
+                            <span>- ₹{(student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.oneShotPayment.baseFee * 
+                              student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.semesterFeeDetails?.scholarshipPercentage * 0.01).toLocaleString()}</span>
+                          </div>
+                          <div className="flex justify-between pt-1 border-t border-white/10">
+                            <span className="font-medium text-white">Total</span>
+                            <span className="font-medium text-white">
+                              ₹{student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.oneShotPayment.amountPayable.toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                  </div>
+            </div>
+      </div> : 
       <div className="space-y-4">
         {student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.installmentDetails.map(
           (sem: any, semIndex: number) => (
@@ -416,7 +511,7 @@ export default function FeePaymentSetup() {
             </div>
           )
         )}
-      </div>
+      </div>}
     </div>
   );
 

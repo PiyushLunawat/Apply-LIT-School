@@ -17,13 +17,18 @@ interface DashboardCardProps {
   to: string;
   bgColor: string;
   border: string;
+  disable: Boolean;
 }
 
-const DashboardCard = ({ title, description, icon, to, bgColor, border }: DashboardCardProps) => (
+const DashboardCard = ({ title, description, icon, to, bgColor, border, disable }: DashboardCardProps) => (
   <Link
-    to={to}
-    className={`rounded-2xl ${bgColor} ${border} border border-b-8 hover:opacity-90 transition-opacity`}
+     to={'#'} // Prevent navigation if disabled
+    className={`rounded-2xl ${bgColor} ${border} border-b-8 hover:opacity-90 transition-opacity ${
+      disable ? "opacity-50 cursor-not-allowed" : ""
+    }`}
+    onClick={(e) => disable && e.preventDefault()} // Prevent link click if disabled
   >
+
     <div className={``}>
       {icon}
     </div>
@@ -53,23 +58,21 @@ export default function ApplicationDashboard() {
   }, []);
   
   const handleExploreClick = () => {
-    navigate('/Dashboard/litmus-task');
+    navigate('/dashboard/litmus-task');
   };
 
   const handleDocumentClick = () => {
-    navigate('/Dashboard/personal-documents');
+    navigate('/dashboard/personal-documents');
   };
 
   const handleFeePaymentClick = () => {
     navigate('/dashboard/fee-payment-setup');
   };
 
+  const isLitmusDetailsAvailable = !!student?.litmusTestDetails?.length;
+
   return (
   <>
-  <Header subtitle="" classn="drop-shadow-lg" />
-  <div className="flex">
-    <Sidebar />
-    <div className="overflow-y-auto" style={{ height: `calc(100vh - 52px)`}}>
       <div className="flex justify-between items-end p-[52px] bg-[#64748B1A] border-b">
         <div className="space-y-8">
           <Avatar className="w-32 h-32">
@@ -149,6 +152,7 @@ export default function ApplicationDashboard() {
           to="/dashboard/application-documents"
           bgColor="bg-orange-600/10"
           border="border-orange-600"
+          disable={!isLitmusDetailsAvailable}
         />
         <DashboardCard
           title="Fee Payment"
@@ -157,6 +161,7 @@ export default function ApplicationDashboard() {
           to="/dashboard/fee-payment-setup"
           bgColor="bg-blue-600/10"
           border="border-blue-600"
+          disable={!isLitmusDetailsAvailable}
         />
         <DashboardCard
           title="Account Details"
@@ -165,6 +170,7 @@ export default function ApplicationDashboard() {
           to="/dashboard/account-details"
           bgColor="bg-[#F8E000]/10"
           border="border-[#F8E000]"
+          disable={!isLitmusDetailsAvailable}
         />
         <DashboardCard
           title="Personal Documents"
@@ -173,10 +179,9 @@ export default function ApplicationDashboard() {
           to="/dashboard/personal-documents"
           bgColor="bg-emerald-600/10"
           border="border-emerald-600"
+          disable={!isLitmusDetailsAvailable}
         />
       </div>
-    </div>
-    </div>
     </div>
   </>
   );

@@ -17,6 +17,19 @@ export async function getCohorts() {
   return response.json();
 }
 
+export async function getCohortById(id: string) {
+  const response = await fetch(`${CONST_API}/admin/cohort/${id}`);
+  if (!response.ok) {
+    const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
+    throw new Error(
+      `${
+        errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
+      }`
+    );
+  }
+  return response.json();
+}
+
 // Fetch all centres
 export async function getCentres() {
   const response = await fetch(`${CONST_API}/admin/center`);
