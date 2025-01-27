@@ -23,6 +23,8 @@ export const RegisterInterceptor = () => {
             "/auth/verify-otp",
             "/student/verify-mobile-number",
             "/student/verify-otp-number",
+            "/login",        // <--- UI route
+            "/sign-up",  
           ];
       
           // If this URL is in the public list, skip token checks
