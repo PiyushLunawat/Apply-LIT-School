@@ -12,6 +12,19 @@ body {
   }
 }
 
+/* @font-face {
+  font-family: 'Random Grotesque';
+  src: url('/fonts/RandomGrotesqueStandard-Bold.woff2') format('woff2'),
+       url('/fonts/RandomGrotesqueStandard-Bold.woff') format('woff'),
+       url('/fonts/RandomGrotesqueStandard-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+.font-random {
+  font-family: 'Random Grotesque', sans-serif;
+  font-weight: bold;
+} */
 @layer base {
   :root {
     --background: 0 0% 100%;

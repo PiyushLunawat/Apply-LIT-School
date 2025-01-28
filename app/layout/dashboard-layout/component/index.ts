@@ -1,5 +1,0 @@
-export * from '.'
-export * from './application-documents'
-export * from './fee-payment-setup'
-export * from './account-details'
-export * from './personal-documents'

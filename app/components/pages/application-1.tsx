@@ -16,10 +16,8 @@ import { redirect, useNavigate } from '@remix-run/react';
 import { getCurrentStudent, getStudents } from '~/utils/studentAPI';
 import { UserContext } from '~/context/UserContext';
 import { Skeleton } from '../ui/skeleton';
-// import ApplicationDetailsForm from '../molecules/ApplicationDetailsForm/OneTimeSetup';
-// import ApplicationDetailsForm from '../molecules/ApplicationDetailsForm/ApplicationDetailsForm';
-// import ApplicationDetailsForm from '../molecules/ApplicationDetailsForm/trash';
 import ApplicationTaskForm from '../molecules/ApplicationTaskForm/trash';
+import ApplicationDetailsForm from '../molecules/ApplicationDetailsForm/ApplicationDetailsForm';
 // import ApplicationTaskForm from '../molecules/ApplicationTaskForm/ApplicationTaskForm';
 
 // Extend the global Window interface to include Razorpay
@@ -28,12 +26,6 @@ declare global {
     Razorpay: any;
   }
 }
-
-import dynamic from 'next/dynamic';
-
-const ApplicationDetailsForm = dynamic(() => import('../molecules/ApplicationDetailsForm/OneTimeSetup'), {
-  ssr: false,
-});
 
 export const ApplicationStep1: React.FC = () => {
   const [studentData, setStudentData] = useState<any>(null);
@@ -82,10 +74,10 @@ export const ApplicationStep1: React.FC = () => {
   return (
     <div className="w-full">
       <Header subtitle="Welcome to LIT" submessage='Get started with your application process'/>
-      <img src="/assets/images/application-process-01.svg" alt="BANNER" className="w-screen my-8 sm:my-12" />
-      <div className="w-full px-6 justify-center items-center">
-        <div className='max-w-[1000px] mx-auto'>
-          
+      <img src="/assets/images/application-process-01.svg" alt="BANNER" className="w-screen object-left object-cover overflow-x-auto h-[188px] sm:h-full my-6 sm:my-12" />
+      
+      <div className="w-full px-4 justify-center items-center">
+        <div className='max-w-[1000px] mx-auto'> 
           {loading ? 
           <div className='space-y-4'>
             <div className='flex gap-2'>
@@ -108,14 +100,12 @@ export const ApplicationStep1: React.FC = () => {
             </div>
           </div> :
           !second ? (
-            <div className="flex flex-col gap-4 mt-8">
-              {/* <AccountDetailsForm/> */}
+            <div className="mt-8">
               <ApplicationDetailsForm/>
             </div>
           ) : (
-            <div className="flex flex-col gap-4 mt-8">
+            <div className="mt-8">
               <ApplicationTaskForm/>
-             
             </div>
           )}
         </div>

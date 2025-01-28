@@ -1,4 +1,5 @@
 // Import necessary modules and components
+"use client";
 import React, { useContext, useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm, Controller } from "react-hook-form";
@@ -47,7 +48,7 @@ const formSchema = z.object({
   profileUrl: z.any().optional(),
   applicationData: z.object({  
     address: z.string().nonempty("Address is required"),
-    city: z.string().nonempty("City is required"),
+    city: z.string().nonempty("City & State is required"),
     zipcode: z.string().nonempty("Postal/Zip Code is required"),
     educationLevel: z.string().nonempty("Education level is required"),
     fieldOfStudy: z.string().nonempty("Field of study is required"),
@@ -83,6 +84,50 @@ const formSchema = z.object({
   }),
 })
 .refine(
+  (data) => !data.applicationData.isExperienced || (data.applicationData.experienceType),
+  {
+    message: "Experience Type is required.",
+    path: ["applicationData.experienceType"], 
+  }
+)
+.refine(
+  (data) => !data.applicationData.isExperienced || (data.applicationData.jobDescription),
+  {
+    message: "Job Description is required.",
+    path: ["applicationData.jobDescription"], 
+  }
+)
+.refine(
+  (data) =>
+    !data.applicationData.isExperienced ||
+    !['Working Professional', 'Business Owner', 'Consultant'].includes(data.applicationData.experienceType || '') ||
+    data.applicationData.nameOfCompany,
+  {
+    message: "Company name is required.",
+    path: ["applicationData.nameOfCompany"],
+  }
+)
+.refine(
+  (data) =>
+    !data.applicationData.isExperienced ||
+    !['Business Owner'].includes(data.applicationData.experienceType || '') ||
+    data.applicationData.duration,
+  {
+    message: "Duration is required.",
+    path: ["applicationData.duration"],
+  }
+)
+.refine(
+  (data) =>
+    !data.applicationData.isExperienced ||
+    !["Working Professional", "Freelancer", "Consultant"].includes(data.applicationData.experienceType || '') ||
+    data.applicationData.duration,
+  {
+    message: "Duration is required.",
+    path: ["applicationData.durationFrom"],
+  }
+)
+.refine(
   (data) =>
     // Ensure at least one parent's details are filled
     (data.applicationData.fatherFirstName &&
@@ -97,55 +142,59 @@ const formSchema = z.object({
       data.applicationData.motherEmail),
   {
     message: "Either mother's or father's details must be provided.",
-    path: ["applicationData"], // Add error to the root of applicationData
+    path: ["applicationData.motherOccupation"], // Add error to the root of applicationData
   }
 ).refine(
   (data) => data.applicationData.emergencyContact !== data.studentData.contact,
   {
     message: "Emergency contact and your contact must be different.",
-    path: ["emergencyContact"], // Error for emergencyContact
+    path: ["applicationData.emergencyContact"], // Error for emergencyContact
   }
 )
 .refine(
   (data) => data.applicationData.fatherContact !== data.studentData.contact,
   {
     message: "Father's contact and your contact must be different.",
-    path: ["fatherContact"], // Error for fatherContact
+    path: ["applicationData.fatherContact"], // Error for fatherContact
   }
 )
 .refine(
   (data) => data.applicationData.motherContact !== data.studentData.contact,
   {
     message: "Mother's contact and your contact must be different.",
-    path: ["motherContact"], // Error for motherContact
+    path: ["applicationData.motherContact"], // Error for motherContact
   }
 )
 .refine(
-  (data) => data.applicationData.fatherContact !== data.applicationData.motherContact,
+  (data) => (data.applicationData.fatherContact !== data.applicationData.motherContact ||
+    !data.applicationData.fatherContact
+  ),
   {
     message: "Father's contact and mother's contact must be different.",
-    path: ["motherContact"], // Error for motherContact
+    path: ["applicationData.motherContact"], // Error for motherContact
   }
 )
 .refine(
   (data) => data.applicationData.fatherEmail !== data.studentData.email,
   {
     message: "Father's email and your email must be different.",
-    path: ["fatherEmail"], // Error for Father's email
+    path: ["applicationData.fatherEmail"], // Error for Father's email
   }
 )
 .refine(
   (data) => data.studentData.email !== data.applicationData.motherEmail,
   {
     message: "Mother's email and your email must be different.",
-    path: ["motherEmail"], // Error for mother's email
+    path: ["applicationData.motherEmail"], // Error for mother's email
   }
 )
 .refine(
-  (data) => data.applicationData.fatherEmail !== data.applicationData.motherEmail,
+  (data) => (data.applicationData.fatherEmail !== data.applicationData.motherEmail || 
+    !data.applicationData.fatherEmail
+  ),
   {
     message: "Father's email and mother's email must be different.",
-    path: ["motherEmail"], // Error for mother's email
+    path: ["applicationData.motherEmail"], // Error for mother's email
   }
 );
 
@@ -165,15 +214,11 @@ const ApplicationDetailsForm: React.FC = () => {
   const [interest, setInterest] = useState<any[]>([]); 
   const [cohorts, setCohorts] = useState<any[]>([]); 
   const [contactInfo, setContactInfo] = useState<string>('');
-  const [imagePreview, setImagePreview] = useState<File | null>(null);
   const [isSaved, setIsSaved] = useState((studentData?.applicationDetails !== undefined));
   const [isPaymentDone, setIsPaymentDone] = useState(false);
+
   const [otp, setOtp] = useState("");
   const [verificationId, setVerificationId] = useState("");
-  const [isVerified, setIsVerified] = useState(false);
-
-
-  const [previewUrl, setPreviewUrl] = useState<string>(studentData?.profileUrl || '');
 
 
   const [fetchedStudentData, setFetchedStudentData] = useState<any>(null);
@@ -222,6 +267,9 @@ const ApplicationDetailsForm: React.FC = () => {
         durationFrom: '',
         durationTo: '',
         duration: '',
+        experienceType: '',
+        nameOfCompany: '',
+        jobDescription: '',
         emergencyFirstName: '',
         emergencyLastName: '',
         emergencyContact: '',
@@ -280,15 +328,17 @@ const ApplicationDetailsForm: React.FC = () => {
           fieldOfStudy: sData?.previousEducation?.fieldOfStudy || '',
           institutionName: sData?.previousEducation?.nameOfInstitution || '',
           graduationYear: sData?.previousEducation?.yearOfGraduation || '',
-          isExperienced: sData?.workExperience || 
+          isExperienced: sData?.workExperience?.isExperienced || 
             ["Working Professional", "Freelancer", "Business Owner", "Consultant",].includes(studentData?.qualification) 
             || false,
-          experienceType: sData?.experienceType || studentData?.qualification || '',
-          nameOfCompany: sData?.nameOfCompany || '',
+          experienceType: sData?.workExperience?.experienceType || (
+            ['Working Professional', 'Business Owner', 'Freelancer', 'Consultant'].includes(studentData?.qualification) 
+              ? studentData?.qualification : ''),
+          nameOfCompany: sData?.workExperience?.nameOfCompany || '',
           durationFrom: '',
           durationTo: '',
-          duration: sData?.duration || '',
-          jobDescription: sData?.jobDescription || '',
+          duration: sData?.workExperience?.duration || '',
+          jobDescription: sData?.workExperience?.jobDescription || '',
           emergencyFirstName: sData?.emergencyContact?.firstName || '',
           emergencyLastName: sData?.emergencyContact?.lastName || '',
           emergencyContact: sData?.emergencyContact?.contactNumber || '',
@@ -360,28 +410,45 @@ const ApplicationDetailsForm: React.FC = () => {
     fetchCohorts();
   }, []);
 
-  const handleVerifyClick = async (contact: string) => {
+const handleVerifyClick = async (contact: string) => {
+  if (typeof window === 'undefined') {
+    // Ensure code only runs on the client
+    return;
+  }
+
+  try {
+    // Lazy load the RecaptchaVerifier when the button is clicked
     const recaptchaVerifier = new RecaptchaVerifier(
       auth,
       "recaptcha-container", 
       { size: "invisible",}   
     );
-
-    try {
-      const confirmationResult = await signInWithPhoneNumber(
-        auth,
-        contact,
-        recaptchaVerifier
-      );
-      setVerificationId(confirmationResult.verificationId);
-      console.log('Verification initiated:', confirmationResult);
-    } catch (error) {
-      console.error('Error verifying number:', error);
-    } finally {
+    const confirmationResult = await signInWithPhoneNumber(auth, contact, recaptchaVerifier);
+    setVerificationId(confirmationResult.verificationId);
     setContactInfo(contact);
     setIsDialogOpen(true);
+    console.log('Verification initiated:', confirmationResult);
+  } catch (error: any) {
+    console.error('Error verifying number:', error);
+    form.setError('studentData.contact', {
+      type: 'manual',
+      message: error.message || 'Failed to send OTP. Please try again.',
+    });
   }
-  };
+};
+
+// useEffect to ensure RecaptchaVerifier is initialized on the client side
+useEffect(() => {
+  if (typeof window !== 'undefined') {
+    // Ensure recaptcha container exists for Firebase RecaptchaVerifier
+    const recaptchaContainer = document.getElementById('recaptcha-container');
+    if (!recaptchaContainer) {
+      const div = document.createElement('div');
+      div.id = 'recaptcha-container';
+      document.body.appendChild(div);
+    }
+  }
+}, []);
 
   const formatDate = (isoDate: string | number | Date) => {
     if (!isoDate) return ''; // Handle cases where date is undefined
@@ -413,17 +480,10 @@ const ApplicationDetailsForm: React.FC = () => {
     return center ? center.name : "--";
   };
 
-
-  const getCohortName = (cohortId: string) => {
-    const cohort = cohorts.find((c) => c._id === cohortId);
-    return cohort ? `${formatDateToMonthYear(cohort?.startDate)} (${cohort?.timeSlot}), ${getCenterName(cohort?.centerDetail)}` : "--";
-  };
-
   const formatDateToMonthYear = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleString('default', { month: 'long', year: 'numeric' });
   };
-
 
   const handleContinueToDashboard = () => {
     window.location.href = '/application/step-1';
@@ -552,19 +612,19 @@ const ApplicationDetailsForm: React.FC = () => {
       studentData: {
         firstName: studentData?.firstName || '',
         lastName: studentData?.lastName || '',
-        mobileNumber: data?.studentData?.contact || studentData?.mobileNumber,
+        mobileNumber: studentData?.mobileNumber || '',
         isMobileVerified: studentData?.isMobileVerified || false,
         email: studentData?.email || '',
-        qualification: data?.studentData?.currentStatus || studentData?.qualification,
-        program: data?.studentData?.courseOfInterest || studentData?.program,
-        cohort: data?.studentData?.cohort || studentData?.cohort,
+        qualification: studentData?.qualification || '',
+        program: studentData?.program || '',
+        cohort: studentData?.cohort || '',
         gender: data.studentData.gender,
         isVerified: studentData?.isVerified || false,
-        dateOfBirth: new Date(data?.studentData?.dob || studentData?.dateOfBirth), 
+        dateOfBirth: new Date(studentData?.dateOfBirth || Date.now()), 
+        profileImage: [],
         linkedInUrl: data.studentData.linkedInUrl || "",
         instagramUrl: data.studentData.instagramUrl || "",
       },
-      profileImage: [],
       applicationData: {
         currentAddress: {
           streetAddress: data.applicationData.address,
@@ -619,8 +679,11 @@ const ApplicationDetailsForm: React.FC = () => {
     setLoading(true);
     console.log("dssd",apiPayload);
     
-    const response = await fetch('http://localhost:4000/student/submit-application', {
+    const response = await fetch('https://myfashionfind.shop/student/submit-application', {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify(apiPayload), 
     });
 
@@ -656,65 +719,10 @@ const ApplicationDetailsForm: React.FC = () => {
     <>
     <Form {...form}>
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 mt-8">
-      <Badge size="xl" className='flex-1 bg-[#00A3FF]/[0.2] text-[#00A3FF] text-center '>Personal Details</Badge>
-        <div className="grid sm:flex gap-6">
-          {/* Image Upload */}
-          {/* <div className="w-full sm:w-[232px] h-[308px] bg-[#1F1F1F] flex flex-col items-center justify-center rounded-xl text-sm space-y-4">
-      {previewUrl ? (
-        <div className="w-full h-full relative">
-          <img
-            src={previewUrl}
-            alt="Passport Preview"
-            className="w-full h-full object-cover rounded-lg"
-          />
-          <div className="absolute top-2 right-2 flex space-x-2">
-            <button
-              className="p-2 bg-white/10 mix-blend-difference border border-white rounded-full hover:bg-white/20"
-              onClick={() => {
-                setImagePreview(null);
-                setPreviewUrl('')
-              }}
-            >
-              <XIcon className="w-5 h-5 text-white" />
-            </button>
-          </div>
+        <div className='flex-1 bg-[#00A3FF]/[0.2] text-[#00A3FF] text-center py-4 mt-10 text-2xl rounded-full'>
+          Personal Details
         </div>
-      ) : (
-        <>
-        <label
-          htmlFor="passport-input"
-          className="cursor-pointer flex flex-col items-center justify-center items-center bg-[#1F1F1F] px-6 rounded-xl border-[#2C2C2C] w-full h-[220px]"
-        >
-          <div className="text-center my-auto text-muted-foreground">
-            <Camera className="mx-auto mb-2 w-8 h-8" />
-            <div className="text-wrap">
-              Upload a Passport size Image of Yourself. Ensure that your face covers
-              60% of this picture.
-            </div>
-          </div>
-          <input
-            id="passport-input"
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) {
-                const imageUrl = URL.createObjectURL(file);
-                console.log("fefs",imageUrl,file);
-                
-                setImagePreview(file);
-                setPreviewUrl(imageUrl);
-                setStudentData({ ...studentData, profileUrl: file });
-              }
-            }}
-          />
-        </label>
-        </>
-      )}
-    </div> */}
-
-
+        <div className="grid sm:flex gap-6">
           {/* Form Fields */}
           <div className="flex-1 space-y-4">
             {/* Full Name */}
@@ -723,17 +731,17 @@ const ApplicationDetailsForm: React.FC = () => {
               name="studentData.firstName"
               render={({ field }) => (
                 <FormItem className='flex-1 space-y-1'>
-                  <Label className="text-base font-normal pl-3">Full Name</Label>
+                  <Label className="text-xs sm:text-sm font-normal pl-3">Full Name</Label>
                   <FormControl>
                     <Input id="fullName" defaultValue={((studentData?.firstName || "-")+' '+(studentData?.lastName || "-"))} placeholder="John Doe" disabled/>
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
                 </FormItem>
               )}
             />
 
             {/* Email and Contact */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-2">
               {/* Email */}
               <FormField
                 control={control}
@@ -741,7 +749,7 @@ const ApplicationDetailsForm: React.FC = () => {
                 render={({ field }) => (
                   <FormItem className='flex-1 space-y-1 relative'>
                     <CheckCircle className="text-[#00CC92] absolute left-3 top-[52px] w-5 h-5 " />
-                    <Label className="text-base font-normal pl-3">Email</Label>
+                    <Label className="text-xs sm:text-sm font-normal pl-3">Email</Label>
                     <FormControl>
                       <Input
                         id="email"
@@ -753,7 +761,7 @@ const ApplicationDetailsForm: React.FC = () => {
                       />
                     </FormControl>
                     <Mail className="absolute right-3 top-[46px] w-5 h-5 " />
-                    <FormMessage />
+                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
                   </FormItem>
                 )}
               />
@@ -767,35 +775,39 @@ const ApplicationDetailsForm: React.FC = () => {
                       <CheckCircle className="text-[#00CC92] absolute left-3 top-[52px] w-5 h-5 " /> : 
                       <Phone className="absolute left-3 top-[52px] w-5 h-5 " />
                     }
-                    <Label className="text-base font-normal pl-3">Contact No.</Label>
+                    <Label className="text-xs sm:text-sm font-normal pl-3">Contact No.</Label>
                     <FormControl>
-                      <Input disabled={isSaved}
+                      <Input disabled={isSaved || studentData?.isMobileVerified}
                         id="contact"
                         type="tel"
                         placeholder="+91 95568 97688"
                         className='pl-10'
                         defaultValue={studentData?.mobileNumber || "--"}
+                        {...field}
                       />
                     </FormControl>
                     {studentData?.isMobileVerified ?
                       <Phone className="absolute right-3 top-[46px] w-5 h-5" /> : 
-                      <Button size='sm' className='absolute right-3 top-10 rounded-full px-4 bg-[#00CC92]' onClick={() => handleVerifyClick(studentData?.mobileNumber)} type="button">
+                      <Button size='sm' className='absolute right-3 top-10 rounded-full px-4 bg-[#00CC92]' onClick={() => handleVerifyClick(field.value || studentData?.mobileNumber)} type="button">
                         Verify
                       </Button>
                     }
-                    <FormMessage />
-                    {(!studentData?.isMobileVerified) && (
-                      <div className="text-red-500 text-sm font-medium pl-3">
-                        Please verify your mobile number before submitting.
-                      </div>
-                    )}
+                      {errors?.studentData?.contact ? (
+                        <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                      ) : (
+                        !studentData?.isMobileVerified && (
+                          <div className="text-[#FF503D] text-xs sm:text-sm font-normal pl-3">
+                            Please verify your mobile number.
+                          </div>
+                        )
+                      )}
                   </FormItem>
                 )}
               />
             </div>
 
             {/* Date of Birth and Current Status */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-2">
               {/* Date of Birth */}
               <FormField
                 control={control}
@@ -806,7 +818,7 @@ const ApplicationDetailsForm: React.FC = () => {
                   const maxDateString = maxDate.toISOString().split('T')[0];
                   return (
                   <FormItem className="flex-1 flex flex-col space-y-1 relative">
-                    <Label className="text-base font-normal pl-3">Date of Birth</Label>
+                    <Label className="text-xs sm:text-sm font-normal pl-3">Date of Birth</Label>
                     <FormControl>
                     <input
                       type="date"
@@ -822,7 +834,7 @@ const ApplicationDetailsForm: React.FC = () => {
                       max={maxDateString}
                     />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
                   </FormItem>
                 )}}
               />
@@ -832,7 +844,7 @@ const ApplicationDetailsForm: React.FC = () => {
                 name="studentData.currentStatus"
                 render={({ field }) => (
                   <FormItem className='flex-1 space-y-1'>
-                    <Label className="text-base font-normal pl-3">You are Currently a</Label>
+                    <Label className="text-xs sm:text-sm font-normal pl-3">You are Currently a</Label>
                     <FormControl>
                       <Select disabled={isSaved} value={field.value} onValueChange={field.onChange}>
                         <SelectTrigger>
@@ -850,7 +862,7 @@ const ApplicationDetailsForm: React.FC = () => {
                       </Select>
                       {/* <Input id="currentStatus" type="text" placeholder="College Student" defaultValue={studentData?.qualification} /> */}
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
                   </FormItem>
                 )}
               />
@@ -866,7 +878,7 @@ const ApplicationDetailsForm: React.FC = () => {
             name="studentData.courseOfInterest"
             render={({ field }) => (
               <FormItem className='flex-1 space-y-1'>
-                <Label className='text-base font-normal pl-3'>Course of Interest</Label>
+                <Label className='text-xs sm:text-sm font-normal pl-3'>Course of Interest</Label>
                 <FormControl>
                   <Select disabled={isSaved}
                   onValueChange={(value) => { field.onChange(value); (value); }} 
@@ -888,7 +900,7 @@ const ApplicationDetailsForm: React.FC = () => {
                 <Label htmlFor="form-alert" className='flex gap-1 items-center text-sm text-[#00A3FF] font-normal pl-3 mt-1'>
                   Your application form will be in line with the course of your choice.
                 </Label>
-                <FormMessage />
+                <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
               </FormItem>
             )}
           />
@@ -898,7 +910,7 @@ const ApplicationDetailsForm: React.FC = () => {
             name="studentData.cohort"
             render={({ field }) => (
               <FormItem className='flex-1 space-y-1'>
-                <Label className='text-base font-normal pl-3'>Select Cohort</Label>
+                <Label className='text-xs sm:text-sm font-normal pl-3'>Select Cohort</Label>
                 <FormControl>
                   <Select disabled={isSaved}
                     onValueChange={(value) => { field.onChange(value); (value); }} 
@@ -915,21 +927,21 @@ const ApplicationDetailsForm: React.FC = () => {
                     </SelectContent>
                   </Select>
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
               </FormItem>
             )}
           />
         </div>
         
         {/* LinkedIn and Instagram IDs */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-2">
           {/* LinkedIn ID */}
           <FormField
             control={control}
             name="studentData.linkedInUrl"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1 relative">
-                <Label className="text-base font-normal pl-3">Your LinkedIn ID (Not Compulsory)</Label>
+                <Label className="text-xs sm:text-sm font-normal pl-3">Your LinkedIn ID (Not Compulsory)</Label>
                 <FormControl>
                   <Input id="linkedInUrl" placeholder="linkedin.com/in" {...field} 
                   onChange={(e) => {
@@ -938,7 +950,7 @@ const ApplicationDetailsForm: React.FC = () => {
                   }} disabled={isSaved}/>
                 </FormControl>
                 <Linkedin className="absolute right-3 top-[46px] w-5 h-5" />
-                <FormMessage />
+                <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
               </FormItem>
             )}
           />
@@ -948,7 +960,7 @@ const ApplicationDetailsForm: React.FC = () => {
             name="studentData.instagramUrl"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1 relative">
-                <Label className="text-base font-normal pl-3">Your Instagram ID (Not Compulsory)</Label>
+                <Label className="text-xs sm:text-sm font-normal pl-3">Your Instagram ID (Not Compulsory)</Label>
                 <FormControl>
                   <Input id="instagramUrl" placeholder="@JohnDoe" {...field} 
                   onChange={(e) => {
@@ -957,7 +969,7 @@ const ApplicationDetailsForm: React.FC = () => {
                   }} disabled={isSaved}/>
                 </FormControl>
                 <Instagram className="absolute right-3 top-[46px] w-5 h-5" />
-                <FormMessage />
+                <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
               </FormItem>
             )}
           />
@@ -969,7 +981,7 @@ const ApplicationDetailsForm: React.FC = () => {
           name="studentData.gender"
           render={({ field }) => (
             <FormItem className='flex-1 space-y-1 pl-3'>
-              <Label className="text-base font-normal">Select Your Gender</Label>
+              <Label className="text-xs sm:text-sm font-normal">Select Your Gender</Label>
               <FormControl>
                 <RadioGroup disabled={isSaved}
                   onValueChange={field.onChange}
@@ -978,19 +990,19 @@ const ApplicationDetailsForm: React.FC = () => {
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="Male" id="male" />
-                    <Label htmlFor="male" className="text-base font-normal">Male</Label>
+                    <Label htmlFor="male" className="text-sm sm:text-base font-normal">Male</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="Female" id="female" />
-                    <Label htmlFor="female" className="text-base font-normal">Female</Label>
+                    <Label htmlFor="female" className="text-sm sm:text-base font-normal">Female</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="Other" id="other" />
-                    <Label htmlFor="other" className="text-base font-normal">Other</Label>
+                    <Label htmlFor="other" className="text-sm sm:text-base font-normal">Other</Label>
                   </div>
                 </RadioGroup>
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
             </FormItem>
           )}
         />
@@ -1001,28 +1013,28 @@ const ApplicationDetailsForm: React.FC = () => {
           name="applicationData.address"
           render={({ field }) => (
             <FormItem className='flex-1 space-y-1'>
-              <Label htmlFor="address" className="text-base font-normal pl-3">Your Current Address</Label>
+              <Label htmlFor="address" className="text-xs sm:text-sm font-normal pl-3">Your Current Address</Label>
               <FormControl>
                 <Input id="address" placeholder="Street Address" {...field} disabled={isSaved} />
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
             </FormItem>
           )}
         />
 
         {/* City and Zip Code */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-2">
           {/* City */}
           <FormField
             control={control}
             name="applicationData.city"
             render={({ field }) => (
               <FormItem className='flex-1 space-y-1'>
-                <Label htmlFor="city" className="text-base font-normal pl-3">City, State</Label>
+                <Label htmlFor="city" className="text-xs sm:text-sm font-normal pl-3">City, State</Label>
                 <FormControl>
                   <Input id="city" placeholder="City, State" {...field} disabled={isSaved} />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
               </FormItem>
             )}
           />
@@ -1032,7 +1044,7 @@ const ApplicationDetailsForm: React.FC = () => {
             name="applicationData.zipcode"
             render={({ field }) => (
               <FormItem className='flex-1 space-y-1'>
-                <Label htmlFor="zipcode" className="text-base font-normal pl-3">Postal/Zip Code</Label>
+                <Label htmlFor="zipcode" className="text-xs sm:text-sm font-normal pl-3">Postal/Zip Code</Label>
                 <FormControl>
                   <Input maxLength={6} id="zipcode" placeholder="Postal/Zip Code" {...field} 
                   onInput={(e) => {
@@ -1041,7 +1053,7 @@ const ApplicationDetailsForm: React.FC = () => {
                     field.onChange(target.value);
                   }} disabled={isSaved}/>
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
               </FormItem>
             )}
           />
@@ -1051,14 +1063,14 @@ const ApplicationDetailsForm: React.FC = () => {
         <div className='flex-1 bg-[#FF791F]/[0.2] text-[#FF791F] text-center py-4 mt-10 text-2xl rounded-full'>
           Previous Education
         </div>
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
           {/* Education Level */}
           <FormField
             control={control}
             name="applicationData.educationLevel"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1">
-                <Label htmlFor="educationLevel" className="text-base font-normal pl-3">Highest Level of Education Attained</Label>
+                <Label htmlFor="educationLevel" className="text-xs sm:text-sm font-normal pl-3">Highest Level of Education Attained</Label>
                 <FormControl>
                   <Select disabled={isSaved}
                     onValueChange={field.onChange}
@@ -1074,7 +1086,7 @@ const ApplicationDetailsForm: React.FC = () => {
                     </SelectContent>
                   </Select>
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
               </FormItem>
             )}
           />
@@ -1084,29 +1096,29 @@ const ApplicationDetailsForm: React.FC = () => {
             name="applicationData.fieldOfStudy"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1">
-                <Label htmlFor="fieldOfStudy" className="text-base font-normal pl-3">Field of Study (Your Major)</Label>
+                <Label htmlFor="fieldOfStudy" className="text-xs sm:text-sm font-normal pl-3">Field of Study (Your Major)</Label>
                 <FormControl>
                   <Input id="fieldOfStudy" placeholder="Type here" {...field} disabled={isSaved} />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
               </FormItem>
             )}
           />
         </div>
 
         {/* Institution Name and Graduation Year */}
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
           {/* Institution Name */}
           <FormField
             control={control}
             name="applicationData.institutionName"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1">
-                <Label htmlFor="institutionName" className="text-base font-normal pl-3">Name of Institution</Label>
+                <Label htmlFor="institutionName" className="text-xs sm:text-sm font-normal pl-3">Name of Institution</Label>
                 <FormControl>
                   <Input id="institutionName" placeholder="Type here" {...field} disabled={isSaved} />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
               </FormItem>
             )}
           />
@@ -1116,7 +1128,7 @@ const ApplicationDetailsForm: React.FC = () => {
             name="applicationData.graduationYear"
             render={({ field }) => (
               <FormItem className="flex-1 flex flex-col space-y-1">
-                <Label htmlFor="graduationYear" className="text-base font-normal pl-3">Year of Graduation</Label>
+                <Label htmlFor="graduationYear" className="text-xs sm:text-sm font-normal pl-3">Year of Graduation</Label>
                 <FormControl>
                   <input 
                     placeholder="MM YYYY"
@@ -1124,7 +1136,7 @@ const ApplicationDetailsForm: React.FC = () => {
                     className="!h-[64px] bg-[#09090B] px-3 rounded-xl border"
                     id="graduationYear" {...field} disabled={isSaved} />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
               </FormItem>
             )}
           />
@@ -1137,7 +1149,7 @@ const ApplicationDetailsForm: React.FC = () => {
           render={({ field }) => (
             <FormItem className="flex flex-col sm:flex-row gap-2">
               <div className="flex-1 space-y-1 pl-3">
-                <Label className="text-base font-normal">Do you have any work experience?</Label>
+                <Label className="text-xs sm:text-sm font-normal">Do you have any work experience?</Label>
                 <FormControl>
                   <RadioGroup disabled={isSaved}
                     className="flex space-x-6 mt-2"
@@ -1150,15 +1162,15 @@ const ApplicationDetailsForm: React.FC = () => {
                   >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="yes" id="yesWorkExperience" />
-                      <Label htmlFor="yesWorkExperience" className="text-base font-normal">Yes</Label>
+                      <Label htmlFor="yesWorkExperience" className="text-sm sm:text-base font-normal">Yes</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="no" id="noWorkExperience" />
-                      <Label htmlFor="noWorkExperience" className="text-base font-normal">No</Label>
+                      <Label htmlFor="noWorkExperience" className="text-sm sm:text-base font-normal">No</Label>
                     </div>
                   </RadioGroup>
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
               </div>
             </FormItem>
           )}
@@ -1168,14 +1180,14 @@ const ApplicationDetailsForm: React.FC = () => {
         {watchHasWorkExperience && (
           <>
             {/* Experience Type and Job Description */}
-            <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
               {/* Experience Type */}
               <FormField
                 control={control}
                 name="applicationData.experienceType"
                 render={({ field }) => (
                   <FormItem className="flex-1 space-y-1">
-                    <Label htmlFor="experienceType" className="text-base font-normal pl-3">Select Your Latest Work Experience Type</Label>
+                    <Label htmlFor="experienceType" className="text-xs sm:text-sm font-normal pl-3">Select Your Latest Work Experience Type</Label>
                     <FormControl>
                       <Select value={field.value} disabled={isSaved}
                           onValueChange={(value) => {
@@ -1193,7 +1205,7 @@ const ApplicationDetailsForm: React.FC = () => {
                         </SelectContent>
                       </Select>
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
                   </FormItem>
                 )}
               />
@@ -1203,11 +1215,11 @@ const ApplicationDetailsForm: React.FC = () => {
                 name="applicationData.jobDescription"
                 render={({ field }) => (
                   <FormItem className="flex-1 space-y-1">
-                    <Label htmlFor="jobDescription" className="text-base font-normal pl-3">Latest Job/Service Description</Label>
+                    <Label htmlFor="jobDescription" className="text-xs sm:text-sm font-normal pl-3">Latest Job/Service Description</Label>
                     <FormControl>
                       <Input id="jobDescription" placeholder="Type here" {...field} disabled={isSaved} />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
                   </FormItem>
                 )}
               />
@@ -1215,25 +1227,25 @@ const ApplicationDetailsForm: React.FC = () => {
 
             {/* Conditional Fields Based on Experience Type */}
             {watchExperienceType === 'Working Professional' && (
-              <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
                 {/* Company Name */}
                 <FormField
                   control={control}
                   name="applicationData.nameOfCompany"
                   render={({ field }) => (
                     <FormItem className="flex-1 space-y-1">
-                      <Label htmlFor="companyName" className="text-base font-normal pl-3">Name of Company (Latest or Current)</Label>
+                      <Label htmlFor="companyName" className="text-xs sm:text-sm font-normal pl-3">Name of Company (Latest or Current)</Label>
                       <FormControl>
                         <Input id="companyName" placeholder="Type here" {...field} disabled={isSaved} />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
                     </FormItem>
                   )}
                 />
                 {/* Work Duration */}
                 <div className='flex-1 space-y-1'>
-                <Label htmlFor="duration" className="text-base font-normal pl-3">Apx. Duration of Work</Label>
-                  <div className="flex flex-1 items-center gap-6">
+                <Label htmlFor="duration" className="text-xs sm:text-sm font-normal pl-3">Apx. Duration of Work</Label>
+                  <div className="grid sm:flex flex-1 items-center gap-4 sm:gap-2">
                   <FormField
                     control={control}
                     name="applicationData.durationFrom"
@@ -1245,10 +1257,10 @@ const ApplicationDetailsForm: React.FC = () => {
                             id="durationFrom"
                             {...field}
                             disabled={isSaved}
-                            className="!h-[64px] bg-[#09090B] px-3 rounded-xl border text-white"
+                            className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border text-white"
                           />
                         </FormControl>
-                        <FormMessage>
+                        <FormMessage className="text-xs sm:text-sm font-normal pl-3">
                           {errors.applicationData?.durationFrom && (
                             <span className="text-red-500">{errors.applicationData.durationFrom.message}</span>
                           )}
@@ -1257,7 +1269,7 @@ const ApplicationDetailsForm: React.FC = () => {
                     )}
                   />
 
-                  <Minus className='w-4 h-4'/>
+                  <Minus className='w-4 h-4 mx-auto'/>
 
                   <FormField
                     control={control}
@@ -1270,10 +1282,10 @@ const ApplicationDetailsForm: React.FC = () => {
                             id="durationTo"
                             {...field}
                             disabled={isSaved}
-                            className="!h-[64px] bg-[#09090B] px-3 rounded-xl border text-white"
+                            className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border text-white"
                           />
                         </FormControl>
-                        <FormMessage>
+                        <FormMessage className="text-xs sm:text-sm font-normal pl-3">
                           {errors.applicationData?.durationTo && (
                             <span className="text-red-500">{errors.applicationData.durationTo.message}</span>
                           )}
@@ -1287,18 +1299,18 @@ const ApplicationDetailsForm: React.FC = () => {
             )}
 
             {watchExperienceType === 'Business Owner' && (
-              <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
                 {/* Company Name */}
                 <FormField
                   control={control}
                   name="applicationData.nameOfCompany"
                   render={({ field }) => (
                     <FormItem className="flex-1 space-y-1">
-                      <Label htmlFor="companyName" className="text-base font-normal pl-3">Name of Company</Label>
+                      <Label htmlFor="companyName" className="text-xs sm:text-sm font-normal pl-3">Name of Company</Label>
                       <FormControl>
                         <Input id="companyName" placeholder="Type here" {...field} disabled={isSaved} />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
                     </FormItem>
                   )}
                 />
@@ -1307,8 +1319,8 @@ const ApplicationDetailsForm: React.FC = () => {
                   control={control}
                   name="applicationData.duration"
                   render={({ field }) => (
-                    <FormItem className="flex-1 flex flex-col space-y-1">
-                      <Label htmlFor="companyStartDate" className="text-base font-normal pl-3">When Did You Start Your Company?</Label>
+                    <FormItem className="flex-1 flex flex-col">
+                      <Label htmlFor="companyStartDate" className="text-xs sm:text-sm font-normal pl-3">When Did You Start Your Company?</Label>
                       <FormControl>
                         <input 
                           placeholder="MM/YYYY" 
@@ -1316,7 +1328,7 @@ const ApplicationDetailsForm: React.FC = () => {
                           className="!h-[64px] bg-[#09090B] px-3 rounded-xl border"
                           id="companyStartDate" {...field} disabled={isSaved} />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
                     </FormItem>
                   )}
                 />
@@ -1324,11 +1336,11 @@ const ApplicationDetailsForm: React.FC = () => {
             )}
 
             {watchExperienceType === 'Freelancer' && (
-              <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
                 {/* Duration of Work */}
                 <div className='flex-1 space-y-1'>
-                <Label htmlFor="duration" className="text-base font-normal pl-3">Apx. Duration of Work</Label>
-                  <div className="flex flex-1 items-center gap-6">
+                <Label htmlFor="duration" className="text-xs sm:text-sm font-normal pl-3">Apx. Duration of Work</Label>
+                  <div className="grid sm:flex flex-1 items-center gap-2">
                   <FormField
                     control={control}
                     name="applicationData.durationFrom"
@@ -1340,10 +1352,10 @@ const ApplicationDetailsForm: React.FC = () => {
                             id="durationFrom"
                             {...field}
                             disabled={isSaved}
-                            className="!h-[64px] bg-[#09090B] px-3 rounded-xl border text-white"
+                            className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border text-white"
                           />
                         </FormControl>
-                        <FormMessage>
+                        <FormMessage className="text-xs sm:text-sm font-normal pl-3">
                           {errors.applicationData?.durationFrom && (
                             <span className="text-red-500">{errors.applicationData.durationFrom.message}</span>
                           )}
@@ -1352,7 +1364,7 @@ const ApplicationDetailsForm: React.FC = () => {
                     )}
                   />
 
-                  <Minus className='w-4 h-4'/>
+                  <Minus className='w-4 h-4 mx-auto'/>
 
                   <FormField
                     control={control}
@@ -1365,10 +1377,10 @@ const ApplicationDetailsForm: React.FC = () => {
                             id="durationTo"
                             {...field}
                             disabled={isSaved}
-                            className="!h-[64px] bg-[#09090B] px-3 rounded-xl border text-white"
+                            className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border text-white"
                           />
                         </FormControl>
-                        <FormMessage>
+                        <FormMessage className="text-xs sm:text-sm font-normal pl-3">
                           {errors.applicationData?.durationTo && (
                             <span className="text-red-500">{errors.applicationData.durationTo.message}</span>
                           )}
@@ -1382,11 +1394,11 @@ const ApplicationDetailsForm: React.FC = () => {
             )}
 
             {watchExperienceType === 'Consultant' && (
-              <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
                 {/* Duration of Work */}
                 <div className='flex-1 space-y-1'>
-                <Label htmlFor="duration" className="text-base font-normal pl-3">Apx. Duration of Work</Label>
-                  <div className="flex flex-1 items-center gap-6">
+                <Label htmlFor="duration" className="text-xs sm:text-sm font-normal pl-3">Apx. Duration of Work</Label>
+                  <div className="grid sm:flex flex-1 items-center gap-2">
                   <FormField
                     control={control}
                     name="applicationData.durationFrom"
@@ -1398,10 +1410,10 @@ const ApplicationDetailsForm: React.FC = () => {
                             id="durationFrom"
                             {...field}
                             disabled={isSaved}
-                            className="!h-[64px] bg-[#09090B] px-3 rounded-xl border text-white"
+                            className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border text-white"
                           />
                         </FormControl>
-                        <FormMessage>
+                        <FormMessage className="text-xs sm:text-sm font-normal pl-3">
                           {errors.applicationData?.durationFrom && (
                             <span className="text-red-500">{errors.applicationData.durationFrom.message}</span>
                           )}
@@ -1410,7 +1422,7 @@ const ApplicationDetailsForm: React.FC = () => {
                     )}
                   />
 
-                  <Minus className='w-4 h-4'/>
+                  <Minus className='w-4 h-4 mx-auto'/>
 
                   <FormField
                     control={control}
@@ -1423,10 +1435,10 @@ const ApplicationDetailsForm: React.FC = () => {
                             id="durationTo"
                             {...field}
                             disabled={isSaved}
-                            className="!h-[64px] bg-[#09090B] px-3 rounded-xl border text-white"
+                            className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border text-white"
                           />
                         </FormControl>
-                        <FormMessage>
+                        <FormMessage className="text-xs sm:text-sm font-normal pl-3">
                           {errors.applicationData?.durationTo && (
                             <span className="text-red-500">{errors.applicationData.durationTo.message}</span>
                           )}
@@ -1445,18 +1457,18 @@ const ApplicationDetailsForm: React.FC = () => {
         <div className='flex-1 bg-[#00AB7B]/[0.2] text-[#00AB7B] text-center py-4 mt-10 text-2xl rounded-full'>
           Emergency Contact Details
         </div>
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
           {/* Emergency Contact First Name */}
           <FormField
             control={control}
             name="applicationData.emergencyFirstName"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1">
-                <Label htmlFor="emergencyFirstName" className="text-base font-normal pl-3">First Name</Label>
+                <Label htmlFor="emergencyFirstName" className="text-xs sm:text-sm font-normal pl-3">First Name</Label>
                 <FormControl>
                   <Input id="emergencyFirstName" placeholder="John" {...field} disabled={isSaved} />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
               </FormItem>
             )}
           />
@@ -1466,24 +1478,24 @@ const ApplicationDetailsForm: React.FC = () => {
             name="applicationData.emergencyLastName"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1">
-                <Label htmlFor="emergencyLastName" className="text-base font-normal pl-3">Last Name</Label>
+                <Label htmlFor="emergencyLastName" className="text-xs sm:text-sm font-normal pl-3">Last Name</Label>
                 <FormControl>
                   <Input id="emergencyLastName" placeholder="Doe" {...field} disabled={isSaved} />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
               </FormItem>
             )}
           />
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
           {/* Emergency Contact Number */}
           <FormField
             control={control}
             name="applicationData.emergencyContact"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1">
-                <Label htmlFor="emergencyContact" className="text-base font-normal pl-3">Contact No.</Label>
+                <Label htmlFor="emergencyContact" className="text-xs sm:text-sm font-normal pl-3">Contact No.</Label>
                 <FormControl>
                   <Input id="emergencyContact" type='tel' placeholder="+91 00000 00000" {...field} maxLength={14}
                   value={field.value || "+91 "}
@@ -1493,7 +1505,7 @@ const ApplicationDetailsForm: React.FC = () => {
                     field.onChange(target.value);
                   }} disabled={isSaved}/>
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
               </FormItem>
             )}
           />
@@ -1503,11 +1515,11 @@ const ApplicationDetailsForm: React.FC = () => {
             name="applicationData.relationship"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1">
-                <Label htmlFor="relationship" className="text-base font-normal pl-3">Relationship with Contact</Label>
+                <Label htmlFor="relationship" className="text-xs sm:text-sm font-normal pl-3">Relationship with Contact</Label>
                 <FormControl>
                   <Input id="relationship" placeholder="Father/Mother/Sibling" {...field} disabled={isSaved} />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
               </FormItem>
             )}
           />
@@ -1518,18 +1530,18 @@ const ApplicationDetailsForm: React.FC = () => {
           Parental Information
         </div>
         {/* Father's Information */}
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
           {/* Father's First Name */}
           <FormField
             control={control}
             name="applicationData.fatherFirstName"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1">
-                <Label htmlFor="fatherFirstName" className="text-base font-normal pl-3">Father's First Name</Label>
+                <Label htmlFor="fatherFirstName" className="text-xs sm:text-sm font-normal pl-3">Father's First Name</Label>
                 <FormControl>
                   <Input id="fatherFirstName" placeholder="John" {...field} disabled={isSaved} />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
               </FormItem>
             )}
           />
@@ -1539,24 +1551,24 @@ const ApplicationDetailsForm: React.FC = () => {
             name="applicationData.fatherLastName"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1">
-                <Label htmlFor="fatherLastName" className="text-base font-normal pl-3">Father's Last Name</Label>
+                <Label htmlFor="fatherLastName" className="text-xs sm:text-sm font-normal pl-3">Father's Last Name</Label>
                 <FormControl>
                   <Input id="fatherLastName" placeholder="Doe" {...field} disabled={isSaved} />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
               </FormItem>
             )}
           />
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
           {/* Father's Contact Number */}
           <FormField
             control={control}
             name="applicationData.fatherContact"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1">
-                <Label htmlFor="fatherContact" className="text-base font-normal pl-3">Father's Contact No.</Label>
+                <Label htmlFor="fatherContact" className="text-xs sm:text-sm font-normal pl-3">Father's Contact No.</Label>
                 <FormControl>
                   <Input id="fatherContact" type='tel' placeholder="+91 00000 00000" {...field} maxLength={14}
                   value={field.value || "+91 "}
@@ -1566,7 +1578,7 @@ const ApplicationDetailsForm: React.FC = () => {
                     field.onChange(target.value);
                   }} disabled={isSaved}/>
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
               </FormItem>
             )}
           />
@@ -1576,28 +1588,28 @@ const ApplicationDetailsForm: React.FC = () => {
             name="applicationData.fatherOccupation"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1">
-                <Label htmlFor="fatherOccupation" className="text-base font-normal pl-3">Father's Occupation</Label>
+                <Label htmlFor="fatherOccupation" className="text-xs sm:text-sm font-normal pl-3">Father's Occupation</Label>
                 <FormControl>
                   <Input id="fatherOccupation" placeholder="Type here" {...field} disabled={isSaved} />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
               </FormItem>
             )}
           />
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
           {/* Mother's Last Name */}
           <FormField
             control={control}
             name="applicationData.fatherEmail"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1">
-                <Label htmlFor="fatherEmail" className="text-base font-normal pl-3">Father's Email</Label>
+                <Label htmlFor="fatherEmail" className="text-xs sm:text-sm font-normal pl-3">Father's Email</Label>
                 <FormControl>
                   <Input id="fatherEmail" placeholder="Doe" {...field} disabled={isSaved} />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
               </FormItem>
             )}
           />
@@ -1606,28 +1618,28 @@ const ApplicationDetailsForm: React.FC = () => {
             name="applicationData.motherFirstName"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1">
-                <Label htmlFor="motherFirstName" className="text-base font-normal pl-3">Mother's First Name</Label>
+                <Label htmlFor="motherFirstName" className="text-xs sm:text-sm font-normal pl-3">Mother's First Name</Label>
                 <FormControl>
                   <Input id="motherFirstName" placeholder="John" {...field} disabled={isSaved} />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
               </FormItem>
             )}
           />
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
           {/* Mother's Last Name */}
           <FormField
             control={control}
             name="applicationData.motherLastName"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1">
-                <Label htmlFor="motherLastName" className="text-base font-normal pl-3">Mother's Last Name</Label>
+                <Label htmlFor="motherLastName" className="text-xs sm:text-sm font-normal pl-3">Mother's Last Name</Label>
                 <FormControl>
                   <Input id="motherLastName" placeholder="Doe" {...field} disabled={isSaved} />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
               </FormItem>
             )}
           />
@@ -1637,7 +1649,7 @@ const ApplicationDetailsForm: React.FC = () => {
             name="applicationData.motherContact"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1">
-                <Label htmlFor="motherContact" className="text-base font-normal pl-3">Mother's Contact No.</Label>
+                <Label htmlFor="motherContact" className="text-xs sm:text-sm font-normal pl-3">Mother's Contact No.</Label>
                 <FormControl>
                   <Input id="motherContact" type='tel' placeholder="+91 00000 00000" {...field} maxLength={14}
                   value={field.value || "+91 "}
@@ -1647,24 +1659,24 @@ const ApplicationDetailsForm: React.FC = () => {
                     field.onChange(target.value);
                   }} disabled={isSaved}/>
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
               </FormItem>
             )}
           />
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
           {/* Mother's Occupation */}
           <FormField
             control={control}
             name="applicationData.motherOccupation"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1">
-                <Label htmlFor="motherOccupation" className="text-base font-normal pl-3">Mother's Occupation</Label>
+                <Label htmlFor="motherOccupation" className="text-xs sm:text-sm font-normal pl-3">Mother's Occupation</Label>
                 <FormControl>
                   <Input id="motherOccupation" placeholder="Type here" {...field} disabled={isSaved} />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
               </FormItem>
             )}
           />
@@ -1674,11 +1686,11 @@ const ApplicationDetailsForm: React.FC = () => {
             name="applicationData.motherEmail"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1">
-                <Label htmlFor="motherEmail" className="text-base font-normal pl-3">Mother's Email</Label>
+                <Label htmlFor="motherEmail" className="text-xs sm:text-sm font-normal pl-3">Mother's Email</Label>
                 <FormControl>
                   <Input id="motherEmail" placeholder="John" {...field} disabled={isSaved} />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
               </FormItem>
             )}
           />
@@ -1686,14 +1698,14 @@ const ApplicationDetailsForm: React.FC = () => {
 
         {/* Financial Dependency and Aid */}
         <div className='space-y-2'>
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
           {/* Financially Dependent */}
           <FormField
             control={control}
             name="applicationData.financiallyDependent"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1 p-6 bg-[#27272A]/[0.6] rounded-2xl">
-                <Label className="text-base font-normal">Are you financially dependent on your Parents?</Label>
+                <Label className="text-xs sm:text-sm font-normal">Are you financially dependent on your Parents?</Label>
                 <FormControl>
                   <RadioGroup disabled={isSaved}
                     className="flex space-x-6 mt-2"
@@ -1702,15 +1714,15 @@ const ApplicationDetailsForm: React.FC = () => {
                   >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="yes" id="yesFinanciallyDependent" />
-                      <Label htmlFor="yesFinanciallyDependent" className="text-base font-normal">Yes</Label>
+                      <Label htmlFor="yesFinanciallyDependent" className="ttext-sm sm:text-base font-normal">Yes</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="no" id="noFinanciallyDependent" />
-                      <Label htmlFor="noFinanciallyDependent" className="text-base font-normal">No</Label>
+                      <Label htmlFor="noFinanciallyDependent" className="text-sm sm:text-base font-normal">No</Label>
                     </div>
                   </RadioGroup>
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
               </FormItem>
             )}
           />
@@ -1720,7 +1732,7 @@ const ApplicationDetailsForm: React.FC = () => {
             name="applicationData.appliedForFinancialAid"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1 p-6 bg-[#27272A]/[0.6] rounded-2xl">
-                <Label className="text-base font-normal">Have you tried applying for financial aid earlier?</Label>
+                <Label className="text-xs sm:text-sm font-normal">Have you tried applying for financial aid earlier?</Label>
                 <FormControl>
                   <RadioGroup disabled={isSaved}
                     className="flex space-x-6 mt-2"
@@ -1729,15 +1741,15 @@ const ApplicationDetailsForm: React.FC = () => {
                   >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="yes" id="yesFinancialAid" />
-                      <Label htmlFor="yesFinancialAid" className="text-base font-normal">Yes</Label>
+                      <Label htmlFor="yesFinancialAid" className="text-sm sm:text-base font-normal">Yes</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="no" id="noFinancialAid" />
-                      <Label htmlFor="noFinancialAid" className="text-base font-normal">No</Label>
+                      <Label htmlFor="noFinancialAid" className="text-sm sm:text-base font-normal">No</Label>
                     </div>
                   </RadioGroup>
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
               </FormItem>
             )}
           />
@@ -1782,7 +1794,7 @@ const ApplicationDetailsForm: React.FC = () => {
       <img src='/assets/images/make-payment.svg' className="mx-auto mb-8" />
       <div>
         <div className="text-2xl font-semibold ">Admission Fee Payment</div>
-        <div className="mt-2 text-base font-normal text-center">
+        <div className="mt-2 text-xs sm:text-sm font-normal text-center">
           Make an admission fee payment of INR 500 to move to the next step of your admission process
         </div>
       </div>
@@ -1797,6 +1809,9 @@ const ApplicationDetailsForm: React.FC = () => {
     </Dialog>
     <PaymentSuccessDialog open={successDialogOpen} setOpen={setSuccessDialogOpen} type='step1' mail={studentData?.email || 'your email'} onContinue={handleContinueToDashboard}/>
     <PaymentFailedDialog open={failedDialogOpen} setOpen={setFailedDialogOpen} type='step1' mail={studentData?.email || 'your email'} onContinue={handleRetry}/>
+    <div id='recaptcha-container'>
+
+    </div>
     </>
   );
 };

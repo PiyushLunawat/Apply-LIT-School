@@ -4,7 +4,6 @@ import Header from "~/components/organisms/Header/Header";
 import Sidebar from "~/components/organisms/Sidebar/Sidebar";
 import ApplicationDashboard from "~/components/pages/dashboard";
 import { Toaster } from "~/components/ui/toaster";
-import { DashboardLayout } from "~/layout/dashboard-layout";
 
 export default function DashboardIndex() {
   return(

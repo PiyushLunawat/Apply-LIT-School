@@ -62,14 +62,14 @@ export const ApplicationStep2: React.FC = () => {
       {(isPaymentVerified === null || isPaymentVerified === undefined) ? (
         <div className="w-full">
           <Header subtitle="" />
-          <div className="max-w-[1216px] mx-8 sm:mx-16 xl:mx-auto justify-center items-center space-y-20">
+          <div className="max-w-[1216px] sm:mx-16 xl:mx-auto justify-center items-center space-y-20">
             <Review setIsPaymentVerified={setIsPaymentVerified}/>
             <div className="space-y-4 sm:space-y-6">
               <ProgressBar currentStage={2} />
               <img
                 src="/assets/images/application-process-02.svg"
                 alt="Application Process Step 2"
-                className="w-full rounded-xl sm:rounded-3xl"
+                className="w-screen object-cover h-[188px] sm:h-full sm:rounded-3xl"
               />
             </div>
           </div>

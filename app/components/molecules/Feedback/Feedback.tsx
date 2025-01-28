@@ -51,32 +51,35 @@ const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass, book
       emails: reviewerEmails,
       eventCategory: "Application Test Review", // Change to "Litmus Test Review" if required
     };
+
+    console.log("pay",payload);
+    
   
-    // try {
-    //   const response = await fetch(
-    //     "https://main.d2ogeweki0hgqu.amplifyapp.com/application-portal/get-all-users",
-    //     {
-    //       method: "POST",
-    //       headers: {
-    //         "Content-Type": "application/json",
-    //       },
-    //       body: JSON.stringify(payload),
-    //     }
-    //   );
+    try {
+      const response = await fetch(
+        "https://main.d2ogeweki0hgqu.amplifyapp.com/application-portal/get-all-users",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
   
-    //   if (!response.ok) {
-    //     throw new Error(`Failed to schedule interview: ${response.statusText}`);
-    //   }
+      if (!response.ok) {
+        throw new Error(`Failed to schedule interview: ${response.statusText}`);
+      }
   
-    //   const result = await response.json();
-    //   console.log("Interview scheduled successfully:", response,result);
+      const result = await response.json();
+      console.log("Interview scheduled successfully:", response,result);
   
       // Optionally set dialog open or show success message
-    // } 
-    // catch (error) {
-    //   console.error("Error scheduling interview:", error);
-    //   alert("Failed to schedule interview. Please try again later.");
-    // }
+    } 
+    catch (error) {
+      console.error("Error scheduling interview:", error);
+      alert("Failed to schedule interview. Please try again later.");
+    }
     setInterviewOpen(true);
   };
   

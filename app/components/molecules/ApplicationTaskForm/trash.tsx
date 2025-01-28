@@ -284,14 +284,13 @@ const ApplicationTaskForm: React.FC = () => {
               name="courseDive.interest"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-base font-normal text-[#00A0E9] pl-3">
+                  <FormLabel className="flex gap-1 items-center text-base font-normal text-[#00A0E9] pl-3">
                     Why are you interested in joining The LIT School?
                   </FormLabel>
                   <FormControl>
                     <Textarea
-                      className="w-full text-white text-base"
+                      className="w-full text-white text-base h-[540px] sm:h-[240px]"
                       placeholder="Write up to 120 characters"
-                      rows={6}
                       onChange={(e) => wordLimitHandler(e, field, 120)}
                       value={field.value}
                     />
@@ -307,14 +306,13 @@ const ApplicationTaskForm: React.FC = () => {
               name="courseDive.goals"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-base font-normal text-[#00A0E9] pl-3">
+                  <FormLabel className="flex gap-1 items-center text-base font-normal text-[#00A0E9] pl-3">
                     What are your career goals or aspirations?
                   </FormLabel>
                   <FormControl>
                     <Textarea
-                      className="w-full text-white text-base"
+                      className="w-full text-white text-base h-[540px] sm:h-[240px]"
                       placeholder="Write up to 240 characters"
-                      rows={6}
                       onChange={(e) => wordLimitHandler(e, field, 240)}
                       value={field.value}
                     />
@@ -334,10 +332,10 @@ const ApplicationTaskForm: React.FC = () => {
             </div>
             <div className='space-y-1'>
               <div className='mb-4'>
-                <Label className="text-base text-[#FA69E5] pl-3">
+                <Label className="text-base font-normal text-[#FA69E5] pl-3">
                   {task.title}
                 </Label>
-                <div className="text-2xl text-white mt-2 pl-3">
+                <div className="text-xl sm:text-2xl text-white mt-2 pl-3">
                   {task.description}
                 </div>
               </div>
@@ -345,7 +343,8 @@ const ApplicationTaskForm: React.FC = () => {
                 <div className="text-center text-white">
                   No tasks available. Please ensure the cohort data is loaded correctly.
                 </div> : 
-                task.config.map((configItem: any, configIndex: number) => (
+                <div className='space-y-3'>
+                {task.config.map((configItem: any, configIndex: number) => (
                   <TaskConfigItem
                     key={configIndex}
                     control={control}
@@ -353,7 +352,8 @@ const ApplicationTaskForm: React.FC = () => {
                     configIndex={configIndex}
                     configItem={configItem}
                   />
-                ))
+                ))}
+                </div>
               }
             </div>
           </div>
@@ -400,9 +400,8 @@ const TaskConfigItem: React.FC<TaskConfigItemProps> = ({ control, taskIndex, con
             <FormItem>
               <FormControl>
                 <Textarea
-                  className={`w-full text-white text-base mt-2 ${configItem.type === 'short' ? 'h-24' : ''}`}
+                  className={`w-full text-white text-base mt-2 h-[540px] sm:h-[240px]`}
                   placeholder={`Write up to ${configItem.characterLimit} characters`}
-                  rows={configItem.type === 'long' ? 6 : 3}
                   onChange={(e) => wordLimitHandler(e, field, configItem.characterLimit)}
                   value={field.value}
                 />
@@ -534,12 +533,12 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
           {/* Display selected files */}
           {files.map((file, index) => (
             <div key={index} className="flex items-center bg-[#007AFF] h-[52px] text-white p-1.5 rounded-xl w-full">
-              <Button size="icon" className='bg-[#3698FB] rounded-xl mr-2'>
+              <Button size="icon" type='button' className='bg-[#3698FB] rounded-xl mr-2'>
                 <FileTextIcon className="w-5" />
               </Button>
-              <span className="flex-1">{file.name}</span>
+              <span className="flex-1 text-xs sm:text-base">{file.name}</span>
               <div className="flex items-center space-x-2">
-                <Button size="icon" className='bg-[#3698FB] rounded-xl' onClick={() => removeFile(index)}>
+                <Button size="icon" type='button' className='bg-[#3698FB] rounded-xl' onClick={() => removeFile(index)}>
                   <XIcon className="w-5" />
                 </Button>
               </div>
@@ -562,11 +561,11 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
                   }
                   onChange={handleFileChange}
                 />
-                <span className="cursor-pointer">
+                <span className="cursor-pointer text-xs sm:text-base">
                   {`Upload ${configItem.type}${configItem.maxFiles > 1 ? 's' : ''} (Max size: ${configItem.maxFileSize || 15} MB)`}
                 </span>
               </label>
-              <Button className="flex gap-2 text-white px-6 py-6 rounded-xl" onClick={() => document.querySelector<HTMLInputElement>(`input[type="file"]`)?.click()}>
+              <Button type='button' className="flex gap-2 text-white px-6 py-6 rounded-xl" onClick={() => document.querySelector<HTMLInputElement>(`input[type="file"]`)?.click()}>
                 <UploadIcon className='w-4 h-4'/> Upload {configItem.type}
               </Button>
             </div>

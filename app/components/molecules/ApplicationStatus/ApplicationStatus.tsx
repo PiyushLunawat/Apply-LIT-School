@@ -147,7 +147,7 @@ const StatusMessage: React.FC<StatusMessageProps> = ({
             {countdown === '00:00:00' && <div className='text-[#FF503D]'>A reminder has been sent to our team, we'll review it shortly</div>}
           </div>
           )}
-          <div className='mx-8 sm:mx-16 text-2xl sm:text-3xl md:text-5xl font-bold text-center'>
+          <div className='mx-4 sm:mx-16 text-2xl sm:text-3xl md:text-5xl font-bold text-center'>
             {headMessage}
           </div>
           <div className='mx-8 sm:mx-16 text-xs sm:text-sm md:text-base text-center font-normal'>

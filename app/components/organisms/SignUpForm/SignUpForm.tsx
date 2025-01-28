@@ -178,167 +178,167 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ setShowOtp, setEmail }) 
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4 px-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
         <div className="grid sm:grid-cols-2 gap-2">
-          <FormField
-            control={form.control}
-            name="firstName"
-            render={({ field }) => (
-              <FormItem className="flex-1 space-y-1 relative">
-                <Label className="text-sm font-normal pl-3">First Name</Label>
-                <Input placeholder="John" {...field} />
-                <FormMessage className="text-sm font-normal pl-3"/>
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="lastName"
-            render={({ field }) => (
-              <FormItem className="flex-1 space-y-1 relative">
-                <Label className="text-sm font-normal pl-3">Last Name</Label>
-                <Input placeholder="Doe" {...field} />
-                <FormMessage className="text-sm font-normal pl-3"/>
-              </FormItem>
-            )}
-          />
+            <FormField
+              control={form.control}
+              name="firstName"
+              render={({ field }) => (
+                <FormItem className="flex-1 space-y-1 relative">
+                  <Label className="text-xs sm:text-sm font-normal pl-3">First Name</Label>
+                  <Input placeholder="John" {...field} />
+                  <FormMessage className="text-xs sm:text-sm font-normal pl-3"/>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="lastName"
+              render={({ field }) => (
+                <FormItem className="flex-1 space-y-1 relative">
+                  <Label className="text-xs sm:text-sm font-normal pl-3">Last Name</Label>
+                  <Input placeholder="Doe" {...field} />
+                  <FormMessage className="text-xs sm:text-sm font-normal pl-3"/>
+                </FormItem>
+              )}
+            />
         </div>
 
         <div className="grid sm:grid-cols-2 gap-2">
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem className="flex-1 space-y-1 relative">
-                <Label className="text-sm font-normal pl-3">Email</Label>
-                <Input placeholder="johndoe@gmail.com" {...field} />
-                <Mail className="absolute right-3 top-[46px] w-5 h-5" />
-                <FormMessage className="text-sm font-normal pl-3"/>
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="mobileNumber"
-            render={({ field }) => (
-              <FormItem className="flex-1 space-y-1 relative">
-                <Label className="text-sm font-normal pl-3">Contact No.</Label>
-                <Input  type="tel" maxLength={14} placeholder="+91 00000 00000" {...field}
-                value={field.value || "+91 "}
-                onInput={(e) => {
-                  const target = e.target as HTMLInputElement;
-                  target.value = target.value.replace(/[^0-9+ ]/g, '');
-                  field.onChange(target.value);
-                }}/>
-                <Phone className="absolute right-3 top-[46px] w-5 h-5" />
-                <FormMessage className="text-sm font-normal pl-3"/>
-              </FormItem>
-            )}
-          />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem className="flex-1 space-y-1 relative">
+                  <Label className="text-xs sm:text-sm font-normal pl-3">Email</Label>
+                  <Input placeholder="johndoe@gmail.com" {...field} />
+                  <Mail className="absolute right-3 top-[46px] w-5 h-5" />
+                  <FormMessage className="text-xs sm:text-sm font-normal pl-3"/>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="mobileNumber"
+              render={({ field }) => (
+                <FormItem className="flex-1 space-y-1 relative">
+                  <Label className="text-xs sm:text-sm font-normal pl-3">Contact No.</Label>
+                  <Input  type="tel" maxLength={14} placeholder="+91 00000 00000" {...field}
+                  value={field.value || "+91 "}
+                  onInput={(e) => {
+                    const target = e.target as HTMLInputElement;
+                    target.value = target.value.replace(/[^0-9+ ]/g, '');
+                    field.onChange(target.value);
+                  }}/>
+                  <Phone className="absolute right-3 top-[46px] w-5 h-5" />
+                  <FormMessage className="text-xs sm:text-sm font-normal pl-3"/>
+                </FormItem>
+              )}
+            />
         </div>
 
         <div className="grid sm:grid-cols-2 gap-2">
-        <FormField
-  control={form.control}
-  name="dateOfBirth"
-  render={({ field }) => {
-    const maxDate = new Date();
-    maxDate.setFullYear(maxDate.getFullYear() - 16); // Subtract 16 years from today's date
-    const maxDateString = maxDate.toISOString().split('T')[0];
-    return (
-      <FormItem className="flex-1 flex flex-col space-y-1 relative">
-        <Label className="text-sm font-normal pl-3">Date of Birth</Label>
-        <input
-          type="date"
-          className="!h-[64px] bg-[#09090B] px-3 uppercase rounded-xl border"
-          id="dateOfBirth"
-          name="dateOfBirth"
-          value={field.value ? format(new Date(field.value), 'yyyy-MM-dd') : ''}
-          onChange={(e) => {
-            const date = e.target.value;
-            field.onChange(date);
-          }}
-          max={maxDateString}
-        />
-        <FormMessage className="text-sm font-normal pl-3" />
-      </FormItem>
-    );
-  }}
-/>
+            <FormField
+              control={form.control}
+              name="dateOfBirth"
+              render={({ field }) => {
+                const maxDate = new Date();
+                maxDate.setFullYear(maxDate.getFullYear() - 16); // Subtract 16 years from today's date
+                const maxDateString = maxDate.toISOString().split('T')[0];
+                return (
+                  <FormItem className="flex-1 flex flex-col space-y-1 relative">
+                    <Label className="text-xs sm:text-sm font-normal pl-3">Date of Birth</Label>
+                    <input
+                      type="date"
+                      className="!h-[64px] bg-[#09090B] px-3 uppercase rounded-xl border w-full"
+                      id="dateOfBirth"
+                      name="dateOfBirth"
+                      value={field.value ? format(new Date(field.value), 'yyyy-MM-dd') : ''}
+                      onChange={(e) => {
+                        const date = e.target.value;
+                        field.onChange(date);
+                      }}
+                      max={maxDateString}
+                    />
+                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                  </FormItem>
+                );
+              }}
+            />
 
-          <FormField
-            control={form.control}
-            name="qualification"
-            render={({ field }) => (
-              <FormItem className="flex-1 space-y-1 relative">
-                <Label className="text-sm font-normal pl-3">Qualification</Label>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Student">Student</SelectItem>
-                    <SelectItem value="Highschool Graduate">Highschool Graduate</SelectItem>
-                    <SelectItem value="College Graduate">College Graduate</SelectItem>
-                    <SelectItem value="Working Professional">Working Professional</SelectItem>
-                    <SelectItem value="Freelancer">Freelancer</SelectItem>
-                    <SelectItem value="Business Owner">Business Owner</SelectItem>
-                    <SelectItem value="Consultant">Consultant</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage className="text-sm font-normal pl-3"/>
-              </FormItem>
-            )}
-          />
+            <FormField
+              control={form.control}
+              name="qualification"
+              render={({ field }) => (
+                <FormItem className="flex-1 space-y-1 relative">
+                  <Label className="text-xs sm:text-sm font-normal pl-3">Qualification</Label>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Student">Student</SelectItem>
+                      <SelectItem value="Highschool Graduate">Highschool Graduate</SelectItem>
+                      <SelectItem value="College Graduate">College Graduate</SelectItem>
+                      <SelectItem value="Working Professional">Working Professional</SelectItem>
+                      <SelectItem value="Freelancer">Freelancer</SelectItem>
+                      <SelectItem value="Business Owner">Business Owner</SelectItem>
+                      <SelectItem value="Consultant">Consultant</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage className="text-xs sm:text-sm font-normal pl-3"/>
+                </FormItem>
+              )}
+            />
         </div>
 
         <div className='space-y-2'>
-        <div className="grid sm:grid-cols-2 gap-2">
-        <FormField
-          control={form.control}
-          name="program"
-          render={({ field }) => (
-            <FormItem className="flex-1 space-y-1 relative">
-              <Label className="text-sm font-normal pl-3">Course of Interest</Label>
-              <Select onValueChange={(value) => { field.onChange(value); (value); }} defaultValue={field.value} >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select" />
-                </SelectTrigger>
-                <SelectContent>
-                {Array.from(new Map(interest.map((int) => [int.programDetail, int])).values()).map((int) => (
-                  <SelectItem key={int.programDetail} value={int.programDetail}>
-                    {getProgramName(int.programDetail)}
-                  </SelectItem>
-                ))}
-                </SelectContent>
-              </Select>
-              <FormMessage className="text-sm font-normal pl-3"/>
-            </FormItem>
-          )}
-        />
+          <div className="grid sm:grid-cols-2 gap-2">
+              <FormField
+                control={form.control}
+                name="program"
+                render={({ field }) => (
+                  <FormItem className="flex-1 space-y-1 relative">
+                    <Label className="text-xs sm:text-sm font-normal pl-3">Course of Interest</Label>
+                    <Select onValueChange={(value) => { field.onChange(value); (value); }} defaultValue={field.value} >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                      {Array.from(new Map(interest.map((int) => [int.programDetail, int])).values()).map((int) => (
+                        <SelectItem key={int.programDetail} value={int.programDetail}>
+                          {getProgramName(int.programDetail)}
+                        </SelectItem>
+                      ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage className="text-xs sm:text-sm font-normal pl-3"/>
+                  </FormItem>
+                )}
+              />
 
-        <FormField
-          control={form.control}
-          name="cohort"
-          render={({ field }) => (
-            <FormItem className="flex-1 space-y-1 relative">
-              <Label className="text-sm font-normal pl-3">Select Cohort</Label>
-              <Select onValueChange={(value) => { field.onChange(value); (value); }} defaultValue={field.value} disabled={!form.watch("program")}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select" />
-                </SelectTrigger>
-                <SelectContent>
-                  {cohorts.map((cohort) => (
-                    <SelectItem key={cohort._id} value={cohort._id}>{formatDateToMonthYear(cohort.startDate)} ({cohort.timeSlot}), {getCenterName(cohort?.centerDetail)}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage className="text-sm font-normal pl-3"/>
-            </FormItem>
-          )}
-        />
-        </div>
-          <Label htmlFor="form-alert" className='flex gap-1 items-center text-sm text-[#00A3FF] font-normal mt-1 pl-3'>
+              <FormField
+                control={form.control}
+                name="cohort"
+                render={({ field }) => (
+                  <FormItem className="flex-1 space-y-1 relative">
+                    <Label className="text-xs sm:text-sm font-normal pl-3">Select Cohort</Label>
+                    <Select onValueChange={(value) => { field.onChange(value); (value); }} defaultValue={field.value} disabled={!form.watch("program")}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {cohorts.map((cohort) => (
+                          <SelectItem key={cohort._id} value={cohort._id}>{formatDateToMonthYear(cohort.startDate)} ({cohort.timeSlot}), {getCenterName(cohort?.centerDetail)}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage className="text-xs sm:text-sm font-normal pl-3"/>
+                  </FormItem>
+                )}
+              />
+          </div>
+          <Label htmlFor="form-alert" className='flex gap-1 items-center text-xs sm:text-sm font-normal text-[#00A3FF] font-normal mt-1 pl-3'>
             Your application form will be in line with the course of your choice.
           </Label>
         </div>

@@ -25,22 +25,22 @@ export const Header: React.FC<HeaderProps> = ({ subtitle, submessage, classn }) 
   return (
     <header className={`flex flex-col gap-6 sm:gap-8 py-2 ${classn}`}>
       <div className="px-4 sm:px-6 flex justify-between items-center">
-        <div className="flex items-center">
-          <img onClick={() => navigate('../')} src="/assets/images/lit-logo.svg" alt="LIT Logo" className="w-4 sm:w-6" />
-        </div>
+          <div className="flex items-center">
+              <img onClick={() => navigate('../')} src="/assets/images/lit-logo.svg" alt="LIT Logo" className="w-6" />
+          </div>
 
-        <div className="flex items-center">
-          <Button variant="ghost" onClick={handleLogout} className="flex gap-2 px-0 hover:bg-background text-sm sm:text-base">
-            <UploadIcon className="w-4 h-4 -rotate-90" />Logout
-          </Button>
-        </div>
+          <div className="flex items-center">
+              <Button variant="ghost" onClick={handleLogout} className="flex gap-2 px-0 hover:bg-background text-sm sm:text-base">
+                <UploadIcon className="w-4 h-4 -rotate-90" />Logout
+              </Button>
+          </div>
       </div>
 
-      {subtitle && <div className="flex flex-col gap-2 sm:gap-4 text-center px-4 ">
-        <div className="text-xl sm:text-3xl font-semibold">
+      {subtitle && <div className="flex flex-col gap-1 sm:gap-4 text-center px-4 ">
+        <div className="text-[22px] sm:text-3xl font-semibold">
           Hey {studentData?.firstName} <span role="img" aria-label="waving-hand">👋</span> {subtitle}
         </div>
-        <div className="text-xs sm:text-base">{submessage}</div>
+        <div className="text-sm sm:text-base font-light sm:font-normal">{submessage}</div>
       </div>}
     </header>
   );
