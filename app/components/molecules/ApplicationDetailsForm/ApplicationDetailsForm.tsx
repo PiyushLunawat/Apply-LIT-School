@@ -823,7 +823,7 @@ useEffect(() => {
                     <input
                       type="date"
                       disabled={isSaved}
-                      className="!h-[64px] bg-[#09090B] px-3 uppercase rounded-xl border"
+                      className="w-full !h-[64px] bg-[#09090B] px-3 uppercase rounded-xl border"
                       id="dob"
                       name="dateOfBirth"
                       defaultValue={studentData?.dateOfBirth ? format(new Date(studentData.dateOfBirth || field.value), "yyyy-MM-dd") : ""}
@@ -897,7 +897,7 @@ useEffect(() => {
                     </SelectContent>
                   </Select>
                 </FormControl>
-                <Label htmlFor="form-alert" className='flex gap-1 items-center text-sm text-[#00A3FF] font-normal pl-3 mt-1'>
+                <Label htmlFor="form-alert" className='flex gap-1 items-center text-xs sm:text-sm text-[#00A3FF] font-normal pl-3 mt-1'>
                   Your application form will be in line with the course of your choice.
                 </Label>
                 <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
@@ -981,7 +981,7 @@ useEffect(() => {
           name="studentData.gender"
           render={({ field }) => (
             <FormItem className='flex-1 space-y-1 pl-3'>
-              <Label className="text-xs sm:text-sm font-normal">Select Your Gender</Label>
+              <Label className="text-sm font-normal">Select Your Gender</Label>
               <FormControl>
                 <RadioGroup disabled={isSaved}
                   onValueChange={field.onChange}
@@ -1133,7 +1133,7 @@ useEffect(() => {
                   <input 
                     placeholder="MM YYYY"
                     type="month"
-                    className="!h-[64px] bg-[#09090B] px-3 rounded-xl border"
+                    className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border"
                     id="graduationYear" {...field} disabled={isSaved} />
                 </FormControl>
                 <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
@@ -1149,7 +1149,7 @@ useEffect(() => {
           render={({ field }) => (
             <FormItem className="flex flex-col sm:flex-row gap-2">
               <div className="flex-1 space-y-1 pl-3">
-                <Label className="text-xs sm:text-sm font-normal">Do you have any work experience?</Label>
+                <Label className="text-sm font-normal">Do you have any work experience?</Label>
                 <FormControl>
                   <RadioGroup disabled={isSaved}
                     className="flex space-x-6 mt-2"
@@ -1257,7 +1257,7 @@ useEffect(() => {
                             id="durationFrom"
                             {...field}
                             disabled={isSaved}
-                            className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border text-white"
+                            className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border"
                           />
                         </FormControl>
                         <FormMessage className="text-xs sm:text-sm font-normal pl-3">
@@ -1282,7 +1282,7 @@ useEffect(() => {
                             id="durationTo"
                             {...field}
                             disabled={isSaved}
-                            className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border text-white"
+                            className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border"
                           />
                         </FormControl>
                         <FormMessage className="text-xs sm:text-sm font-normal pl-3">
@@ -1325,7 +1325,7 @@ useEffect(() => {
                         <input 
                           placeholder="MM/YYYY" 
                           type="month"
-                          className="!h-[64px] bg-[#09090B] px-3 rounded-xl border"
+                          className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border"
                           id="companyStartDate" {...field} disabled={isSaved} />
                       </FormControl>
                       <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
@@ -1352,7 +1352,7 @@ useEffect(() => {
                             id="durationFrom"
                             {...field}
                             disabled={isSaved}
-                            className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border text-white"
+                            className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border"
                           />
                         </FormControl>
                         <FormMessage className="text-xs sm:text-sm font-normal pl-3">
@@ -1377,7 +1377,7 @@ useEffect(() => {
                             id="durationTo"
                             {...field}
                             disabled={isSaved}
-                            className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border text-white"
+                            className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border"
                           />
                         </FormControl>
                         <FormMessage className="text-xs sm:text-sm font-normal pl-3">
@@ -1435,7 +1435,7 @@ useEffect(() => {
                             id="durationTo"
                             {...field}
                             disabled={isSaved}
-                            className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border text-white"
+                            className="w-full flex-1 !h-[64px] bg-[#09090B] px-3 rounded-xl border text-white"
                           />
                         </FormControl>
                         <FormMessage className="text-xs sm:text-sm font-normal pl-3">
@@ -1704,8 +1704,8 @@ useEffect(() => {
             control={control}
             name="applicationData.financiallyDependent"
             render={({ field }) => (
-              <FormItem className="flex-1 space-y-1 p-6 bg-[#27272A]/[0.6] rounded-2xl">
-                <Label className="text-xs sm:text-sm font-normal">Are you financially dependent on your Parents?</Label>
+              <FormItem className="flex-1 space-y-1 p-4 sm:p-6 bg-[#27272A]/[0.6] rounded-2xl">
+                <Label className="text-sm font-normal">Are you financially dependent on your Parents?</Label>
                 <FormControl>
                   <RadioGroup disabled={isSaved}
                     className="flex space-x-6 mt-2"
@@ -1731,8 +1731,8 @@ useEffect(() => {
             control={control}
             name="applicationData.appliedForFinancialAid"
             render={({ field }) => (
-              <FormItem className="flex-1 space-y-1 p-6 bg-[#27272A]/[0.6] rounded-2xl">
-                <Label className="text-xs sm:text-sm font-normal">Have you tried applying for financial aid earlier?</Label>
+              <FormItem className="flex-1 space-y-1 p-4 sm:p-6 bg-[#27272A]/[0.6] rounded-2xl">
+                <Label className="text-sm font-normal">Have you tried applying for financial aid earlier?</Label>
                 <FormControl>
                   <RadioGroup disabled={isSaved}
                     className="flex space-x-6 mt-2"
@@ -1757,24 +1757,29 @@ useEffect(() => {
         </div>
  
         <div className="flex justify-between items-center mt-10">
-          <Button variant="link" type='button' onClick={() => form.reset() }>Clear Form</Button>
-          {isPaymentDone ?
-          <Button size="xl" className='px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90' type="button" onClick={() => handleContinueToDashboard()} disabled={loading}>
-            <div className='flex items-center gap-2'>
-              {loading ? 'Redirecting...' : 'Continue to Dashboard'}
-            </div>
-          </Button> :
-          isSaved ?
-          <Button size="xl" className='px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90' type="button" onClick={() => handlePayment()} disabled={loading}>
-            <div className='flex items-center gap-2'>
-              {loading ? 'Initializing Payment...' : 'Pay INR ₹500.00'}
-            </div>
-          </Button> :
-          <Button size="xl" className='px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90' type="submit" disabled={loading}>
-          <div className='flex items-center gap-2'>
-            <SaveIcon className='w-5 h-5' />{loading ? 'Submitting...' : 'Submit'}
-          </div>
-        </Button>}
+          {!isSaved &&
+            <Button variant="link" type='button' onClick={() => form.reset() }>Clear Form</Button>
+          }
+          {isPaymentDone ? (
+              <Button size="xl" className='w-full sm:w-fit px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90' type="button" onClick={() => handleContinueToDashboard()} disabled={loading}>
+                <div className='flex items-center gap-2'>
+                  {loading ? 'Redirecting...' : 'Continue to Dashboard'}
+                </div>
+              </Button>
+          ) : (
+              isSaved ? (
+                  <Button size="xl" className='w-full sm:w-fit px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90' type="button" onClick={() => handlePayment()} disabled={loading}>
+                    <div className='flex items-center gap-2'>
+                      {loading ? 'Initializing Payment...' : 'Pay INR ₹500.00'}
+                    </div>
+                  </Button>
+              ) : (
+                  <Button size="xl" className='w-full sm:w-fit px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90' type="submit" disabled={loading}>
+                    <div className='flex items-center gap-2'>
+                      <SaveIcon className='w-5 h-5' />{loading ? 'Submitting...' : 'Submit and Pay INR 500.00'}
+                    </div>
+                  </Button>
+          ))}
         </div>
       </form>
     </Form>
@@ -1790,7 +1795,7 @@ useEffect(() => {
       </DialogContent>
     </Dialog>
     <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
-    <DialogContent className="max-w-[500px] mx-4 bg-[#1C1C1C] text-white rounded-lg px-8 py-16 text-center shadow-[0px_4px_32px_0px_rgba(0,0,0,0.75)]">
+    <DialogContent className="max-w-[90vw] sm:max-w-[500px] mx-auto bg-[#1C1C1C] text-white rounded-lg px-8 py-16 text-center shadow-[0px_4px_32px_0px_rgba(0,0,0,0.75)]">
       <img src='/assets/images/make-payment.svg' className="mx-auto mb-8" />
       <div>
         <div className="text-2xl font-semibold ">Admission Fee Payment</div>

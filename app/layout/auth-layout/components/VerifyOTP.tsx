@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { verifyOtp, resendOtp, verifyMobileOTP } from '~/utils/authAPI';
 import Cookies from 'js-cookie';
-import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '../../ui/input-otp';
+import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '~/components/ui/input-otp';
 import { Button } from '~/components/ui/button';
-import { AlertCircle, MailIcon, Phone, PhoneCallIcon } from 'lucide-react';
+import { MailIcon, Phone } from 'lucide-react';
 import { Label } from '~/components/ui/label';
 import { useNavigate } from '@remix-run/react';
 import {
@@ -38,7 +38,6 @@ interface VerifyOTPProps {
   setIsDialogOpen?: (isOpen: boolean) => void;
   onVerificationSuccess?: () => void;
   verificationId?: string;
-  back?: string;
 }
 
 export const VerifyOTP: React.FC<VerifyOTPProps> = ({
@@ -48,7 +47,6 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
   setIsDialogOpen,
   onVerificationSuccess,
   verificationId,
-  back
 }) => {
     const navigate = useNavigate();
     const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
@@ -94,7 +92,7 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
           }
         }
         if(res.studentData?.litmusTestDetails[0]?.litmusTaskId !== undefined){
-          navigate('../dashboard');
+          navigate('../../dashboard');
         }
         else if(res.studentData?.applicationDetails !== undefined){
                 console.log("navigating")
@@ -103,13 +101,13 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
                     console.log(' student data:', res.data?.applicationDetails?.applicationStatus);
                   if(res.data?.applicationDetails?.applicationStatus !== "initiated" &&
                     res.data?.applicationDetails?.applicationStatus !== undefined){
-                      navigate('/application/step-2');
+                      navigate('../../application/step-2');
                     }
                   else
-                    navigate('../application/step-1');
+                    navigate('../../application/step-1');
             }
         else{
-          navigate('../application/step-1');
+          navigate('../../application/step-1');
         }
       }
 
@@ -173,8 +171,7 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
   }
 
   return (
-    <div className="w-full px-6 mt-8 sm:mt-14 justify-center items-center">
-      <div className="flex flex-col gap-6 sm:gap-8 w-full max-w-[840px] bg-[#1C1C1C] p-8 rounded-3xl mx-auto">
+      <div className="p-8 ">
         <div className="flex justify-center">
           <img src="/assets/images/otp-verify-icon.svg" alt="Verify OTP" className="" />
         </div>
@@ -207,7 +204,7 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <InputOTP maxLength={6} {...field}onChange={(e) => {
+                    <InputOTP maxLength={6} {...field}onChange={(e: any) => {
                     field.onChange(e); // React Hook Form's internal handler
                     setResendError(null); // Clear resend error
                     setVerifyError(null); // Clear verification error
@@ -248,28 +245,13 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
         </Form>
 
 
-        <div className="flex gap-2 text-center items-center text-base mx-auto">
+        <div className="flex gap-2 text-center items-center justify-center text-base mx-auto">
           <Button variant="link" onClick={handleResendOtp} disabled={loading || timer>0}>
             {loading ? 'Resending OTP...' : 'Resend OTP'}
           </Button>
           {timer > 0 ? `in 00:${timer < 10 ? `0${timer}` : timer}` : ""}
         </div>
-
       </div>
-
-      {(verificationType === 'email') && (back === 'login' ? 
-        <div className="text-center my-8">
-         <a href={'/auth/login'} className="text-base font-medium text-white hover:underline">
-           {'← Login'}
-         </a>
-        </div> : 
-        <div className="text-center my-8">
-        <a href={'/auth/sign-up'} className="text-base font-medium text-white hover:underline">
-          {'← Register'}
-        </a>
-       </div>)
-      }
-    </div>
   );
 };
 

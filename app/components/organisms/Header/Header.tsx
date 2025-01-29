@@ -19,7 +19,7 @@ export const Header: React.FC<HeaderProps> = ({ subtitle, submessage, classn }) 
       Cookies.remove('user-token');
       localStorage.removeItem('studentData');
       setStudentData(null);
-      navigate('../login');
+      navigate('../auth/login');
     };
     
   return (

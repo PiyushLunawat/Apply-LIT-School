@@ -2,16 +2,14 @@ import { CirclePause, Clock } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
 interface StatusMessageProps {
-  name: string; // e.g., "John"
+  name: string;
   messageType: string;
-  bgClassName: string;
   time?: string;
 }
 
 const StatusMessage: React.FC<StatusMessageProps> = ({
   name,
   messageType,
-  bgClassName,
   time,
 }) => {
   const [headMessage, setHeadMessage] = useState<string | JSX.Element>('');
