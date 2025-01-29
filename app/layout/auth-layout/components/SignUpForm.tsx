@@ -184,7 +184,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({}) => {
     </div>
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
-        <div className="grid sm:grid-cols-2 gap-2">
+        <div className="grid sm:grid-cols-2 gap-4 sm:gap-2">
             <FormField
               control={form.control}
               name="firstName"
@@ -209,7 +209,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({}) => {
             />
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-2">
+        <div className="grid sm:grid-cols-2 gap-4 sm:gap-2">
             <FormField
               control={form.control}
               name="email"
@@ -242,7 +242,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({}) => {
             />
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-2">
+        <div className="grid sm:grid-cols-2 gap-4 sm:gap-2">
             <FormField
               control={form.control}
               name="dateOfBirth"
@@ -298,7 +298,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({}) => {
         </div>
 
         <div className='space-y-2'>
-          <div className="grid sm:grid-cols-2 gap-2">
+          <div className="grid sm:grid-cols-2 gap-4 sm:gap-2">
               <FormField
                 control={form.control}
                 name="program"
