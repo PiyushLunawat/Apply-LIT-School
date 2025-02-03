@@ -18,7 +18,6 @@ import {
 } from '~/components/ui/form';
 import { Calendar, Camera, CheckCircle, Instagram, Linkedin, Mail, Minus, Phone, SaveIcon, XIcon } from 'lucide-react';
 import { UserContext } from '~/context/UserContext';
-import { PaymentFailedDialog, PaymentSuccessDialog } from '../PaymentDialog/PaymentDialog';
 import { getCentres, getCohorts, getCurrentStudent, getPrograms, payApplicationFee, submitApplication, verifyApplicationFeePayment } from '~/utils/studentAPI';
 import { Badge } from '~/components/ui/badge';
 import { Dialog, DialogContent } from '~/components/ui/dialog';
@@ -27,6 +26,7 @@ import { format } from 'date-fns';
 import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 import { auth } from 'firebase.config';
 import VerifyOTP from '~/layout/auth-layout/components/VerifyOTP';
+import { PaymentFailedDialog, PaymentSuccessDialog } from '~/components/molecules/PaymentDialog/PaymentDialog';
 
 type ExperienceType = 'Working Professional' | 'Business Owner' | 'Freelancer' | 'Consultant';
 

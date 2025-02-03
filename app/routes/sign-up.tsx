@@ -10,4 +10,4 @@ export const meta: MetaFunction = () => {
 
 export default function SignUpPage() {
     return <SignUp/>
-  }
+}

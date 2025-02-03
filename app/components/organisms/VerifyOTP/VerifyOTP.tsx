@@ -103,13 +103,13 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
                     console.log(' student data:', res.data?.applicationDetails?.applicationStatus);
                   if(res.data?.applicationDetails?.applicationStatus !== "initiated" &&
                     res.data?.applicationDetails?.applicationStatus !== undefined){
-                      navigate('/application/step-2');
+                      navigate('/application/status');
                     }
                   else
-                    navigate('../application/step-1');
+                    navigate('../application');
             }
         else{
-          navigate('../application/step-1');
+          navigate('../application');
         }
       }
 

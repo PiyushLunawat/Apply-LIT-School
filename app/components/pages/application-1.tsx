@@ -51,13 +51,13 @@ export const ApplicationStep1: React.FC = () => {
   useEffect(() => {
     async function fetchCurrentStudentData() {
       try {
-        console.log('faceofgf  studentData?._id:', studentData?._id);
+        // console.log('faceofgf  studentData?._id:', studentData?._id);
           const res = await getCurrentStudent(studentData?._id);
-            console.log(' student data:', res.data?.applicationDetails?.applicationStatus);
+            // console.log(' student data:', res.data?.applicationDetails?.applicationStatus);
             if(res.data?.applicationDetails?.applicationStatus === 'under review'
                || res.data?.applicationDetails?.applicationStatus === 'accepted'
                || res.data?.applicationDetails?.applicationStatus === 'rejected')
-               navigate("/application/step-2");
+               navigate("/application/status");
             if(res.data?.applicationDetails?.applicationStatus === 'initiated' || res.data?.applicationDetails?.applicationStatus === 'on hold')
               setSecond(true)
       } catch (error) {

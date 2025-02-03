@@ -16,10 +16,10 @@ import { UserContext } from "~/context/UserContext";
 import { getCohortById, getCurrentStudent } from "~/utils/studentAPI";
 
 interface SchedulePresentationProps {
-  interviewr: string[];
+  interviewer: [];
 }
 
-export function SchedulePresentation({ interviewr }: SchedulePresentationProps) {
+export function SchedulePresentation({ interviewer }: SchedulePresentationProps) {
     const [selectedInterviewer, setSelectedInterviewer] = useState<any | null>(null);
     const { studentData, setStudentData } = useContext(UserContext);
     const [ cohortData, setCohortData ] = useState<any>([]);
@@ -36,15 +36,16 @@ export function SchedulePresentation({ interviewr }: SchedulePresentationProps) 
         fetchStudentData();
     }, []);
 
-    const reviewerList: any[] = cohortData?.collaborators
-        ?.filter((collaborator: any) => 
-            interviewr.some((role: string) => collaborator.role === role)
-        ) || [];
-
     const handleSelect = (interviewer: any) => {
         setSelectedInterviewer(interviewer);
     };
 
+    const handleScheduleRedirect = () => {
+        if (!selectedInterviewer || !studentData?._id || !studentData?.cohort) return;
+        const url = `https://main.d2ogeweki0hgqu.amplifyapp.com/${selectedInterviewer?.personalUrl}/${selectedInterviewer?.events[0]?.eventName}?&litApplicationUserId=${studentData?._id}&cohortId=${studentData?.cohort}&eventCategory=Application Test Review&eventId=${selectedInterviewer?.events[0]?._id} `;
+        window.open(url, "_blank"); 
+      };
+    
 
   return (
     <div>
@@ -66,20 +67,20 @@ export function SchedulePresentation({ interviewr }: SchedulePresentationProps) 
         <div className="flex gap-6 mt-4">
             <div className="w-full space-y-4">
                 <div className="flex flex-col items-start space-y-2">
-                {reviewerList.length > 0 ? (
+                {interviewer.length > 0 ? (
                     <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {reviewerList.map((interviewer: any, index: any) => (
-                            <div key={index}
+                        {interviewer.map((interviewer: any, index: any) => (
+                            <div key={interviewer?._id}
                                 className={`flex flex-col bg-[#09090B] ${
-                                    selectedInterviewer?.email === interviewer.email ? 'border-white text-white' : 'text-muted-foreground'
+                                    selectedInterviewer?._id === interviewer?._id ? 'border-white text-white' : 'text-muted-foreground'
                                 } border rounded-xl w-full cursor-pointer hover:border-white hover:text-white transition-colors`}
                                 onClick={() => handleSelect(interviewer)}
                             >
-                                <img src={`/assets/images/placeholder-image-${index%3+1}.svg`} alt={interviewer.email} className={`h-[200px] object-cover rounded-t-xl 
-                                ${ selectedInterviewer?.email === interviewer.email ? '' : 'opacity-75' }`} />
+                                <img src={interviewer?.profileImageUrl || `/assets/images/placeholder-image-${index%3+1}.svg`} alt={interviewer?.email} className={`h-[200px] object-cover rounded-t-xl 
+                                ${ selectedInterviewer?._id === interviewer?._id ? '' : 'opacity-75' }`} />
                                 <div className="flex flex-col gap-2 p-4">
                                     <div className={` text-base font-medium`}>
-                                        {interviewer.email}
+                                        {interviewer?.firstName + ' ' + interviewer?.lastName}
                                     </div>
                                 </div>
                             </div>
@@ -91,7 +92,7 @@ export function SchedulePresentation({ interviewr }: SchedulePresentationProps) 
                     </div>
                 )}
                 </div>
-                <Button size={'xl'} className="w-full" disabled={!selectedInterviewer} >
+                <Button size={"xl"} className="w-full" disabled={!selectedInterviewer} onClick={handleScheduleRedirect}>
                     Select Interview Slot
                 </Button>
             </div>

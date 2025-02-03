@@ -1,21 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import StatusMessage from '~/components/molecules/ApplicationStatus/ApplicationStatus';
-import InterviewFeedback from '../InterviewFeedback/InterviewFeedback';
-import BookYourSeat from '../../molecules/BookYourSeat/BookYourSeat';
 import { getCurrentStudent, submitTokenReceipt } from '~/utils/studentAPI';
-import Feedback from '~/components/molecules/Feedback/Feedback';
-import { log } from 'node:console';
-import Header from '../Header/Header';
 import { Card } from '~/components/ui/card';
 import { Button } from '~/components/ui/button';
 import { AlertCircle, Pencil, X } from 'lucide-react';
-import Footer from '../Footer/Footer';
 import { useNavigate } from '@remix-run/react';
 
-interface TokenVerificationProps {
+interface AdmissionFeeProps {
 }
 
-const TokenVerification: React.FC<TokenVerificationProps> = ({  }) => {
+const AdmissionFee: React.FC<AdmissionFeeProps> = ({  }) => {
   const navigate = useNavigate();
     
    const [isPaymentVerified, setIsPaymentVerified] = useState<string | null>(null);
@@ -142,19 +135,6 @@ const TokenVerification: React.FC<TokenVerificationProps> = ({  }) => {
    }
 
   return (
-    <div className="w-full">
-          {isPaymentVerified === "pending" &&
-          <Header
-            subtitle={isPaymentVerified === "pending" ? `Your Payment is being verified` : 
-             isPaymentVerified === "paid" ? `Your Payment is verified` : `Your Payment verification failed`}
-            submessage="You may access your dashboard once your payment has been verified"
-          />}
-          <img
-            src="/assets/images/application-process-02-done.svg"
-            alt="Payment Verification"
-            className="w-screen my-8 sm:my-12"
-          />
-          <div className="w-full px-6 justify-center items-center">
             <Card className="max-w-4xl mx-auto px-6 py-8">
               <div className="mx-4 space-y-4">
                 <div className="flex justify-between items-center">
@@ -246,10 +226,7 @@ const TokenVerification: React.FC<TokenVerificationProps> = ({  }) => {
                 </div>}
               </div>
             </Card>
-          </div>
-          <Footer />
-        </div>
   );
 };
 
-export default TokenVerification;
+export default AdmissionFee;

@@ -58,17 +58,13 @@ const CURVE_INTENSITY = 150;
 const BASE_CURVE_MULTIPLIER = 1.5;
 
 
-const BookYourSeat: React.FC<FeedbackProps> = ({ booked, setIsPaymentVerified }) => {
-
-  console.log("booked",booked);
-  
+const BookYourSeat: React.FC<FeedbackProps> = ({ booked, setIsPaymentVerified }) => {  
   const [seats] = useState(generateSeats(booked));
   const [selectedSeatId, setSelectedSeatId] = useState<string>();
 
   const handleSeatSelect = (seatId: string) => {
     setSelectedSeatId(seatId);
   };
-
   
   const [selectedSeat, setSelectedSeat] = useState<{
     row: number;

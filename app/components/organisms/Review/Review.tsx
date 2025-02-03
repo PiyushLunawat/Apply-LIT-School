@@ -58,7 +58,7 @@ const Review: React.FC<ReviewProps> = ({ setIsPaymentVerified }) => {
       setAppliData(fetchedData);
       setName(fetchedData?.firstName);
       setStatus(fetchedData?.applicationDetails?.applicationStatus);
-      console.log("fwf",fetchedData?.applicationDetails?.applicationStatus);
+      // console.log("fwf",fetchedData?.applicationDetails?.applicationStatus);
       
       setTime(fetchedData?.applicationDetails?.updatedAt);
       setFilledSeats(fetchedData?.cohort?.filledSeats?.length || 0);

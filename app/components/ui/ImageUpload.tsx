@@ -64,7 +64,7 @@ const ImageUpload: React.FC<TokenPaymentDialogProps> = ({ paymentType }) => {
 
       const data = await response.json();
       console.log('Receipt uploaded successfully:', data);
-      navigate('../application/step-3');
+      navigate('../application/status');
     } catch (error) {
       setUploadError('Error uploading receipt. Please try again.');
       console.error('Error uploading receipt:', error);

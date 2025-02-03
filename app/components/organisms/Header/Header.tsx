@@ -6,7 +6,7 @@ import { Button } from '~/components/ui/button';
 import { UserContext } from '~/context/UserContext';
 
 interface HeaderProps {
-  subtitle?: string;
+  subtitle?: string ;
   submessage?: string
   classn?: string;
 }
@@ -23,7 +23,7 @@ export const Header: React.FC<HeaderProps> = ({ subtitle, submessage, classn }) 
     };
     
   return (
-    <header className={`flex flex-col gap-6 sm:gap-8 py-2 ${classn}`}>
+    <header className={`flex flex-col gap-2 sm:gap-4 py-2 ${classn}`}>
       <div className="px-4 sm:px-6 flex justify-between items-center">
           <div className="flex items-center">
               <img onClick={() => navigate('../')} src="/assets/images/lit-logo.svg" alt="LIT Logo" className="w-6" />
@@ -36,7 +36,8 @@ export const Header: React.FC<HeaderProps> = ({ subtitle, submessage, classn }) 
           </div>
       </div>
 
-      {subtitle && <div className="flex flex-col gap-1 sm:gap-4 text-center px-4 ">
+      {subtitle && 
+      <div className="flex flex-col gap-1 sm:gap-2 text-center px-4">
         <div className="text-[22px] sm:text-3xl font-semibold">
           Hey {studentData?.firstName} <span role="img" aria-label="waving-hand">👋</span> {subtitle}
         </div>

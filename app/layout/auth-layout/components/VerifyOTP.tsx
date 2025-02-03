@@ -28,6 +28,7 @@ const formSchema = z.object({
     .string()
     .length(6, { message: "OTP must be 6 digits" })
     .regex(/^\d+$/, { message: "OTP must contain only numbers" }),
+    generalError: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -49,11 +50,8 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
   verificationId,
 }) => {
     const navigate = useNavigate();
-    const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
-    const [timer, setTimer] = useState(59);
-    const [resendError, setResendError] = useState<string | null>(null);
-    const [verifyError, setVerifyError] = useState<string | null>(null);
     const { studentData, setStudentData } = useContext(UserContext);
+    const [timer, setTimer] = useState(59);
     const [loading, setLoading] = useState(false);
 
     const form = useForm<FormValues>({
@@ -61,12 +59,9 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
       defaultValues: {
         otp: '',
       },
-      });
-
-    const { register, handleSubmit, formState: { errors } } = useForm({
-      resolver: zodResolver(formSchema),
-      defaultValues: { otp: '' },
     });
+    
+    const { register, handleSubmit, formState: { errors }, reset } = form;    
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -95,19 +90,19 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
           navigate('../../dashboard');
         }
         else if(res.studentData?.applicationDetails !== undefined){
-                console.log("navigating")
-                console.log('studentData?._id:', studentData?._id);
-                  const res = await getCurrentStudent(studentData?._id);
-                    console.log(' student data:', res.data?.applicationDetails?.applicationStatus);
-                  if(res.data?.applicationDetails?.applicationStatus !== "initiated" &&
-                    res.data?.applicationDetails?.applicationStatus !== undefined){
-                      navigate('../../application/step-2');
-                    }
-                  else
-                    navigate('../../application/step-1');
-            }
+          console.log("navigating")
+          console.log('studentData?._id:', studentData?._id);
+            const res = await getCurrentStudent(studentData?._id);
+              console.log(' student data:', res.data?.applicationDetails?.applicationStatus);
+            if(res.data?.applicationDetails?.applicationStatus !== "initiated" &&
+              res.data?.applicationDetails?.applicationStatus !== undefined){
+                navigate('../../application/status');
+              }
+            else
+              navigate('../../application');
+        }
         else{
-          navigate('../../application/step-1');
+          navigate('../../application');
         }
       }
 
@@ -149,7 +144,7 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
       
     } catch (error) {
       console.error('OTP verification failed:', error);
-      setVerifyError('OTP verification failed. Please check your OTP and try again.');
+      form.setError('generalError', { type: 'manual', message: `OTP verification failed. ${error}` });
     } finally {
       setLoading(false);
     }
@@ -158,22 +153,22 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
   const handleResendOtp = async () => {
     try {
       setLoading(true);
-
       await resendOtp({ email: contactInfo });
       setTimer(60);
-      setResendError(null);
+      form.clearErrors("generalError");
+      reset({ otp: '' });
     } catch (error) {
       console.error('Resend OTP failed:', error);
-      setResendError('Failed to resend OTP. Please try again later.');
+      form.setError('generalError', { type: 'manual', message:`Failed to resend OTP. ${error}` });
     } finally {
       setLoading(false);
     }
   }
 
   return (
-      <div className="p-8 ">
-        <div className="flex justify-center">
-          <img src="/assets/images/otp-verify-icon.svg" alt="Verify OTP" className="" />
+      <div className="p-8 sm:p-16">
+        <div className="flex justify-center mb-6">
+          <img src="/assets/images/otp-verify-icon.svg" alt="Verify OTP" className="w-24 sm:w-32" />
         </div>
 
         {/* Header */}
@@ -204,10 +199,9 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <InputOTP maxLength={6} {...field}onChange={(e: any) => {
-                    field.onChange(e); // React Hook Form's internal handler
-                    setResendError(null); // Clear resend error
-                    setVerifyError(null); // Clear verification error
+                    <InputOTP maxLength={6} {...field}
+                    onChange={(e: any) => {
+                    field.onChange(e);
                   }}>
                       <InputOTPGroup>
                         <InputOTPSlot index={0} />
@@ -223,30 +217,18 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
                   <FormMessage />
                 </FormItem>
               )}
-            />
-
-              {(resendError || verifyError) && (
-                <Label htmlFor="contact-error" className='flex gap-1 items-center text-sm justify-start text-[#FF503D] font-normal mt-2'>
-                  {/* <AlertCircle className='w-3 h-3'/> */}
-                  {resendError  || verifyError}
-                </Label>
-              )}
-
-              {errors.otp && (
-                <Label className="text-sm text-red-500 mt-2">{errors.otp.message}</Label>
-              )}
-              
+            />              
               <div className="text-center mt-8">
                 <Button size="xl" type="submit" disabled={loading}>
-                  {loading ? '...' : verificationType === 'contact' ? 'Verify and Login' : 'Confirm and Login'}
+                  {loading ? 'Wait...' : verificationType === 'contact' ? 'Verify' : 'Confirm and Login'}
                 </Button>
               </div>
           </form>
         </Form>
 
 
-        <div className="flex gap-2 text-center items-center justify-center text-base mx-auto">
-          <Button variant="link" onClick={handleResendOtp} disabled={loading || timer>0}>
+        <div className="flex gap-2 text-center items-center justify-center text-base mx-auto mt-2">
+          <Button variant="link"className='underline' onClick={handleResendOtp} disabled={loading || timer>0}>
             {loading ? 'Resending OTP...' : 'Resend OTP'}
           </Button>
           {timer > 0 ? `in 00:${timer < 10 ? `0${timer}` : timer}` : ""}

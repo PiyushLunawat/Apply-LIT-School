@@ -19,6 +19,7 @@ const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass, book
   const { studentData } = useContext(UserContext);
   const [interviewOpen, setInterviewOpen] = useState(false);
   const [student, setStudent] = useState<any>([]);
+  const [interviewer, setInterviewer] = useState<any>([]);
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -34,7 +35,7 @@ const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass, book
   }, []);
 
   const handleReviseApplication = () => {
-    navigate('../application/step-1');
+    navigate('../application/task');
   };
 
   const handleScheduleInterview = async () => {
@@ -57,7 +58,7 @@ const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass, book
   
     try {
       const response = await fetch(
-        "https://main.d2ogeweki0hgqu.amplifyapp.com/application-portal/get-all-users",
+        "https://dev.cal.litschool.in/application-portal/get-all-users",
         {
           method: "POST",
           headers: {
@@ -66,21 +67,22 @@ const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass, book
           body: JSON.stringify(payload),
         }
       );
-  
+      
+      setInterviewOpen(true);
       if (!response.ok) {
         throw new Error(`Failed to schedule interview: ${response.statusText}`);
       }
   
       const result = await response.json();
-      console.log("Interview scheduled successfully:", response,result);
+      setInterviewer(result.data)
+      console.log("Interview scheduled successfully:", result.data);
   
       // Optionally set dialog open or show success message
     } 
     catch (error) {
       console.error("Error scheduling interview:", error);
-      alert("Failed to schedule interview. Please try again later.");
+      // alert("Failed to schedule interview. Please try again later.");
     }
-    setInterviewOpen(true);
   };
   
 
@@ -138,8 +140,8 @@ const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass, book
     {status === "accepted" && <BookYourSeat booked={booked} setIsPaymentVerified={setIsPaymentVerified}
     />}
   <Dialog open={interviewOpen} onOpenChange={setInterviewOpen}>
-    <DialogContent className="max-w-2xl">
-      <SchedulePresentation interviewr={['interviewer']}/>
+    <DialogContent className="max-w-[90vw] sm:max-w-2xl">
+      <SchedulePresentation interviewer={interviewer}/>
     </DialogContent>
   </Dialog>
   </div>

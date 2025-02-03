@@ -42,6 +42,16 @@ const StatusMessage: React.FC<StatusMessageProps> = ({
           'We have curated feedback based on your submission. Review your feedback and proceed to book your interview call with our counsellor.'
         );
         break;
+      case 'Interview Scheduled':
+        setHeadMessage(
+          <>
+            <span className="text-[#00A3FF]">Meeting!</span> Scheduled.
+          </>
+        );
+        setSubMessage(
+          'We have curated feedback based on your submission. Review your feedback and proceed to book your interview call with our counsellor.'
+        );
+        break;
       case 'rejected':
         setHeadMessage(
           <>

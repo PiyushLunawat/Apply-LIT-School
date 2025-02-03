@@ -5,12 +5,14 @@ const CONST_API = "https://myfashionfind.shop";
 // Fetch all cohorts
 export async function getCohorts() {
   const response = await fetch(`${CONST_API}/admin/cohort`);
-  
+
   if (!response.ok) {
     const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
     throw new Error(
       `${
-        errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
+        errorDetails
+          ? `${errorDetails.message || JSON.stringify(errorDetails)}`
+          : ""
       }`
     );
   }
@@ -23,7 +25,9 @@ export async function getCohortById(id: string) {
     const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
     throw new Error(
       `${
-        errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
+        errorDetails
+          ? `${errorDetails.message || JSON.stringify(errorDetails)}`
+          : ""
       }`
     );
   }
@@ -33,12 +37,14 @@ export async function getCohortById(id: string) {
 // Fetch all centres
 export async function getCentres() {
   const response = await fetch(`${CONST_API}/admin/center`);
-  
+
   if (!response.ok) {
     const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
     throw new Error(
       `${
-        errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
+        errorDetails
+          ? `${errorDetails.message || JSON.stringify(errorDetails)}`
+          : ""
       }`
     );
   }
@@ -48,12 +54,14 @@ export async function getCentres() {
 // Fetch all programs
 export async function getPrograms() {
   const response = await fetch(`${CONST_API}/admin/program`);
-  
+
   if (!response.ok) {
     const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
     throw new Error(
       `${
-        errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
+        errorDetails
+          ? `${errorDetails.message || JSON.stringify(errorDetails)}`
+          : ""
       }`
     );
   }
@@ -70,13 +78,14 @@ export async function getStudents() {
     const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
     throw new Error(
       `${
-        errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
+        errorDetails
+          ? `${errorDetails.message || JSON.stringify(errorDetails)}`
+          : ""
       }`
     );
   }
   return response.json();
 }
-
 
 export async function getCurrentStudent(id: string) {
   const response = await fetch(`${CONST_API}/admin/student/${id}`, {
@@ -88,7 +97,9 @@ export async function getCurrentStudent(id: string) {
     const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
     throw new Error(
       `${
-        errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
+        errorDetails
+          ? `${errorDetails.message || JSON.stringify(errorDetails)}`
+          : ""
       }`
     );
   }
@@ -99,7 +110,7 @@ export async function getCurrentStudent(id: string) {
 export async function submitApplication(formdata: any) {
   try {
     const response = await fetch(`${CONST_API}/student/submit-application`, {
-      method: 'POST',
+      method: "POST",
       body: formdata,
     });
 
@@ -109,216 +120,240 @@ export async function submitApplication(formdata: any) {
         `${
           errorDetails
             ? `${errorDetails.message || JSON.stringify(errorDetails)}`
-            : 'Failed to submit application'
+            : "Failed to submit application"
         }`
       );
     }
 
     return response.json();
   } catch (error: any) {
-    console.error('Error submitting application:', error);
+    console.error("Error submitting application:", error);
     throw new Error(`Application submission failed: ${error.message}`);
   }
 }
 
 export async function submitApplicationTask(formData: FormData) {
-    const response = await fetch(`${CONST_API}/student/submit-application-task`, {
-      method: 'POST',
-      body: formData,
-    });
-  
-    if (!response.ok) {
-      const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
-      throw new Error(
-        `${
-          errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
-        }`
-      );
-    }
-    return response.json();
+  const response = await fetch(`${CONST_API}/student/submit-application-task`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
+    throw new Error(
+      `${
+        errorDetails
+          ? `${errorDetails.message || JSON.stringify(errorDetails)}`
+          : ""
+      }`
+    );
   }
-  
-  export async function submitLITMUSTest(formData: FormData, litmusTaskId: string) {
-    formData.append('litmusTaskId', litmusTaskId);
-    console.log("sgsf",formData)
-    const response = await fetch(`${CONST_API}/student/litmus-test`, {
-      method: 'POST',
-      body: formData,
-    });
-  
-    if (!response.ok) {
-      const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
-      throw new Error(
-        `${
-          errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
-        }`
-      );
-    }
-    return response.json();
+  return response.json();
+}
+
+export async function submitLITMUSTest(
+  formData: FormData,
+  litmusTaskId: string
+) {
+  formData.append("litmusTaskId", litmusTaskId);
+  console.log("sgsf", formData);
+  const response = await fetch(`${CONST_API}/student/litmus-test`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
+    throw new Error(
+      `${
+        errorDetails
+          ? `${errorDetails.message || JSON.stringify(errorDetails)}`
+          : ""
+      }`
+    );
   }
-  
-  // New API for uploading student documents
-  export async function uploadStudentDocuments(formData: FormData) {
-    const response = await fetch(`${CONST_API}/student/documents`, {
-      method: "POST",
-      // Do not set Content-Type headers, fetch will handle it for FormData
-      body: formData,
-    });
-  
-    if (!response.ok) {
-      throw new Error("Failed to upload student documents");
-    }
-  
-    return await response.json();
+  return response.json();
+}
+
+// New API for uploading student documents
+export async function uploadStudentDocuments(formData: FormData) {
+  const response = await fetch(`${CONST_API}/student/documents`, {
+    method: "POST",
+    // Do not set Content-Type headers, fetch will handle it for FormData
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to upload student documents");
   }
 
-  
-  // New API for fee setup
-  export async function setupFeePayment(feeData: any) {
-    try {
-      const response = await fetch(`${CONST_API}/student/fee-setup`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(feeData),
-      });
-  
-      if (!response.ok) {
-        const errorDetails = await response.json().catch(() => null); // Handle non-JSON responses
-        throw new Error(
-          `${
-            errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : "Unknown error occurred"
-          }`
-        );
-      }
-  
-      return response.json();
-    } catch (error: any) {
-      console.error("setupFeePayment error:", error.message);
-      throw error;
-    }
-  }
-  
+  return await response.json();
+}
 
-  export async function submitTokenReceipt(formData: FormData) {
-    const response = await fetch(`${CONST_API}/student/token-receipt`, {
-      method: "POST",
-      body: formData,
-    });
-    if (!response.ok) {
-      const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
-      throw new Error(
-        `${
-          errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
-        }`
-      );
-    }
-    return await response.json();
-  }
-  
-  export async function payApplicationFee(amount: number, currency: string) {
-    const response = await fetch(`${CONST_API}/student/pay-application-fee`, {
+// New API for fee setup
+export async function setupFeePayment(feeData: any) {
+  try {
+    const response = await fetch(`${CONST_API}/student/fee-setup`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        appFeeData: {
-          currency,
-          amount: amount * 100, // Convert to smallest currency unit
-          receipt: "",
-        },
-      }),
+      body: JSON.stringify(feeData),
     });
-  
+
     if (!response.ok) {
-      const errorDetails = await response.json().catch(() => null);
+      const errorDetails = await response.json().catch(() => null); // Handle non-JSON responses
       throw new Error(
         `${
-          errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
+          errorDetails
+            ? `${errorDetails.message || JSON.stringify(errorDetails)}`
+            : "Unknown error occurred"
         }`
       );
     }
-    return response.json();
-  }
 
-  export async function verifyApplicationFeePayment(data: {
-    appFeeData: {
-      currency: string;
-      amount: number;
-      receipt: string;
-    };
-    studentId: string;
-    cohortId: string;
-    razorpay_order_id: string;
-    razorpay_payment_id: string;
-    razorpay_signature: string;
-  }) {
-    const response = await fetch(`${CONST_API}/student/verify-application-fee-payement`, {
+    return response.json();
+  } catch (error: any) {
+    console.error("setupFeePayment error:", error.message);
+    throw error;
+  }
+}
+
+export async function submitTokenReceipt(formData: FormData) {
+  const response = await fetch(`${CONST_API}/student/token-receipt`, {
+    method: "POST",
+    body: formData,
+  });
+  if (!response.ok) {
+    const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
+    throw new Error(
+      `${
+        errorDetails
+          ? `${errorDetails.message || JSON.stringify(errorDetails)}`
+          : ""
+      }`
+    );
+  }
+  return await response.json();
+}
+
+export async function payApplicationFee(amount: number, currency: string) {
+  const response = await fetch(`${CONST_API}/student/pay-application-fee`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      appFeeData: {
+        currency,
+        amount: amount * 100, // Convert to smallest currency unit
+        receipt: "",
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const errorDetails = await response.json().catch(() => null);
+    throw new Error(
+      `${
+        errorDetails
+          ? `${errorDetails.message || JSON.stringify(errorDetails)}`
+          : ""
+      }`
+    );
+  }
+  return response.json();
+}
+
+export async function verifyApplicationFeePayment(data: {
+  appFeeData: {
+    currency: string;
+    amount: number;
+    receipt: string;
+  };
+  studentId: string;
+  cohortId: string;
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+}) {
+  const response = await fetch(
+    `${CONST_API}/student/verify-application-fee-payement`,
+    {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
-    });
-  
-    if (!response.ok) {
-      const errorDetails = await response.json().catch(() => null);
-      throw new Error(
-        `${
-          errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : "Payment verification failed"
-        }`
-      );
     }
-    return response.json();
+  );
+
+  if (!response.ok) {
+    const errorDetails = await response.json().catch(() => null);
+    throw new Error(
+      `${
+        errorDetails
+          ? `${errorDetails.message || JSON.stringify(errorDetails)}`
+          : "Payment verification failed"
+      }`
+    );
   }
-  
-  export async function uploadFeeReceipt(formData: any) {  
-  
-    const response = await fetch(`${CONST_API}/student/upload-semester-fee-installments`, {
+  return response.json();
+}
+
+export async function uploadFeeReceipt(formData: any) {
+  const response = await fetch(
+    `${CONST_API}/student/upload-semester-fee-installments`,
+    {
       method: "POST",
       // FormData automatically sets the proper `Content-Type` headers
       body: formData,
+    }
+  );
+
+  if (!response.ok) {
+    const errorDetails = await response.json().catch(() => null);
+    throw new Error(
+      `${
+        errorDetails
+          ? `${errorDetails.message || JSON.stringify(errorDetails)}`
+          : "Failed to upload fee receipt"
+      }`
+    );
+  }
+  return response;
+}
+
+export async function updateStudentData(
+  data:
+    | FormData
+    | Partial<{
+        profileImage: File;
+        bloodGroup: string;
+        linkedInUrl: string;
+        instagramUrl: string;
+      }>
+): Promise<any> {
+  try {
+    const response = await fetch(`${CONST_API}/student/student-data`, {
+      method: "POST", // Using PATCH for partial updates
+      headers:
+        data instanceof FormData
+          ? {} // Let the browser set the Content-Type for FormData
+          : { "Content-Type": "application/json" }, // Set Content-Type for JSON data
+      body: data instanceof FormData ? data : JSON.stringify(data),
     });
-  
+
     if (!response.ok) {
-      const errorDetails = await response.json().catch(() => null);
+      const errorDetails = await response.json().catch(() => null); // Handle non-JSON responses
       throw new Error(
         `${
           errorDetails
-            ? `${errorDetails.message || JSON.stringify(errorDetails)}`
-            : "Failed to upload fee receipt"
+            ? errorDetails.message || JSON.stringify(errorDetails)
+            : "Failed to update student data."
         }`
       );
     }
-    return response;
+
+    return response.json(); // Return the updated student data
+  } catch (error: any) {
+    console.error("updateStudentData error:", error.message);
+    throw new Error(`Update failed: ${error.message}`);
   }
-  
-  export async function updateStudentData(
-    data: FormData | Partial<{ profileImage: File; bloodGroup: string; linkedInUrl: string; instagramUrl: string }>
-  ): Promise<any> {
-    try {
-      const response = await fetch(`${CONST_API}/student/student-data`, {
-        method: "POST", // Using PATCH for partial updates
-        headers:
-          data instanceof FormData
-            ? {} // Let the browser set the Content-Type for FormData
-            : { "Content-Type": "application/json" }, // Set Content-Type for JSON data
-        body: data instanceof FormData ? data : JSON.stringify(data),
-      });
-  
-      if (!response.ok) {
-        const errorDetails = await response.json().catch(() => null); // Handle non-JSON responses
-        throw new Error(
-          `${
-            errorDetails
-              ? errorDetails.message || JSON.stringify(errorDetails)
-              : "Failed to update student data."
-          }`
-        );
-      }
-  
-      return response.json(); // Return the updated student data
-    } catch (error: any) {
-      console.error("updateStudentData error:", error.message);
-      throw new Error(`Update failed: ${error.message}`);
-    }
-  }
-  
+}
