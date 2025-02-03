@@ -137,7 +137,7 @@ const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass, book
     )}
     {['accepted', 'on hold'].includes(status) &&
     <div className="flex justify-center mt-8">
-      <Button size="xl" className=" mx-auto px-8"
+      <Button size="xl" className="w-full sm:w-fit mx-auto px-8"
         onClick={() => {
           if (status === "on hold") {
             handleReviseApplication();

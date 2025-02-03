@@ -75,7 +75,7 @@ const Review: React.FC<ReviewProps> = ({ setIsPaymentVerified }) => {
   
   return (
     <div className='h-fit mb-16 sm:mb-24' >
-        <div className={`${['on hold', 'waitlist'].includes(status) ? 'grayscale h-[400px] sm:h-[500px] ' : ['accepted', 'selected'].includes(status) ? 'h-[650px] sm:h-[800px] grayscale-0' : ['rejected', 'not qualified'].includes(status) ? 'h-[650px] sm:h-[800px] grayscale-0' : 'h-[250px] sm:h-[350px] grayscale-0'} absolute top-0 left-0 right-0 mt-[50px] absolute bg-black-to-b from-blue-900 to-transparent mb-24`} style={{
+        <div className={`${['on hold', 'waitlist'].includes(status) ? 'grayscale h-[400px] sm:h-[500px] ' : ['accepted', 'selected'].includes(status) ? 'h-[400px] sm:h-[500px] grayscale-0' : ['rejected', 'not qualified'].includes(status) ? 'h-[400px] sm:h-[500px] grayscale-0' : 'h-[250px] sm:h-[350px] grayscale-0'} absolute top-0 left-0 right-0 mt-[50px] absolute bg-black-to-b from-blue-900 to-transparent mb-24`} style={{
           backgroundImage: `url('/assets/images/application-review-banner.svg')`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
@@ -90,9 +90,9 @@ const Review: React.FC<ReviewProps> = ({ setIsPaymentVerified }) => {
           /> 
 
         <div className='z-10 relative mx-4 space-y-12'>
-            {['accepted', 'rejected'].includes(status) && 
+            {/* {['accepted', 'rejected'].includes(status) && 
               <TaskSubmission mediaItems={mediaItems} />
-            }
+            } */}
             {!['under review', 'concluded'].includes(status) && 
               <Feedback setIsPaymentVerified={setIsPaymentVerified} status={status} feedbackList={appliData} setPass={setPass} booked={filledSeats}/>
             }
