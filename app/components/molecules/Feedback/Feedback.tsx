@@ -135,7 +135,7 @@ const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass, book
       </div>
 
     )}
-    {['accepeted', 'on hold'].includes(status) &&
+    {['accepted', 'on hold'].includes(status) &&
     <div className="flex justify-center mt-8">
       <Button size="xl" className=" mx-auto px-8"
         onClick={() => {
