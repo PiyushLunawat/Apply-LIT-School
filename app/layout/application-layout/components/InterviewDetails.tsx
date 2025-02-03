@@ -82,14 +82,14 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
             </div>
             <div className="space-y-2 sm:space-y-4">
             <p className="text-xl sm:text-2xl font-semibold uppercase">
-                {'10:30 AM'}{' '} 
+                {lastInterview?.startTime}{' '} 
                 <span className="text-sm sm:text-base font-light text-muted-foreground lowercase">to</span>{' '}
                 {lastInterview?.endTime}
             </p>
             <div className='flex flex-wrap justify-start text-start text-sm sm:text-base font-normal'>
                 Your meeting link has been mailed to you at
                 <span className='flex font-medium w-fit items-center'>
-                <Mail className='w-4 h-4 mr-1'/> 
+                <Mail className='w-4 h-4 mx-1'/> 
                 {student?.email}
                 </span>
             </div>

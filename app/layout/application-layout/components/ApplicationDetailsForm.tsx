@@ -1755,59 +1755,59 @@ useEffect(() => {
  
         <div className={`flex flex-col sm:flex-row ${isSaved ? 'justify-end' : 'justify-between'} items-center mt-10 space-y-4 sm:space-y-0 sm:space-x-4`}>
   
-  {/* Submit/Payment Button */}
-  {isPaymentDone ? (
-    <Button
-      size="xl"
-      className='w-full sm:w-fit px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90 order-1 sm:order-2'
-      type="button"
-      onClick={() => handleContinueToDashboard()}
-      disabled={loading}
-    >
-      <div className='flex items-center gap-2'>
-        {loading ? 'Redirecting...' : 'Continue to Dashboard'}
-      </div>
-    </Button>
-  ) : (
-    isSaved ? (
-      <Button
-        size="xl"
-        className='w-full sm:w-fit px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90 order-1 sm:order-2'
-        type="button"
-        onClick={() => handlePayment()}
-        disabled={loading}
-      >
-        <div className='flex items-center gap-2'>
-          {loading ? 'Initializing Payment...' : 'Pay INR ₹500.00'}
-        </div>
-      </Button>
-    ) : (
-      <Button
-        size="xl"
-        className='w-full sm:w-fit px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90 order-1 sm:order-2'
-        type="submit"
-        disabled={loading}
-      >
-        <div className='flex items-center gap-2'>
-          <SaveIcon className='w-5 h-5' />
-          {loading ? 'Submitting...' : 'Submit and Pay INR 500.00'}
-        </div>
-      </Button>
-    )
-  )}
+        {/* Submit/Payment Button */}
+        {isPaymentDone ? (
+          <Button
+            size="xl"
+            className='w-full sm:w-fit px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90 order-1 sm:order-2'
+            type="button"
+            onClick={() => handleContinueToDashboard()}
+            disabled={loading}
+          >
+            <div className='flex items-center gap-2'>
+              {loading ? 'Redirecting...' : 'Continue to Dashboard'}
+            </div>
+          </Button>
+        ) : (
+          isSaved ? (
+            <Button
+              size="xl"
+              className='w-full sm:w-fit px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90 order-1 sm:order-2'
+              type="button"
+              onClick={() => handlePayment()}
+              disabled={loading}
+            >
+              <div className='flex items-center gap-2'>
+                {loading ? 'Initializing Payment...' : 'Pay INR ₹500.00'}
+              </div>
+            </Button>
+          ) : (
+            <Button
+              size="xl"
+              className='w-full sm:w-fit px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90 order-1 sm:order-2'
+              type="submit"
+              disabled={loading}
+            >
+              <div className='flex items-center gap-2'>
+                <SaveIcon className='w-5 h-5' />
+                {loading ? 'Submitting...' : 'Submit and Pay INR 500.00'}
+              </div>
+            </Button>
+          )
+        )}
 
-  {/* "Clear Form" Button */}
-  {!isSaved && (
-    <Button
-      variant="link"
-      type='button'
-      className='underline w-full sm:w-auto order-2 sm:order-1'
-      onClick={() => form.reset()}
-    >
-      Clear Form
-    </Button>
-  )}
-</div>
+        {/* "Clear Form" Button */}
+        {!isSaved && (
+          <Button
+            variant="link"
+            type='button'
+            className='underline w-full sm:w-auto order-2 sm:order-1'
+            onClick={() => form.reset()}
+          >
+            Clear Form
+          </Button>
+        )}
+      </div>
 
       </form>
     </Form>

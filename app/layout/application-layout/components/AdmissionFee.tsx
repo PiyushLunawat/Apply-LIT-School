@@ -135,19 +135,19 @@ const AdmissionFee: React.FC<AdmissionFeeProps> = ({  }) => {
    }
 
   return (
-            <Card className="max-w-4xl mx-auto px-6 py-8">
+            <Card className="max-w-4xl mx-auto px-1 sm:px-6 py-6 sm:py-8">
               <div className="mx-4 space-y-4">
-                <div className="flex justify-between items-center">
-                  {isPaymentVerified === "pending" && <div className="text-2xl font-normal">Payment Receipt is being verified</div>}
-                  {isPaymentVerified === "paid" && <div className="text-2xl font-normal">Payment Receipt is verified</div>}
+                <div className="grid sm:flex justify-between items-center">
+                  {isPaymentVerified === "pending" && <div className="text-lg sm:text-2xl font-normal">Payment Receipt is being verified</div>}
+                  {isPaymentVerified === "paid" && <div className="text-lg sm:text-2xl font-normal">Payment Receipt is verified</div>}
                   {isPaymentVerified === "flagged" && 
-                    <div className="text-[#FF503D] flex gap-2 items-center text-2xl font-normal">
+                    <div className="text-[#FF503D] flex gap-2 items-center text-lg sm:text-2xl font-normal">
                       <AlertCircle className='w-5 h-5'/>Receipt Rejected
                     </div>
                   }
                   <div className="font-normal">{new Date().toLocaleDateString()}</div>
                 </div>
-                  <div className='space-y-1'>
+                  <div className='text-sm sm:text-base space-y-1'>
                     <div className="flex gap-2 font-normal">
                     Paid via {studentData?.paymentMethod } to 
                     <span className='flex gap-2'>

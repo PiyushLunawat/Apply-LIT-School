@@ -28,11 +28,11 @@ export default function ApplicationLayout() {
           setSubtitle('Welcome to LIT');
           setSubmessage('Get started with your application process');
           navigate("/application");
-        } else if (["initiated", "on hold"].includes(status)) {
+        } else if (["initiated"].includes(status)) {
           setSubtitle('Welcome to LIT');
           setSubmessage(`Dive into the ${res.data?.program?.name} Course`);
           navigate("/application/task");
-        } else if (["selected"].includes(status)) {
+        } else if (["selected"].includes(status) && isVerified === 'paid') {
           navigate("/dashboard");
         } else {
             if(status === 'Interview Scheduled') {

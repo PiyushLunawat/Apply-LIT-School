@@ -35,7 +35,7 @@ const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass, book
   }, []);
 
   const handleReviseApplication = () => {
-    navigate('../application/task');
+    navigate('../../application/task');
   };
 
   const handleScheduleInterview = async () => {
@@ -87,14 +87,14 @@ const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass, book
   
 
   return (
-    <div className={`${status === "on hold" ? 'shadow-[0px_4px_32px_rgba(121,121,121,0.2)]' : status === "accepted" ? 'shadow-[0px_4px_32px_rgba(0,163,122551,0.2)]' : 'shadow-[0px_4px_32px_rgba(255,80,61,0.2)]'} max-w-[1216px] z-10 bg-[#09090B] border border-[#2C2C2C] text-white px-4 sm:px-6 py-6 sm:py-8 mx-auto rounded-2xl justify-between items-start`}>
+    <div className={`${['on hold', 'waitlist'].includes(status) ? 'shadow-[0px_4px_32px_rgba(121,121,121,0.2)]' : ['accepted', 'selected'].includes(status) ? 'shadow-[0px_4px_32px_rgba(0,163,122551,0.2)]' : 'shadow-[0px_4px_32px_rgba(255,80,61,0.2)]'} max-w-[1216px] z-10 bg-[#09090B] border border-[#2C2C2C] text-white px-4 sm:px-6 py-6 sm:py-8 mx-auto rounded-2xl justify-between items-start`}>
     <div className="flex justify-between items-center mb-4">
       <div className="text-lg sm:text-xl font-semibold ">
         {status === "on hold" ? 'Reason for hold up' : 'Feedback'}
       </div>
-      <div className="text-xs sm:text-base flex uppercase">{new Date(feedbackList?.applicationDetails?.updatedAt).toLocaleString()}</div>
+      <div className="text-xs sm:text-base flex">{new Date(feedbackList?.applicationDetails?.updatedAt).toLocaleDateString()}</div>
     </div>
-    {status === "on hold" ? (
+    {status === "on hold" && (
       <ul className="ml-4 sm:ml-6 space-y-2 list-disc">
         {feedbackList?.applicationDetails?.applicationTasks[0]?.applicationTaskDetail?.applicationTasks[0]?.overallFeedback[feedbackList?.applicationDetails?.applicationTasks[0]?.applicationTaskDetail?.applicationTasks[0]?.overallFeedback.length-1]?.feedback.map((item: any, index: any) => (
           <li className="text-sm sm:text-base" key={index}>
@@ -102,7 +102,8 @@ const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass, book
           </li>
         ))}
       </ul>
-    ) : (status === "rejected" || status === "accepted") ? (
+    )} 
+    {(status === "rejected" || status === "accepted") && (
       <div className="space-y-4">
         {feedbackList?.applicationDetails?.applicationTasks[0]?.applicationTaskDetail?.applicationTasks[0].tasks?.map((task: any, index: any) => (
           task?.feedback.length>0 && 
@@ -120,10 +121,21 @@ const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass, book
           </div>
         ))}
       </div>
-    ) : (
-      <div className="text-sm sm:text-base">No feedback available.</div>
     )}
-    {!(status === "rejected") &&
+    {(
+      <div className="space-y-4">
+        <ul className="ml-4 sm:ml-6 space-y-2 list-disc">
+          {feedbackList?.applicationDetails?.applicationTestInterviews[feedbackList?.applicationDetails?.applicationTestInterviews.length - 1]?.feedback[feedbackList?.applicationDetails?.applicationTestInterviews[feedbackList?.applicationDetails?.applicationTestInterviews.length - 1]?.feedback.length - 1]?.comments?.map((feedback: any, index: any) => (
+            feedback?.length > 0 && 
+            <li className="text-sm sm:text-base" key={index}>
+              {feedback}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+    )}
+    {['accepeted', 'on hold'].includes(status) &&
     <div className="flex justify-center mt-8">
       <Button size="xl" className=" mx-auto px-8"
         onClick={() => {
@@ -137,7 +149,7 @@ const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass, book
       </Button>
     </div>}
 
-    {status === "accepted" && <BookYourSeat booked={booked} setIsPaymentVerified={setIsPaymentVerified}
+    {status === "selected" && <BookYourSeat booked={booked} setIsPaymentVerified={setIsPaymentVerified}
     />}
   <Dialog open={interviewOpen} onOpenChange={setInterviewOpen}>
     <DialogContent className="max-w-[90vw] sm:max-w-2xl">

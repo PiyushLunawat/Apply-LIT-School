@@ -21,25 +21,40 @@ export const ApplicationStatus: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const fetchCurrentStudentData = async () => {
+    const fetchDataOnMount = async () => {
       try {
-        if (!studentData?._id) throw new Error('Student ID is missing.');
-        const res = await getCurrentStudent(studentData._id);
-        const isVerified = res.data?.cousrseEnrolled?.[res.data.cousrseEnrolled.length - 1]?.tokenFeeDetails?.verificationStatus;
-        setStudentData(res.data)
-        setIsPaymentVerified(isVerified);
-        setIsInterviewScheduled(res.data?.applicationDetails?.applicationStatus)
+        setLoading(true);
+
+        // 1) Try reading from local storage
+        const storedData = localStorage.getItem('studentData');
+        if (storedData) {
+          const parsedData = JSON.parse(storedData);
+          setStudentData(parsedData);
+
+          // 2) If there's a valid ID, fetch updated info
+          if (parsedData?._id) {
+            const res = await getCurrentStudent(parsedData._id);
+            const latest = res.data;
+            
+            // Check token fee verification status
+            const isVerified =
+              latest?.cousrseEnrolled?.[latest.cousrseEnrolled.length - 1]?.tokenFeeDetails?.verificationStatus;
+            
+            setStudentData(latest);
+            setIsPaymentVerified(isVerified);
+            setIsInterviewScheduled(latest?.applicationDetails?.applicationStatus);
+          }
+        }
       } catch (err) {
         setError('Failed to fetch student data. Please try again later.');
       } finally {
         setLoading(false);
+        console.log("re rendering")
       }
     };
 
-    if (studentData) {
-      fetchCurrentStudentData();
-    }
-  }, [studentData]);
+    fetchDataOnMount();
+  }, []);
 
   if (loading) {
     return (

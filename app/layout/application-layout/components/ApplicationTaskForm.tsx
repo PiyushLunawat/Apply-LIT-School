@@ -359,9 +359,9 @@ const ApplicationTaskForm: React.FC = () => {
           </div>
         ))}
 
-        <div className="flex justify-between items-center mt-8">
-           <Button variant="link" type='button' onClick={() => form.reset() }>Clear Form</Button>
-           <Button size="xl" className='space-y-1' type="submit" disabled={loading}>
+        <div className="flex flex-col sm:flex-row gap-2 justify-end sm:justify-between items-center mt-8">
+           <Button variant="link" type='button' className='underline order-2 sm:order-1' onClick={() => form.reset() }>Clear Form</Button>
+           <Button size="xl" className='w-full sm:w-fit space-y-1 order-1 sm:order-2' type="submit" disabled={loading}>
             {loading ? 'Submitting...' : 'Submit Application'}
           </Button>
         </div>

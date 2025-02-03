@@ -29,12 +29,16 @@ const DashboardCard = ({ title, description, icon, to, bgColor, border, disable 
     onClick={(e) => disable && e.preventDefault()} // Prevent link click if disabled
   >
 
-    <div className={``}>
+    <div className="hidden sm:block">
       {icon}
     </div>
-    <div className="m-6">
-      <h3 className="text-2xl font-semibold mb-2">{title}</h3>
-      <p className="text-base opacity-80">{description}</p>
+    <div className='flex gap-4 items-center sm:hidden'>
+      {icon}
+      <h3 className="text-xl sm:text-2xl font-semibold mb-2">{title}</h3>
+    </div>
+    <div className="mx-4 my-3 sm:m-6">
+      <h3 className="hidden sm:block text-base text-2xl font-semibold mb-2">{title}</h3>
+      <p className="text-sm sm:text-base opacity-80">{description}</p>
     </div>
   </Link>
 );

@@ -69,16 +69,16 @@ export default function Sidebar() {
     }, [studentData]);
 
   return (
-    <div className="max-w-[360px] w-full text-white flex flex-col border-r" style={{ height: `calc(100vh - 52px)`}}>
+    <div className="hidden sm:block max-w-[360px] w-full text-white flex flex-col border-r" style={{ height: `calc(100vh - 52px)`}}>
       {/* User Profile Section */}
       <div className="h-[200px] border-b border-[#2C2C2C]">
         <div className="flex flex-col gap-5 p-8 mt-5">
           <Avatar className="w-[60px] h-[60px]">
             <AvatarImage src={studentData?.profileUrl} className="object-cover" alt={studentData?.firstName[0]+studentData?.lastName[0]} />
-            <AvatarFallback>{studentData?.firstName[0]}{studentData?.lastName[0]}</AvatarFallback>
+            <AvatarFallback className="uppercase">{studentData?.firstName[0]}{studentData?.lastName[0]}</AvatarFallback>
           </Avatar>
           <div>
-            <h2 className="text -base font-semibold">{studentData?.firstName}</h2>
+            <h2 className="text -base font-semibold">{studentData?.firstName + ' ' + studentData?.lastName}</h2>
             <p className="text-sm text-normal">{student?.studentDetails?.previousEducation?.nameOfInstitution}</p>
           </div>
         </div>
