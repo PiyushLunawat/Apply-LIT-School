@@ -36,10 +36,10 @@ export const ApplicationTask: React.FC = () => {
           const status = res.data?.applicationDetails?.applicationStatus;
           console.log("3:",status);
   
-          if (status === "under review" || status === "accepted" || status === "rejected") {
+          if (['under review', 'accepted' , 'rejected', 'Interview Scheduled', 'waitlist', 'selected', 'not qualified'].includes(status)) {
             console.log("Navigating to /application/status:", status);
             navigate("/application/status");
-          } else if (status === "initiated" || status === "on hold") {
+          } else if (['initiated', 'on hold'].includes(status)) {
             console.log("Navigating to /application/task:", status);
             navigate("/application/task");
           }

@@ -3,7 +3,7 @@
 import { useContext, useEffect, useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "~/components/ui/dialog";
-import { File as FileIcon, Download, Upload, FilePenLine, FilePen, Eye } from "lucide-react";
+import { File as FileIcon, Download, Upload, FilePenLine, FilePen, Eye, Pen } from "lucide-react";
 import { getCurrentStudent, uploadStudentDocuments } from "~/utils/studentAPI"; // Ensure correct path
 import { UserContext } from "~/context/UserContext";
 
@@ -188,7 +188,7 @@ const PersonalDocuments = () => {
                     document.getElementById(`file-input-${doc.id}`)?.click()
                   }
                 >
-                  <FilePenLine className="h-5 w-5" />
+                  <Pen className="h-4 w-4" />
                 </Button>
               </>  
               ))}
@@ -246,7 +246,7 @@ const PersonalDocuments = () => {
                     variant="ghost"
                     className="!p-[18px] border bg-[#1B1B1C]"
                   >
-                    <FilePenLine className="h-4 w-4" />
+                    <Pen className="h-4 w-4" />
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
@@ -260,9 +260,10 @@ const PersonalDocuments = () => {
           </div>
         </div>
       ))}
-      {docs?.adminUploadedocuments?.length > 0 && docs?.adminUploadedocuments.map((doc: any) => {
-            return (
-              <div
+
+      <div className="text-3xl pt-4 px-6">Additional Documents</div>
+      {docs?.adminUploadedocuments?.length > 0 && docs?.adminUploadedocuments.map((doc: any) => (
+        <div
           key={doc?._id}
           className="flex items-center justify-between p-6 bg-[#64748B1F] border rounded-xl"
         >
@@ -279,19 +280,18 @@ const PersonalDocuments = () => {
           </div>
 
           <div className="flex items-center gap-4">
-                <Button
-                  size="xl"
-                  variant="ghost"
-                  className="border bg-[#1B1B1C]"
-                  onClick={() => handleFileDownload(doc?.url || "", doc?.documentName)}
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Download
-                </Button>
+            <Button
+              size="xl"
+              variant="ghost"
+              className="border bg-[#1B1B1C]"
+              onClick={() => handleFileDownload(doc?.url || "", doc?.documentName)}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Download
+            </Button>
           </div>
-                </div>
-            );
-          })}
+        </div>
+      ))}
     </div>
   );
 };

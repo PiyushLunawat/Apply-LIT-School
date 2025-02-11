@@ -1,5 +1,6 @@
 import { CirclePause, Clock } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import { Button } from '~/components/ui/button';
 
 interface StatusMessageProps {
   name: string;
@@ -33,6 +34,7 @@ const StatusMessage: React.FC<StatusMessageProps> = ({
         );
         break;
       case 'accepted':
+      case 'interview cancelled':
         setHeadMessage(
           <>
             <span className="text-[#00A3FF]">Congratulations!</span> Your application has been accepted.
@@ -138,7 +140,7 @@ const StatusMessage: React.FC<StatusMessageProps> = ({
     <>
       <div className='bg-transparent flex relative h-[250px] sm:h-[350px] px-auto'>
         <div className='w-full md:w-[850px] mx-auto flex flex-col gap-4 sm:gap-8 justify-center items-center'>
-          {(messageType === 'under review' || messageType === 'concluded') && (
+          {(messageType === 'under review' || messageType === 'interview cancelled') && (
           <div className='space-y-2'>  
             <div
               className={`mx-auto w-fit flex justify-center items-center gap-2 px-6 py-2 sm:py-4 border-2 ${
@@ -155,12 +157,23 @@ const StatusMessage: React.FC<StatusMessageProps> = ({
             {countdown === '00:00:00' && <div className='text-[#FF503D]'>A reminder has been sent to our team, we'll review it shortly</div>}
           </div>
           )}
-          <div className='mx-4 sm:mx-16 text-2xl sm:text-3xl md:text-5xl font-bold text-center'>
+          <div className='mx-4 sm:mx-12 text-2xl sm:text-3xl md:text-5xl font-bold text-center'>
             {headMessage}
           </div>
           <div className='mx-8 sm:mx-16 text-xs sm:text-sm md:text-base text-center font-normal'>
             {subMessage}
           </div>
+
+          {messageType === 'Interview Scheduled' &&
+            <div className='mx-8 mt-4 sm:mx-16 text-xs sm:text-sm md:text-base text-center font-normal space-y-3'>
+              <div className=''>
+                If you were unable to attend this interview you may choose to
+              </div>
+              <Button className='bg-[#FFFFFF2B] rounded'>
+                Reschedule Your Interview
+              </Button>
+            </div>
+          }
         </div>
       </div>
     </>

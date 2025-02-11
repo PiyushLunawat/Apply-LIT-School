@@ -50,10 +50,10 @@ const ApplicationTaskForm: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();  
   const [fetchedStudentData, setFetchedStudentData] = useState<any>(null);
-  
 
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
+    // Remove hardcoded defaultValues; we will initialize (or reset) the form
     defaultValues: {
       courseDive: {
         interest: '',
@@ -63,8 +63,9 @@ const ApplicationTaskForm: React.FC = () => {
     },
   });
 
-  const { control, handleSubmit, setValue, reset } = form;
+  const { control, handleSubmit, setValue, reset, watch } = form;
 
+  // ------------------ Fetch data from server and reset the form ------------------
   useEffect(() => {
     async function fetchData() {
       try {
@@ -80,66 +81,45 @@ const ApplicationTaskForm: React.FC = () => {
         setCohort(studentResp.data?.cohort);
   
         // The tasks array from the saved data, if any
-        // IMPORTANT: .tasks here is your custom array of tasks,
-        // each item containing { task: { text, links, images, ...}, feedback: ... }
-        const sDataTasks = sData?.tasks || []; // or []
+        const sDataTasks = sData?.tasks || [];
   
         // The "application" tasks from the cohort structure
-        // (the config that tells us how many tasks, what type they are, etc.)
         const cohortTasks =
           studentResp.data?.cohort?.applicationFormDetail?.[0]?.task || [];
   
         // Build our final tasks array by merging the config from "cohortTasks"
         // with the actual saved values from "sDataTasks".
         const finalTasks = cohortTasks.map((ct: any, tIndex: number) => {
-          // "sDataTasks[tIndex]?.task" holds the actual { text, images, files, links } object
           const existingTask = sDataTasks[tIndex]?.task || {};
-  
           return {
             configItems: ct.config.map((configItem: any, cIndex: number) => {
               let answer: any = '';
-  
               switch (configItem.type) {
                 case 'long':
                 case 'short':
-                  // existingTask.text might be an array => e.g. ["some text", "some text2" ...]
-                  // If you keep 1 text per config item, pick the `[cIndex]`.
                   answer =
                     existingTask.text && existingTask.text[cIndex]
                       ? existingTask.text[cIndex]
                       : '';
                   break;
-  
                 case 'link':
-                  // existingTask.links might be an array => e.g. ["https://...."]
-                  // If the config only expects 1 link, you might store it in answer[0].
-                  // Otherwise, store them as an array of strings.
                   answer = existingTask.links || [];
                   break;
-  
                 case 'image':
-                  // existingTask.images => array of file URLs or files?
                   answer = existingTask.images || [];
                   break;
-  
                 case 'video':
                   answer = existingTask.videos || [];
                   break;
-  
                 case 'file':
                   answer = existingTask.files || [];
                   break;
-  
                 default:
                   answer = '';
                   break;
               }
-  
               return {
                 type: configItem.type,
-                maxFiles: configItem.maxFiles,
-                maxFileSize: configItem.maxFileSize,
-                // etc.
                 answer,
               };
             }),
@@ -152,11 +132,21 @@ const ApplicationTaskForm: React.FC = () => {
           goals: sData?.courseDive?.text2 || '',
         };
   
-        // Finally reset the entire form to these defaults
-        reset({
+        if (sData?.courseDive?.text1) {
+          const storedFormJSON = localStorage.getItem("applicationTaskForm") ?? "{}";
+          try {
+            const parsedForm = JSON.parse(storedFormJSON);
+            reset(parsedForm);
+          } catch (error) {
+            console.error("Error parsing form data from localStorage:", error);
+          }
+        }
+        else {
+          reset({
           courseDive: courseDiveData,
           tasks: finalTasks,
-        });
+          });
+        }
       } catch (err) {
         console.error('Error fetching data:', err);
       }
@@ -165,36 +155,54 @@ const ApplicationTaskForm: React.FC = () => {
     fetchData();
   }, [studentData, reset]);
   
+  // ------------------ LOCAL STORAGE SETUP FOR APPLICATION TASK FORM ------------------
+  // 1. Initialize localStorage for "applicationTaskForm" if it doesn't exist.
+  useEffect(() => {
+    // Only run if studentData is available
+    if (!studentData || !studentData._id) return;
+    const existingData = localStorage.getItem("applicationTaskForm");
+    if (!existingData) {
+      // Initialize with the current form values (after fetchData has reset the form)
+      // Use form.getValues() to capture the current state.
+      const initialData = form.getValues();
+      localStorage.setItem("applicationTaskForm", JSON.stringify(initialData));
+    }
+  }, [studentData, form]);
+  
+  // 2. On mount, if localStorage data exists, load it and reset the form.
+  useEffect(() => {
+    const storedFormJSON = localStorage.getItem("applicationTaskForm");
+    if (storedFormJSON) {
+      try {
+        const parsedForm = JSON.parse(storedFormJSON);
+        reset(parsedForm);
+      } catch (error) {
+        console.error("Error parsing form data from localStorage:", error);
+      }
+    }
+  }, [reset]);
+  
+  // 3. Whenever the form data changes, update localStorage.
+  useEffect(() => {
+    const subscription = watch((value) => {
+      localStorage.setItem("applicationTaskForm", JSON.stringify(value));
+    });
+    return () => subscription.unsubscribe();
+  }, [watch]);
+  
+  // ------------------ End LOCAL STORAGE SETUP ------------------
   
   const tasks = cohort?.applicationFormDetail?.[0]?.task || [];
-  // useEffect(() => {
-  //   if (tasks.length > 0) {
-  //     setValue(
-  //       'tasks',
-  //       tasks.map((task: any) => ({
-  //         configItems: task.config.map((configItem: any) => ({
-  //           type: configItem.type,
-  //           answer:
-  //             configItem.type === 'link'
-  //               ? Array(configItem.maxFiles || 1).fill('')
-  //               : configItem.type === 'file' || configItem.type === 'image' || configItem.type === 'video'
-  //               ? []
-  //               : '',
-  //         })),
-  //       }))
-  //     );
-  //   }
-  // }, [tasks, setValue]);
-
+  
   const onSubmit = async (data: FormSchema) => {
     try {
       setLoading(true);
-
+  
       const formData = new FormData();
       // courseDive => text1, text2
       formData.append("courseDive[text1]", data.courseDive.interest);
       formData.append("courseDive[text2]", data.courseDive.goals);
-
+  
       // tasks => each configItem's answer
       data.tasks.forEach((task, tIndex) => {
         task.configItems.forEach((configItem, cIndex) => {
@@ -205,7 +213,6 @@ const ApplicationTaskForm: React.FC = () => {
                 formData.append(`tasks[${tIndex + 1}].text[${cIndex}]`, configItem.answer);
               }
               break;
-
             case "link":
               if (Array.isArray(configItem.answer)) {
                 configItem.answer.forEach((link, idx) => {
@@ -213,13 +220,11 @@ const ApplicationTaskForm: React.FC = () => {
                 });
               }
               break;
-
             case "image":
             case "video":
             case "file":
               if (Array.isArray(configItem.answer)) {
                 configItem.answer.forEach((f: File, idx: number) => {
-                  // e.g. tasks[1].files[0]
                   if (configItem.type === "image") {
                     formData.append(`tasks[${tIndex + 1}].images[${idx}]`, f);
                   } else if (configItem.type === "video") {
@@ -230,13 +235,12 @@ const ApplicationTaskForm: React.FC = () => {
                 });
               }
               break;
-
             default:
               break;
           }
         });
       });
-
+  
       // Debug the FormData
       for (let pair of formData.entries()) {
         if (pair[1] instanceof File) {
@@ -245,29 +249,27 @@ const ApplicationTaskForm: React.FC = () => {
           console.log(pair[0], pair[1]);
         }
       }
-
+  
       // send to your API
       const res = await submitApplicationTask(formData);
       console.log("Submission success => ", res);
-
-      // optionally redirect
       navigate("/application/status");
+      localStorage.removeItem("applicationTaskForm");
     } catch (err) {
       console.error("Failed to submit application task:", err);
     } finally {
       setLoading(false);
     }
   };
-
+  
   const wordLimitHandler = (event: React.ChangeEvent<HTMLTextAreaElement>, field: any, maxWordLimit: number) => {
     const text = event.target.value;
-    const wordCount = text.split(/\s+/).filter(Boolean).length; // Count the words
-  
+    const wordCount = text.split(/\s+/).filter(Boolean).length;
     if (wordCount <= maxWordLimit) {
-      field.onChange(text); // Allow change if under word limit
+      field.onChange(text);
     }
   };
-
+  
   return (
     <Form {...form}>
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -276,9 +278,7 @@ const ApplicationTaskForm: React.FC = () => {
           <div className='flex-1 bg-[#00A3FF]/[0.2] text-[#00A3FF] text-center py-4 text-2xl rounded-full'>
             Course Dive
           </div>
-
           <div className="space-y-6">
-            {/* Interest Field */}
             <FormField
               control={control}
               name="courseDive.interest"
@@ -299,8 +299,7 @@ const ApplicationTaskForm: React.FC = () => {
                 </FormItem>
               )}
             />
-
-            {/* Goals Field */}
+  
             <FormField
               control={control}
               name="courseDive.goals"
@@ -323,7 +322,7 @@ const ApplicationTaskForm: React.FC = () => {
             />
           </div>
         </div>
-
+  
         {/* Tasks Section */}
         {tasks.map((task: any, taskIndex: number) => (
           <div key={taskIndex} className="flex flex-col gap-6 mt-8">
@@ -344,24 +343,24 @@ const ApplicationTaskForm: React.FC = () => {
                   No tasks available. Please ensure the cohort data is loaded correctly.
                 </div> : 
                 <div className='space-y-3'>
-                {task.config.map((configItem: any, configIndex: number) => (
-                  <TaskConfigItem
-                    key={configIndex}
-                    control={control}
-                    taskIndex={taskIndex}
-                    configIndex={configIndex}
-                    configItem={configItem}
-                  />
-                ))}
+                  {task.config.map((configItem: any, configIndex: number) => (
+                    <TaskConfigItem
+                      key={configIndex}
+                      control={control}
+                      taskIndex={taskIndex}
+                      configIndex={configIndex}
+                      configItem={configItem}
+                    />
+                  ))}
                 </div>
               }
             </div>
           </div>
         ))}
-
+  
         <div className="flex flex-col sm:flex-row gap-2 justify-end sm:justify-between items-center mt-8">
-           <Button variant="link" type='button' className='underline order-2 sm:order-1' onClick={() => form.reset() }>Clear Form</Button>
-           <Button size="xl" className='w-full sm:w-fit space-y-1 order-1 sm:order-2' type="submit" disabled={loading}>
+          <Button variant="link" type='button' className='underline order-2 sm:order-1' onClick={() => form.reset() }>Clear Form</Button>
+          <Button size="xl" className='w-full sm:w-fit space-y-1 order-1 sm:order-2' type="submit" disabled={loading}>
             {loading ? 'Submitting...' : 'Submit Application'}
           </Button>
         </div>
@@ -369,26 +368,25 @@ const ApplicationTaskForm: React.FC = () => {
     </Form>
   );
 };
-
+  
 interface TaskConfigItemProps {
   control: any;
   taskIndex: number;
   configIndex: number;
   configItem: any;
 }
-
+  
 const TaskConfigItem: React.FC<TaskConfigItemProps> = ({ control, taskIndex, configIndex, configItem }) => {
   const fieldName = `tasks.${taskIndex}.configItems.${configIndex}.answer`;
-
+  
   const wordLimitHandler = (event: React.ChangeEvent<HTMLTextAreaElement>, field: any, maxWordLimit: number) => {
     const text = event.target.value;
-    const wordCount = text.split(/\s+/).filter(Boolean).length; // Count the words
-  
+    const wordCount = text.split(/\s+/).filter(Boolean).length;
     if (wordCount <= maxWordLimit) {
-      field.onChange(text); // Allow change if under word limit
+      field.onChange(text);
     }
   };
-
+  
   switch (configItem.type) {
     case 'long':
     case 'short':
@@ -411,7 +409,6 @@ const TaskConfigItem: React.FC<TaskConfigItemProps> = ({ control, taskIndex, con
           )}
         />
       );
-
     case 'image':
     case 'video':
     case 'file':
@@ -427,110 +424,98 @@ const TaskConfigItem: React.FC<TaskConfigItemProps> = ({ control, taskIndex, con
           )}
         />
       );
-
-      case 'link':
-        return (
-          <FormField
-      control={control}
-      name={fieldName}
-      render={({ field, fieldState }) => (
-        <FormItem>
-          <FormLabel className="text-base font-normal text-[#FA69E5] pl-3">
-            {configItem.label || 'Links'}
-          </FormLabel>
-          <FormControl>
-            <div className="flex flex-col space-y-2 mt-2">
-              {Array.from({ length: configItem.characterLimit || 1 }).map((_, index) => (
-                <div key={index} className="relative">
-                  <Input
-                    type="url"
-                    className={`w-full text-white text-base mt-2 !pl-10 ${
-                      fieldState?.error ? 'border-red-500' : ''
-                    }`}
-                    placeholder={`Enter URL ${index + 1}`}
-                    value={field.value?.[index] || ''}
-                    onChange={(e) => {
-                      const newLinks = [...(field.value || [])];
-                      newLinks[index] = e.target.value;
-                      field.onChange(newLinks);
-                    }}
-                  />
-                  <Link2Icon className="absolute left-3 top-[30px] w-5 h-5" />
+    case 'link':
+      return (
+        <FormField
+          control={control}
+          name={fieldName}
+          render={({ field, fieldState }) => (
+            <FormItem>
+              <FormLabel className="text-base font-normal text-[#FA69E5] pl-3">
+                {configItem.label || 'Links'}
+              </FormLabel>
+              <FormControl>
+                <div className="flex flex-col space-y-2 mt-2">
+                  {Array.from({ length: configItem.characterLimit || 1 }).map((_, index) => (
+                    <div key={index} className="relative">
+                      <Input
+                        type="url"
+                        className={`w-full text-white text-base mt-2 !pl-10 ${
+                          fieldState?.error ? 'border-red-500' : ''
+                        }`}
+                        placeholder={`Enter URL ${index + 1}`}
+                        value={field.value?.[index] || ''}
+                        onChange={(e) => {
+                          const newLinks = [...(field.value || [])];
+                          newLinks[index] = e.target.value;
+                          field.onChange(newLinks);
+                        }}
+                      />
+                      <Link2Icon className="absolute left-3 top-[30px] w-5 h-5" />
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </FormControl>
-          {fieldState.error && (
-            <p className="text-red-500 text-sm">
-              {fieldState.error.message || 'Please enter a valid URL'}
-            </p>
+              </FormControl>
+              {fieldState.error && (
+                <p className="text-red-500 text-sm">
+                  {fieldState.error.message || 'Please enter a valid URL'}
+                </p>
+              )}
+              <FormMessage />
+            </FormItem>
           )}
-          <FormMessage />
-        </FormItem>
-      )}
-    />
-        );
-
+        />
+      );
     default:
       return null;
   }
 };
-
+  
 interface FileUploadFieldProps {
   field: any;
   configItem: any;
 }
-
+  
 const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) => {
   const [files, setFiles] = useState<File[]>(field.value || []);
   const [error, setError] = useState<string | null>(null);
-
+  
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = event.target.files;
     if (selectedFiles) {
       let fileArray = Array.from(selectedFiles);
-
-      // Combine existing files with new ones
       const totalFiles = files.length + fileArray.length;
-
-      // Apply maxFiles limit
       if (configItem.maxFiles && totalFiles > configItem.maxFiles) {
         setError(`You can upload up to ${configItem.maxFiles} files.`);
         return;
       }
-
-      // Apply maxFileSize limit
-      const maxSize = (configItem.maxFileSize || 15) * 1024 * 1024; // Convert MB to bytes
+      const maxSize = (configItem.maxFileSize || 15) * 1024 * 1024;
       for (let file of fileArray) {
         if (file.size > maxSize) {
           setError(`Each file must be less than ${configItem.maxFileSize} MB.`);
           return;
         }
       }
-
-      // Update files state
       const newFiles = [...files, ...fileArray];
       setFiles(newFiles);
       field.onChange(newFiles);
       setError(null);
     }
   };
-
+  
   const removeFile = (index: number) => {
     const newFiles = [...files];
     newFiles.splice(index, 1);
     setFiles(newFiles);
     field.onChange(newFiles);
   };
-
-  // Determine if we should show the upload button
+  
   const showUploadButton = !configItem.maxFiles || files.length < configItem.maxFiles;
-
+  
   return (
     <FormItem>
       <FormControl>
         <div className="flex flex-col space-y-2 mt-2">
-          {/* Display selected files */}
           {files.map((file, index) => (
             <div key={index} className="flex items-center bg-[#007AFF] h-[52px] text-white p-1.5 rounded-xl w-full">
               <Button size="icon" type='button' className='bg-[#3698FB] rounded-xl mr-2'>
@@ -544,8 +529,6 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
               </div>
             </div>
           ))}
-
-          {/* File upload input */}
           {showUploadButton && (
             <div className="flex items-center justify-between w-full h-16 border-2 border-dashed rounded-xl p-1.5">
               <label className="w-full pl-3 text-muted-foreground">
@@ -570,7 +553,6 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
               </Button>
             </div>
           )}
-          {/* Display the number of uploaded files out of maxFiles */}
           {configItem.maxFiles && (
             <div className="text-sm text-muted-foreground pl-3">
               Uploaded {files.length} of {configItem.maxFiles} file{configItem.maxFiles > 1 ? 's' : ''}
@@ -583,6 +565,5 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
     </FormItem>
   );
 };
-
-
+  
 export default ApplicationTaskForm;

@@ -24,11 +24,10 @@ const DashboardCard = ({ title, description, icon, to, bgColor, border, disable 
   <Link
      to={'#'} // Prevent navigation if disabled
     className={`rounded-2xl ${bgColor} ${border} border-b-8 hover:opacity-90 transition-opacity ${
-      disable ? "opacity-50 cursor-not-allowed" : ""
+      disable ? "opacity-10 cursor-not-allowed" : ""
     }`}
     onClick={(e) => disable && e.preventDefault()} // Prevent link click if disabled
   >
-
     <div className="hidden sm:block">
       {icon}
     </div>

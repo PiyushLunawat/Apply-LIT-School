@@ -21,7 +21,7 @@ const navItems = [
     title: "Application Documents",
     icon: FolderClosed,
     to: "/dashboard/application-documents",
-    badge: 1,
+    badge: '!',
     bgColor: "bg-orange-600/20",
     textColor: "text-[#FF791F]"
   },
@@ -29,7 +29,7 @@ const navItems = [
     title: "Fee Payment",
     icon: ReceiptIndianRupee,
     to: "/dashboard/fee-payment-setup",
-    badge: 1,
+    badge: '!',
     bgColor: "bg-blue-600/20",
     textColor: "text-[#1388FF]"
   },
@@ -37,7 +37,7 @@ const navItems = [
     title: "Account Details",
     icon: UserRound,
     to: "/dashboard/account-details",
-    badge: 1,
+    badge: '!',
     bgColor: "bg-[#F8E000]/20",
     textColor: "text-[#F8E000]"
   },
@@ -45,7 +45,7 @@ const navItems = [
     title: "Personal Documents",
     icon: FileText,
     to: "/dashboard/personal-documents",
-    badge: 1,
+    badge: '!',
     bgColor: "bg-emerald-600/20",
     textColor: "text-[#00CC92]"
   }
@@ -101,7 +101,7 @@ export default function Sidebar() {
               <span>{item.title}</span>
             </div>
             {item.badge && (
-              <span className={`${item.bgColor} text-white text-[10px] px-2 py-0.5 rounded-md`}>
+              <span className={`${item.bgColor} text-white text-[10px] font-bold px-2 py-0.5 rounded-md`}>
                 {item.badge}
               </span>
             )}

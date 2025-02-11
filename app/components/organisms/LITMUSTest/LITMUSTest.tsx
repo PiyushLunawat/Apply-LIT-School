@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Button } from '~/components/ui/button';
-import { Upload, Clock, FileTextIcon, RefreshCw, X, Link2Icon, XIcon, UploadIcon } from 'lucide-react';
+import { Upload, Clock, FileTextIcon, RefreshCw, X, Link2Icon, XIcon, UploadIcon, Download } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -62,8 +62,10 @@ const LITMUSTest: React.FC = () => {
   const { studentData } = useContext(UserContext);
   const [cohorts, setCohorts] = useState<any[]>([]);
   const [stu, setStu] = useState("");
+  const [student, setStudent] = useState<any>();
   const [interviewOpen, setInterviewOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [interviewer, setInterviewer] = useState<any>([]);
   const navigate = useNavigate();
   
   const form = useForm<LitmusTestFormValues>({
@@ -74,7 +76,6 @@ const LITMUSTest: React.FC = () => {
   });
 
   const { control, handleSubmit, setValue } = form;
-
   
   useEffect(() => {
     async function fetchCohorts() {
@@ -92,7 +93,8 @@ const LITMUSTest: React.FC = () => {
     const fetchStudentData = async () => {
       try {
         const student = await getCurrentStudent(studentData._id); // Pass the actual student ID here
-        setStu(student.data?.litmusTestDetails[0]?.litmusTaskId?._id); // Store the fetched data in state
+        setStu(student.data?.litmusTestDetails[0]?.litmusTaskId?._id); 
+        setStudent(student.data)
       } catch (error) {
         console.error("Failed to fetch student data:", error);
       }
@@ -196,7 +198,52 @@ const LITMUSTest: React.FC = () => {
     }
   };
 
+  const handleScheduleInterview = async () => {
+    const reviewerEmails = student?.cohort?.collaborators
+      ?.filter((collaborator: any) => collaborator.role === "evaluator")
+      .map((collaborator: any) => collaborator.email);
+  
+    if (!reviewerEmails || reviewerEmails.length === 0) {
+      console.error("No reviewer emails found.");
+      return;
+    }
+  
+    const payload = {
+      emails: reviewerEmails,
+      eventCategory: "Application Test Review", // Change to "Litmus Test Review" if required
+    };
 
+    console.log("pay",payload);
+    
+  
+    try {
+      const response = await fetch(
+        "https://dev.cal.litschool.in/application-portal/get-all-users",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+      
+      setInterviewOpen(true);
+      if (!response.ok) {
+        throw new Error(`Failed to schedule interview: ${response.statusText}`);
+      }
+  
+      const result = await response.json();
+      setInterviewer(result.data)
+      console.log("Interview scheduled successfully:", result.data);
+  
+      // Optionally set dialog open or show success message
+    } 
+    catch (error) {
+      console.error("Error scheduling interview:", error);
+      // alert("Failed to schedule interview. Please try again later.");
+    }
+  };
 
   return (
     <>
@@ -207,76 +254,77 @@ const LITMUSTest: React.FC = () => {
         {tasks.map((task: any, taskIndex: number) => (
           <>
           <div>
-          <Badge className="text-sm my-4 border-[#3698FB] text-[#3698FB] bg-[#3698FB]/10">
-            Task 0{taskIndex+1}
-          </Badge>
-          <h2 className="text-3xl font-semibold mb-2">
-            {task.title}
-          </h2>
-          <p className="text-xl mb-4">
-            {task.description}
-          </p>
-        </div>
-
-        {/* Document Display */}
-        <div className="flex items-center justify-between w-full p-1.5 bg-[#2C2C2C] rounded-xl">
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="icon"
-              className="text-white rounded-xl hover:bg-[#1a1a1d]"
-            >
-              <FileTextIcon className="w-5 h-5" />
-            </Button>
-            <span className="text-white">SBI_Challenge.doc</span>
+            <Badge className="text-sm my-4 border-[#3698FB] text-[#3698FB] bg-[#3698FB]/10">
+              Task 0{taskIndex+1}
+            </Badge>
+            <h2 className="text-3xl font-semibold mb-2">
+              {task.title}
+            </h2>
+            <p className="text-xl mb-4">
+              {task.description}
+            </p>
           </div>
-          <Button
-            variant="outline"
-            size="icon"
-            className="text-white rounded-xl hover:bg-[#1a1a1d]"
-          >
-            <Upload className="w-5 h-5" />
-          </Button>
-        </div>
 
-        {/* Challenge Image with Text Overlay */}
-        <div className="w-full h-full  ">
-          <iframe
-            src={task?.resources?.resourceLink}
-            title={task?.resources?.resourceLink}
-            className="rounded-xl h-[472px] w-full"
-            allowFullScreen
-         ></iframe>
-        </div>
-        
-        <div className='w-full space-y-4'>
-          <div className="flex justify-between items-center">
-            <div className="text-xl sm:text-3xl font-semibold">Judgement Criteria</div>
-          </div>
-          <div className="w-full grid grid-cols sm:grid-cols-2 gap-3">
-            {cohort?.litmusTestDetail?.[0]?.litmusTasks[0]?.judgmentCriteria.map((criteria: any, index: number) => ( 
-              <JudgementCriteriaCard criteria={criteria?.name} maxPoint={criteria?.points} desc={criteria?.description} />
+          <div className='w-full space-y-4'>
+            {task?.resources?.resourceFiles.map((file: any, index: number) => (
+              <div key={index} className="flex items-center justify-between w-full p-1.5 bg-[#2C2C2C] rounded-xl">
+                <div className="flex items-center space-x-2">
+                  <Badge
+                    variant="outline"
+                    size="icon"
+                    className="text-white rounded-xl bg-[#09090b]"
+                  >
+                    <FileTextIcon className="w-5 h-5" />
+                  </Badge>
+                  <span className="text-white">{file.split('/').pop()}</span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="icon" type='button'
+                  className="text-white rounded-xl hover:bg-[#1a1a1d]"
+                >
+                  <Download className="w-5 h-5" />
+                </Button>
+              </div>
+            ))}
+
+            {task?.resources?.resourceLink.map((link: any, index: number) => (
+              <div key={index} className="w-full h-full  ">
+                <iframe
+                  src={link}
+                  title={link}
+                  className="rounded-xl h-[472px] w-full"
+                  allowFullScreen
+                ></iframe>
+                </div>
             ))}
           </div>
-        </div>
+            
+          <div className='w-full space-y-4'>
+            <div className="flex justify-between items-center">
+              <div className="text-xl sm:text-3xl font-semibold">Judgement Criteria</div>
+            </div>
+            <div className="w-full grid grid-cols sm:grid-cols-2 gap-3">
+              {cohort?.litmusTestDetail?.[0]?.litmusTasks[0]?.judgmentCriteria.map((criteria: any, index: number) => ( 
+                <JudgementCriteriaCard criteria={criteria?.name} maxPoint={criteria?.points} desc={criteria?.description} />
+              ))}
+            </div>
+          </div>
 
-        { !cohort ? 
-          <div className="text-center text-white">
-            No tasks available. Please ensure the cohort data is loaded correctly.
-          </div> : 
-          task.submissionTypes.map((configItem: any, configIndex: number) => (
-            <TaskConfigItem
-              key={configIndex}
-              control={control}
-              taskIndex={taskIndex}
-               configIndex={configIndex}
-              configItem={configItem}
-             />
-           ))
-        }
-        
+          { !cohort ? 
+            <div className="text-center text-white">
+              No tasks available. Please ensure the cohort data is loaded correctly.
+            </div> : 
+            task.submissionTypes.map((configItem: any, configIndex: number) => (
+              <TaskConfigItem
+                key={configIndex}
+                control={control}
+                taskIndex={taskIndex}
+                configIndex={configIndex}
+                configItem={configItem}
+              />
+          ))}
         </>))}
-
 
         <div className='w-full flex justify-between items-center '>
             <Button size="xl" className='' type="submit" disabled={loading}>
@@ -303,7 +351,7 @@ const LITMUSTest: React.FC = () => {
 
   <Dialog open={interviewOpen} onOpenChange={setInterviewOpen}>
     <DialogContent className="max-w-2xl">
-      <SchedulePresentation interviewr={['evaluator']}/>
+      <SchedulePresentation interviewer={interviewer}/>
     </DialogContent>
   </Dialog>
   </>

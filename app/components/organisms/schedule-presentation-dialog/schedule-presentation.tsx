@@ -42,7 +42,7 @@ export function SchedulePresentation({ interviewer }: SchedulePresentationProps)
 
     const handleScheduleRedirect = () => {
         if (!selectedInterviewer || !studentData?._id || !studentData?.cohort) return;
-        const url = `https://main.d2ogeweki0hgqu.amplifyapp.com/${selectedInterviewer?.personalUrl}/${selectedInterviewer?.events[0]?.eventName}?&litApplicationUserId=${studentData?._id}&cohortId=${studentData?.cohort}&eventCategory=Application Test Review&eventId=${selectedInterviewer?.events[0]?._id} `;
+        const url = `https://main.d2ogeweki0hgqu.amplifyapp.com/${selectedInterviewer?.personalUrl}/${selectedInterviewer?.events[0]?.eventName || ''}?&litApplicationUserId=${studentData?._id}&cohortId=${studentData?.cohort}&eventCategory=Application Test Review&eventId=${selectedInterviewer?.events[0]?._id} `;
         window.open(url, "_blank"); 
       };
     

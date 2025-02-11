@@ -87,7 +87,7 @@ const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass, book
   
 
   return (
-    <div className={`${['on hold', 'waitlist'].includes(status) ? 'shadow-[0px_4px_32px_rgba(121,121,121,0.2)]' : ['accepted', 'selected'].includes(status) ? 'shadow-[0px_4px_32px_rgba(0,163,122551,0.2)]' : 'shadow-[0px_4px_32px_rgba(255,80,61,0.2)]'} max-w-[1216px] z-10 bg-[#09090B] border border-[#2C2C2C] text-white px-4 sm:px-6 py-6 sm:py-8 mx-auto rounded-2xl justify-between items-start`}>
+    <div className={`${['on hold', 'waitlist'].includes(status) ? 'shadow-[0px_4px_32px_rgba(121,121,121,0.2)]' : ['accepted', 'interview cancelled', 'selected'].includes(status) ? 'shadow-[0px_4px_32px_rgba(0,163,122551,0.2)]' : 'shadow-[0px_4px_32px_rgba(255,80,61,0.2)]'} max-w-[1216px] z-10 bg-[#09090B] border border-[#2C2C2C] text-white px-4 sm:px-6 py-6 sm:py-8 mx-auto rounded-2xl justify-between items-start`}>
     <div className="flex justify-between items-center mb-4">
       <div className="text-lg sm:text-xl font-semibold ">
         {status === "on hold" ? 'Reason for hold up' : 'Feedback'}
@@ -103,7 +103,7 @@ const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass, book
         ))}
       </ul>
     )} 
-    {(status === "rejected" || status === "accepted") && (
+    {(['accepted', 'interview cancelled', 'rejected'].includes(status)) && (
       <div className="space-y-4">
         {feedbackList?.applicationDetails?.applicationTasks[0]?.applicationTaskDetail?.applicationTasks[0].tasks?.map((task: any, index: any) => (
           task?.feedback.length>0 && 
@@ -135,13 +135,13 @@ const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass, book
       </div>
 
     )}
-    {['accepted', 'on hold'].includes(status) &&
+    {['accepted', 'interview cancelled', 'on hold'].includes(status) &&
     <div className="flex justify-center mt-8">
       <Button size="xl" className="w-full sm:w-fit mx-auto px-8"
         onClick={() => {
           if (status === "on hold") {
             handleReviseApplication();
-          } else if (status === "accepted") {
+          } else {
             handleScheduleInterview();
           }
         }}>

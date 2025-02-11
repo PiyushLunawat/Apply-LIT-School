@@ -69,16 +69,12 @@ const formSchema = z.object({
     fatherLastName: z.string().optional(),
     fatherContact: z.string().optional(),
     fatherOccupation: z.string().optional(),
-    fatherEmail: z
-      .string()
-      .optional(),
+    fatherEmail: z.string().email("Invalid email address").optional(),  
     motherFirstName: z.string().optional(),
     motherLastName: z.string().optional(),
     motherContact: z.string().optional(),
     motherOccupation: z.string().optional(),
-    motherEmail: z
-    .string()
-    .optional(),
+    motherEmail: z.string().optional(),
     financiallyDependent: z.boolean(),
     appliedForFinancialAid: z.boolean(),
   }),
@@ -209,26 +205,81 @@ const ApplicationDetailsForm: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
-  const [programs, setPrograms] = useState<any[]>([]);
-  const [ centres, setCentres] = useState<any[]>([]);
   const [interest, setInterest] = useState<any[]>([]); 
   const [cohorts, setCohorts] = useState<any[]>([]); 
   const [contactInfo, setContactInfo] = useState<string>('');
   const [isSaved, setIsSaved] = useState((studentData?.applicationDetails !== undefined));
   const [isPaymentDone, setIsPaymentDone] = useState(false);
-
-  const [otp, setOtp] = useState("");
   const [verificationId, setVerificationId] = useState("");
-
-
   const [fetchedStudentData, setFetchedStudentData] = useState<any>(null);
 
-  // Fetch current student data when component mounts
+  const [programs, setPrograms] = useState<any[]>([]);
+const [centres, setCentres] = useState<any[]>([]);
+
+// All open cohorts from the server
+const [openCohorts, setOpenCohorts] = useState<any[]>([]);
+
+// Unique Program IDs extracted from openCohorts for the "Course of Interest" dropdown
+const [availablePrograms, setAvailablePrograms] = useState<any[]>([]);
+
+// Cohorts filtered by the user's chosen program
+const [filteredCohorts, setFilteredCohorts] = useState<any[]>([]);
+
+useEffect(() => {
+  async function fetchData() {
+    try {
+      // 1. Load all programs, centres, and cohorts
+      const programsData = await getPrograms();
+      setPrograms(programsData.data);
+
+      const centresData = await getCentres();
+      setCentres(centresData.data);
+
+      const cohortsData = await getCohorts();
+
+      // 2. Filter only OPEN cohorts
+      const open = cohortsData.data.filter((cohort: any) => cohort.status === "Open");
+      setOpenCohorts(open);
+
+      // 3. Extract unique program IDs from openCohorts
+      const uniquePrograms = Array.from(
+        new Set(open.map((cohort: any) => cohort.programDetail))
+      );
+      setAvailablePrograms(uniquePrograms);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  }
+
+  fetchData();
+}, []);
+
+
+    useEffect(() => {
+    async function fetchCohorts() {
+      try {
+        const programsData = await getPrograms();
+        setPrograms(programsData.data);
+        const centresData = await getCentres();
+        setCentres(centresData.data);
+        const cohortsData = await getCohorts();
+        const openCohorts = cohortsData.data.filter((cohort: any) => cohort.status === "Open");
+        setInterest(openCohorts);
+        
+      } catch (error) {
+        console.error('Error fetching cohorts:', error);
+      }
+    }
+    fetchCohorts();
+  }, []);
+
+
+
   useEffect(() => {
     const fetchStudentData = async () => {
       try {
-        const student = await getCurrentStudent(studentData._id); // Pass the actual student ID here
-        setFetchedStudentData(student.data?.studentDetails); // Store the fetched data in state        
+        const student = await getCurrentStudent(studentData._id);
+        setFetchedStudentData(student.data?.studentDetails);        
       } catch (error) {
         console.error("Failed to fetch student data:", error);
       }
@@ -238,57 +289,25 @@ const ApplicationDetailsForm: React.FC = () => {
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      studentData: {
-        firstName: studentData?.firstName || '',
-        lastName: studentData?.lastName || '',
-        email: studentData?.email || '',
-        contact: studentData?.mobileNumber || '',
-        dob: studentData?.dateOfBirth || '',
-        currentStatus: studentData?.qualification || '',
-        courseOfInterest: studentData?.program || '',
-        cohort: studentData?.cohort || '',
-        linkedInUrl: studentData?.linkedInUrl || '',
-        instagramUrl: studentData?.instagramUrl || '',
-        gender: "Male",
-      },
-      profileUrl: studentData?.profileUrl || "",
-      applicationData: {
-        address: '',
-        city: '',
-        zipcode: '',
-        educationLevel: '',
-        fieldOfStudy: '',
-        institutionName: '',
-        graduationYear: '',
-        isExperienced: false,
-        durationFrom: '',
-        durationTo: '',
-        duration: '',
-        experienceType: '',
-        nameOfCompany: '',
-        jobDescription: '',
-        emergencyFirstName: '',
-        emergencyLastName: '',
-        emergencyContact: '',
-        relationship: '',
-        fatherFirstName: '',
-        fatherLastName: '',
-        fatherContact: '',
-        fatherOccupation: '',
-        fatherEmail: '',
-        motherFirstName: '',
-        motherLastName: '',
-        motherContact: '',
-        motherOccupation: '',
-        motherEmail: '',
-        financiallyDependent: false,
-        appliedForFinancialAid: false,
-      },
-    },
   });
 
   const { control, handleSubmit, formState: { errors }, reset, setValue, watch } = form;
+
+  useEffect(() => {
+    const selectedProgram = form.watch("studentData.courseOfInterest");
+    if (!selectedProgram) {
+      // No program chosen yet—empty the "Select Cohort" list
+      setFilteredCohorts([]);
+      return;
+    }
+  
+    // Filter openCohorts by the chosen program ID
+    const matching = openCohorts.filter(
+      (cohort) => cohort.programDetail === selectedProgram
+    );
+    setFilteredCohorts(matching);
+  }, [form.watch("studentData.courseOfInterest"), openCohorts]);
+  
 
   useEffect(() => {
     const fetchStudentData = async () => {
@@ -303,8 +322,11 @@ const ApplicationDetailsForm: React.FC = () => {
           if(student.data?.applicationDetails?.applicationFeeDetail?.status === 'paid')
             setIsPaymentDone(true);
 
-        // Once fetched, reset the form with the fetched data
-        reset({
+          const existingData = localStorage.getItem("applicationDetailsForm");
+
+          // If nothing is stored yet, we create a minimal object with those three fields
+          if (!existingData) {
+          reset({
           studentData: {
             firstName: studentData?.firstName || '',
             lastName: studentData?.lastName || '',
@@ -317,53 +339,103 @@ const ApplicationDetailsForm: React.FC = () => {
             linkedInUrl: student.data?.linkedInUrl || '',
             instagramUrl: student.data?.instagramUrl || '',
             gender: studentData?.gender || "Male",
-          },
-          applicationData: {
-            address: sData?.currentAddress?.streetAddress || '',
-          city: sData?.currentAddress?.city || '',
-          zipcode: sData?.currentAddress?.postalCode || '',
-          educationLevel: sData?.previousEducation?.highestLevelOfEducation || '',
-          fieldOfStudy: sData?.previousEducation?.fieldOfStudy || '',
-          institutionName: sData?.previousEducation?.nameOfInstitution || '',
-          graduationYear: sData?.previousEducation?.yearOfGraduation || '',
-          isExperienced: sData?.workExperience?.isExperienced || 
-            ["Working Professional", "Freelancer", "Business Owner", "Consultant",].includes(studentData?.qualification) 
-            || false,
-          experienceType: sData?.workExperience?.experienceType || (
-            ['Working Professional', 'Business Owner', 'Freelancer', 'Consultant'].includes(studentData?.qualification) 
-              ? studentData?.qualification : ''),
-          nameOfCompany: sData?.workExperience?.nameOfCompany || '',
-          durationFrom: '',
-          durationTo: '',
-          duration: sData?.workExperience?.duration || '',
-          jobDescription: sData?.workExperience?.jobDescription || '',
-          emergencyFirstName: sData?.emergencyContact?.firstName || '',
-          emergencyLastName: sData?.emergencyContact?.lastName || '',
-          emergencyContact: sData?.emergencyContact?.contactNumber || '',
-          relationship: sData?.emergencyContact?.relationshipWithStudent || '',
-          fatherFirstName: sData?.parentInformation?.father?.firstName || '',
-          fatherLastName: sData?.parentInformation?.father?.lastName || '',
-          fatherContact: sData?.parentInformation?.father?.contactNumber || '',
-          fatherOccupation: sData?.parentInformation?.father?.occupation || '',
-          fatherEmail: sData?.parentInformation?.father?.email || '',
-          motherFirstName: sData?.parentInformation?.mother?.firstName || '',
-          motherLastName: sData?.parentInformation?.mother?.lastName || '',
-          motherContact: sData?.parentInformation?.mother?.contactNumber || '',
-          motherOccupation: sData?.parentInformation?.mother?.occupation || '',
-          motherEmail: sData?.parentInformation?.mother?.email || '',
-          financiallyDependent: !sData?.financialInformation?.isFinanciallyIndependent || false,
-          appliedForFinancialAid: sData?.financialInformation?.hasAppliedForFinancialAid || false,
+          }
+          // ,
+          // applicationData: {
+          //   address: sData?.currentAddress?.streetAddress || '',
+          //   city: sData?.currentAddress?.city || '',
+          //   zipcode: sData?.currentAddress?.postalCode || '',
+          //   educationLevel: sData?.previousEducation?.highestLevelOfEducation || '',
+          //   fieldOfStudy: sData?.previousEducation?.fieldOfStudy || '',
+          //   institutionName: sData?.previousEducation?.nameOfInstitution || '',
+          //   graduationYear: sData?.previousEducation?.yearOfGraduation || '',
+          //   isExperienced: sData?.workExperience?.isExperienced || 
+          //     ["Working Professional", "Freelancer", "Business Owner", "Consultant",].includes(studentData?.qualification) 
+          //     || false,
+          //   experienceType: sData?.workExperience?.experienceType || (
+          //     ['Working Professional', 'Business Owner', 'Freelancer', 'Consultant'].includes(studentData?.qualification) 
+          //       ? studentData?.qualification : ''),
+          //   nameOfCompany: sData?.workExperience?.nameOfCompany || '',
+          //   durationFrom: '',
+          //   durationTo: '',
+          //   duration: sData?.workExperience?.duration || '',
+          //   jobDescription: sData?.workExperience?.jobDescription || '',
+          //   emergencyFirstName: sData?.emergencyContact?.firstName || '',
+          //   emergencyLastName: sData?.emergencyContact?.lastName || '',
+          //   emergencyContact: sData?.emergencyContact?.contactNumber || '',
+          //   relationship: sData?.emergencyContact?.relationshipWithStudent || '',
+          //   fatherFirstName: sData?.parentInformation?.father?.firstName || '',
+          //   fatherLastName: sData?.parentInformation?.father?.lastName || '',
+          //   fatherContact: sData?.parentInformation?.father?.contactNumber || '',
+          //   fatherOccupation: sData?.parentInformation?.father?.occupation || '',
+          //   fatherEmail: sData?.parentInformation?.father?.email || '',
+          //   motherFirstName: sData?.parentInformation?.mother?.firstName || '',
+          //   motherLastName: sData?.parentInformation?.mother?.lastName || '',
+          //   motherContact: sData?.parentInformation?.mother?.contactNumber || '',
+          //   motherOccupation: sData?.parentInformation?.mother?.occupation || '',
+          //   motherEmail: sData?.parentInformation?.mother?.email || '',
+          //   financiallyDependent: !sData?.financialInformation?.isFinanciallyIndependent || false,
+          //   appliedForFinancialAid: sData?.financialInformation?.hasAppliedForFinancialAid || false,
+          // }
+          });
         }
-        });
-
-        setFetchedStudentData(sData);
+          setFetchedStudentData(sData);
+        
       } catch (error) {
         console.error("Failed to fetch student data:", error);
       }
     };
 
     fetchStudentData();
-  }, [studentData, reset]);
+  }, [studentData, reset, interest]);
+
+  useEffect(() => {
+  // If we don't have studentData yet, or if there's no user ID,
+  // skip until we have the data we need
+  if (!studentData || !studentData._id || interest) return;
+
+  // Check if something already exists in localStorage
+  const existingData = localStorage.getItem("applicationDetailsForm");
+
+  // If nothing is stored yet, we create a minimal object with those three fields
+  if (!existingData) {
+    const initialForm = {
+      // Only the fields you want to seed
+      studentData: {
+        currentStatus: studentData?.qualification || "",
+        courseOfInterest: studentData?.program || "",
+        cohort: studentData?.cohort || "",
+      },
+      // Everything else can remain empty or undefined
+      applicationData: {},
+    };
+
+    localStorage.setItem("applicationDetailsForm", JSON.stringify(initialForm));
+  }
+}, [studentData, interest]);
+
+
+  useEffect(() => {
+    const storedFormJSON = localStorage.getItem("applicationDetailsForm");
+    if (storedFormJSON) {
+      try {
+        const parsedForm = JSON.parse(storedFormJSON);
+        reset(parsedForm);
+      } catch (error) {
+        console.error("Error parsing form data from Local Storage:", error);
+      }
+    }
+  }, [reset]);
+
+  // 2) Whenever the form data changes, update Local Storage in real time
+  useEffect(() => {
+    // .watch() returns the entire form state on every change
+    const subscription = watch((value) => {
+      localStorage.setItem("applicationDetailsForm", JSON.stringify(value));
+    });
+    // unsubscribe on unmount
+    return () => subscription.unsubscribe();
+  }, [watch]);
   
 
   // Watch fields for conditional rendering
@@ -387,25 +459,6 @@ const ApplicationDetailsForm: React.FC = () => {
       setValue('applicationData.duration', '');
     }
   }, [watch('applicationData.durationFrom'), watch('applicationData.durationTo'), setValue]);
-
-
-  useEffect(() => {
-    async function fetchCohorts() {
-      try {
-        const programsData = await getPrograms();
-        setPrograms(programsData.data);
-        const centresData = await getCentres();
-        setCentres(centresData.data);
-        const cohortsData = await getCohorts();
-        const openCohorts = cohortsData.data.filter((cohort: any) => cohort.status === "Open");
-        setInterest(openCohorts);
-        
-      } catch (error) {
-        console.error('Error fetching cohorts:', error);
-      }
-    }
-    fetchCohorts();
-  }, []);
 
 const handleVerifyClick = async (contact: string) => {
   if (typeof window === 'undefined') {
@@ -688,6 +741,7 @@ useEffect(() => {
       console.log('Form submitted successfully', response);
       setIsPaymentDialogOpen(true);
       setIsSaved(true);
+      localStorage.removeItem("applicationDetailsForm");
     } else {
       // Handle error response
       console.error('Form submission failed');
@@ -871,63 +925,69 @@ useEffect(() => {
         <div className="flex flex-col sm:flex-row gap-2 ">
           {/* Course of Interest */}
           <FormField
-            control={control}
-            name="studentData.courseOfInterest"
-            render={({ field }) => (
-              <FormItem className='flex-1 space-y-1'>
-                <Label className='text-xs sm:text-sm font-normal pl-3'>Course of Interest</Label>
-                <FormControl>
-                  <Select disabled={isSaved}
-                  onValueChange={(value) => { field.onChange(value); (value); }} 
-                  value={field.value}
-                  >
-                    <SelectTrigger className="">
-                      <SelectValue placeholder="Select" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.from(new Map(interest.map((int) => [int.programDetail, int])).values()).map((int) => (
-                        <SelectItem key={int.programDetail} value={int.programDetail}>
-                          {getProgramName(int.programDetail)}
-                        </SelectItem>
-                      ))}
-                      {/* <SelectItem value={studentData?.program}>{getProgramName(studentData?.program)}</SelectItem> */}
-                    </SelectContent>
-                  </Select>
-                </FormControl>
-                <Label htmlFor="form-alert" className='flex gap-1 items-center text-xs sm:text-sm text-[#00A3FF] font-normal pl-3 mt-1'>
-                  Your application form will be in line with the course of your choice.
-                </Label>
-                <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-              </FormItem>
-            )}
-          />
+  control={control}
+  name="studentData.courseOfInterest"
+  render={({ field }) => (
+    <FormItem className="flex-1 space-y-1">
+      <Label className="text-xs sm:text-sm font-normal pl-3">
+        Course of Interest
+      </Label>
+      <FormControl>
+        <Select
+          disabled={isSaved}
+          onValueChange={(value) => field.onChange(value)}
+          value={field.value}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select a Program" />
+          </SelectTrigger>
+          <SelectContent>
+            {availablePrograms.map((programId) => (
+              <SelectItem key={programId} value={programId}>
+                {getProgramName(programId)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </FormControl>
+      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+    </FormItem>
+  )}
+/>
+
           {/* Select Cohort */}
           <FormField
-            control={control}
-            name="studentData.cohort"
-            render={({ field }) => (
-              <FormItem className='flex-1 space-y-1'>
-                <Label className='text-xs sm:text-sm font-normal pl-3'>Select Cohort</Label>
-                <FormControl>
-                  <Select disabled={isSaved}
-                    onValueChange={(value) => { field.onChange(value); (value); }} 
-                    value={field.value}
-                  >
-                    <SelectTrigger className="">
-                      <SelectValue placeholder="Select" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {cohorts.map((cohort) => (
-                                          <SelectItem key={cohort._id} value={cohort._id}>{formatDateToMonthYear(cohort.startDate)} ({cohort.timeSlot}), {getCenterName(cohort?.centerDetail)}</SelectItem>
-                                        ))}
-                        {/* <SelectItem key={studentData?.cohort} value={studentData?.cohort}>{getCohortName(studentData?.cohort)}</SelectItem> */}
-                    </SelectContent>
-                  </Select>
-                </FormControl>
-                <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-              </FormItem>
-            )}
-          />
+  control={control}
+  name="studentData.cohort"
+  render={({ field }) => (
+    <FormItem className="flex-1 space-y-1">
+      <Label className="text-xs sm:text-sm font-normal pl-3">
+        Select Cohort
+      </Label>
+      <FormControl>
+        <Select
+          disabled={isSaved}
+          onValueChange={(value) => field.onChange(value)}
+          value={field.value}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select" />
+          </SelectTrigger>
+          <SelectContent>
+            {filteredCohorts.map((cohort) => (
+              <SelectItem key={cohort._id} value={cohort._id}>
+                {formatDateToMonthYear(cohort.startDate)} ({cohort.timeSlot}),{" "}
+                {getCenterName(cohort.centerDetail)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </FormControl>
+      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+    </FormItem>
+  )}
+/>
+
         </div>
         
         {/* LinkedIn and Instagram IDs */}

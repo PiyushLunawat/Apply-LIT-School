@@ -40,7 +40,7 @@ const AccountDetails = () => {
       }
     };
     fetchStudentData();
-  }, [studentData]);
+  }, []);
 
   const handleDownloadPDF = async () => {
     if (!pdfRef.current) return;
@@ -127,20 +127,28 @@ const AccountDetails = () => {
   // Handle blood group save
   const handleBloodGroup = async () => {
     const validBloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
-    if (!validBloodGroups.includes(bloodGroupInput.toUpperCase())) {
-      alert("Please enter a valid blood group (e.g., A+, O-, AB+).");
+
+    console.log("bloodGroupInput",bloodGroupInput)
+    
+    if (!validBloodGroups.includes(bloodGroupInput)) {
+      alert(`${bloodGroupInput} Please enter a valid blood group (e.g., A+, O-, AB+).`);
       return;
     }
+  
     setLoading(true);
+  
     try {
       const formData = new FormData();
       formData.append("bloodGroup", bloodGroupInput.toUpperCase());
+      
       const response = await updateStudentData(formData);
       console.log(response, "response blood");
-
+  
       if (response.status) {
+        // Update student data with the new blood group and retain the value in the input field
         setDetails(response.data);
         setStudentData({ ...studentData, bloodGroup: response.data.bloodGroup });
+        setBloodGroupInput(response.data.bloodGroup); // Update the input field with the new blood group value
       }
     } catch (error) {
       console.error("Error updating blood group:", error);
@@ -148,7 +156,7 @@ const AccountDetails = () => {
     } finally {
       setLoading(false);
     }
-  };
+  };  
 
   const handleLinkedInSave = async () => {
     setLoading(true);
@@ -193,9 +201,9 @@ const AccountDetails = () => {
     <div className="p-8 space-y-6 text-white">
       {/* 1) User Details Card */}
       <Card className="bg-[#64748B1F] rounded-xl text-white">
-        <CardContent className="p-6 space-y-4">
-          <div className="flex gap-4">
-            <div className="w-full sm:w-[300px] h-[325px] bg-[#1F1F1F] flex flex-col items-center justify-center rounded-xl text-sm space-y-4">
+        <CardContent className="p-6 space-y-2 sm:space-y-4">
+          <div className="flex sm:flex-row flex-col gap-4">
+            <div className="w-full sm:w-[315px] h-[355px] bg-[#1F1F1F] flex flex-col items-center justify-center rounded-xl text-sm space-y-4">
               {studentData?.profileUrl || selectedImage ? (
                 <div className="w-full h-full relative">
                   <img
@@ -242,7 +250,7 @@ const AccountDetails = () => {
                 </label>
               )}
             </div>
-            <div className="w-full">
+            <div className="w-full space-y-2">
               {/* Full Name */}
               <div className="flex justify-between items-center border-b border-gray-700 pb-2">
                 <div className="flex flex-col gap-2">
@@ -297,8 +305,8 @@ const AccountDetails = () => {
           </div>
 
           {/* Gender & Blood Group */}
-          <div className="flex items-center gap-2 border-b border-gray-700 pb-2">
-            <div className="flex-1 space-y-2">
+          <div className="flex sm:flex-row flex-col sm:items-center gap-2 border-b border-gray-700 pb-2">
+            <div className="flex-1 space-y-2 border-b border-gray-700 pb-2 sm:pb-0 sm:border-none">
               <div className="text-sm">Gender</div>
               <div className="text-xl text-white">{studentData?.gender || "--"}</div>
             </div>
@@ -328,12 +336,12 @@ const AccountDetails = () => {
           </div>
 
           {/* LinkedIn ID + Instagram ID */}
-          <div className="flex justify-between items-center gap-2 border-b border-gray-700 pb-2">
+          <div className="flex sm:flex-row flex-col justify-between sm:items-center gap-2 border-b border-gray-700 pb-2">
             {/* LinkedIn URL */}
-            <div className="flex flex-1 justify-between items-center">
-              <div className="flex flex-col">
+            <div className="flex flex-1 justify-between items-center border-b border-gray-700 pb-2 sm:pb-0 sm:border-none">
+              <div className="flex flex-col space-y-2">
                 <div className="text-sm">LinkedIn ID</div>
-                {linkedInInput === "" ? (
+                {(studentData?.linkedInUrl !== "" && linkedInInput === "") ? (
                   <div className="text-xl">{studentData?.linkedInUrl || "--"}</div>
                 ) : (
                   <input
@@ -345,17 +353,17 @@ const AccountDetails = () => {
                 )}
               </div>
               <Button
-                className={`${linkedInInput === "" ? "bg-transparent" : ""} rounded-lg`}
-                size={linkedInInput === "" ? "icon" : "lg"}
+                className={`${(studentData?.linkedInUrl !== "" && linkedInInput === "") ? "bg-transparent" : ""} rounded-lg`}
+                size={(studentData?.linkedInUrl !== "" && linkedInInput === "") ? "icon" : "lg"}
                 onClick={() => {
-                  if (linkedInInput === "") {
+                  if (studentData?.linkedInUrl !== "" && linkedInInput === "") {
                     setLinkedInInput(studentData?.linkedInUrl || "");
                   } else {
                     handleLinkedInSave();
                   }
                 }}
               >
-                {linkedInInput === "" ? (
+                {(studentData?.linkedInUrl !== "" && linkedInInput === "") ? (
                   <Pencil className="h-4 w-4 text-white" />
                 ) : (
                   'Save'
@@ -365,9 +373,9 @@ const AccountDetails = () => {
 
             {/* Instagram URL */}
             <div className="flex flex-1 justify-between items-center">
-              <div className="flex flex-col">
+              <div className="flex flex-col space-y-2">
                 <div className="text-sm">Instagram ID</div>
-                {instagramInput === "" ? (
+                {(studentData?.instagramUrl !== "" && instagramInput === "") ? (
                   <div className="text-xl">{studentData?.instagramUrl || "--"}</div>
                 ) : (
                   <input
@@ -379,17 +387,17 @@ const AccountDetails = () => {
                 )}
               </div>
               <Button
-                className={`${instagramInput === "" ? "bg-transparent" : ""} rounded-lg`}
-                size={instagramInput === "" ? "icon" : "lg"}
+                className={`${(studentData?.instagramUrl !== "" && instagramInput === "") ? "bg-transparent" : ""} rounded-lg`}
+                size={(studentData?.instagramUrl !== "" && instagramInput === "") ? "icon" : "lg"}
                 onClick={() => {
-                  if (instagramInput === "") {
+                  if ((studentData?.instagramUrl !== "" && instagramInput === "")) {
                     setInstagramInput(studentData?.instagramUrl || "");
                   } else {
                     handleInstagramSave();
                   }
                 }}
               >
-                {instagramInput === "" ? (
+                {(studentData?.instagramUrl !== "" && instagramInput === "") ? (
                   <Pencil className="h-4 w-4 text-white" />
                 ) : (
                   'Save'
