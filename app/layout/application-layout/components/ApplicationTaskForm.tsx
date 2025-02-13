@@ -254,7 +254,7 @@ const ApplicationTaskForm: React.FC = () => {
       const res = await submitApplicationTask(formData);
       console.log("Submission success => ", res);
       navigate("/application/status");
-      localStorage.removeItem("applicationTaskForm");
+      // localStorage.removeItem("applicationTaskForm");
     } catch (err) {
       console.error("Failed to submit application task:", err);
     } finally {
