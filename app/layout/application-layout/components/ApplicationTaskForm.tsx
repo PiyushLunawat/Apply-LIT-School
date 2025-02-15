@@ -72,16 +72,15 @@ const ApplicationTaskForm: React.FC = () => {
         // Fetch the student's data
         const studentResp = await getCurrentStudent(studentData._id);
   
-        // The first (or current) applicationTasks item:
-        const sData =
-          studentResp.data?.applicationDetails?.applicationTasks?.[0]
-            ?.applicationTaskDetail?.applicationTasks?.[0];
+        const applicationTasks = studentResp.data?.applicationDetails?.applicationTasks;
+      // Get the last task submission from the array, if it exists
+      const lastTaskSubmission =  applicationTasks[applicationTasks.length - 1]?.applicationTaskDetail?.applicationTasks?.[0];
   
         // Store the cohort for referencing later
         setCohort(studentResp.data?.cohort);
   
         // The tasks array from the saved data, if any
-        const sDataTasks = sData?.tasks || [];
+        const sDataTasks = lastTaskSubmission?.tasks || [];
   
         // The "application" tasks from the cohort structure
         const cohortTasks =
@@ -128,25 +127,39 @@ const ApplicationTaskForm: React.FC = () => {
   
         // Prepare the courseDive data from the server if available
         const courseDiveData = {
-          interest: sData?.courseDive?.text1 || '',
-          goals: sData?.courseDive?.text2 || '',
+          interest: lastTaskSubmission?.courseDive?.text1 || '',
+          goals: lastTaskSubmission?.courseDive?.text2 || '',
         };
   
-        if (sData?.courseDive?.text1) {
-          const storedFormJSON = localStorage.getItem("applicationTaskForm") ?? "{}";
-          try {
-            const parsedForm = JSON.parse(storedFormJSON);
-            reset(parsedForm);
-          } catch (error) {
-            console.error("Error parsing form data from localStorage:", error);
-          }
-        }
-        else {
-          reset({
-          courseDive: courseDiveData,
-          tasks: finalTasks,
-          });
-        }
+        const storedFormJSON = localStorage.getItem("applicationTaskForm");
+  if (storedFormJSON) {
+    const parsedForm = JSON.parse(storedFormJSON);
+
+    // Check if it's effectively empty
+    const isEmpty =
+      parsedForm?.courseDive?.interest === "" &&
+      parsedForm?.courseDive?.goals === "" &&
+      Array.isArray(parsedForm?.tasks) &&
+      parsedForm.tasks.length === 0;
+
+    if (isEmpty) {
+      // If empty, reset to the new data
+      reset({
+        courseDive: courseDiveData,
+        tasks: finalTasks,
+      });
+    } else {
+      // Otherwise, use what was stored in local storage
+      reset(parsedForm);
+    }
+  } else {
+    // If nothing is in local storage at all, just reset to the new data
+    reset({
+      courseDive: courseDiveData,
+      tasks: finalTasks,
+    });
+  }
+
       } catch (err) {
         console.error('Error fetching data:', err);
       }
@@ -254,7 +267,7 @@ const ApplicationTaskForm: React.FC = () => {
       const res = await submitApplicationTask(formData);
       console.log("Submission success => ", res);
       navigate("/application/status");
-      // localStorage.removeItem("applicationTaskForm");
+      localStorage.removeItem("applicationTaskForm");
     } catch (err) {
       console.error("Failed to submit application task:", err);
     } finally {

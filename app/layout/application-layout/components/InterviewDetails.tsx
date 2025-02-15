@@ -37,7 +37,7 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
         <div className="md:w-1/2 px-8 py-12 flex flex-col justify-between bg-[#1B1B1C] !rounded-tl-2xl sm:!rounded-tl-3xl rounded-t-2xl sm:rounded-l-3xl sm:rounded-t-none rounded-l-none ">
         <div className="space-y-4 sm:space-y-6">
           <div className="text-2xl sm:text-3xl font-semibold">
-            LIT Admissions Interview - {student?.program?.name} Programs
+            LIT Admissions Interview - {student?.program?.name} Program
           </div>
           <div className="w-fit px-3 py-2 flex items-center gap-2 text-sm font-medium rounded-full border border-[#00A3FF]">
             <Clock className="h-4 w-4 text-[#00A3FF]" />
@@ -63,10 +63,7 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
             </ul>
           </div>
         </div>
-  
-          <p className="text-base sm:text-xl font-normal mt-4">
-            We then leave it for you to decide if it feels like the perfect fit for you! 🚀
-          </p>
+
         </div>
   
         {/* Right Section */}

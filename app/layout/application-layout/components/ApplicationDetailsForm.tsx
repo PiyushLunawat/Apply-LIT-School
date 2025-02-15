@@ -69,12 +69,12 @@ const formSchema = z.object({
     fatherLastName: z.string().optional(),
     fatherContact: z.string().optional(),
     fatherOccupation: z.string().optional(),
-    fatherEmail: z.string().email("Invalid email address").optional(),  
+    fatherEmail: z.union([z.string().email("Invalid email address"), z.literal("")]).optional(),  
     motherFirstName: z.string().optional(),
     motherLastName: z.string().optional(),
     motherContact: z.string().optional(),
     motherOccupation: z.string().optional(),
-    motherEmail: z.string().optional(),
+    motherEmail: z.union([z.string().email("Invalid email address"), z.literal("")]).optional(),
     financiallyDependent: z.boolean(),
     appliedForFinancialAid: z.boolean(),
   }),
@@ -314,80 +314,118 @@ useEffect(() => {
       try {
         const student = await getCurrentStudent(studentData._id);
         const sData = student.data?.studentDetails;
-          if (student.data?.applicationDetails !== undefined) {
-            setIsSaved(true);
-          } else {
-            setIsSaved(false); 
-          }
-          if(student.data?.applicationDetails?.applicationFeeDetail?.status === 'paid')
-            setIsPaymentDone(true);
-
-          const existingData = localStorage.getItem("applicationDetailsForm");
-
-          // If nothing is stored yet, we create a minimal object with those three fields
-          if (!existingData) {
-          reset({
-          studentData: {
-            firstName: studentData?.firstName || '',
-            lastName: studentData?.lastName || '',
-            email: studentData?.email || '',
-            contact: studentData?.mobileNumber || '',
-            dob: studentData?.dateOfBirth ? studentData.dateOfBirth.split('T')[0] : '',
-            currentStatus: studentData?.qualification || '',
-            courseOfInterest: studentData?.program || '',
-            cohort: studentData?.cohort || '',
-            linkedInUrl: student.data?.linkedInUrl || '',
-            instagramUrl: student.data?.instagramUrl || '',
-            gender: studentData?.gender || "Male",
-          }
-          // ,
-          // applicationData: {
-          //   address: sData?.currentAddress?.streetAddress || '',
-          //   city: sData?.currentAddress?.city || '',
-          //   zipcode: sData?.currentAddress?.postalCode || '',
-          //   educationLevel: sData?.previousEducation?.highestLevelOfEducation || '',
-          //   fieldOfStudy: sData?.previousEducation?.fieldOfStudy || '',
-          //   institutionName: sData?.previousEducation?.nameOfInstitution || '',
-          //   graduationYear: sData?.previousEducation?.yearOfGraduation || '',
-          //   isExperienced: sData?.workExperience?.isExperienced || 
-          //     ["Working Professional", "Freelancer", "Business Owner", "Consultant",].includes(studentData?.qualification) 
-          //     || false,
-          //   experienceType: sData?.workExperience?.experienceType || (
-          //     ['Working Professional', 'Business Owner', 'Freelancer', 'Consultant'].includes(studentData?.qualification) 
-          //       ? studentData?.qualification : ''),
-          //   nameOfCompany: sData?.workExperience?.nameOfCompany || '',
-          //   durationFrom: '',
-          //   durationTo: '',
-          //   duration: sData?.workExperience?.duration || '',
-          //   jobDescription: sData?.workExperience?.jobDescription || '',
-          //   emergencyFirstName: sData?.emergencyContact?.firstName || '',
-          //   emergencyLastName: sData?.emergencyContact?.lastName || '',
-          //   emergencyContact: sData?.emergencyContact?.contactNumber || '',
-          //   relationship: sData?.emergencyContact?.relationshipWithStudent || '',
-          //   fatherFirstName: sData?.parentInformation?.father?.firstName || '',
-          //   fatherLastName: sData?.parentInformation?.father?.lastName || '',
-          //   fatherContact: sData?.parentInformation?.father?.contactNumber || '',
-          //   fatherOccupation: sData?.parentInformation?.father?.occupation || '',
-          //   fatherEmail: sData?.parentInformation?.father?.email || '',
-          //   motherFirstName: sData?.parentInformation?.mother?.firstName || '',
-          //   motherLastName: sData?.parentInformation?.mother?.lastName || '',
-          //   motherContact: sData?.parentInformation?.mother?.contactNumber || '',
-          //   motherOccupation: sData?.parentInformation?.mother?.occupation || '',
-          //   motherEmail: sData?.parentInformation?.mother?.email || '',
-          //   financiallyDependent: !sData?.financialInformation?.isFinanciallyIndependent || false,
-          //   appliedForFinancialAid: sData?.financialInformation?.hasAppliedForFinancialAid || false,
-          // }
-          });
+  
+        // Payment or "isSaved" checks
+        if (student.data?.applicationDetails !== undefined) {
+          setIsSaved(true);
+        } else {
+          setIsSaved(false);
         }
-          setFetchedStudentData(sData);
-        
+        if (student.data?.applicationDetails?.applicationFeeDetail?.status === "paid") {
+          setIsPaymentDone(true);
+        }
+  
+        // Read existing localStorage data, if any
+        const existingDataJSON = localStorage.getItem("applicationDetailsForm");
+        let existingData: any = null;
+        if (existingDataJSON) {
+          existingData = JSON.parse(existingDataJSON);
+        }
+  
+        // Merge the localStorage data with the data from sData
+        // and your default "studentData" fields
+        const mergedForm = {
+          studentData: {
+            // Default to your known fields first
+            firstName: studentData?.firstName || "",
+            lastName: studentData?.lastName || "",
+            email: studentData?.email || "",
+            courseOfInterest: existingData?.studentData?.program || studentData?.program || "",
+            cohort: existingData?.studentData?.cohort || studentData?.cohort || "",
+            contact: existingData?.studentData?.contact ||  studentData?.mobileNumber || "",
+            dob: existingData?.studentData?.dob.split("T")[0] || studentData.dateOfBirth.split("T")[0],
+            currentStatus: existingData?.studentData?.currentStatus ||  studentData?.qualification || "",
+            linkedInUrl: existingData?.studentData?.linkedInUrl || student.data?.linkedInUrl || "",
+            instagramUrl: existingData?.studentData?.instagramUrl || student.data?.instagramUrl || "",
+            gender: existingData?.studentData?.gender || studentData?.gender || "Male",
+          },
+  
+          applicationData: {
+            // Use existingData first if it’s relevant, otherwise fallback to sData or defaults
+            address: existingData?.applicationData?.address || "",
+            city: existingData?.applicationData?.city || "",
+            zipcode: existingData?.applicationData?.zipcode || "",
+            educationLevel:
+              existingData?.applicationData?.educationLevel || "",
+            fieldOfStudy: existingData?.applicationData?.fieldOfStudy || "",
+            institutionName:
+              existingData?.applicationData?.institutionName || "",
+            graduationYear:
+              existingData?.applicationData?.graduationYear || "",
+            isExperienced:
+              existingData?.applicationData?.isExperienced ||
+              ["Working Professional", "Freelancer", "Business Owner", "Consultant"].includes(
+                studentData?.qualification
+              ) ||
+              false,
+            experienceType:
+              existingData?.applicationData?.experienceType ||
+              (["Working Professional", "Business Owner", "Freelancer", "Consultant"].includes(
+                studentData?.qualification
+              )
+                ? studentData?.qualification
+                : ""),
+            nameOfCompany: existingData?.applicationData?.nameOfCompany || "",
+            durationFrom: existingData?.applicationData?.durationFrom || "",
+            durationTo: existingData?.applicationData?.durationTo || "",
+            duration: existingData?.applicationData?.duration || "",
+            jobDescription: existingData?.applicationData?.jobDescription || "",
+            emergencyFirstName: existingData?.applicationData?.emergencyFirstName || "",
+            emergencyLastName: existingData?.applicationData?.emergencyLastName || "",
+            emergencyContact: existingData?.applicationData?.emergencyContact || "",
+            relationship: existingData?.applicationData?.relationship || "",
+            fatherFirstName:
+              existingData?.applicationData?.fatherFirstName || "",
+            fatherLastName:
+              existingData?.applicationData?.fatherLastName || "",
+            fatherContact:
+              existingData?.applicationData?.fatherContact || "",
+            fatherOccupation:
+              existingData?.applicationData?.fatherOccupation || "",
+            fatherEmail:
+              existingData?.applicationData?.fatherEmail || "",
+            motherFirstName:
+              existingData?.applicationData?.motherFirstName || "",
+            motherLastName:
+              existingData?.applicationData?.motherLastName || "",
+            motherContact:
+              existingData?.applicationData?.motherContact || "",
+            motherOccupation:
+              existingData?.applicationData?.motherOccupation || "",
+            motherEmail:
+              existingData?.applicationData?.motherEmail || "",
+            financiallyDependent:
+              existingData?.applicationData?.financiallyDependent ||
+              false,
+            appliedForFinancialAid:
+              existingData?.applicationData?.appliedForFinancialAid ||
+              false,
+          },
+        };
+  
+        // Finally, reset the form with merged data
+        reset(mergedForm);
+  
+        // If you need the sData for anything else, store it:
+        setFetchedStudentData(sData);
       } catch (error) {
         console.error("Failed to fetch student data:", error);
       }
     };
-
+  
     fetchStudentData();
-  }, [studentData, reset, interest]);
+  }, [studentData, interest]);
+  
 
   useEffect(() => {
   // If we don't have studentData yet, or if there's no user ID,
@@ -666,8 +704,8 @@ useEffect(() => {
         isMobileVerified: studentData?.isMobileVerified || false,
         email: studentData?.email || '',
         qualification: studentData?.qualification || '',
-        program: studentData?.program || '',
-        cohort: studentData?.cohort || '',
+        program: data.studentData?.courseOfInterest || '',
+        cohort: data.studentData?.cohort || '',
         gender: data.studentData.gender,
         isVerified: studentData?.isVerified || false,
         dateOfBirth: new Date(studentData?.dateOfBirth || Date.now()), 
@@ -877,10 +915,9 @@ useEffect(() => {
                       className="w-full !h-[64px] bg-[#09090B] px-3 uppercase rounded-xl border"
                       id="dob"
                       name="dateOfBirth"
-                      defaultValue={studentData?.dateOfBirth ? format(new Date(studentData.dateOfBirth || field.value), "yyyy-MM-dd") : ""}
+                      value={field.value || ""}
                       onChange={(e) => {
-                        const date = e.target.value;
-                        field.onChange(date);
+                        field.onChange(e.target.value);
                       }}
                       max={maxDateString}
                     />
@@ -1492,7 +1529,7 @@ useEffect(() => {
                             id="durationTo"
                             {...field}
                             disabled={isSaved}
-                            className="w-full flex-1 !h-[64px] bg-[#09090B] px-3 rounded-xl border text-white"
+                            className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border text-white"
                           />
                         </FormControl>
                         <FormMessage className="text-xs sm:text-sm font-normal pl-3">
