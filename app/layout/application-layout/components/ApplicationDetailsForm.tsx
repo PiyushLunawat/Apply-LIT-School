@@ -36,10 +36,10 @@ const formSchema = z.object({
     lastName: z.string().optional(),
     email: z.string().optional(),
     contact: z.string().optional(),
-    dob: z.string().optional(),
-    currentStatus: z.string().optional(),
-    courseOfInterest: z.string().optional(),
-    cohort: z.string().optional(),
+    dob: z.string(),
+    currentStatus: z.string(),
+    courseOfInterest: z.string(),
+    cohort: z.string(),
     isMobileVerified: z.boolean().optional(),
     linkedInUrl: z.string().optional(),
     instagramUrl: z.string().optional(),
@@ -332,17 +332,81 @@ useEffect(() => {
           existingData = JSON.parse(existingDataJSON);
         }
   
-        // Merge the localStorage data with the data from sData
-        // and your default "studentData" fields
-        const mergedForm = {
+        const isExistingDataEmpty =
+  existingData &&
+  existingData.studentData &&
+  Object.keys(existingData.studentData).length === 0 &&
+  existingData.applicationData &&
+  existingData.applicationData?.duration === "";
+
+// 3. Decide how to build mergedForm
+let mergedForm;
+if (isExistingDataEmpty) {
+  // If everything in local storage is empty, use the data from sData
+  mergedForm = {
+    studentData: {
+      firstName: studentData?.firstName || '',
+      lastName: studentData?.lastName || '',
+      email: studentData?.email || '',
+      contact: studentData?.mobileNumber || '',
+      dob: studentData?.dateOfBirth ? studentData.dateOfBirth.split('T')[0] : '',
+      currentStatus: studentData?.qualification || '',
+      courseOfInterest: studentData?.program || '',
+      cohort: studentData?.cohort || '',
+      linkedInUrl: student.data?.linkedInUrl || '',
+      instagramUrl: student.data?.instagramUrl || '',
+      gender: studentData?.gender || 'Male',
+    },
+    applicationData: {
+      address: sData?.currentAddress?.streetAddress || '',
+      city: sData?.currentAddress?.city || '',
+      zipcode: sData?.currentAddress?.postalCode || '',
+      educationLevel: sData?.previousEducation?.highestLevelOfEducation || '',
+      fieldOfStudy: sData?.previousEducation?.fieldOfStudy || '',
+      institutionName: sData?.previousEducation?.nameOfInstitution || '',
+      graduationYear: sData?.previousEducation?.yearOfGraduation || '',
+      isExperienced:
+        sData?.workExperience?.isExperienced ||
+        ['Working Professional', 'Freelancer', 'Business Owner', 'Consultant'].includes(studentData?.qualification) ||
+        false,
+      experienceType:
+        sData?.workExperience?.experienceType ||
+        (['Working Professional', 'Business Owner', 'Freelancer', 'Consultant'].includes(studentData?.qualification)
+          ? studentData?.qualification
+          : ''),
+      nameOfCompany: sData?.workExperience?.nameOfCompany || '',
+      durationFrom: '',
+      durationTo: '',
+      duration: sData?.workExperience?.duration || '',
+      jobDescription: sData?.workExperience?.jobDescription || '',
+      emergencyFirstName: sData?.emergencyContact?.firstName || '',
+      emergencyLastName: sData?.emergencyContact?.lastName || '',
+      emergencyContact: sData?.emergencyContact?.contactNumber || '',
+      relationship: sData?.emergencyContact?.relationshipWithStudent || '',
+      fatherFirstName: sData?.parentInformation?.father?.firstName || '',
+      fatherLastName: sData?.parentInformation?.father?.lastName || '',
+      fatherContact: sData?.parentInformation?.father?.contactNumber || '',
+      fatherOccupation: sData?.parentInformation?.father?.occupation || '',
+      fatherEmail: sData?.parentInformation?.father?.email || '',
+      motherFirstName: sData?.parentInformation?.mother?.firstName || '',
+      motherLastName: sData?.parentInformation?.mother?.lastName || '',
+      motherContact: sData?.parentInformation?.mother?.contactNumber || '',
+      motherOccupation: sData?.parentInformation?.mother?.occupation || '',
+      motherEmail: sData?.parentInformation?.mother?.email || '',
+      financiallyDependent: !sData?.financialInformation?.isFinanciallyIndependent || false,
+      appliedForFinancialAid: sData?.financialInformation?.hasAppliedForFinancialAid || false,
+    },
+  };
+} else
+{ mergedForm = {
           studentData: {
             // Default to your known fields first
             firstName: studentData?.firstName || "",
             lastName: studentData?.lastName || "",
             email: studentData?.email || "",
-            courseOfInterest: existingData?.studentData?.program || studentData?.program || "",
+            courseOfInterest: existingData?.studentData?.courseOfInterest || studentData?.program || "",
             cohort: existingData?.studentData?.cohort || studentData?.cohort || "",
-            contact: existingData?.studentData?.contact ||  studentData?.mobileNumber || "",
+            contact: existingData?.studentData?.contact || studentData?.mobileNumber || "",
             dob: existingData?.studentData?.dob.split("T")[0] || studentData.dateOfBirth.split("T")[0],
             currentStatus: existingData?.studentData?.currentStatus ||  studentData?.qualification || "",
             linkedInUrl: existingData?.studentData?.linkedInUrl || student.data?.linkedInUrl || "",
@@ -412,7 +476,7 @@ useEffect(() => {
               false,
           },
         };
-  
+      }
         // Finally, reset the form with merged data
         reset(mergedForm);
   
