@@ -44,9 +44,9 @@ const Review: React.FC<ReviewProps> = ({ setIsPaymentVerified }) => {
   useEffect(() => {
     fetchCurrentStudentData();
   
-    const intervalId = setInterval(fetchCurrentStudentData, 5000);
+    // const intervalId = setInterval(fetchCurrentStudentData, 5000);
   
-    return () => clearInterval(intervalId);
+    // return () => clearInterval(intervalId);
   }, [studentData?._id]);
   
   async function fetchCurrentStudentData() {

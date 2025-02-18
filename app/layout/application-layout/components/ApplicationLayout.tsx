@@ -65,7 +65,7 @@ export default function ApplicationLayout() {
 
   return (
     <div className="flex flex-col min-h-screen">
-        <Header subtitle={subtitle} submessage={submessage} />      
+        <Header />      
         <div className="p-0">
             <Outlet />
         </div>

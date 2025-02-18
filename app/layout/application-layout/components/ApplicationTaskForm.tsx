@@ -7,7 +7,7 @@ import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { UserContext } from '~/context/UserContext';
 import { Button } from '~/components/ui/button';
-import { FileTextIcon, Link2Icon, Phone, RefreshCw, UploadIcon, XIcon } from 'lucide-react';
+import { Download, FileTextIcon, Link2Icon, Phone, RefreshCw, UploadIcon, XIcon } from 'lucide-react';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '~/components/ui/form';
 import { getCohorts, getCurrentStudent, submitApplicationTask } from '~/utils/studentAPI';
 import { useNavigate } from '@remix-run/react';
@@ -524,24 +524,44 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
   };
   
   const showUploadButton = !configItem.maxFiles || files.length < configItem.maxFiles;
+
+  const downloadFile = (file: string) => {
+    // const url = URL.createObjectURL(file);
+    const a = document.createElement("a");
+    a.href = file;
+    a.download = file.split('/').pop() || "Task";
+    a.click();
+    URL.revokeObjectURL(file);
+  };
   
   return (
     <FormItem>
       <FormControl>
         <div className="flex flex-col space-y-2 mt-2">
-          {files.map((file, index) => (
+          {files.map((file, index) => {
+            const isLink = typeof file === "string";
+            return (
             <div key={index} className="flex items-center bg-[#007AFF] h-[52px] text-white p-1.5 rounded-xl w-full">
               <Button size="icon" type='button' className='bg-[#3698FB] rounded-xl mr-2'>
                 <FileTextIcon className="w-5" />
               </Button>
-              <span className="flex-1 text-xs sm:text-base">{file.name}</span>
+              <span className="flex-1 text-xs sm:text-base truncate mr-4">
+                {isLink ? (file as string).split('/').pop() : file.name}
+              </span>
               <div className="flex items-center space-x-2">
+                {isLink && (
+                  <Button size="icon" type='button' variant="ghost" className="bg-[#3698FB] rounded-xl">
+                    <a href={file} download target="_blank" rel="noopener noreferrer">
+                      <Download className="w-5" />
+                    </a>
+                  </Button>
+                )}
                 <Button size="icon" type='button' className='bg-[#3698FB] rounded-xl' onClick={() => removeFile(index)}>
                   <XIcon className="w-5" />
                 </Button>
               </div>
             </div>
-          ))}
+          )})}
           {showUploadButton && (
             <div className="flex items-center justify-between w-full h-16 border-2 border-dashed rounded-xl p-1.5">
               <label className="w-full pl-3 text-muted-foreground">

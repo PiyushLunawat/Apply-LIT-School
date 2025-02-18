@@ -23,7 +23,9 @@ export async function signUp(data: {
     const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
     throw new Error(
       `${
-        errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
+        errorDetails
+          ? `${errorDetails.message || JSON.stringify(errorDetails)}`
+          : ""
       }`
     );
   }
@@ -42,7 +44,9 @@ export async function verifyOtp(data: { email: string; otp: string }) {
     const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
     throw new Error(
       `${
-        errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
+        errorDetails
+          ? `${errorDetails.message || JSON.stringify(errorDetails)}`
+          : ""
       }`
     );
   }
@@ -62,7 +66,9 @@ export async function resendOtp(data: { email: string }) {
     const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
     throw new Error(
       `${
-        errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
+        errorDetails
+          ? `${errorDetails.message || JSON.stringify(errorDetails)}`
+          : ""
       }`
     );
   }
@@ -82,7 +88,9 @@ export async function loginOTP(data: { email: string }) {
     const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
     throw new Error(
       `${
-        errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
+        errorDetails
+          ? `${errorDetails.message || JSON.stringify(errorDetails)}`
+          : ""
       }`
     );
   }
@@ -102,7 +110,9 @@ export async function verifyNumber(data: { phone: string }) {
     const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
     throw new Error(
       `${
-        errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
+        errorDetails
+          ? `${errorDetails.message || JSON.stringify(errorDetails)}`
+          : ""
       }`
     );
   }
@@ -111,7 +121,10 @@ export async function verifyNumber(data: { phone: string }) {
 }
 
 // Verify Mobile OTP
-export async function verifyMobileOTP(data: { mobileNumber: string; otp: string }) {
+export async function verifyMobileOTP(data: {
+  mobileNumber: string;
+  otp: string;
+}) {
   const response = await fetch(`${CONST_API}/student/verify-otp-number`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -122,7 +135,9 @@ export async function verifyMobileOTP(data: { mobileNumber: string; otp: string 
     const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
     throw new Error(
       `${
-        errorDetails ? `${errorDetails.message || JSON.stringify(errorDetails)}` : ""
+        errorDetails
+          ? `${errorDetails.message || JSON.stringify(errorDetails)}`
+          : ""
       }`
     );
   }

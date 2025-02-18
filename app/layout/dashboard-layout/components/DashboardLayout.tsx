@@ -8,7 +8,7 @@ export default function DashboardLayout() {
 
   return (
         <main>
-              <Header subtitle="" classn="drop-shadow-lg" />
+              <Header classn="drop-shadow-lg" />
               <div className="flex">
                   <Sidebar />
                   <div className="overflow-y-auto w-full" style={{ height: `calc(100vh - 52px)`}}>

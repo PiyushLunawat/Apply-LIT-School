@@ -5,6 +5,7 @@ import ProgressBar from '~/components/molecules/ProgressBar/ProgressBar';
 import Review from '~/components/organisms/Review/Review';
 import InterviewDetails from '../components/InterviewDetails';
 import AdmissionFee from '../components/AdmissionFee';
+import SubHeader from '~/components/organisms/SubHeader/SubHeader';
 
 export const ApplicationStatus: React.FC = () => {
   const [isPaymentVerified, setIsPaymentVerified] = useState<string | null>(null);
@@ -12,6 +13,8 @@ export const ApplicationStatus: React.FC = () => {
   const [studentData, setStudentData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [subtitle, setSubtitle] = useState("");
+  const [submessage, setSubmessage] = useState("");
 
   useEffect(() => {
     const storedData = localStorage.getItem('studentData');
@@ -39,7 +42,16 @@ export const ApplicationStatus: React.FC = () => {
             // Check token fee verification status
             const isVerified =
               latest?.cousrseEnrolled?.[latest.cousrseEnrolled.length - 1]?.tokenFeeDetails?.verificationStatus;
-            
+              if(isVerified === 'pending') {
+                setSubtitle('Your Payment is being verified');
+                setSubmessage(`You may access your dashboard once your payment has been verified.`);
+              } else if(isVerified === 'flagged') {
+                setSubtitle('Your Payment verification failed');
+                setSubmessage(`You may access your dashboard once your payment has been verified.`);
+              } else if(isVerified === 'paid') {
+                setSubtitle('Your Payment is verified');
+                setSubmessage(`You may access your dashboard.`);
+              }
             setStudentData(latest);
             setIsPaymentVerified(isVerified);
             setIsInterviewScheduled(latest?.applicationDetails?.applicationStatus);
@@ -88,6 +100,7 @@ export const ApplicationStatus: React.FC = () => {
           </div>
         </div> : 
         <>
+          <SubHeader subtitle='Welcome to LIT' submessage='Your interview call is booked with our counsellors' />
           <img src="/assets/images/application-process-02.svg" alt="BANNER" className="w-screen object-cover overflow-x-auto h-[188px] sm:h-full my-6 sm:my-12" />
           <div className="mt-10 sm:mt-16 w-full px-4 justify-center items-center">
              <InterviewDetails student={studentData}/>
@@ -95,6 +108,7 @@ export const ApplicationStatus: React.FC = () => {
         </>
         ) : (
           <>
+            <SubHeader subtitle={subtitle} submessage={submessage} />
             <img src="/assets/images/application-process-02-done.svg" alt="BANNER" className="w-screen object-center object-cover overflow-x-auto h-[188px] sm:h-full my-6 sm:my-12" />
             <div className=" w-full px-4 justify-center items-center">
               <AdmissionFee />

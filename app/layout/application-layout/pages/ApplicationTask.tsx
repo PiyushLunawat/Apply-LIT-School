@@ -3,12 +3,14 @@ import React, { useEffect, useState } from 'react';
 import ApplicationTaskForm from '../components/ApplicationTaskForm';
 import { useNavigate } from '@remix-run/react';
 import { getCurrentStudent } from '~/utils/studentAPI';
+import SubHeader from '~/components/organisms/SubHeader/SubHeader';
 
 export const ApplicationTask: React.FC = () => {
   const [studentData, setStudentData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [subtitle, setSubtitle] = useState("");
     const [submessage, setSubmessage] = useState("");
+    const [programName, setProgramName] = useState("");
   
     // useNavigate hook for client-side transitions
     const navigate = useNavigate();
@@ -31,6 +33,7 @@ export const ApplicationTask: React.FC = () => {
           console.log("1");
 
           const res = await getCurrentStudent(studentData._id);
+          setProgramName(res.data?.program?.name);
           console.log("2:");
 
           const status = res.data?.applicationDetails?.applicationStatus;
@@ -55,6 +58,7 @@ export const ApplicationTask: React.FC = () => {
 
   return (
     <>
+        <SubHeader subtitle='Welcome to LIT' submessage={`Dive into the ${programName} Course`} />
         <img src="/assets/images/application-process-01.svg" alt="BANNER" className="w-screen object-left object-cover overflow-x-auto h-[188px] sm:h-full my-6 sm:my-12" />
           
         <div className="w-full px-4 justify-center items-center">

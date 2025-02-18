@@ -63,7 +63,7 @@ export const ApplicationStep2: React.FC = () => {
     <>
       {(isPaymentVerified === null || isPaymentVerified === undefined) ? (
         <div className="w-full">
-          <Header subtitle="" />
+          <Header />
           <div className="max-w-[1216px] sm:mx-16 xl:mx-auto justify-center items-center space-y-20">
             <Review setIsPaymentVerified={setIsPaymentVerified}/>
             <div className="space-y-4 sm:space-y-6">
