@@ -78,27 +78,27 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
       if(verificationType === 'email'){
         const res = await verifyOtp({ email: contactInfo, otp: data.otp });
         Cookies.set('user-token', res.token, { expires: 4});
+
+        console.log("resp",res)
         // Store studentData in localStorage
         if (res.studentData) {
-          localStorage.setItem('studentData', JSON.stringify(res.studentData));
+        localStorage.setItem('studentData', JSON.stringify(res.studentData));
           const storedData = localStorage.getItem('studentData');
           if (storedData) {
             setStudentData(JSON.parse(storedData));
           }
         }
-        if(res.studentData?.litmusTestDetails[0]?.litmusTaskId !== undefined){
+        if(res.studentData?.appliedCohorts[res.studentData?.appliedCohorts.length - 1]?.status === 'enrolled'){
           navigate('../../dashboard');
         }
-        else if(res.studentData?.applicationDetails !== undefined){
+        else if(['initated', 'applied'].includes(res.studentData?.appliedCohorts[res.studentData?.appliedCohorts.length - 1]?.status)){
           console.log("navigating")
           console.log('studentData?._id:', studentData?._id);
-            const res = await getCurrentStudent(studentData?._id);
-              console.log(' student data:', res.data?.applicationDetails?.applicationStatus);
-            if(res.data?.applicationDetails?.applicationStatus !== "initiated" &&
-              res.data?.applicationDetails?.applicationStatus !== undefined){
-                navigate('../../application/status');
-              }
-            else
+            // if(res.data?.applicationDetails?.applicationStatus !== "initiated" &&
+            //   res.data?.applicationDetails?.applicationStatus !== undefined){
+            //     navigate('../../application/status');
+            //   }
+            // else
               navigate('../../application');
         }
         else{

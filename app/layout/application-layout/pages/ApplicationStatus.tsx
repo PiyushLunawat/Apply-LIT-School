@@ -6,42 +6,31 @@ import Review from '~/components/organisms/Review/Review';
 import InterviewDetails from '../components/InterviewDetails';
 import AdmissionFee from '../components/AdmissionFee';
 import SubHeader from '~/components/organisms/SubHeader/SubHeader';
+import { UserContext } from '~/context/UserContext';
 
 export const ApplicationStatus: React.FC = () => {
   const [isPaymentVerified, setIsPaymentVerified] = useState<string | null>(null);
   const [isInterviewScheduled, setIsInterviewScheduled] = useState<string | null>(null);
-  const [studentData, setStudentData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { studentData, setStudentData } = useContext(UserContext); 
+  const [latestCohort, setLatestCohort] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [subtitle, setSubtitle] = useState("");
   const [submessage, setSubmessage] = useState("");
 
   useEffect(() => {
-    const storedData = localStorage.getItem('studentData');
-    if (storedData) {
-      setStudentData(JSON.parse(storedData));
-    }
-  }, []);
-
-  useEffect(() => {
     const fetchDataOnMount = async () => {
       try {
-        setLoading(true);
-
-        // 1) Try reading from local storage
-        const storedData = localStorage.getItem('studentData');
-        if (storedData) {
-          const parsedData = JSON.parse(storedData);
-          setStudentData(parsedData);
-
+        // setLoading(true);
           // 2) If there's a valid ID, fetch updated info
-          if (parsedData?._id) {
-            const res = await getCurrentStudent(parsedData._id);
-            const latest = res.data;
-            
+          if (studentData?._id) {
+            const res = await getCurrentStudent(studentData._id);
+            setStudentData(res);
+            const latest = res?.appliedCohorts[res.appliedCohorts.length - 1];
+                        
             // Check token fee verification status
             const isVerified =
-              latest?.cousrseEnrolled?.[latest.cousrseEnrolled.length - 1]?.tokenFeeDetails?.verificationStatus;
+              latest?.tokenFeeDetails?.verificationStatus;
               if(isVerified === 'pending') {
                 setSubtitle('Your Payment is being verified');
                 setSubmessage(`You may access your dashboard once your payment has been verified.`);
@@ -52,21 +41,19 @@ export const ApplicationStatus: React.FC = () => {
                 setSubtitle('Your Payment is verified');
                 setSubmessage(`You may access your dashboard.`);
               }
-            setStudentData(latest);
+              setLatestCohort(latest);
             setIsPaymentVerified(isVerified);
             setIsInterviewScheduled(latest?.applicationDetails?.applicationStatus);
           }
-        }
-      } catch (err) {
-        setError('Failed to fetch student data. Please try again later.');
+      } catch (err: any) {
+        setError(err);
       } finally {
         setLoading(false);
-        console.log("re rendering")
       }
     };
 
     fetchDataOnMount();
-  }, []);
+  }, [studentData]);
 
   if (loading) {
     return (
@@ -79,10 +66,11 @@ export const ApplicationStatus: React.FC = () => {
   if (error) {
     return (
       <div className="w-full flex items-center justify-center min-h-screen">
-        <div>{error}</div>
+        <div>{String(error)}</div>
       </div>
     );
   }
+  
 
   return (
     <>
@@ -103,7 +91,7 @@ export const ApplicationStatus: React.FC = () => {
           <SubHeader subtitle='Welcome to LIT' submessage='Your interview call is booked with our counsellors' />
           <img src="/assets/images/application-process-02.svg" alt="BANNER" className="w-screen object-cover overflow-x-auto h-[188px] sm:h-full my-6 sm:my-12" />
           <div className="mt-10 sm:mt-16 w-full px-4 justify-center items-center">
-             <InterviewDetails student={studentData}/>
+             <InterviewDetails student={latestCohort}/>
           </div>
         </>
         ) : (
@@ -111,7 +99,7 @@ export const ApplicationStatus: React.FC = () => {
             <SubHeader subtitle={subtitle} submessage={submessage} />
             <img src="/assets/images/application-process-02-done.svg" alt="BANNER" className="w-screen object-center object-cover overflow-x-auto h-[188px] sm:h-full my-6 sm:my-12" />
             <div className=" w-full px-4 justify-center items-center">
-              <AdmissionFee />
+              <AdmissionFee student={studentData}/>
             </div>
           </>
       )}

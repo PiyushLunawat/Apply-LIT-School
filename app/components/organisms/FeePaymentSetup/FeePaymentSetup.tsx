@@ -50,12 +50,12 @@ export default function FeePaymentSetup() {
     const fetchStudentData = async () => {
       try {
         const result = await getCurrentStudent(studentData._id);
-        setStudent(result.data);
+        setStudent(result?.appliedCohorts[result.appliedCohorts.length - 1]);
 
         // If there's already a feeSetup, skip to step 2
         if (
-          result?.data?.cousrseEnrolled?.length > 0 &&
-          result.data.cousrseEnrolled[result.data.cousrseEnrolled.length - 1]?.feeSetup
+          result?.appliedCohorts[result.appliedCohorts.length - 1]?.installmentDetails?.length > 0 &&
+          result?.appliedCohorts[result.appliedCohorts.length - 1]?.installmentDetails?.feeSetup
         ) {
           setStep(2);
         }

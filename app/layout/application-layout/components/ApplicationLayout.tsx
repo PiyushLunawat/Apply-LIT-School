@@ -24,35 +24,35 @@ export default function ApplicationLayout() {
         const res = await getCurrentStudent(studentData._id);
         const status = res.data?.applicationDetails?.applicationStatus;
         const isVerified = res.data?.cousrseEnrolled?.[res.data.cousrseEnrolled.length - 1]?.tokenFeeDetails?.verificationStatus;
-        if (status === undefined || status === "") {
-          setSubtitle('Welcome to LIT');
-          setSubmessage('Get started with your application process');
-          navigate("/application");
-        } else if (["initiated"].includes(status)) {
-          setSubtitle('Welcome to LIT');
-          setSubmessage(`Dive into the ${res.data?.program?.name} Course`);
-          navigate("/application/task");
-        } else if (["selected"].includes(status) && isVerified === 'paid') {
-          navigate("/dashboard");
-        } else {
-            if(status === 'Interview Scheduled') {
-              setSubtitle('Welcome to LIT');
-              setSubmessage(`Book your interview call with our counsellors.`);
-            } else if(isVerified === 'pending') {
-              setSubtitle('Your Payment is being verified');
-              setSubmessage(`You may access your dashboard once your payment has been verified.`);
-            } else if(isVerified === 'flagged') {
-              setSubtitle('Your Payment verification failed');
-              setSubmessage(`You may access your dashboard once your payment has been verified.`);
-            } else if(isVerified === 'paid') {
-              setSubtitle('Your Payment is verified');
-              setSubmessage(`You may access your dashboard.`);
-            }  else {
-              setSubtitle('');
-              setSubmessage(``);
-            }
-          navigate("/application/status");
-        }
+        // if (status === undefined || status === "") {
+        //   setSubtitle('Welcome to LIT');
+        //   setSubmessage('Get started with your application process');
+        //   navigate("/application");
+        // } else if (["initiated"].includes(status)) {
+        //   setSubtitle('Welcome to LIT');
+        //   setSubmessage(`Dive into the ${res.data?.program?.name} Course`);
+        //   navigate("/application/task");
+        // } else if (["selected"].includes(status) && isVerified === 'paid') {
+        //   navigate("/dashboard");
+        // } else {
+        //     if(status === 'Interview Scheduled') {
+        //       setSubtitle('Welcome to LIT');
+        //       setSubmessage(`Book your interview call with our counsellors.`);
+        //     } else if(isVerified === 'pending') {
+        //       setSubtitle('Your Payment is being verified');
+        //       setSubmessage(`You may access your dashboard once your payment has been verified.`);
+        //     } else if(isVerified === 'flagged') {
+        //       setSubtitle('Your Payment verification failed');
+        //       setSubmessage(`You may access your dashboard once your payment has been verified.`);
+        //     } else if(isVerified === 'paid') {
+        //       setSubtitle('Your Payment is verified');
+        //       setSubmessage(`You may access your dashboard.`);
+        //     }  else {
+        //       setSubtitle('');
+        //       setSubmessage(``);
+        //     }
+        //   navigate("/application/status");
+        // }
       } catch (error) {
         console.log("Error fetching student data:", error);
       } finally {

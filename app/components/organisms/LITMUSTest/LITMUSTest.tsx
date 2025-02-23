@@ -81,6 +81,8 @@ const LITMUSTest: React.FC = () => {
     async function fetchCohorts() {
       try {
         const cohortsData = await getCohorts();
+        console.log("eda",cohortsData);
+        
         setCohorts(cohortsData.data);
       } catch (error) {
         console.error('Error fetching cohorts:', error);
@@ -93,27 +95,31 @@ const LITMUSTest: React.FC = () => {
     const fetchStudentData = async () => {
       try {
         const student = await getCurrentStudent(studentData._id); // Pass the actual student ID here
-        setStu(student.data?.litmusTestDetails[0]?.litmusTaskId?._id); 
-        setStudent(student.data)
+        console.log("vsd",student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.litmusTestDetails?._id);
+        setStu(student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.litmusTestDetails?._id); 
+        setStudent(student)
+
       } catch (error) {
         console.error("Failed to fetch student data:", error);
       }
     };
     fetchStudentData();
-  }, []);
+  }, [studentData]);
 
   const getCohort = (cohortId: string) => {
         return cohorts.find((c) => c._id === cohortId);
       };
 
-  const cohort = getCohort(studentData?.cohort);
+  const cohort = getCohort(studentData?.appliedCohorts?.[studentData?.appliedCohorts.length - 1]?.cohortId?._id);  
 
-  const tasks = cohort?.litmusTestDetail?.[0]?.litmusTasks || [];
+  const tasks = studentData?.appliedCohorts?.[studentData?.appliedCohorts.length - 1]?.cohortId?.litmusTestDetail?.[0]?.litmusTasks || [];
   useEffect(() => {
-    if (tasks.length > 0) {
+    if (cohort?.litmusTestDetail?.[0]?.litmusTasks.length > 0) {
+      console.log("sfbsd",cohort?.litmusTestDetail?.[0]?.litmusTasks);
+      
       setValue(
         'tasks',
-        tasks.map((task: any) => ({
+        cohort?.litmusTestDetail?.[0]?.litmusTasks.map((task: any) => ({
           configItems: task.submissionTypes.map((configItem: any) => ({
             type: configItem.type,
             answer:
@@ -126,7 +132,7 @@ const LITMUSTest: React.FC = () => {
         }))
       );
     }
-  }, [tasks, setValue]);
+  }, [cohort, setValue]);
 
 
   const onSubmit = async (data: LitmusTestFormValues) => {
@@ -199,7 +205,7 @@ const LITMUSTest: React.FC = () => {
   };
 
   const handleScheduleInterview = async () => {
-    const reviewerEmails = student?.cohort?.collaborators
+    const reviewerEmails = student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.cohortId?.collaborators
       ?.filter((collaborator: any) => collaborator.role === "evaluator")
       .map((collaborator: any) => collaborator.email);
   
@@ -210,7 +216,7 @@ const LITMUSTest: React.FC = () => {
   
     const payload = {
       emails: reviewerEmails,
-      eventCategory: "Application Test Review", // Change to "Litmus Test Review" if required
+      eventCategory: "Litmus Test Review", // Change to "Litmus Test Review" if required
     };
 
     console.log("pay",payload);
@@ -251,7 +257,7 @@ const LITMUSTest: React.FC = () => {
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="flex flex-col items-start p-[52px] bg-[#09090B] text-white shadow-md w-full mx-auto space-y-6">
         {/* Title and Guidelines */}
-        {tasks.map((task: any, taskIndex: number) => (
+        {cohort?.litmusTestDetail?.[0]?.litmusTasks.map((task: any, taskIndex: number) => (
           <>
           <div>
             <Badge className="text-sm my-4 border-[#3698FB] text-[#3698FB] bg-[#3698FB]/10">
@@ -263,10 +269,11 @@ const LITMUSTest: React.FC = () => {
             <p className="text-xl mb-4">
               {task.description}
             </p>
+            hello
           </div>
 
-          <div className='w-full space-y-4'>
-            {task?.resources?.resourceFiles.map((file: any, index: number) => (
+           <div className='w-full space-y-4'>
+            {/* {task?.resources?.resourceFiles.map((file: any, index: number) => (
               <div key={index} className="flex items-center justify-between w-full p-1.5 bg-[#2C2C2C] rounded-xl">
                 <div className="flex items-center space-x-2">
                   <Badge
@@ -286,9 +293,9 @@ const LITMUSTest: React.FC = () => {
                   <Download className="w-5 h-5" />
                 </Button>
               </div>
-            ))}
+            ))} */}
 
-            {task?.resources?.resourceLink.map((link: any, index: number) => (
+            {/* {task?.resources?.resourceLink.map((link: any, index: number) => (
               <div key={index} className="w-full h-full  ">
                 <iframe
                   src={link}
@@ -297,7 +304,7 @@ const LITMUSTest: React.FC = () => {
                   allowFullScreen
                 ></iframe>
                 </div>
-            ))}
+            ))} */}
           </div>
             
           <div className='w-full space-y-4'>

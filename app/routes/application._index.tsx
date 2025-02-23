@@ -9,6 +9,7 @@ export const meta: MetaFunction = () => {
   ];
 };
 
+
 export default function ApplicationIndexRoute() {
   return <ApplicationDetails />;
 }

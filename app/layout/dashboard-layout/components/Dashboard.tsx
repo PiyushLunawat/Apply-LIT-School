@@ -49,14 +49,20 @@ export default function ApplicationDashboard() {
   useEffect(() => {
     const fetchStudentData = async () => {
       try {
-        const student = await getCurrentStudent(studentData._id); // Pass the actual student ID here
-        setStudent(student.data); // Store the fetched data in state
+        const student = await getCurrentStudent(studentData._id);
+        console.log("fff",student);
+        
+        setStudent(student); 
       } catch (error) {
         console.error("Failed to fetch student data:", error);
       }
     };
     fetchStudentData();
   }, []);
+
+  const latestCohort = student?.appliedCohorts?.[student?.appliedCohorts.length - 1];
+  const cohortDetails = latestCohort?.cohortId;
+  const applicationId = latestCohort?.applicationDetails?._id;
   
   const handleExploreClick = () => {
     navigate('/dashboard/litmus-task');
@@ -72,6 +78,18 @@ export default function ApplicationDashboard() {
 
   const isLitmusDetailsAvailable = !!student?.litmusTestDetails?.length;
 
+  function formatTestDuration(durationDays: number): string {
+    if (durationDays > 2) {
+      return `${durationDays} days`;
+    } else {
+      // For durationDays <= 2, convert to hours.
+      const totalHours = durationDays * 24;
+      // Format as HH:MM:SS; here minutes and seconds are zero.
+      const hoursStr = totalHours.toString().padStart(2, '0');
+      return `${hoursStr}:00:00`;
+    }
+  }
+  
   return (
   <>
       <div className="flex sm:flex-row flex-col gap-4 justify-between sm:items-end p-6 sm:p-[52px] bg-[#64748B1A] border-b">
@@ -101,7 +119,7 @@ export default function ApplicationDashboard() {
                   <h2 className="text-base sm:text-xl font-semibold">LITMUS Test Submission</h2>
                   <Badge className="flex px-2 gap-1 sm:gap-2 items-center bg-black h-7">
                     <Clock className="text-[#00A3FF] w-3 h-3"/>
-                    <div className="text-xs sm:text-base font-normal">52:00:00</div>
+                    <div className="text-xs sm:text-base font-normal">{formatTestDuration(cohortDetails?.litmusTestDetail[0]?.litmusTestDuration)}</div>
                   </Badge>
                 </div>
                 <p className="sm:w-3/4 text-xs sm:text-base">

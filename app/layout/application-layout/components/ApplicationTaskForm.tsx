@@ -70,21 +70,25 @@ const ApplicationTaskForm: React.FC = () => {
     async function fetchData() {
       try {
         // Fetch the student's data
+        console.log("ffef",studentData?._id);
+        
         const studentResp = await getCurrentStudent(studentData._id);
+
+        console.log("ffef",studentResp);
   
-        const applicationTasks = studentResp.data?.applicationDetails?.applicationTasks;
-      // Get the last task submission from the array, if it exists
-      const lastTaskSubmission =  applicationTasks[applicationTasks.length - 1]?.applicationTaskDetail?.applicationTasks?.[0];
+        const applicationTasks = studentResp?.appliedCohorts[studentResp.appliedCohorts.length - 1]?.applicationDetails?.applicationTasks;
+        // Get the last task submission from the array, if it exists
+        const lastTaskSubmission =  applicationTasks[applicationTasks.length - 1]?.applicationTasks?.[0];
   
         // Store the cohort for referencing later
-        setCohort(studentResp.data?.cohort);
+        setCohort(studentResp?.appliedCohorts[studentResp.appliedCohorts.length - 1]?.cohortId);
   
         // The tasks array from the saved data, if any
         const sDataTasks = lastTaskSubmission?.tasks || [];
   
         // The "application" tasks from the cohort structure
         const cohortTasks =
-          studentResp.data?.cohort?.applicationFormDetail?.[0]?.task || [];
+        studentResp?.appliedCohorts[studentResp.appliedCohorts.length - 1]?.cohortId?.applicationFormDetail?.[0]?.task || [];
   
         // Build our final tasks array by merging the config from "cohortTasks"
         // with the actual saved values from "sDataTasks".

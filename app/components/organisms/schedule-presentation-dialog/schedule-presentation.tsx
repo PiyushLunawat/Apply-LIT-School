@@ -24,10 +24,12 @@ export function SchedulePresentation({ interviewer }: SchedulePresentationProps)
     const { studentData, setStudentData } = useContext(UserContext);
     const [ cohortData, setCohortData ] = useState<any>([]);
 
+    let latestCohort = studentData?.appliedCohorts?.[studentData?.appliedCohorts.length - 1];
+
     useEffect(() => {
         const fetchStudentData = async () => {
           try {
-            const cohort = await getCohortById(studentData?.cohort); // Use actual student ID here
+            const cohort = await getCohortById(latestCohort?.cohortId?._id); // Use actual student ID here
             setCohortData(cohort.data);            
           } catch (error) {
             console.error("Failed to fetch student data:", error);
@@ -41,8 +43,8 @@ export function SchedulePresentation({ interviewer }: SchedulePresentationProps)
     };
 
     const handleScheduleRedirect = () => {
-        if (!selectedInterviewer || !studentData?._id || !studentData?.cohort) return;
-        const url = `https://dev.cal.litschool.in/${selectedInterviewer?.personalUrl}/${selectedInterviewer?.events[0]?.eventName || ''}?&litApplicationUserId=${studentData?._id}&cohortId=${studentData?.cohort}&eventCategory=Application Test Review&eventId=${selectedInterviewer?.events[0]?._id} `;
+        if (!selectedInterviewer || !studentData?._id || !latestCohort?.cohortId?._id) return;
+        const url = `https://dev.cal.litschool.in/${selectedInterviewer?.personalUrl}/${selectedInterviewer?.events[0]?.eventName || ''}?&litApplicationUserId=${studentData?._id}&cohortId=${latestCohort?.cohortId?._id}&eventCategory=Application Test Review&eventId=${selectedInterviewer?.events[0]?._id} `;
         window.open(url, "_blank"); 
       };
     
@@ -58,7 +60,7 @@ export function SchedulePresentation({ interviewer }: SchedulePresentationProps)
             <div className="flex gap-4 h-5 items-center">
                 <p className="text-sm text-muted-foreground">Program Application</p>
                 <Separator orientation="vertical" />
-                <p className="text-sm text-muted-foreground"> Submitted application on {new Date(studentData?.litmusTestDetails[0]?.litmusTaskId?.createdAt).toLocaleDateString()}</p>
+                <p className="text-sm text-muted-foreground"> Submitted application on {new Date(latestCohort?.applicationDetails?.createdAt).toLocaleDateString()}</p>
             </div>
         </div>
 

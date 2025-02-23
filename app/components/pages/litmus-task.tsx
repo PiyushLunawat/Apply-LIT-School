@@ -6,10 +6,10 @@ import Sidebar from "../organisms/Sidebar/Sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import LITMUSTest from "../organisms/LITMUSTest/LITMUSTest";
 import { getCurrentStudent } from "~/utils/studentAPI";
 import { UserContext } from "~/context/UserContext";
 import { useContext, useEffect, useState } from "react";
+import LITMUSTest from "../organisms/LITMUSTest/LITMUSTest";
 
 interface DashboardCardProps {
   title: string;
@@ -36,17 +36,35 @@ const DashboardCard = ({ title, description, icon, to, bgColor, border }: Dashbo
 export default function LitmusTask() {
   const { studentData } = useContext(UserContext);
   const [student, setStudent] = useState<any>([]);
+
   useEffect(() => {
     const fetchStudentData = async () => {
       try {
-        const student = await getCurrentStudent(studentData._id); // Pass the actual student ID here
-        setStudent(student.data); // Store the fetched data in state
+        const student = await getCurrentStudent(studentData._id);        
+        setStudent(student); 
       } catch (error) {
         console.error("Failed to fetch student data:", error);
       }
     };
     fetchStudentData();
-  }, []);
+  }, [studentData]);
+
+  const latestCohort = student?.appliedCohorts?.[student?.appliedCohorts.length - 1];
+  const cohortDetails = latestCohort?.cohortId;
+
+  function formatTestDuration(durationDays?: number): string {
+    if (durationDays === undefined || durationDays === null) return "00:00:00";
+    if (durationDays > 2) {
+      return `${durationDays} days`;
+    } else {
+      // For durationDays <= 2, convert to hours.
+      const totalHours = durationDays * 24;
+      // Format as HH:MM:SS; here minutes and seconds are zero.
+      const hoursStr = totalHours.toString().padStart(2, '0');
+      return `${hoursStr}:00:00`;
+    }
+  }
+  
 
   return (
   <>
@@ -58,7 +76,7 @@ export default function LitmusTask() {
             </Badge>
             <Badge className="flex gap-2 items-center bg-black">
               <Clock className="text-[#00A3FF] w-3 h-3"/>
-              <div className="text-base font-normal">52:00:00</div>
+              <div className="text-base font-normal">{formatTestDuration(cohortDetails?.litmusTestDetail[0]?.litmusTestDuration)}</div>
             </Badge>
           </div>
           <h1 className="text-4xl font-normal">

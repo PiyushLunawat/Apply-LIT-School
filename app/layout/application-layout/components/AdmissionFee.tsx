@@ -1,96 +1,94 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { getCurrentStudent, submitTokenReceipt } from '~/utils/studentAPI';
 import { Card } from '~/components/ui/card';
 import { Button } from '~/components/ui/button';
 import { AlertCircle, Pencil, X } from 'lucide-react';
 import { useNavigate } from '@remix-run/react';
+import { UserContext } from '~/context/UserContext';
 
 interface AdmissionFeeProps {
+  student: any
 }
 
-const AdmissionFee: React.FC<AdmissionFeeProps> = ({  }) => {
+export default function AdmissionFee({ student }: AdmissionFeeProps) {
   const navigate = useNavigate();
     
-   const [isPaymentVerified, setIsPaymentVerified] = useState<string | null>(null);
-   const [studentData, setStudentData] = useState<any>(null);
-   const [loading, setLoading] = useState(true);
-   const [reciptUrl, setReciptUrl] = useState("");
-   const [error, setError] = useState<string | null>(null);const [selectedImage, setSelectedImage] = useState<string | null>(null);
-     const [receiptFile, setReceiptFile] = useState<File | null>(null); // State for the uploaded file
-     const [uploadError, setUploadError] = useState<string | null>(null);
-     const [countdown, setCountdown] = useState(5);
-   
-     const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-       if (event.target.files && event.target.files[0]) {
-         const file = event.target.files[0];
-         const reader = new FileReader();
-   
-         // Preview image
-         reader.onload = (e) => {
-           if (e.target?.result) {
-             setSelectedImage(e.target.result as string);
-           }
-         };
-   
-         reader.readAsDataURL(file);
-         setReceiptFile(file); // Store the selected file for upload
-       }
-     };
-   
-     const handleDeleteImage = () => {
-       setSelectedImage(null); // Remove the image preview
-       setReceiptFile(null); // Remove the file from state
-     };
-   
-     const handleEditImage = () => {
-       document.getElementById('image-upload')?.click();
-     };
-   
- 
-   useEffect(() => {
-     const storedData = localStorage.getItem('studentData');
-     if (storedData) {
-       setStudentData(JSON.parse(storedData));
-     }
-   }, []);
- 
-   useEffect(() => {
-       fetchCurrentStudentData();
-     
-       const intervalId = setInterval(fetchCurrentStudentData, 5000);
-     
-       return () => clearInterval(intervalId);
-     }, [studentData?._id]);
-     
-     async function fetchCurrentStudentData() {
-       if (!studentData?._id) return;
-       try {
-        if (!studentData?._id) throw new Error('Student ID is missing.');
-        const res = await getCurrentStudent(studentData._id);
-        console.log("fd",res.data?.cousrseEnrolled?.[res.data.cousrseEnrolled.length - 1]?.tokenFeeDetails?.receiptUrl[0]);
-        setReciptUrl(res.data?.cousrseEnrolled?.[res.data.cousrseEnrolled.length - 1]?.tokenFeeDetails?.receiptUrl[0])
-        const isVerified = res.data?.cousrseEnrolled?.[res.data.cousrseEnrolled.length - 1]?.tokenFeeDetails?.verificationStatus;
-        setIsPaymentVerified(isVerified);
+  const [loading, setLoading] = useState(false);
+  const [studentData, setStudentData] = useState<any>(null); 
+  const [isPaymentVerified, setIsPaymentVerified] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [reciptUrl, setReciptUrl] = useState("");
+  const [receiptFile, setReceiptFile] = useState<File | null>(null); // State for the uploaded file
+  const [error, setError] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState(5);
 
-        if (res.data?.cousrseEnrolled?.[res.data.cousrseEnrolled.length - 1]?.tokenFeeDetails?.verificationStatus === 'paid') {
-            const countdownInterval = setInterval(() => {
-              setCountdown((prev) => {
-                if (prev <= 1) {
-                  clearInterval(countdownInterval);
-                  navigate('../dashboard');
-                }
-                return prev - 1;
-              });
-            }, 1000);
-      
-            return () => clearInterval(countdownInterval);
+  const latestCohort = student?.appliedCohorts?.[student?.appliedCohorts.length - 1];
+  const tokenFeeDetails = latestCohort?.tokenFeeDetails;
+
+  useEffect(() => {
+    if (tokenFeeDetails?.receiptUrl) {
+      setReciptUrl(tokenFeeDetails.receiptUrl[0]);
+    }
+    setIsPaymentVerified(tokenFeeDetails?.verificationStatus);
+  }, [tokenFeeDetails]);
+
+
+  useEffect(() => {
+    if (tokenFeeDetails?.verificationStatus === "paid") {
+      const countdownInterval = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(countdownInterval);
+            navigate("../../dashboard");
+            return 0;
           }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(countdownInterval);
+    }
+  }, [tokenFeeDetails?.verificationStatus, navigate]);
+
+  
+    const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+      if (event.target.files && event.target.files[0]) {
+        const file = event.target.files[0];
+        const reader = new FileReader();
+
+        // Preview image
+        reader.onload = (e) => {
+          if (e.target?.result) {
+            setSelectedImage(e.target.result as string);
+          }
+        };
+
+        reader.readAsDataURL(file);
+        setReceiptFile(file); // Store the selected file for upload
+      }
+    };
+   
+    const handleDeleteImage = () => {
+      setSelectedImage(null); // Remove the image preview
+      setReceiptFile(null); // Remove the file from state
+    };
+  
+    const handleEditImage = () => {
+      document.getElementById('image-upload')?.click();
+    };
+     
+    async function fetchCurrentStudentData() {
+      if (!studentData?._id) return;
+      try {
+        const res = await getCurrentStudent(studentData._id);
+        setStudentData(res)
+
       } catch (err) {
         setError('Failed to fetch student data. Please try again later.');
       } finally {
         setLoading(false);
       }
-     }
+    }
  
    const handleSubmitImage = async () => {
      if (!receiptFile) {
@@ -101,7 +99,8 @@ const AdmissionFee: React.FC<AdmissionFeeProps> = ({  }) => {
      setUploadError(null)
  
      const formData = new FormData();
-     formData.append('paymentType', studentData?.paymentMethod); // Add paymentType to formData
+     formData.append('cohortId', tokenFeeDetails?.cohortId); // Add paymentType to formData
+     formData.append('paymentType', tokenFeeDetails?.paymentType); // Add paymentType to formData
      formData.append('receipt', receiptFile); // Add receipt image file to formData
  
      try {
@@ -142,16 +141,21 @@ const AdmissionFee: React.FC<AdmissionFeeProps> = ({  }) => {
                   {isPaymentVerified === "paid" && <div className="text-lg sm:text-2xl font-normal">Payment Receipt is verified</div>}
                   {isPaymentVerified === "flagged" && 
                     <div className="text-[#FF503D] flex gap-2 items-center text-lg sm:text-2xl font-normal">
-                      <AlertCircle className='w-5 h-5'/>Receipt Rejected
+                      <AlertCircle className='w-5 h-5'/>Looks like your payment receipt was rejected
                     </div>
                   }
                   <div className="font-normal">{new Date().toLocaleDateString()}</div>
                 </div>
+                {isPaymentVerified === "flagged" &&
+                  <div className='p-3 bg-[#1B1B1C] rounded-md'>
+                    {tokenFeeDetails?.comment?.[tokenFeeDetails?.comment.length - 1]?.text}
+                  </div>
+                }
                   <div className='text-sm sm:text-base space-y-1'>
                     <div className="flex gap-2 font-normal">
-                    Paid via {studentData?.paymentMethod } to 
+                    Paid via {tokenFeeDetails?.paymentType } to 
                     <span className='flex gap-2'>
-                        {studentData?.paymentMethod === 'bank transfer' ? 
+                        {tokenFeeDetails?.paymentType === 'bank transfer' ? 
                         <img src="/assets/images/bank-transfer-type.svg" alt="M" className="w-4"/> :
                         <img src="/assets/images/cash-type.svg" alt="C" className="w-4"/>
                         }
@@ -178,7 +182,7 @@ const AdmissionFee: React.FC<AdmissionFeeProps> = ({  }) => {
                         <img
                           src={selectedImage}
                           alt="Uploaded receipt"
-                          className="mx-auto h-full  "
+                          className="mx-auto h-full"
                         />
 
                         <div className="absolute top-3 right-3 flex space-x-2">
@@ -228,5 +232,3 @@ const AdmissionFee: React.FC<AdmissionFeeProps> = ({  }) => {
             </Card>
   );
 };
-
-export default AdmissionFee;

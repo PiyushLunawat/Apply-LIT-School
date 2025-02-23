@@ -1,6 +1,6 @@
-// const CONST_API = "http://localhost:4000";
 // const CONST_API = "http://51.21.131.240:4000";
-const CONST_API = "https://myfashionfind.shop";
+const CONST_API = "http://localhost:4000";
+// const CONST_API = "https://myfashionfind.shop";
 
 // Fetch all cohorts
 export async function getCohorts() {
@@ -88,9 +88,9 @@ export async function getStudents() {
 }
 
 export async function getCurrentStudent(id: string) {
-  const response = await fetch(`${CONST_API}/admin/student/${id}`, {
+  const response = await fetch(`${CONST_API}/student/${id}`, {
     method: "GET",
-    headers: { "Content-Type": "application/json" },
+    // headers: { "Content-Type": "application/json" },
   });
 
   if (!response.ok) {

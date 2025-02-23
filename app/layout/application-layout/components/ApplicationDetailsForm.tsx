@@ -208,7 +208,7 @@ const ApplicationDetailsForm: React.FC = () => {
   const [interest, setInterest] = useState<any[]>([]); 
   const [cohorts, setCohorts] = useState<any[]>([]); 
   const [contactInfo, setContactInfo] = useState<string>('');
-  const [isSaved, setIsSaved] = useState((studentData?.applicationDetails !== undefined));
+  const [isSaved, setIsSaved] = useState(false);
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [verificationId, setVerificationId] = useState("");
   const [fetchedStudentData, setFetchedStudentData] = useState<any>(null);
@@ -275,17 +275,19 @@ useEffect(() => {
 
 
 
-  useEffect(() => {
-    const fetchStudentData = async () => {
-      try {
-        const student = await getCurrentStudent(studentData._id);
-        setFetchedStudentData(student.data?.studentDetails);        
-      } catch (error) {
-        console.error("Failed to fetch student data:", error);
-      }
-    };
-    fetchStudentData();
-  }, []);
+  // useEffect(() => {
+  //   const fetchStudentData = async () => {
+  //     try {
+  //       const student = await getCurrentStudent(studentData._id);
+  //       console.log("bitch",studentData._id,student);
+        
+  //       setFetchedStudentData(student.data?.studentDetails);        
+  //     } catch (error) {
+  //       console.error("Failed to fetch student data:", error);
+  //     }
+  //   };
+  //   fetchStudentData();
+  // }, [studentData]);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -311,106 +313,114 @@ useEffect(() => {
 
   useEffect(() => {
     const fetchStudentData = async () => {
+      if(studentData._id)
       try {
+        console.log("bitch");
         const student = await getCurrentStudent(studentData._id);
-        const sData = student.data?.studentDetails;
-  
+        console.log("nice", student);
+        
+        const sData = student?.appliedCohorts[student.appliedCohorts.length - 1]?.applicationDetails?.studentDetails;
+        
         // Payment or "isSaved" checks
-        if (student.data?.applicationDetails !== undefined) {
+        if (student?.appliedCohorts[student.appliedCohorts.length - 1]?.applicationDetails?.studentDetails !== undefined) {
           setIsSaved(true);
         } else {
           setIsSaved(false);
         }
-        if (student.data?.applicationDetails?.applicationFeeDetail?.status === "paid") {
+        if (student?.appliedCohorts[student.appliedCohorts.length - 1]?.applicationDetails?.applicationFee === "paid") {
           setIsPaymentDone(true);
         }
-  
+
         // Read existing localStorage data, if any
         const existingDataJSON = localStorage.getItem("applicationDetailsForm");
         let existingData: any = null;
         if (existingDataJSON) {
           existingData = JSON.parse(existingDataJSON);
         }
-  
+        
         const isExistingDataEmpty =
-  existingData &&
-  existingData.studentData &&
-  Object.keys(existingData.studentData).length === 0 &&
-  existingData.applicationData &&
-  existingData.applicationData?.duration === "";
-
-// 3. Decide how to build mergedForm
-let mergedForm;
-if (isExistingDataEmpty) {
-  // If everything in local storage is empty, use the data from sData
-  mergedForm = {
-    studentData: {
-      firstName: studentData?.firstName || '',
-      lastName: studentData?.lastName || '',
-      email: studentData?.email || '',
-      contact: studentData?.mobileNumber || '',
-      dob: studentData?.dateOfBirth ? studentData.dateOfBirth.split('T')[0] : '',
-      currentStatus: studentData?.qualification || '',
-      courseOfInterest: studentData?.program || '',
-      cohort: studentData?.cohort || '',
-      linkedInUrl: student.data?.linkedInUrl || '',
-      instagramUrl: student.data?.instagramUrl || '',
-      gender: studentData?.gender || 'Male',
-    },
-    applicationData: {
-      address: sData?.currentAddress?.streetAddress || '',
-      city: sData?.currentAddress?.city || '',
-      zipcode: sData?.currentAddress?.postalCode || '',
-      educationLevel: sData?.previousEducation?.highestLevelOfEducation || '',
-      fieldOfStudy: sData?.previousEducation?.fieldOfStudy || '',
-      institutionName: sData?.previousEducation?.nameOfInstitution || '',
-      graduationYear: sData?.previousEducation?.yearOfGraduation || '',
-      isExperienced:
-        sData?.workExperience?.isExperienced ||
-        ['Working Professional', 'Freelancer', 'Business Owner', 'Consultant'].includes(studentData?.qualification) ||
-        false,
-      experienceType:
-        sData?.workExperience?.experienceType ||
-        (['Working Professional', 'Business Owner', 'Freelancer', 'Consultant'].includes(studentData?.qualification)
-          ? studentData?.qualification
-          : ''),
-      nameOfCompany: sData?.workExperience?.nameOfCompany || '',
-      durationFrom: '',
-      durationTo: '',
-      duration: sData?.workExperience?.duration || '',
-      jobDescription: sData?.workExperience?.jobDescription || '',
-      emergencyFirstName: sData?.emergencyContact?.firstName || '',
-      emergencyLastName: sData?.emergencyContact?.lastName || '',
-      emergencyContact: sData?.emergencyContact?.contactNumber || '',
-      relationship: sData?.emergencyContact?.relationshipWithStudent || '',
-      fatherFirstName: sData?.parentInformation?.father?.firstName || '',
-      fatherLastName: sData?.parentInformation?.father?.lastName || '',
-      fatherContact: sData?.parentInformation?.father?.contactNumber || '',
-      fatherOccupation: sData?.parentInformation?.father?.occupation || '',
-      fatherEmail: sData?.parentInformation?.father?.email || '',
-      motherFirstName: sData?.parentInformation?.mother?.firstName || '',
-      motherLastName: sData?.parentInformation?.mother?.lastName || '',
-      motherContact: sData?.parentInformation?.mother?.contactNumber || '',
-      motherOccupation: sData?.parentInformation?.mother?.occupation || '',
-      motherEmail: sData?.parentInformation?.mother?.email || '',
-      financiallyDependent: !sData?.financialInformation?.isFinanciallyIndependent || false,
-      appliedForFinancialAid: sData?.financialInformation?.hasAppliedForFinancialAid || false,
-    },
-  };
-} else
-{ mergedForm = {
+        existingData &&
+        existingData.studentData &&
+        Object.keys(existingData.studentData).length === 0 &&
+        existingData.applicationData &&
+        existingData.applicationData?.duration === "";
+        
+        console.log("1",isExistingDataEmpty);
+        console.log("2",studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]?.cohortId._id);
+        console.log("3",studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]?.cohortId?.programDetail?._id);
+        
+        // 3. Decide how to build mergedForm
+        let mergedForm;
+        if (isExistingDataEmpty) {
+          // If everything in local storage is empty, use the data from sData
+          mergedForm = {
+            studentData: {
+              firstName: studentData?.firstName || '',
+              lastName: studentData?.lastName || '',
+              email: studentData?.email || '',
+              contact: studentData?.mobileNumber || '',
+              dob: studentData?.dateOfBirth ? studentData.dateOfBirth.split('T')[0] : '',
+              currentStatus: studentData?.qualification || '',
+              courseOfInterest: studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]?.cohortId?.programDetail?._id || '',
+              cohort: studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]?.cohortId._id || '',
+              linkedInUrl: studentData?.linkedInUrl || '',
+              instagramUrl: studentData?.instagramUrl || '',
+              gender: studentData?.gender || 'Male',
+            },
+            applicationData: {
+              address: sData?.currentAddress?.streetAddress || '',
+              city: sData?.currentAddress?.city || '',
+              zipcode: sData?.currentAddress?.postalCode || '',
+              educationLevel: sData?.previousEducation?.highestLevelOfEducation || '',
+              fieldOfStudy: sData?.previousEducation?.fieldOfStudy || '',
+              institutionName: sData?.previousEducation?.nameOfInstitution || '',
+              graduationYear: sData?.previousEducation?.yearOfGraduation || '',
+              isExperienced:
+                sData?.workExperience?.isExperienced ||
+                ['Working Professional', 'Freelancer', 'Business Owner', 'Consultant'].includes(studentData?.qualification) ||
+                false,
+              experienceType:
+                sData?.workExperience?.experienceType ||
+                (['Working Professional', 'Business Owner', 'Freelancer', 'Consultant'].includes(studentData?.qualification)
+                  ? studentData?.qualification
+                  : ''),
+              nameOfCompany: sData?.workExperience?.nameOfCompany || '',
+              durationFrom: '',
+              durationTo: '',
+              duration: sData?.workExperience?.duration || '',
+              jobDescription: sData?.workExperience?.jobDescription || '',
+              emergencyFirstName: sData?.emergencyContact?.firstName || '',
+              emergencyLastName: sData?.emergencyContact?.lastName || '',
+              emergencyContact: sData?.emergencyContact?.contactNumber || '',
+              relationship: sData?.emergencyContact?.relationshipWithStudent || '',
+              fatherFirstName: sData?.parentInformation?.father?.firstName || '',
+              fatherLastName: sData?.parentInformation?.father?.lastName || '',
+              fatherContact: sData?.parentInformation?.father?.contactNumber || '',
+              fatherOccupation: sData?.parentInformation?.father?.occupation || '',
+              fatherEmail: sData?.parentInformation?.father?.email || '',
+              motherFirstName: sData?.parentInformation?.mother?.firstName || '',
+              motherLastName: sData?.parentInformation?.mother?.lastName || '',
+              motherContact: sData?.parentInformation?.mother?.contactNumber || '',
+              motherOccupation: sData?.parentInformation?.mother?.occupation || '',
+              motherEmail: sData?.parentInformation?.mother?.email || '',
+              financiallyDependent: !sData?.financialInformation?.isFinanciallyIndependent || false,
+              appliedForFinancialAid: sData?.financialInformation?.hasAppliedForFinancialAid || false,
+            },
+          };
+        } else
+        { mergedForm = {
           studentData: {
             // Default to your known fields first
             firstName: studentData?.firstName || "",
             lastName: studentData?.lastName || "",
             email: studentData?.email || "",
-            courseOfInterest: existingData?.studentData?.courseOfInterest || studentData?.program || "",
-            cohort: existingData?.studentData?.cohort || studentData?.cohort || "",
+            courseOfInterest: existingData?.studentData?.courseOfInterest || studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]?.cohortId?.programDetail?._id || "",
+            cohort: existingData?.studentData?.cohort || studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]?.cohortId._id || "",
             contact: existingData?.studentData?.contact || studentData?.mobileNumber || "",
             dob: existingData?.studentData?.dob.split("T")[0] || studentData.dateOfBirth.split("T")[0],
             currentStatus: existingData?.studentData?.currentStatus ||  studentData?.qualification || "",
-            linkedInUrl: existingData?.studentData?.linkedInUrl || student.data?.linkedInUrl || "",
-            instagramUrl: existingData?.studentData?.instagramUrl || student.data?.instagramUrl || "",
+            linkedInUrl: existingData?.studentData?.linkedInUrl || studentData?.linkedInUrl || "",
+            instagramUrl: existingData?.studentData?.instagramUrl || studentData?.instagramUrl || "",
             gender: existingData?.studentData?.gender || studentData?.gender || "Male",
           },
   
@@ -491,30 +501,30 @@ if (isExistingDataEmpty) {
   }, [studentData, interest]);
   
 
-  useEffect(() => {
-  // If we don't have studentData yet, or if there's no user ID,
-  // skip until we have the data we need
-  if (!studentData || !studentData._id || interest) return;
+//   useEffect(() => {
+//   // If we don't have studentData yet, or if there's no user ID,
+//   // skip until we have the data we need
+//   if (!studentData || !studentData._id || interest) return;
 
-  // Check if something already exists in localStorage
-  const existingData = localStorage.getItem("applicationDetailsForm");
+//   // Check if something already exists in localStorage
+//   const existingData = localStorage.getItem("applicationDetailsForm");
 
-  // If nothing is stored yet, we create a minimal object with those three fields
-  if (!existingData) {
-    const initialForm = {
-      // Only the fields you want to seed
-      studentData: {
-        currentStatus: studentData?.qualification || "",
-        courseOfInterest: studentData?.program || "",
-        cohort: studentData?.cohort || "",
-      },
-      // Everything else can remain empty or undefined
-      applicationData: {},
-    };
+//   // If nothing is stored yet, we create a minimal object with those three fields
+//   if (!existingData) {
+//     const initialForm = {
+//       // Only the fields you want to seed
+//       studentData: {
+//         currentStatus: studentData?.qualification || "",
+//         courseOfInterest: studentData?.program || "",
+//         cohort: studentData?.cohort || "",
+//       },
+//       // Everything else can remain empty or undefined
+//       applicationData: {},
+//     };
 
-    localStorage.setItem("applicationDetailsForm", JSON.stringify(initialForm));
-  }
-}, [studentData, interest]);
+//     localStorage.setItem("applicationDetailsForm", JSON.stringify(initialForm));
+//   }
+// }, [studentData, interest]);
 
 
   useEffect(() => {
@@ -761,6 +771,7 @@ useEffect(() => {
     }
  
     const apiPayload = {
+      cohortId: data.studentData?.cohort,
       studentData: {
         firstName: studentData?.firstName || '',
         lastName: studentData?.lastName || '',
@@ -831,7 +842,7 @@ useEffect(() => {
     setLoading(true);
     console.log("dssd",apiPayload);
     
-    const response = await fetch('https://myfashionfind.shop/student/submit-application', {
+    const response = await fetch('http://localhost:4000/student/submit-application', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -861,7 +872,6 @@ useEffect(() => {
       console.log("save",studentData?.applicationDetails, isSaved);
       await saveData(data);
   };
-  
   
   const handleRetry = () => {
     setFailedDialogOpen(false); // Close the dialog

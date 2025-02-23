@@ -53,12 +53,13 @@ const Review: React.FC<ReviewProps> = ({ setIsPaymentVerified }) => {
     if (!studentData?._id) return;
     try {
       const res = await getCurrentStudent(studentData._id);
-      const fetchedData = res.data;
+      const fetchedData = res?.appliedCohorts[res.appliedCohorts.length - 1];
+      console.log("xxx",fetchedData?.applicationDetails?.applicationStatus);
+      
   
       setAppliData(fetchedData);
-      setName(fetchedData?.firstName);
+      setName(res?.firstName);
       setStatus(fetchedData?.applicationDetails?.applicationStatus);
-      // console.log("fwf",fetchedData?.applicationDetails?.applicationStatus);
       
       setTime(fetchedData?.applicationDetails?.updatedAt);
       setFilledSeats(fetchedData?.cohort?.filledSeats?.length || 0);

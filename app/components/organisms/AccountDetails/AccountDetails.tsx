@@ -32,9 +32,9 @@ const AccountDetails = () => {
     const fetchStudentData = async () => {
       try {
         const student = await getCurrentStudent(studentData._id);
-        setStudentData(student.data);
-        setDetails(student.data);
-        setBloodGroupInput(student.data.bloodGroup || "");
+        setStudentData(student);
+        setDetails(student);
+        setBloodGroupInput(student.bloodGroup || "");
       } catch (error) {
         console.error("Failed to fetch student data:", error);
       }
@@ -284,7 +284,7 @@ const AccountDetails = () => {
                 <div className="text-sm ">Institute Name</div>
                 <div className="flex justify-between items-center border-b border-gray-700 pb-2">
                   <div className="text-xl">
-                    {studentData?.applicationDetails?.studenDetails?.previousEducation?.nameOfInstitution || "--"}
+                    {details?.appliedCohorts?.[details?.appliedCohorts.length - 1]?.applicationDetails?.studenDetails?.previousEducation?.nameOfInstitution || "--"}
                   </div>
                   <CheckCircle className="h-4 w-4 text-[#00CC92]" />
                 </div>

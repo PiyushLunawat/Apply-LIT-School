@@ -10,7 +10,9 @@ interface Seat {
 }
 
 interface FeedbackProps {
+  cohortId: string
   booked: number;
+  tokenFee: number;
   setIsPaymentVerified: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
@@ -58,7 +60,7 @@ const CURVE_INTENSITY = 150;
 const BASE_CURVE_MULTIPLIER = 1.5;
 
 
-const BookYourSeat: React.FC<FeedbackProps> = ({ booked, setIsPaymentVerified }) => {  
+const BookYourSeat: React.FC<FeedbackProps> = ({ cohortId, booked, tokenFee, setIsPaymentVerified }) => {  
   const [seats] = useState(generateSeats(booked));
   const [selectedSeatId, setSelectedSeatId] = useState<string>();
 
@@ -111,6 +113,10 @@ const BookYourSeat: React.FC<FeedbackProps> = ({ booked, setIsPaymentVerified })
     return angle;
   };
 
+  const formatAmount = (value: number | undefined) =>
+    value !== undefined
+      ? new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(Math.round(value))
+      : "--";
 
   return (
   <>  
@@ -180,11 +186,11 @@ const BookYourSeat: React.FC<FeedbackProps> = ({ booked, setIsPaymentVerified })
       <div className='flex justify-center'>
         <Button size="xl" className="mt-8 w-fit bg-[#00AB7B] hover:bg-[#00AB7B]/90 mx-auto" onClick={() => setPaymentDialogOpen(true)} disabled={!selectedSeatId}
         >
-          Pay INR 25,000.00 and Reserve
+          Pay INR {formatAmount(tokenFee)}.00 and Reserve
         </Button>
       </div>
     </div>
-    <TokenPaymentDialog open={PaymentDialogOpen} setOpen={setPaymentDialogOpen} setIsPaymentVerified={setIsPaymentVerified}/>
+    <TokenPaymentDialog cohortId={cohortId} open={PaymentDialogOpen} setOpen={setPaymentDialogOpen} setIsPaymentVerified={setIsPaymentVerified}/>
   </>  
   );
 };

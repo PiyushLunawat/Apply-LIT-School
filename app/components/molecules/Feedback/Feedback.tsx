@@ -26,25 +26,25 @@ const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass, book
     const fetchStudentData = async () => {
       try {
         const student = await getCurrentStudent(studentData._id);
-        setStudent(student.data);
+        setStudent(student);
       } catch (error) {
         console.error("Failed to fetch student data:", error);
       }
     };
     fetchStudentData();
-  }, []);
+  }, [studentData]);
 
   const handleReviseApplication = () => {
     navigate('../../application/task');
   };
 
   const handleScheduleInterview = async () => {
-    const reviewerEmails = student?.cohort?.collaborators
+    const reviewerEmails = student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.cohortId?.collaborators
       ?.filter((collaborator: any) => collaborator.role === "interviewer")
       .map((collaborator: any) => collaborator.email);
   
     if (!reviewerEmails || reviewerEmails.length === 0) {
-      console.error("No reviewer emails found.");
+      console.error("No reviewer emails found.",student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.cohortId?.collaborators);
       return;
     }
   
@@ -55,7 +55,6 @@ const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass, book
 
     console.log("pay",payload);
     
-  
     try {
       const response = await fetch(
         "https://dev.cal.litschool.in/api/application-portal/get-all-users",
@@ -96,7 +95,7 @@ const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass, book
     </div>
     {status === "on hold" && (
       <ul className="ml-4 sm:ml-6 space-y-2 list-disc">
-        {feedbackList?.applicationDetails?.applicationTasks[0]?.applicationTaskDetail?.applicationTasks[0]?.overallFeedback[feedbackList?.applicationDetails?.applicationTasks[0]?.applicationTaskDetail?.applicationTasks[0]?.overallFeedback.length-1]?.feedback.map((item: any, index: any) => (
+        {feedbackList?.applicationDetails?.applicationTasks[0]?.applicationTasks[0]?.overallFeedback[feedbackList?.applicationDetails?.applicationTasks[0]?.applicationTasks[0]?.overallFeedback.length-1]?.feedback.map((item: any, index: any) => (
           <li className="text-sm sm:text-base" key={index}>
             {item}
           </li>
@@ -105,14 +104,14 @@ const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass, book
     )} 
     {(['accepted', 'interview cancelled', 'rejected'].includes(status)) && (
       <div className="space-y-4">
-        {feedbackList?.applicationDetails?.applicationTasks[0]?.applicationTaskDetail?.applicationTasks[0].tasks?.map((task: any, index: any) => (
+        {feedbackList?.applicationDetails?.applicationTasks[0]?.applicationTasks[0].tasks?.map((task: any, index: any) => (
           task?.feedback.length>0 && 
           <div key={task._id}>
               <div className="text-sm sm:text-base font-semibold text-[#00A3FF]">
                 Task 0{index+1}
               </div>
                 {task?.feedback?.map((item: any, i: any) => (
-                  <ul className="ml-4 sm:ml-6 space-y-2 list-disc">
+                  <ul key={i} className="ml-4 sm:ml-6 space-y-2 list-disc">
                     <li className="text-sm sm:text-base" key={i}>
                       {item}
                     </li>
@@ -149,7 +148,12 @@ const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass, book
       </Button>
     </div>}
 
-    {status === "selected" && <BookYourSeat booked={booked} setIsPaymentVerified={setIsPaymentVerified}
+    {status === "selected" && 
+      <BookYourSeat
+        cohortId={student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.cohortId?._id}
+        booked={booked}
+        tokenFee={student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.cohortId?.cohortFeesDetail?.tokenFee}
+        setIsPaymentVerified={setIsPaymentVerified}
     />}
   <Dialog open={interviewOpen} onOpenChange={setInterviewOpen}>
     <DialogContent className="max-w-[90vw] sm:max-w-2xl">

@@ -62,7 +62,6 @@ const formSchema = z.object({
   qualification: z.string().nonempty("Qualification is required"),
   program: z.string().nonempty("Please select a program"),
   cohort: z.string().nonempty("Please select a cohort"),
-  password: z.string().nonempty("Please select a cohort"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -93,7 +92,6 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({}) => {
       qualification: '',
       program: '',
       cohort: '',
-      password: 'hi',
     },
   });
   
