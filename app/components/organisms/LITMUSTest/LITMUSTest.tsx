@@ -193,7 +193,7 @@ const LITMUSTest: React.FC = () => {
       // Submit the form data using the provided API function
       const response = await submitLITMUSTest(formData, stu);
       console.log('Submission successful:', response);
-      setInterviewOpen(true)
+      handleScheduleInterview();
 
       // Handle success (e.g., show a success message or redirect)
     } catch (error) {

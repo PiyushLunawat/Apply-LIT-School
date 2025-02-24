@@ -2,8 +2,9 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const CONST_API = process.env.API_BASE_URL
+const CONST_API = process.env.API_BASE_URL;
 
+// const CONST_API = "https://dev.apply.litschool.in";
 // const CONST_API = "http://51.21.131.240:4000";
 // const CONST_API = "http://localhost:4000";
 // const CONST_API = "https://myfashionfind.shop";
@@ -11,7 +12,7 @@ const CONST_API = process.env.API_BASE_URL
 // Fetch all cohorts
 export async function getCohorts() {
   const response = await fetch(`${CONST_API}/admin/cohort`);
-  
+
   if (!response.ok) {
     throw new Error("Failed to fetch cohorts");
   }
@@ -109,7 +110,7 @@ export async function verifyNumber(data: { phone: string }) {
   const response = await fetch(`${CONST_API}/student/verify-mobile-number`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({mobileNumber: data.phone}),
+    body: JSON.stringify({ mobileNumber: data.phone }),
   });
 
   if (!response.ok) {
@@ -120,7 +121,10 @@ export async function verifyNumber(data: { phone: string }) {
 }
 
 // Verify Mobile Number API
-export async function verifyMobileOTP(data: { mobileNumber: string; otp: string }) {
+export async function verifyMobileOTP(data: {
+  mobileNumber: string;
+  otp: string;
+}) {
   const response = await fetch(`${CONST_API}/student/verify-otp-number`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -134,24 +138,23 @@ export async function verifyMobileOTP(data: { mobileNumber: string; otp: string 
   return response.json();
 }
 
-
 // Submit application function
 export async function submitApplication(data: {
-  studentData:{
-  firstName: string;
-  lastName: string;
-  mobileNumber: string;
-  isMobileVerified: boolean;
-  email: string;
-  qualification?: string;
-  program?: string;
-  cohort?: string;
-  gender: string;
-  isVerified?: boolean;
-  profileImage: any;
-  linkedInUrl: string;
-  instagramUrl: string;
-  dateOfBirth: Date;
+  studentData: {
+    firstName: string;
+    lastName: string;
+    mobileNumber: string;
+    isMobileVerified: boolean;
+    email: string;
+    qualification?: string;
+    program?: string;
+    cohort?: string;
+    gender: string;
+    isVerified?: boolean;
+    profileImage: any;
+    linkedInUrl: string;
+    instagramUrl: string;
+    dateOfBirth: Date;
   };
   applicationData: {
     currentAddress: {

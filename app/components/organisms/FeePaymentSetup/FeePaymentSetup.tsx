@@ -19,12 +19,14 @@ import { Separator } from "../../ui/separator";
 import { Badge } from "../../ui/badge";
 
 type FeePaymentData = {
-  modeOfPayment: string;
-  installmentType: string;
-  accountHolderName: string;
-  accountNumber: string;
-  IFSCCode: string;
-  branchName: string;
+  paymentMethod: string;
+  paymentPlan: string;
+  bankDetails: {
+    accountHolderName: string;
+    accountNumber: string;
+    IFSCCode: string;
+    branchName: string;
+  };
 };
 
 export default function FeePaymentSetup() {
@@ -36,13 +38,15 @@ export default function FeePaymentSetup() {
   const [error, setError] = useState<string | null>(null);
   const [expandedInstallment, setExpandedInstallment] = useState<string | null>(null);
 
-  const [formDat, setFormDat] = useState<FeePaymentData>({
-    modeOfPayment: "",
-    installmentType: "",
-    accountHolderName: "",
-    accountNumber: "",
-    IFSCCode: "",
-    branchName: "",
+  const [formData, setFormData] = useState<FeePaymentData>({
+    paymentMethod: "",
+    paymentPlan: "",
+    bankDetails:{
+      accountHolderName: "",
+      accountNumber: "",
+      IFSCCode: "",
+      branchName: "",
+    }
   });
 
   // Fetch the student data
@@ -69,10 +73,25 @@ export default function FeePaymentSetup() {
   // Simple controlled inputs
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormDat((prev) => ({ ...prev, [name]: value }));
+  
+    // If the name includes a dot, split it. E.g. "bankDetails.accountHolderName"
+    if (name.includes(".")) {
+      const [parent, child] = name.split(".");
+      setFormData((prev: any) => ({
+        ...prev,
+        [parent]: {
+          ...prev[parent],
+          [child]: value,
+        },
+      }));
+    } else {
+      // Otherwise set the top-level property
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
+  
   const handleSelectChange = (name: string, value: string) => {
-    setFormDat((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   // Submit step 1
@@ -80,8 +99,20 @@ export default function FeePaymentSetup() {
     setLoading(true);
     setError(null);
     try {
-      console.log("Request Body:", formDat);
-      const response = await setupFeePayment(formDat);
+      const payload: any = {
+        paymentMethod: formData.paymentMethod,
+        paymentPlan: formData.paymentPlan,
+      };
+  
+      // Only include bank details if paymentMethod is "bank transfer"
+      if (formData.paymentMethod === "bank transfer") {
+        payload.bankDetails = {
+          ...formData.bankDetails,
+        };
+      }
+
+      console.log("Request Body:", payload);
+      const response = await setupFeePayment(payload);
       console.log("Fee Payment Setup Successful", response);
       setStep(2);
     } catch (err: any) {
@@ -94,13 +125,13 @@ export default function FeePaymentSetup() {
 
   // Enable/disable Next button
   const isNextButtonEnabled =
-    (formDat.modeOfPayment === "cash" && formDat.installmentType) ||
-    (formDat.modeOfPayment === "bank transfer" &&
-      formDat.installmentType &&
-      formDat.accountHolderName &&
-      formDat.accountNumber &&
-      formDat.IFSCCode &&
-      formDat.branchName);
+    (formData.paymentMethod === "cash" && formData.paymentPlan) ||
+    (formData.paymentMethod === "bank transfer" &&
+      formData.paymentPlan &&
+      formData.bankDetails.accountHolderName &&
+      formData.bankDetails.accountNumber &&
+      formData.bankDetails.IFSCCode &&
+      formData.bankDetails.branchName);
 
   // STEP 1: Payment Setup
   const renderStep1 = () => {
@@ -125,12 +156,12 @@ export default function FeePaymentSetup() {
         {/* Payment mode & installment type */}
         <div className="flex gap-2">
           <div className="flex-1">
-            <Label className="pl-3" htmlFor="modeOfPayment">
+            <Label className="pl-3" htmlFor="paymentMethod">
               Select Your Mode of Payment
             </Label>
             <Select
-              onValueChange={(val) => handleSelectChange("modeOfPayment", val)}
-              value={formDat.modeOfPayment}
+              onValueChange={(val) => handleSelectChange("paymentMethod", val)}
+              value={formData.paymentMethod}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select" />
@@ -145,12 +176,12 @@ export default function FeePaymentSetup() {
           </div>
 
           <div className="flex-1">
-            <Label className="pl-3" htmlFor="installmentType">
+            <Label className="pl-3" htmlFor="paymentPlan">
               Select Installment Type
             </Label>
             <Select
-              onValueChange={(val) => handleSelectChange("installmentType", val)}
-              value={formDat.installmentType}
+              onValueChange={(val) => handleSelectChange("paymentPlan", val)}
+              value={formData.paymentPlan}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select" />
@@ -166,18 +197,18 @@ export default function FeePaymentSetup() {
         </div>
 
         {/* Bank details if 'bank transfer' */}
-        {formDat.modeOfPayment === "bank transfer" && (
+        {formData.paymentMethod === "bank transfer" && (
           <>
             <div className="flex gap-2">
               <div className="flex-1">
-                <Label className="pl-3" htmlFor="accountHolderName">
+                <Label className="pl-3" htmlFor="bankDetails.accountHolderName">
                   Account Holder Name
                 </Label>
                 <Input
-                  id="accountHolderName"
+                  id="bankDetails.accountHolderName"
                   placeholder="Type here"
-                  name="accountHolderName"
-                  value={formDat.accountHolderName}
+                  name="bankDetails.accountHolderName"
+                  value={formData.bankDetails.accountHolderName}
                   onChange={handleInputChange}
                 />
               </div>
@@ -186,10 +217,10 @@ export default function FeePaymentSetup() {
                   Account Number
                 </Label>
                 <Input
-                  id="accountNumber"
+                  id="bankDetails.accountNumber"
                   placeholder="XXXXXXXXXXXX"
-                  name="accountNumber"
-                  value={formDat.accountNumber}
+                  name="bankDetails.accountNumber"
+                  value={formData.bankDetails.accountNumber}
                   onChange={handleInputChange}
                 />
               </div>
@@ -200,10 +231,10 @@ export default function FeePaymentSetup() {
                   IFSC Code
                 </Label>
                 <Input
-                  id="IFSCCode"
+                  id="bankDetails.IFSCCode"
                   placeholder="XXXXXXXXXXX"
-                  name="IFSCCode"
-                  value={formDat.IFSCCode}
+                  name="bankDetails.IFSCCode"
+                  value={formData.bankDetails.IFSCCode}
                   onChange={handleInputChange}
                 />
               </div>
@@ -212,10 +243,10 @@ export default function FeePaymentSetup() {
                   Branch Name
                 </Label>
                 <Input
-                  id="branchName"
+                  id="bankDetails.branchName"
                   placeholder="Type here"
-                  name="branchName"
-                  value={formDat.branchName}
+                  name="bankDetails.branchName"
+                  value={formData.bankDetails.branchName}
                   onChange={handleInputChange}
                 />
               </div>
@@ -223,7 +254,7 @@ export default function FeePaymentSetup() {
           </>
         )}
 
-        {formDat.modeOfPayment === "cash" && (
+        {formData.paymentMethod === "cash" && (
           <p className="text-sm text-gray-500">
             Cash payment does not require additional details.
           </p>
@@ -299,7 +330,7 @@ export default function FeePaymentSetup() {
         </p>
       </div>}
 
-      {student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.feeSetup?.installmentType === 'one shot payment' ? 
+      {student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.feeSetup?.paymentPlan === 'one shot payment' ? 
       <div className="">
         <div className="border rounded-xl mb-6">
               {/* Semester Header */}
