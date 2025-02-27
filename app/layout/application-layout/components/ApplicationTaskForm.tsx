@@ -135,7 +135,7 @@ const ApplicationTaskForm: React.FC = () => {
           goals: lastTaskSubmission?.courseDive?.text2 || '',
         };
   
-        const storedFormJSON = localStorage.getItem("applicationTaskForm");
+        const storedFormJSON = localStorage.getItem(`applicationTaskForm-${studentData?.email}`);
   if (storedFormJSON) {
     const parsedForm = JSON.parse(storedFormJSON);
 
@@ -177,18 +177,19 @@ const ApplicationTaskForm: React.FC = () => {
   useEffect(() => {
     // Only run if studentData is available
     if (!studentData || !studentData._id) return;
-    const existingData = localStorage.getItem("applicationTaskForm");
+    const existingData = localStorage.getItem(`applicationTaskForm-${studentData?.email}`);
     if (!existingData) {
       // Initialize with the current form values (after fetchData has reset the form)
       // Use form.getValues() to capture the current state.
       const initialData = form.getValues();
-      localStorage.setItem("applicationTaskForm", JSON.stringify(initialData));
+      if (studentData?.email)
+      localStorage.setItem(`applicationTaskForm-${studentData?.email}`, JSON.stringify(initialData));
     }
   }, [studentData, form]);
   
   // 2. On mount, if localStorage data exists, load it and reset the form.
   useEffect(() => {
-    const storedFormJSON = localStorage.getItem("applicationTaskForm");
+    const storedFormJSON = localStorage.getItem(`applicationTaskForm-${studentData?.email}`);
     if (storedFormJSON) {
       try {
         const parsedForm = JSON.parse(storedFormJSON);
@@ -202,10 +203,11 @@ const ApplicationTaskForm: React.FC = () => {
   // 3. Whenever the form data changes, update localStorage.
   useEffect(() => {
     const subscription = watch((value) => {
-      localStorage.setItem("applicationTaskForm", JSON.stringify(value));
+      if(studentData?.email)
+      localStorage.setItem(`applicationTaskForm-${studentData?.email}`, JSON.stringify(value));
     });
     return () => subscription.unsubscribe();
-  }, [watch]);
+  }, [watch, studentData?.email]);
   
   // ------------------ End LOCAL STORAGE SETUP ------------------
   
@@ -271,7 +273,7 @@ const ApplicationTaskForm: React.FC = () => {
       const res = await submitApplicationTask(formData);
       console.log("Submission success => ", res);
       navigate("/application/status");
-      localStorage.removeItem("applicationTaskForm");
+      localStorage.removeItem(`applicationTaskForm-${studentData?.email}`);
     } catch (err) {
       console.error("Failed to submit application task:", err);
     } finally {

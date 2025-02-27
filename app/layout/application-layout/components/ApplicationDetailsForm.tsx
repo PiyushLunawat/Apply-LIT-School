@@ -203,6 +203,7 @@ const ApplicationDetailsForm: React.FC = () => {
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
   const [failedDialogOpen, setFailedDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [interest, setInterest] = useState<any[]>([]); 
@@ -315,9 +316,8 @@ useEffect(() => {
     const fetchStudentData = async () => {
       if(studentData._id)
       try {
-        console.log("bitch");
         const student = await getCurrentStudent(studentData._id);
-        console.log("nice", student);
+        setStudentData(student);
         
         const sData = student?.appliedCohorts[student.appliedCohorts.length - 1]?.applicationDetails?.studentDetails;
         
@@ -332,7 +332,7 @@ useEffect(() => {
         }
 
         // Read existing localStorage data, if any
-        const existingDataJSON = localStorage.getItem("applicationDetailsForm");
+        const existingDataJSON = localStorage.getItem(`applicationDetailsForm-${studentData?.email}`);
         let existingData: any = null;
         if (existingDataJSON) {
           existingData = JSON.parse(existingDataJSON);
@@ -528,7 +528,7 @@ useEffect(() => {
 
 
   useEffect(() => {
-    const storedFormJSON = localStorage.getItem("applicationDetailsForm");
+    const storedFormJSON = localStorage.getItem(`applicationDetailsForm-${studentData?.email}`);
     if (storedFormJSON) {
       try {
         const parsedForm = JSON.parse(storedFormJSON);
@@ -543,11 +543,12 @@ useEffect(() => {
   useEffect(() => {
     // .watch() returns the entire form state on every change
     const subscription = watch((value) => {
-      localStorage.setItem("applicationDetailsForm", JSON.stringify(value));
+      if (studentData?.email)
+      localStorage.setItem(`applicationDetailsForm-${studentData?.email}`, JSON.stringify(value));
     });
     // unsubscribe on unmount
     return () => subscription.unsubscribe();
-  }, [watch]);
+  }, [watch, studentData?.email]);
   
 
   // Watch fields for conditional rendering
@@ -577,7 +578,7 @@ const handleVerifyClick = async (contact: string) => {
     // Ensure code only runs on the client
     return;
   }
-
+  setOtpLoading(true)
   try {
     // Lazy load the RecaptchaVerifier when the button is clicked
     const recaptchaVerifier = new RecaptchaVerifier(
@@ -596,6 +597,8 @@ const handleVerifyClick = async (contact: string) => {
       type: 'manual',
       message: error.message || 'Failed to send OTP. Please try again.',
     });
+  } finally {
+    setOtpLoading(false)
   }
 };
 
@@ -650,6 +653,7 @@ useEffect(() => {
   const handleContinueToDashboard = () => {
     window.location.href = '/application/task';
     setSuccessDialogOpen(false);
+    localStorage.removeItem(`applicationDetailsForm-${studentData?.email}`);
   };
 
   const loadScript = (src: string): Promise<boolean> => {
@@ -671,13 +675,15 @@ useEffect(() => {
       // Load the Razorpay script
       const razorpayLoaded = await loadScript('https://checkout.razorpay.com/v1/checkout.js');
       if (!razorpayLoaded) {
-        alert('Razorpay SDK failed to load. Are you online?');
+      
         setLoading(false);
         return;
       }
   
       // Fetch application fee amount
-      const applicationFee = fetchedStudentData?.cohort?.cohortFeesDetail?.applicationFee || 500;
+      const applicationFee = studentData?.appliedCohorts[studentData.appliedCohorts.length - 1]?.cohortId?.cohortFeesDetail?.applicationFee || 500;
+      const sId = studentData._id;
+      const cId = studentData.appliedCohorts[studentData.appliedCohorts.length - 1].cohortId._id;
   
       // Call the API to create an order
       const feeResponse = await payApplicationFee(applicationFee, "INR");
@@ -702,8 +708,8 @@ useEffect(() => {
               amount: applicationFee,
               receipt: "",
             },
-            studentId: studentData._id,
-            cohortId: studentData.cohort,
+            studentId: sId,
+            cohortId: cId,
             razorpay_order_id: response.razorpay_order_id,
             razorpay_payment_id: response.razorpay_payment_id,
             razorpay_signature: response.razorpay_signature,
@@ -717,9 +723,7 @@ useEffect(() => {
             if (verifyResponse.status === 'ok') {
               setIsPaymentDone(true);
               setSuccessDialogOpen(true);
-            } else {
-              setFailedDialogOpen(true);
-            }
+            } 
           } catch (verificationError) {
             console.error('Error verifying payment:', verificationError);
             setFailedDialogOpen(true);
@@ -842,7 +846,7 @@ useEffect(() => {
     setLoading(true);
     console.log("dssd",apiPayload);
     
-    const response = await fetch('https://dev.apply.litschool.in/student/submit-application', {
+    const response = await fetch('http://localhost:4000/student/submit-application', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -854,7 +858,7 @@ useEffect(() => {
       console.log('Form submitted successfully', response);
       setIsPaymentDialogOpen(true);
       setIsSaved(true);
-      localStorage.removeItem("applicationDetailsForm");
+      localStorage.removeItem(`applicationDetailsForm-${studentData?.email}`);
     } else {
       // Handle error response
       console.error('Form submission failed');
@@ -951,8 +955,8 @@ useEffect(() => {
                     </FormControl>
                     {studentData?.isMobileVerified ?
                       <Phone className="absolute right-3 top-[46px] w-5 h-5" /> : 
-                      <Button size='sm' className='absolute right-3 top-10 rounded-full px-4 bg-[#00CC92]' onClick={() => handleVerifyClick(field.value || studentData?.mobileNumber)} type="button">
-                        Verify
+                      <Button size='sm' className='absolute right-3 top-10 rounded-full px-4 bg-[#00CC92]' disabled={otpLoading} onClick={() => handleVerifyClick(field.value || studentData?.mobileNumber)} type="button">
+                        {otpLoading ? 'Sending OTP...' : 'Verify'}
                       </Button>
                     }
                       {errors?.studentData?.contact ? (
@@ -1961,7 +1965,7 @@ useEffect(() => {
             >
               <div className='flex items-center gap-2'>
                 <SaveIcon className='w-5 h-5' />
-                {loading ? 'Submitting...' : 'Submit and Pay INR 500.00'}
+                {loading ? 'Submitting...' : `Submit and Pay INR ${studentData?.appliedCohorts[studentData.appliedCohorts.length - 1]?.cohortId?.cohortFeesDetail?.applicationFee || 0}.00`}
               </div>
             </Button>
           )

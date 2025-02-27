@@ -19,7 +19,7 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { UserContext } from '~/context/UserContext';
-import { getCurrentStudent } from '~/utils/studentAPI';
+import { getCurrentStudent, updateStudentData } from '~/utils/studentAPI';
 import { PhoneAuthProvider, signInWithCredential } from 'firebase/auth';
 import { auth } from 'firebase.config';
 
@@ -88,18 +88,17 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
             setStudentData(JSON.parse(storedData));
           }
         }
-        if(res.studentData?.appliedCohorts[res.studentData?.appliedCohorts.length - 1]?.status === 'enrolled'){
+        if (res.studentData?.appliedCohorts[res.studentData?.appliedCohorts.length - 1]?.status === 'enrolled'){
           navigate('../../dashboard');
         }
-        else if(['initated', 'applied'].includes(res.studentData?.appliedCohorts[res.studentData?.appliedCohorts.length - 1]?.status)){
-          console.log("navigating")
-          console.log('studentData?._id:', studentData?._id);
-            // if(res.data?.applicationDetails?.applicationStatus !== "initiated" &&
-            //   res.data?.applicationDetails?.applicationStatus !== undefined){
-            //     navigate('../../application/status');
-            //   }
-            // else
-              navigate('../../application');
+        else if (res.studentData?.appliedCohorts[res.studentData?.appliedCohorts.length - 1]?.status === 'reviewing'){
+          navigate('../../application/status');
+        }
+        else if (res.studentData?.appliedCohorts[res.studentData?.appliedCohorts.length - 1]?.status === 'applied'){
+          navigate('../../application/task');
+        }
+        else if (res.studentData?.appliedCohorts[res.studentData?.appliedCohorts.length - 1]?.status === 'initiated'){
+          navigate('../../application');
         }
         else{
           navigate('../../application');
@@ -117,6 +116,12 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
           // setIsVerified(true);
           console.log(data.user.phoneNumber, "dtaa");
 
+          const response = await updateStudentData({
+            mobileNumber: contactInfo,
+            isMobileVerified: true,
+          });
+          console.log("response",response);
+          
           if (studentData) {
             setStudentData({
               ...studentData,

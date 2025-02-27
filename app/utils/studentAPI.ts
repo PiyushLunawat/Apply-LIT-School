@@ -1,6 +1,6 @@
 // const CONST_API = "http://51.21.131.240:4000";
-// const CONST_API = "http://localhost:4000";
-const CONST_API = "https://dev.apply.litschool.in";
+const CONST_API = "http://localhost:4000";
+// const CONST_API = "https://dev.apply.litschool.in";
 // const CONST_API = "https://myfashionfind.shop";
 
 // Fetch all cohorts
@@ -329,6 +329,8 @@ export async function updateStudentData(
         bloodGroup: string;
         linkedInUrl: string;
         instagramUrl: string;
+        mobileNumber: string;
+        isMobileVerified: boolean;
       }>
 ): Promise<any> {
   try {

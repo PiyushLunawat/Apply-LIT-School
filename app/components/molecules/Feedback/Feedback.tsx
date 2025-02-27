@@ -27,6 +27,8 @@ const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass, book
       try {
         const student = await getCurrentStudent(studentData._id);
         setStudent(student);
+        console.log("sdcdc",student);
+        
       } catch (error) {
         console.error("Failed to fetch student data:", error);
       }
