@@ -4,7 +4,7 @@ import { Upload, Clock, FileTextIcon, RefreshCw, X, Link2Icon, XIcon, UploadIcon
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { getCohorts, getCurrentStudent, submitLITMUSTest } from '~/utils/studentAPI'; // Import your API function
+import { getCohorts, getCurrentStudent, GetInterviewers, submitLITMUSTest } from '~/utils/studentAPI'; // Import your API function
 import { UserContext } from '~/context/UserContext';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '~/components/ui/form';
 import { Textarea } from '~/components/ui/textarea';
@@ -205,26 +205,25 @@ const LITMUSTest: React.FC = () => {
   };
 
   const handleScheduleInterview = async () => {
-    const reviewerEmails = student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.cohortId?.collaborators
-      ?.filter((collaborator: any) => collaborator.role === "evaluator")
-      .map((collaborator: any) => collaborator.email);
-  
-    if (!reviewerEmails || reviewerEmails.length === 0) {
-      console.error("No reviewer emails found.");
-      return;
-    }
+
+    const data = {
+      cohortId: student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.cohortId?._id,
+      role: 'Litmus_test_reviewer',
+    };
+    
+    const response = await GetInterviewers(data);
+    console.log("list", response.data);
   
     const payload = {
-      emails: reviewerEmails,
-      eventCategory: "Litmus Test Review", // Change to "Litmus Test Review" if required
+      emails: response.data,
+      eventCategory: "Litmus Test Review", 
     };
 
     console.log("pay",payload);
     
-  
     try {
       const response = await fetch(
-        "https://dev.cal.litschool.in/application-portal/get-all-users",
+        "https://dev.cal.litschool.in/api/application-portal/get-all-users",
         {
           method: "POST",
           headers: {
@@ -358,7 +357,7 @@ const LITMUSTest: React.FC = () => {
 
   <Dialog open={interviewOpen} onOpenChange={setInterviewOpen}>
     <DialogContent className="max-w-2xl">
-      <SchedulePresentation interviewer={interviewer}/>
+      <SchedulePresentation interviewer={interviewer} eventCategory='Litmus Test Review'/>
     </DialogContent>
   </Dialog>
   </>

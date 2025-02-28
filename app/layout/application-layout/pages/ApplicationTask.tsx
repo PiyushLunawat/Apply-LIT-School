@@ -28,15 +28,9 @@ export const ApplicationTask: React.FC = () => {
           setLoading(false);
           return;
         }
-        console.log("0 - studentData", studentData?._id);
         try {
-          console.log("1");
-
-          const res = await getCurrentStudent(studentData._id);
-          console.log("2:");
-
+          const res = await getCurrentStudent(studentData._id);  
           const status = res.data?.applicationDetails?.applicationStatus;
-          console.log("3:",status);
   
           if (['under review', 'accepted' , 'rejected', 'Interview Scheduled', 'waitlist', 'selected', 'not qualified'].includes(status)) {
             console.log("Navigating to /application/status:", status);

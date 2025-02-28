@@ -152,6 +152,29 @@ export async function submitApplicationTask(formData: FormData) {
   return response.json();
 }
 
+export async function GetInterviewers(data: {
+  cohortId: string;
+  role: string;
+}): Promise<any> {
+  const response = await fetch(`${CONST_API}/student/interviewers-list`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const errorDetails = await response.json().catch(() => null);
+    throw new Error(
+      errorDetails
+        ? `${errorDetails.message || JSON.stringify(errorDetails)}`
+        : "Request failed"
+    );
+  }
+  return response.json();
+}
+
 export async function submitLITMUSTest(
   formData: FormData,
   litmusTaskId: string

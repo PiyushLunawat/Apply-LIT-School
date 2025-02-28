@@ -1953,7 +1953,7 @@ useEffect(() => {
               disabled={loading}
             >
               <div className='flex items-center gap-2'>
-                {loading ? 'Initializing Payment...' : 'Pay INR ₹500.00'}
+                {loading ? 'Initializing Payment...' : `Pay INR ₹${studentData?.appliedCohorts[studentData.appliedCohorts.length - 1]?.cohortId?.cohortFeesDetail?.applicationFee || 0}.00`}`
               </div>
             </Button>
           ) : (
@@ -1965,7 +1965,7 @@ useEffect(() => {
             >
               <div className='flex items-center gap-2'>
                 <SaveIcon className='w-5 h-5' />
-                {loading ? 'Submitting...' : `Submit and Pay INR ${studentData?.appliedCohorts[studentData.appliedCohorts.length - 1]?.cohortId?.cohortFeesDetail?.applicationFee || 0}.00`}
+                {loading ? 'Submitting...' : `Submit and Pay INR ₹${studentData?.appliedCohorts[studentData.appliedCohorts.length - 1]?.cohortId?.cohortFeesDetail?.applicationFee || 0}.00`}
               </div>
             </Button>
           )

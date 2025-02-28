@@ -17,9 +17,10 @@ import { getCohortById, getCurrentStudent } from "~/utils/studentAPI";
 
 interface SchedulePresentationProps {
   interviewer: [];
+  eventCategory: string
 }
 
-export function SchedulePresentation({ interviewer }: SchedulePresentationProps) {
+export function SchedulePresentation({ interviewer, eventCategory }: SchedulePresentationProps) {
     const [selectedInterviewer, setSelectedInterviewer] = useState<any | null>(null);
     const { studentData, setStudentData } = useContext(UserContext);
     const [ cohortData, setCohortData ] = useState<any>([]);
@@ -44,7 +45,7 @@ export function SchedulePresentation({ interviewer }: SchedulePresentationProps)
 
     const handleScheduleRedirect = () => {
         if (!selectedInterviewer || !studentData?._id || !latestCohort?.cohortId?._id) return;
-        const url = `https://dev.cal.litschool.in/${selectedInterviewer?.personalUrl}/${selectedInterviewer?.events[0]?.eventName || ''}?&litApplicationUserId=${studentData?._id}&cohortId=${latestCohort?.cohortId?._id}&eventCategory=Application Test Review&eventId=${selectedInterviewer?.events[0]?._id} `;
+        const url = `https://dev.cal.litschool.in/${selectedInterviewer?.personalUrl}/${selectedInterviewer?.events[0]?.eventName || ''}?&litApplicationUserId=${studentData?._id}&cohortId=${latestCohort?.cohortId?._id}&eventCategory=${eventCategory}&eventId=${selectedInterviewer?.events[0]?._id} `;
         window.open(url, "_blank"); 
       };
     

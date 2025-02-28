@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Button } from '~/components/ui/button'; // Assuming you have a Button component
 import BookYourSeat from '../BookYourSeat/BookYourSeat';
-import { getCurrentStudent } from '~/utils/studentAPI';
+import { getCurrentStudent, GetInterviewers } from '~/utils/studentAPI';
 import { UserContext } from '~/context/UserContext';
 import { useNavigate } from '@remix-run/react';
 import { Dialog, DialogContent } from '~/components/ui/dialog';
@@ -23,17 +23,19 @@ const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass, book
   const navigate = useNavigate();
   
   useEffect(() => {
-    const fetchStudentData = async () => {
-      try {
-        const student = await getCurrentStudent(studentData._id);
-        setStudent(student);
-        console.log("sdcdc",student);
-        
-      } catch (error) {
-        console.error("Failed to fetch student data:", error);
-      }
-    };
-    fetchStudentData();
+    if(studentData?._id) {
+      const fetchStudentData = async () => {
+        try {
+          const student = await getCurrentStudent(studentData._id);
+          setStudent(student);
+          console.log("sdcdc",student);
+          
+        } catch (error) {
+          console.error("Failed to fetch student data:", error);
+        }
+      };
+      fetchStudentData();
+    }
   }, [studentData]);
 
   const handleReviseApplication = () => {
@@ -41,18 +43,18 @@ const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass, book
   };
 
   const handleScheduleInterview = async () => {
-    const reviewerEmails = student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.cohortId?.collaborators
-      ?.filter((collaborator: any) => collaborator.role === "interviewer")
-      .map((collaborator: any) => collaborator.email);
-  
-    if (!reviewerEmails || reviewerEmails.length === 0) {
-      console.error("No reviewer emails found.",student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.cohortId?.collaborators);
-      return;
-    }
+
+    const data = {
+      cohortId: student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.cohortId?._id,
+      role: 'application_reviewer',
+    };
+    
+    const response = await GetInterviewers(data);
+    console.log("list", response.data);
   
     const payload = {
-      emails: reviewerEmails,
-      eventCategory: "Application Test Review", // Change to "Litmus Test Review" if required
+      emails: response.data,
+      eventCategory: "Application Test Review", 
     };
 
     console.log("pay",payload);
@@ -159,7 +161,7 @@ const Feedback: React.FC<FeedbackProps> = ({ status, feedbackList, setPass, book
     />}
   <Dialog open={interviewOpen} onOpenChange={setInterviewOpen}>
     <DialogContent className="max-w-[90vw] sm:max-w-2xl">
-      <SchedulePresentation interviewer={interviewer}/>
+      <SchedulePresentation interviewer={interviewer} eventCategory='Application Test Review'/>
     </DialogContent>
   </Dialog>
   </div>
