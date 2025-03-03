@@ -1,6 +1,6 @@
 // const baseUrl = "http://51.21.131.240:4000";
-const baseUrl = "http://localhost:4000";
-// const baseUrl = "https://dev.apply.litschool.in";
+// const baseUrl = "http://localhost:4000";
+const baseUrl = "https://dev.apply.litschool.in";
 // const baseUrl = "https://myfashionfind.shop";
 
 // const baseUrl = `${
