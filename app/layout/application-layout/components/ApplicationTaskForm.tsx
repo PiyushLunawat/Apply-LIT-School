@@ -540,7 +540,7 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
   };
 
   const uploadDirect = async (file: File) => {
-    const { data } = await axios.post(`https://myfashionfind.shop/student/generate-presigned-url`, {
+    const { data } = await axios.post(`http://localhost:4000/student/generate-presigned-url`, {
       bucketName: "dev-application-portal",
       key: generateUniqueFileName(file.name),
     });
@@ -558,7 +558,7 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
 
   const uploadMultipart = async (file: File, chunkSize: number) => {
     const uniqueKey = generateUniqueFileName(file.name);
-    const initiateRes = await axios.post(`https://myfashionfind.shop/student/initiate-multipart-upload`, {
+    const initiateRes = await axios.post(`http://localhost:4000/student/initiate-multipart-upload`, {
       bucketName: "dev-application-portal",
       key: uniqueKey,
     });
@@ -570,7 +570,7 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
       const start = i * chunkSize;
       const end = Math.min(start + chunkSize, file.size);
       const chunk = file.slice(start, end);
-      const partRes = await axios.post(`https://myfashionfind.shop/student/generate-presigned-url-part`, {
+      const partRes = await axios.post(`http://localhost:4000/student/generate-presigned-url-part`, {
         bucketName: "dev-application-portal",
         key: uniqueKey,
         uploadId,
@@ -588,7 +588,7 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
       });
       parts.push({ PartNumber: i + 1, ETag: uploadRes.headers.etag });
     }
-    await axios.post(`https://myfashionfind.shop/student/complete-multipart-upload`, {
+    await axios.post(`http://localhost:4000/student/complete-multipart-upload`, {
       bucketName: "dev-application-portal",
       key: uniqueKey,
       uploadId,
