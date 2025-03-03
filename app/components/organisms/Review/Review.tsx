@@ -26,6 +26,7 @@ const Review: React.FC<ReviewProps> = ({ setIsPaymentVerified }) => {
     const [name, setName] = useState("");
     const [status, setStatus] = useState("");
     const [time, setTime] = useState("");
+    const [cohortId, setCohortId] = useState("");
     const [filledSeats, setFilledSeats] = useState(0);
 
   
@@ -56,7 +57,7 @@ const Review: React.FC<ReviewProps> = ({ setIsPaymentVerified }) => {
       const fetchedData = res?.appliedCohorts[res.appliedCohorts.length - 1];
       console.log("xxx",fetchedData?.applicationDetails?.applicationStatus);
       
-  
+      setCohortId(fetchedData?.cohortId?._id)
       setAppliData(fetchedData);
       setName(res?.firstName);
       setStatus(fetchedData?.applicationDetails?.applicationStatus);
@@ -88,6 +89,7 @@ const Review: React.FC<ReviewProps> = ({ setIsPaymentVerified }) => {
           name={name}
           time={time}
           messageType={status}
+          cohortId={cohortId}
           /> 
 
         <div className='z-10 relative mx-4 space-y-12'>

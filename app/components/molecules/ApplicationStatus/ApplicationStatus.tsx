@@ -1,23 +1,29 @@
 import { CirclePause, Clock } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import { SchedulePresentation } from '~/components/organisms/schedule-presentation-dialog/schedule-presentation';
 import { Button } from '~/components/ui/button';
+import { Dialog, DialogContent } from '~/components/ui/dialog';
+import { GetInterviewers } from '~/utils/studentAPI';
 
 interface StatusMessageProps {
   name: string;
   messageType: string;
   time?: string;
+  cohortId: string;
 }
 
 const StatusMessage: React.FC<StatusMessageProps> = ({
   name,
   messageType,
   time,
+  cohortId
 }) => {
   const [headMessage, setHeadMessage] = useState<string | JSX.Element>('');
   const [subMessage, setSubMessage] = useState('');
   const [countdown, setCountdown] = useState<string>('');
   const [intervalId, setIntervalId] = useState<ReturnType<typeof setInterval> | null>(null); // Use ReturnType<typeof setInterval>
-
+  const [interviewOpen, setInterviewOpen] = useState(false);
+  const [interviewer, setInterviewer] = useState<any>([]);
   // Update headMessage and subMessage based on messageType
   useEffect(() => {
     switch (messageType) {
@@ -136,6 +142,52 @@ const StatusMessage: React.FC<StatusMessageProps> = ({
     }
   }, [time]);
 
+  const handleScheduleInterview = async () => {
+  
+      const data = {
+        cohortId: cohortId,
+        role: 'application_reviewer',
+      };
+      
+      const response = await GetInterviewers(data);
+      console.log("list", response.data);
+    
+      const payload = {
+        emails: response.data,
+        eventCategory: "Application Test Review", 
+      };
+  
+      console.log("pay",payload);
+      
+      try {
+        const response = await fetch(
+          "https://dev.cal.litschool.in/api/application-portal/get-all-users",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          }
+        );
+        
+        setInterviewOpen(true);
+        if (!response.ok) {
+          throw new Error(`Failed to schedule interview: ${response.statusText}`);
+        }
+    
+        const result = await response.json();
+        setInterviewer(result.data)
+        console.log("Interview scheduled successfully:", result.data);
+    
+        // Optionally set dialog open or show success message
+      } 
+      catch (error) {
+        console.error("Error scheduling interview:", error);
+        // alert("Failed to schedule interview. Please try again later.");
+      }
+    };
+
   return (
     <>
       <div className='bg-transparent flex relative h-[250px] sm:h-[350px] px-auto'>
@@ -169,13 +221,18 @@ const StatusMessage: React.FC<StatusMessageProps> = ({
               <div className=''>
                 If you were unable to attend this interview you may choose to
               </div>
-              <Button className='bg-[#FFFFFF2B] rounded'>
+              <Button className='bg-[#FFFFFF2B] rounded' onClick={() => handleScheduleInterview}>
                 Reschedule Your Interview
               </Button>
             </div>
           }
         </div>
       </div>
+      <Dialog open={interviewOpen} onOpenChange={setInterviewOpen}>
+    <DialogContent className="max-w-[90vw] sm:max-w-2xl">
+      <SchedulePresentation interviewer={interviewer} eventCategory='Application Test Review'/>
+    </DialogContent>
+  </Dialog>
     </>
   );
 };
