@@ -1,7 +1,11 @@
-// const CONST_API = "http://51.21.131.240:4000";
-const CONST_API = "http://localhost:4000";
-// const CONST_API = "https://dev.apply.litschool.in";
-// const CONST_API = "https://myfashionfind.shop";
+// const baseUrl = "http://51.21.131.240:4000";
+const baseUrl = "http://localhost:4000";
+// const baseUrl = "https://dev.apply.litschool.in";
+// const baseUrl = "https://myfashionfind.shop";
+
+// const baseUrl = `${
+//   typeof process !== "undefined" ? process.env.API_BASE_URL : ""
+// }`;
 
 // Sign-up function
 export async function signUp(data: {
@@ -14,7 +18,7 @@ export async function signUp(data: {
   dateOfBirth: string;
   qualification: string;
 }) {
-  const response = await fetch(`${CONST_API}/auth/signup`, {
+  const response = await fetch(`${baseUrl}/auth/signup`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -35,7 +39,7 @@ export async function signUp(data: {
 
 // OTP verification function
 export async function verifyOtp(data: { email: string; otp: string }) {
-  const response = await fetch(`${CONST_API}/auth/verify-otp`, {
+  const response = await fetch(`${baseUrl}/auth/verify-otp`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -57,7 +61,7 @@ export async function verifyOtp(data: { email: string; otp: string }) {
 
 // Resend OTP function
 export async function resendOtp(data: { email: string }) {
-  const response = await fetch(`${CONST_API}/auth/resend-otp`, {
+  const response = await fetch(`${baseUrl}/auth/resend-otp`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -79,7 +83,7 @@ export async function resendOtp(data: { email: string }) {
 
 // Login with OTP function
 export async function loginOTP(data: { email: string }) {
-  const response = await fetch(`${CONST_API}/auth/login`, {
+  const response = await fetch(`${baseUrl}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -101,7 +105,7 @@ export async function loginOTP(data: { email: string }) {
 
 // Verify Mobile Number API
 export async function verifyNumber(data: { phone: string }) {
-  const response = await fetch(`${CONST_API}/student/verify-mobile-number`, {
+  const response = await fetch(`${baseUrl}/student/verify-mobile-number`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ mobileNumber: data.phone }),
@@ -126,7 +130,7 @@ export async function verifyMobileOTP(data: {
   mobileNumber: string;
   otp: string;
 }) {
-  const response = await fetch(`${CONST_API}/student/verify-otp-number`, {
+  const response = await fetch(`${baseUrl}/student/verify-otp-number`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),

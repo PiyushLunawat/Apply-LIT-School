@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Button } from '~/components/ui/button';
-import { Upload, Clock, FileTextIcon, RefreshCw, X, Link2Icon, XIcon, UploadIcon, Download } from 'lucide-react';
+import { Upload, Clock, FileTextIcon, RefreshCw, X, Link2Icon, XIcon, UploadIcon, Download, ArrowUpRight, LoaderCircle } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -15,6 +15,9 @@ import { useNavigate } from '@remix-run/react';
 import { Badge } from '~/components/ui/badge';
 import { SchedulePresentation } from '../schedule-presentation-dialog/schedule-presentation';
 import { Dialog, DialogContent } from '~/components/ui/dialog';
+import { Progress } from '~/components/ui/progress';
+import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import axios from 'axios';
 
 const getColor = (index: number) => {
   const colors = [ 'text-emerald-600', 'text-[#3698FB]', 'text-[#FA69E5]', 'text-orange-600'];
@@ -51,11 +54,7 @@ interface Task {
 }
 
 const LITMUSTest: React.FC = () => {
-  const {
-    register,
-    watch,
-    formState: { errors },
-  } = useForm<LitmusTestFormValues>({
+  const { register, watch, formState: { errors }, } = useForm<LitmusTestFormValues>({
     resolver: zodResolver(litmusTestSchema),
   });
 
@@ -137,61 +136,51 @@ const LITMUSTest: React.FC = () => {
 
   const onSubmit = async (data: LitmusTestFormValues) => {
     try {
-      console.log("evedfv",stu)
       setLoading(true);
-      const formData = new FormData();
-      
-      // Append tasks
-      data.tasks.forEach((task, taskIndex) => {
-        // const taskKey = `${taskIndex + 1}`;
-
-        task.configItems.forEach((configItem, index) => {
-          const { type, answer } = configItem;
-
-          switch (type) {
-            case 'long':
-            case 'short':
-              if (answer) {
-                formData.append(`tasks[${taskIndex+1}].text[${index}]`, answer);
-              }
-              break;
-
-            case 'image':
-            case 'video':
-            case 'file':
-              if (Array.isArray(answer)) {
-                answer.forEach((file, idx) => {
-                  formData.append(`tasks[${taskIndex+1}].${type}s[${idx}]`, file);
-                });
-              }
-              break;
-
-            case 'link':
-              if (Array.isArray(answer)) {
-                answer.forEach((link, idx) => {
-                  formData.append(`tasks[${taskIndex+1}].links[${idx}]`, link);
-                });
-              }
-              break;
-
-            default:
-              break;
+      const transformedTasks = data.tasks.map((task) => {
+        const transformedTask: Record<string, any> = { feedback: [] };
+        task.configItems.forEach((configItem) => {
+          const type = configItem.type.toLowerCase();
+          const answer = configItem.answer;
+          let key: string | null = null;
+          if (type === "link") {
+            key = "links";
+          } else if (type === "image") {
+            key = "images";
+          } else if (type === "video") {
+            key = "videos";
+          } else if (type === "file") {
+            key = "files";
+          } else if (type === "long" || type === "short" || type === "text") {
+            key = "text";
+          }
+          if (key) {
+            if (!(key in transformedTask)) {
+              transformedTask[key] = [];
+            }
+            if (Array.isArray(answer)) {
+              transformedTask[key] = answer;
+            } else {
+              transformedTask[key].push(answer);
+            }
           }
         });
+        return transformedTask;
       });
 
-      // **Console log the FormData contents**
-      console.log('FormData entries:');
-      for (let pair of formData.entries()) {
-        if (pair[1] instanceof File) {
-          console.log(`${pair[0]}: [File] ${pair[1].name}`);
-        } else {
-          console.log(`${pair[0]}:`, pair[1]);
-        }
-      }
+      const payload = {
+        litmusTaskId: stu,
+        tasks: [
+          {
+            tasks: transformedTasks,
+          },
+        ],
+      };
+
+      console.log("Payload:", payload);
 
       // Submit the form data using the provided API function
-      const response = await submitLITMUSTest(formData, stu);
+      const response = await submitLITMUSTest(payload);
       console.log('Submission successful:', response);
       handleScheduleInterview();
 
@@ -268,11 +257,10 @@ const LITMUSTest: React.FC = () => {
             <p className="text-xl mb-4">
               {task.description}
             </p>
-            hello
           </div>
 
            <div className='w-full space-y-4'>
-            {/* {task?.resources?.resourceFiles.map((file: any, index: number) => (
+            {task?.resources?.resourceFiles.map((file: any, index: number) => (
               <div key={index} className="flex items-center justify-between w-full p-1.5 bg-[#2C2C2C] rounded-xl">
                 <div className="flex items-center space-x-2">
                   <Badge
@@ -292,9 +280,9 @@ const LITMUSTest: React.FC = () => {
                   <Download className="w-5 h-5" />
                 </Button>
               </div>
-            ))} */}
+            ))}
 
-            {/* {task?.resources?.resourceLink.map((link: any, index: number) => (
+            {task?.resources?.resourceLinks.map((link: any, index: number) => (
               <div key={index} className="w-full h-full  ">
                 <iframe
                   src={link}
@@ -303,7 +291,7 @@ const LITMUSTest: React.FC = () => {
                   allowFullScreen
                 ></iframe>
                 </div>
-            ))} */}
+            ))}
           </div>
             
           <div className='w-full space-y-4'>
@@ -394,7 +382,7 @@ const TaskConfigItem: React.FC<TaskConfigItemProps> = ({ control, taskIndex, con
             <FormItem className='w-full'>
               <FormControl>
                 <Textarea
-                  className={`w-full text-white text-base mt-2 ${configItem.type === 'short' ? 'h-24' : ''}`}
+                  className={`w-full text-white text-base mt-2 h-[540px] sm:h-[240px]`}
                   placeholder={`Write up to ${configItem.characterLimit} characters`}
                   rows={configItem.type === 'long' ? 6 : 3}
                   onChange={(e) => wordLimitHandler(e, field, configItem.characterLimit)}
@@ -469,38 +457,13 @@ interface FileUploadFieldProps {
 }
 
 const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) => {
-  const [files, setFiles] = useState<File[]>(field.value || []);
+  const [files, setFiles] = useState<string[]>(field.value || []);
   const [error, setError] = useState<string | null>(null);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = event.target.files;
-    if (selectedFiles) {
-      let fileArray = Array.from(selectedFiles);
-
-      // Combine existing files with new ones
-      const totalFiles = files.length + fileArray.length;
-
-      // Apply maxFiles limit
-      if (configItem.maxFiles && totalFiles > configItem.maxFiles) {
-        setError(`You can upload up to ${configItem.maxFiles} files.`);
-        return;
-      }
-
-      // Apply maxFileSize limit
-      const maxSize = (configItem.maxFileSize || 15) * 1024 * 1024; // Convert MB to bytes
-      for (let file of fileArray) {
-        if (file.size > maxSize) {
-          setError(`Each file must be less than ${configItem.maxFileSize} MB.`);
-          return;
-        }
-      }
-
-      // Update files state
-      const newFiles = [...files, ...fileArray];
-      setFiles(newFiles);
-      field.onChange(newFiles);
-      setError(null);
-    }
+  const appendFile = (fileUrl: string) => {
+    const newFiles = [...files, fileUrl];
+    setFiles(newFiles);
+    field.onChange(newFiles);
   };
 
   const removeFile = (index: number) => {
@@ -510,29 +473,158 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
     field.onChange(newFiles);
   };
 
-  // Determine if we should show the upload button
   const showUploadButton = !configItem.maxFiles || files.length < configItem.maxFiles;
+
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [fileName, setFileName] = useState("");
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setError(null);
+    setUploadProgress(0);
+    const selectedFiles = e.target.files;
+    if (!selectedFiles || selectedFiles.length === 0) return;
+    const file = selectedFiles[0];
+    setFileName(file.name);
+    const CHUNK_SIZE = 100 * 1024 * 1024;
+    e.target.value = "";
+    try {
+      setUploading(true);
+      let fileUrl = "";
+      if (file.size <= CHUNK_SIZE) {
+        fileUrl = await uploadDirect(file);
+        console.log("uploadDirect File URL:", fileUrl);
+      } else {
+        fileUrl = await uploadMultipart(file, CHUNK_SIZE);
+        console.log("uploadMultipart File URL:", fileUrl);
+      }
+      appendFile(fileUrl);
+    } catch (err: any) {
+      console.error("Upload error:", err);
+      setError(err.message || "Error uploading file");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const uploadDirect = async (file: File) => {
+    const { data } = await axios.post(`http://localhost:4000/student/generate-presigned-url`, {
+      bucketName: "dev-application-portal",
+      key: generateUniqueFileName(file.name),
+    });
+    const { url } = data;
+    await axios.put(url, file, {
+      headers: { "Content-Type": file.type },
+      onUploadProgress: (evt: any) => {
+        if (!evt.total) return;
+        const percentComplete = Math.round((evt.loaded / evt.total) * 100);
+        setUploadProgress(percentComplete);
+      },
+    });
+    return `${url.split("?")[0]}`;
+  };
+
+  const uploadMultipart = async (file: File, chunkSize: number) => {
+    const uniqueKey = generateUniqueFileName(file.name);
+    const initiateRes = await axios.post(`http://localhost:4000/student/initiate-multipart-upload`, {
+      bucketName: "dev-application-portal",
+      key: uniqueKey,
+    });
+    const { uploadId } = initiateRes.data;
+    const totalChunks = Math.ceil(file.size / chunkSize);
+    let totalBytesUploaded = 0;
+    const parts: { ETag: string; PartNumber: number }[] = [];
+    for (let i = 0; i < totalChunks; i++) {
+      const start = i * chunkSize;
+      const end = Math.min(start + chunkSize, file.size);
+      const chunk = file.slice(start, end);
+      const partRes = await axios.post(`http://localhost:4000/student/generate-presigned-url-part`, {
+        bucketName: "dev-application-portal",
+        key: uniqueKey,
+        uploadId,
+        partNumber: i + 1,
+      });
+      const { url } = partRes.data;
+      const uploadRes = await axios.put(url, chunk, {
+        headers: { "Content-Type": file.type },
+        onUploadProgress: (evt: any) => {
+          if (!evt.total) return;
+          totalBytesUploaded += evt.loaded;
+          const percent = Math.round((totalBytesUploaded / file.size) * 100);
+          setUploadProgress(Math.min(percent, 100));
+        },
+      });
+      parts.push({ PartNumber: i + 1, ETag: uploadRes.headers.etag });
+    }
+    await axios.post(`http://localhost:4000/student/complete-multipart-upload`, {
+      bucketName: "dev-application-portal",
+      key: uniqueKey,
+      uploadId,
+      parts,
+    });
+    return `https://dev-application-portal.s3.amazonaws.com/${uniqueKey}`;
+  };
+
+  const generateUniqueFileName = (originalName: string) => {
+    const timestamp = Date.now();
+    return `${timestamp}-${originalName}`;
+  };
 
   return (
     <FormItem className='w-full'>
       <FormControl>
         <div className="flex flex-col space-y-2 mt-2">
           {/* Display selected files */}
-          {files.map((file, index) => (
-            <div key={index} className="flex items-center bg-[#007AFF] h-[52px] text-white p-1.5 rounded-xl w-full">
-              <Button size="icon" className='bg-[#3698FB] rounded-xl mr-2'>
-                <FileTextIcon className="w-5" />
-              </Button>
-              <span className="flex-1">{file.name}</span>
-              <div className="flex items-center space-x-2">
-                <Button size="icon" className='bg-[#3698FB] rounded-xl' onClick={() => removeFile(index)}>
+          {files.map((file, index) => {
+            const isLink = typeof file === "string";
+            return (
+              <div key={index} className="flex items-center bg-[#007AFF] h-[52px] text-white p-1.5 rounded-xl w-full">
+                <Badge size="icon" className="bg-[#3698FB] rounded-xl mr-2">
+                  <FileTextIcon className="w-5" />
+                </Badge>
+                <span className="flex-1 text-xs sm:text-base truncate mr-4">
+                  {isLink ? (file as string).split('/').pop() : (file as File).name}
+                </span>
+                <div className="flex items-center space-x-2">
+                  {isLink && (
+                    <Button size="icon" type="button" variant="ghost" className="bg-[#3698FB] rounded-xl">
+                      <a href={file as string} download target="_blank" rel="noopener noreferrer">
+                        <ArrowUpRight className="w-5" />
+                      </a>
+                    </Button>
+                  )}
+                  <Button size="icon" type="button" className="bg-[#3698FB] rounded-xl" onClick={() => removeFile(index)}>
+                    <XIcon className="w-5" />
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+
+          {uploading && (
+            <div className="flex justify-between items-center bg-[#007AFF] h-[52px] text-white p-1.5 rounded-xl w-full">
+              <div className="flex items-center gap-2">
+                <Badge size="icon" className="bg-[#3698FB] rounded-xl !p-0 mr-2">
+                  <FileTextIcon className="w-5 h-5" />
+                </Badge>
+                <span className="flex-1 text-xs sm:text-base truncate mr-4">{fileName}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {uploadProgress === 100 ? (
+                  <LoaderCircle className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <Progress className="h-2 w-24" value={uploadProgress} />
+                    <span>{uploadProgress}%</span>
+                  </>
+                )}
+                <Button size="icon" type="button" className="bg-[#3698FB] rounded-xl">
                   <XIcon className="w-5" />
                 </Button>
               </div>
             </div>
-          ))}
+          )}
 
-          {/* File upload input */}
           {showUploadButton && (
             <div className="flex items-center justify-between w-full h-16 border-2 border-dashed rounded-xl p-1.5">
               <label className="w-full pl-3 text-muted-foreground">
@@ -541,19 +633,28 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
                   className="hidden"
                   multiple={configItem.maxFiles > 1}
                   accept={
-                    configItem.type === 'image' ? 'image/*' :
-                    configItem.type === 'video' ? 'video/*' :
-                    configItem.type === 'file' && configItem.allowedTypes && !configItem.allowedTypes.includes('All') ?
-                      configItem.allowedTypes.map((type: string) => `.${type.toLowerCase()}`).join(',') : '*/*'
+                    configItem.type === 'image'
+                      ? 'image/*'
+                      : configItem.type === 'video'
+                      ? 'video/*'
+                      : configItem.type === 'file' &&
+                        configItem.allowedTypes &&
+                        !configItem.allowedTypes.includes('All')
+                      ? configItem.allowedTypes.map((type: string) => `.${type.toLowerCase()}`).join(',')
+                      : '*/*'
                   }
-                  onChange={handleFileChange}
+                  onChange={handleFileUpload}
                 />
-                <span className="cursor-pointer">
+                <span className="cursor-pointer text-xs sm:text-base">
                   {`Upload ${configItem.type}${configItem.maxFiles > 1 ? 's' : ''} (Max size: ${configItem.maxFileSize || 15} MB)`}
                 </span>
               </label>
-              <Button className="flex gap-2 text-white px-6 py-6 rounded-xl" onClick={() => document.querySelector<HTMLInputElement>(`input[type="file"]`)?.click()}>
-                <UploadIcon className='w-4 h-4'/> Upload {configItem.type}
+              <Button
+                type="button"
+                className="flex gap-2 text-white px-6 py-6 rounded-xl"
+                onClick={() => document.querySelector<HTMLInputElement>('input[type="file"]')?.click()}
+              >
+                <UploadIcon className="w-4 h-4" /> Upload {configItem.type}
               </Button>
             </div>
           )}

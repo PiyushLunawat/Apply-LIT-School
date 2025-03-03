@@ -29,6 +29,16 @@ export const links: LinksFunction = () => [
   { href: '/assets/fonts/geist.css', rel: 'stylesheet' },
 ];
 
+function getBrowserEnvironment() {
+  const env = process.env;
+  return {
+    API_BASE_URL: env.API_BASE_URL,
+    AWS_ACCESS_KEY_ID: env.AWS_ACCESS_KEY_ID,
+    AWS_SECRET_ACCESS_KEY: env.AWS_SECRET_ACCESS_KEY,
+    AWS_REGION: env.AWS_REGION,
+  };
+ }
+
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="dark">

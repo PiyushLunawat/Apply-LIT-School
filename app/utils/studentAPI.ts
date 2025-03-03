@@ -1,11 +1,15 @@
-// const CONST_API = "http://51.21.131.240:4000";
-const CONST_API = "http://localhost:4000";
-// const CONST_API = "https://dev.apply.litschool.in";
-// const CONST_API = "https://myfashionfind.shop";
+// const baseUrl = "http://51.21.131.240:4000";
+const baseUrl = "http://localhost:4000";
+// const baseUrl = "https://dev.apply.litschool.in";
+// const baseUrl = "https://myfashionfind.shop";
+
+// const baseUrl = `${
+//   typeof process !== "undefined" ? process.env.API_BASE_URL : ""
+// }`;
 
 // Fetch all cohorts
 export async function getCohorts() {
-  const response = await fetch(`${CONST_API}/admin/cohort`);
+  const response = await fetch(`${baseUrl}/admin/cohort`);
 
   if (!response.ok) {
     const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
@@ -21,7 +25,7 @@ export async function getCohorts() {
 }
 
 export async function getCohortById(id: string) {
-  const response = await fetch(`${CONST_API}/admin/cohort/${id}`);
+  const response = await fetch(`${baseUrl}/admin/cohort/${id}`);
   if (!response.ok) {
     const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
     throw new Error(
@@ -37,7 +41,7 @@ export async function getCohortById(id: string) {
 
 // Fetch all centres
 export async function getCentres() {
-  const response = await fetch(`${CONST_API}/admin/center`);
+  const response = await fetch(`${baseUrl}/admin/center`);
 
   if (!response.ok) {
     const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
@@ -54,7 +58,7 @@ export async function getCentres() {
 
 // Fetch all programs
 export async function getPrograms() {
-  const response = await fetch(`${CONST_API}/admin/program`);
+  const response = await fetch(`${baseUrl}/admin/program`);
 
   if (!response.ok) {
     const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
@@ -70,7 +74,7 @@ export async function getPrograms() {
 }
 
 export async function getStudents() {
-  const response = await fetch(`${CONST_API}/admin/students`, {
+  const response = await fetch(`${baseUrl}/admin/students`, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
   });
@@ -89,7 +93,7 @@ export async function getStudents() {
 }
 
 export async function getCurrentStudent(id: string) {
-  const response = await fetch(`${CONST_API}/student/${id}`, {
+  const response = await fetch(`${baseUrl}/student/${id}`, {
     method: "GET",
     // headers: { "Content-Type": "application/json" },
   });
@@ -110,7 +114,7 @@ export async function getCurrentStudent(id: string) {
 // Submit application function
 export async function submitApplication(formdata: any) {
   try {
-    const response = await fetch(`${CONST_API}/student/submit-application`, {
+    const response = await fetch(`${baseUrl}/student/submit-application`, {
       method: "POST",
       body: formdata,
     });
@@ -133,10 +137,13 @@ export async function submitApplication(formdata: any) {
   }
 }
 
-export async function submitApplicationTask(formData: FormData) {
-  const response = await fetch(`${CONST_API}/student/submit-application-task`, {
+export async function submitApplicationTask(formData: any) {
+  const response = await fetch(`${baseUrl}/student/submit-application-task`, {
     method: "POST",
-    body: formData,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(formData),
   });
 
   if (!response.ok) {
@@ -156,7 +163,7 @@ export async function GetInterviewers(data: {
   cohortId: string;
   role: string;
 }): Promise<any> {
-  const response = await fetch(`${CONST_API}/student/interviewers-list`, {
+  const response = await fetch(`${baseUrl}/student/interviewers-list`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -175,15 +182,13 @@ export async function GetInterviewers(data: {
   return response.json();
 }
 
-export async function submitLITMUSTest(
-  formData: FormData,
-  litmusTaskId: string
-) {
-  formData.append("litmusTaskId", litmusTaskId);
-  console.log("sgsf", formData);
-  const response = await fetch(`${CONST_API}/student/litmus-test`, {
+export async function submitLITMUSTest(formData: any) {
+  const response = await fetch(`${baseUrl}/student/litmus-test`, {
     method: "POST",
-    body: formData,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(formData),
   });
 
   if (!response.ok) {
@@ -201,7 +206,7 @@ export async function submitLITMUSTest(
 
 // New API for uploading student documents
 export async function uploadStudentDocuments(formData: FormData) {
-  const response = await fetch(`${CONST_API}/student/documents`, {
+  const response = await fetch(`${baseUrl}/student/documents`, {
     method: "POST",
     // Do not set Content-Type headers, fetch will handle it for FormData
     body: formData,
@@ -217,7 +222,7 @@ export async function uploadStudentDocuments(formData: FormData) {
 // New API for fee setup
 export async function setupFeePayment(feeData: any) {
   try {
-    const response = await fetch(`${CONST_API}/student/fee-setup`, {
+    const response = await fetch(`${baseUrl}/student/fee-setup`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(feeData),
@@ -242,7 +247,7 @@ export async function setupFeePayment(feeData: any) {
 }
 
 export async function submitTokenReceipt(formData: FormData) {
-  const response = await fetch(`${CONST_API}/student/token-receipt`, {
+  const response = await fetch(`${baseUrl}/student/token-receipt`, {
     method: "POST",
     body: formData,
   });
@@ -260,7 +265,7 @@ export async function submitTokenReceipt(formData: FormData) {
 }
 
 export async function payApplicationFee(amount: number, currency: string) {
-  const response = await fetch(`${CONST_API}/student/pay-application-fee`, {
+  const response = await fetch(`${baseUrl}/student/pay-application-fee`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -298,7 +303,7 @@ export async function verifyApplicationFeePayment(data: {
   razorpay_signature: string;
 }) {
   const response = await fetch(
-    `${CONST_API}/student/verify-application-fee-payement`,
+    `${baseUrl}/student/verify-application-fee-payement`,
     {
       method: "POST",
       headers: {
@@ -323,7 +328,7 @@ export async function verifyApplicationFeePayment(data: {
 
 export async function uploadFeeReceipt(formData: any) {
   const response = await fetch(
-    `${CONST_API}/student/upload-semester-fee-installments`,
+    `${baseUrl}/student/upload-semester-fee-installments`,
     {
       method: "POST",
       // FormData automatically sets the proper `Content-Type` headers
@@ -357,7 +362,7 @@ export async function updateStudentData(
       }>
 ): Promise<any> {
   try {
-    const response = await fetch(`${CONST_API}/student/student-data`, {
+    const response = await fetch(`${baseUrl}/student/student-data`, {
       method: "POST", // Using PATCH for partial updates
       headers:
         data instanceof FormData
