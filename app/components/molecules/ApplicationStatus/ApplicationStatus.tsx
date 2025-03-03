@@ -148,6 +148,9 @@ const StatusMessage: React.FC<StatusMessageProps> = ({
         cohortId: cohortId,
         role: 'application_reviewer',
       };
+
+      console.log("liffffst", data);
+
       
       const response = await GetInterviewers(data);
       console.log("list", response.data);
@@ -221,7 +224,7 @@ const StatusMessage: React.FC<StatusMessageProps> = ({
               <div className=''>
                 If you were unable to attend this interview you may choose to
               </div>
-              <Button className='bg-[#FFFFFF2B] rounded' onClick={() => handleScheduleInterview}>
+              <Button className='bg-[#FFFFFF2B] rounded' onClick={() => handleScheduleInterview()}>
                 Reschedule Your Interview
               </Button>
             </div>

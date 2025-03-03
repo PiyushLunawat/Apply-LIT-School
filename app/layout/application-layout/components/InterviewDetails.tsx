@@ -26,6 +26,15 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
         day: 'numeric'    // Day of the month (e.g., "14")
       });
       
+      let durationMin = "";
+      if (lastInterview?.startTime && lastInterview?.endTime) {
+        // Create Date objects using a fixed date so we can compare the times.
+        const startDate = new Date(`1970/01/01 ${lastInterview.startTime}`);
+        const endDate = new Date(`1970/01/01 ${lastInterview.endTime}`);
+        const diffMs = endDate.getTime() - startDate.getTime();
+        const diffMin = Math.round(diffMs / 60000);
+        durationMin = `${diffMin} min`;
+      }
       
     if (!lastInterview) {
         return <div>No interviews found.</div>;
@@ -41,7 +50,7 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
           </div>
           <div className="w-fit px-3 py-2 flex items-center gap-2 text-sm font-medium rounded-full border border-[#00A3FF]">
             <Clock className="h-4 w-4 text-[#00A3FF]" />
-            <span>30 min</span>
+            <span>{durationMin}</span>
           </div>
 
           <h2 className="text-base sm:text-xl font-normal">

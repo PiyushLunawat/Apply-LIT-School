@@ -18,6 +18,8 @@ export const ApplicationStatus: React.FC = () => {
   const [subtitle, setSubtitle] = useState("");
   const [submessage, setSubmessage] = useState("");
 
+  const [showReviewBlock, setShowReviewBlock] = useState(false);
+
   useEffect(() => {
     const fetchDataOnMount = async () => {
       try {
@@ -27,6 +29,16 @@ export const ApplicationStatus: React.FC = () => {
             const res = await getCurrentStudent(studentData._id);
             setStudentData(res);
             const latest = res?.appliedCohorts[res.appliedCohorts.length - 1];
+
+          let meetingEnd: Date | null = null;
+          const lastInterview = latest?.applicationDetails?.applicationTestInterviews?.[latest?.applicationDetails?.applicationTestInterviews.length - 1];
+          if (lastInterview?.meetingDate && lastInterview?.endTime) {
+            // Use the meeting date's string (e.g. "Mon Jan 01 2020") and append the endTime (e.g. "1:40 PM")
+            meetingEnd = new Date(new Date(lastInterview.meetingDate).toDateString() + ' ' + lastInterview.endTime);
+            console.log("meetingEnd",(new Date() > meetingEnd));
+            if(new Date() > meetingEnd)
+              setShowReviewBlock(true);
+          }
                         
             // Check token fee verification status
             const isVerified =
@@ -45,6 +57,8 @@ export const ApplicationStatus: React.FC = () => {
             setIsPaymentVerified(isVerified);
             setIsInterviewScheduled(latest?.applicationDetails?.applicationStatus);
           }
+
+          
       } catch (err: any) {
         setError(err);
       } finally {
@@ -54,6 +68,16 @@ export const ApplicationStatus: React.FC = () => {
 
     fetchDataOnMount();
   }, [studentData]);
+
+//   let showReviewBlock = false;
+//   let meetingEnd: Date | null = null;
+//   const lastInterview = studentData?.appliedCohorts[studentData.appliedCohorts.length - 1]?.applicationDetails?.applicationTestInterviews?.[studentData?.applicationDetails?.applicationTestInterviews.length - 1];
+//   if (lastInterview?.meetingDate && lastInterview?.endTime) {
+//     // Use the meeting date's string (e.g. "Mon Jan 01 2020") and append the endTime (e.g. "1:40 PM")
+//     meetingEnd = new Date(new Date(lastInterview.meetingDate).toDateString() + ' ' + lastInterview.endTime);
+//     showReviewBlock = new Date() > meetingEnd;
+//   }
+// console.log("meetingEnd",meetingEnd);
 
   if (loading) {
     return (
@@ -70,12 +94,11 @@ export const ApplicationStatus: React.FC = () => {
       </div>
     );
   }
-  
 
   return (
     <>
       { (isPaymentVerified === null || isPaymentVerified === undefined) ?
-        (isInterviewScheduled !== 'Interview Scheduled' ? 
+        (showReviewBlock  ? 
         <div className="max-w-[1216px] sm:mx-16 xl:mx-auto justify-center items-center space-y-20">
           <Review setIsPaymentVerified={setIsPaymentVerified}/>
           <div className="space-y-4 sm:space-y-6">
