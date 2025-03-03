@@ -189,7 +189,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({}) => {
               render={({ field }) => (
                 <FormItem className="flex-1 space-y-1 relative">
                   <Label className="text-xs sm:text-sm font-normal pl-3">First Name</Label>
-                  <Input placeholder="John" {...field} />
+                  <Input placeholder="Mithu" {...field} />
                   <FormMessage className="text-xs sm:text-sm font-normal pl-3"/>
                 </FormItem>
               )}
@@ -200,7 +200,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({}) => {
               render={({ field }) => (
                 <FormItem className="flex-1 space-y-1 relative">
                   <Label className="text-xs sm:text-sm font-normal pl-3">Last Name</Label>
-                  <Input placeholder="Doe" {...field} />
+                  <Input placeholder="Pandey" {...field} />
                   <FormMessage className="text-xs sm:text-sm font-normal pl-3"/>
                 </FormItem>
               )}
@@ -214,7 +214,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({}) => {
               render={({ field }) => (
                 <FormItem className="flex-1 space-y-1 relative">
                   <Label className="text-xs sm:text-sm font-normal pl-3">Email</Label>
-                  <Input placeholder="johndoe@gmail.com" {...field} />
+                  <Input placeholder="mithu@gmail.com" {...field} />
                   <Mail className="absolute right-3 top-[46px] w-5 h-5" />
                   <FormMessage className="text-xs sm:text-sm font-normal pl-3"/>
                 </FormItem>

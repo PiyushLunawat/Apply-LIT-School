@@ -41,7 +41,7 @@ const formSchema = z.object({
     courseOfInterest: z.string(),
     cohort: z.string(),
     isMobileVerified: z.boolean().optional(),
-    linkedInUrl: z.string().optional(),
+    linkedInUrl: z.string().url('Please enter a valid LinkedIn URL').optional(),
     instagramUrl: z.string().optional(),
     gender: z.enum(["Male", "Female", "Other"]),
   }),
@@ -213,6 +213,7 @@ const ApplicationDetailsForm: React.FC = () => {
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [verificationId, setVerificationId] = useState("");
   const [fetchedStudentData, setFetchedStudentData] = useState<any>(null);
+  const [applicationFees, setApplicationFees] = useState(0);
 
   const [programs, setPrograms] = useState<any[]>([]);
 const [centres, setCentres] = useState<any[]>([]);
@@ -275,21 +276,6 @@ useEffect(() => {
   }, []);
 
 
-
-  // useEffect(() => {
-  //   const fetchStudentData = async () => {
-  //     try {
-  //       const student = await getCurrentStudent(studentData._id);
-  //       console.log("bitch",studentData._id,student);
-        
-  //       setFetchedStudentData(student.data?.studentDetails);        
-  //     } catch (error) {
-  //       console.error("Failed to fetch student data:", error);
-  //     }
-  //   };
-  //   fetchStudentData();
-  // }, [studentData]);
-
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
   });
@@ -317,7 +303,7 @@ useEffect(() => {
       if(studentData._id)
       try {
         const student = await getCurrentStudent(studentData._id);
-        setStudentData(student);
+        setFetchedStudentData(student);
         
         const sData = student?.appliedCohorts[student.appliedCohorts.length - 1]?.applicationDetails?.studentDetails;
         
@@ -345,10 +331,7 @@ useEffect(() => {
         existingData.applicationData &&
         existingData.applicationData?.duration === "";
         
-        console.log("1",isExistingDataEmpty);
-        console.log("2",studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]?.cohortId._id);
-        console.log("3",studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]?.cohortId?.programDetail?._id);
-        
+        setApplicationFees(fetchedStudentData?.appliedCohorts?.[fetchedStudentData?.appliedCohorts.length - 1]?.cohortId?.cohortFeesDetail?.applicationFee)
         // 3. Decide how to build mergedForm
         let mergedForm;
         if (isExistingDataEmpty) {
@@ -489,9 +472,7 @@ useEffect(() => {
       }
         // Finally, reset the form with merged data
         reset(mergedForm);
-  
-        // If you need the sData for anything else, store it:
-        setFetchedStudentData(sData);
+
       } catch (error) {
         console.error("Failed to fetch student data:", error);
       }
@@ -681,12 +662,12 @@ useEffect(() => {
       }
   
       // Fetch application fee amount
-      const applicationFee = studentData?.appliedCohorts[studentData.appliedCohorts.length - 1]?.cohortId?.cohortFeesDetail?.applicationFee || 500;
+      const applicationFee = applicationFees || 500;
       const sId = studentData._id;
-      const cId = studentData.appliedCohorts[studentData.appliedCohorts.length - 1].cohortId._id;
+      const cId = fetchedStudentData.appliedCohorts[fetchedStudentData.appliedCohorts.length - 1].cohortId._id;
   
       // Call the API to create an order
-      const feeResponse = await payApplicationFee(applicationFee, "INR");
+      const feeResponse = await payApplicationFee(applicationFees, "INR");
       console.log("Fee payment response:", feeResponse);
   
       // Configure Razorpay options
@@ -759,7 +740,6 @@ useEffect(() => {
     }
   };
   
-
   const validateBeforeSubmit = () => {    
     // if (!studentData?.isMobileVerified) {
     //   return "Mobile number verification is required.";
@@ -873,7 +853,7 @@ useEffect(() => {
   };
 
   const onSubmit = async (data: FormData) => {
-      console.log("save",studentData?.applicationDetails, isSaved);
+      console.log("save",fetchedStudentData?.applicationDetails, isSaved);
       await saveData(data);
   };
   
@@ -949,6 +929,7 @@ useEffect(() => {
                         type="tel"
                         placeholder="+91 95568 97688"
                         className='pl-10'
+                        maxLength={14}
                         defaultValue={studentData?.mobileNumber || "--"}
                         {...field}
                       />
@@ -1040,69 +1021,68 @@ useEffect(() => {
         <div className="flex flex-col sm:flex-row gap-2 ">
           {/* Course of Interest */}
           <FormField
-  control={control}
-  name="studentData.courseOfInterest"
-  render={({ field }) => (
-    <FormItem className="flex-1 space-y-1">
-      <Label className="text-xs sm:text-sm font-normal pl-3">
-        Course of Interest
-      </Label>
-      <FormControl>
-        <Select
-          disabled={isSaved}
-          onValueChange={(value) => field.onChange(value)}
-          value={field.value}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select a Program" />
-          </SelectTrigger>
-          <SelectContent>
-            {availablePrograms.map((programId) => (
-              <SelectItem key={programId} value={programId}>
-                {getProgramName(programId)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </FormControl>
-      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-    </FormItem>
-  )}
-/>
+            control={control}
+            name="studentData.courseOfInterest"
+            render={({ field }) => (
+              <FormItem className="flex-1 space-y-1">
+                <Label className="text-xs sm:text-sm font-normal pl-3">
+                  Course of Interest
+                </Label>
+                <FormControl>
+                  <Select
+                    disabled={isSaved}
+                    onValueChange={(value) => field.onChange(value)}
+                    value={field.value}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a Program" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availablePrograms.map((programId) => (
+                        <SelectItem key={programId} value={programId}>
+                          {getProgramName(programId)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+              </FormItem>
+            )}
+          />
 
           {/* Select Cohort */}
           <FormField
-  control={control}
-  name="studentData.cohort"
-  render={({ field }) => (
-    <FormItem className="flex-1 space-y-1">
-      <Label className="text-xs sm:text-sm font-normal pl-3">
-        Select Cohort
-      </Label>
-      <FormControl>
-        <Select
-          disabled={isSaved}
-          onValueChange={(value) => field.onChange(value)}
-          value={field.value}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select" />
-          </SelectTrigger>
-          <SelectContent>
-            {filteredCohorts.map((cohort) => (
-              <SelectItem key={cohort._id} value={cohort._id}>
-                {formatDateToMonthYear(cohort.startDate)} ({cohort.timeSlot}),{" "}
-                {getCenterName(cohort.centerDetail)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </FormControl>
-      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-    </FormItem>
-  )}
-/>
-
+            control={control}
+            name="studentData.cohort"
+            render={({ field }) => (
+            <FormItem className="flex-1 space-y-1">
+              <Label className="text-xs sm:text-sm font-normal pl-3">
+                Select Cohort
+              </Label>
+              <FormControl>
+                <Select
+                  disabled={isSaved}
+                  onValueChange={(value) => field.onChange(value)}
+                  value={field.value}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredCohorts.map((cohort) => (
+                      <SelectItem key={cohort._id} value={cohort._id}>
+                        {formatDateToMonthYear(cohort.startDate)} ({cohort.timeSlot}),{" "}
+                        {getCenterName(cohort.centerDetail)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormControl>
+              <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+            </FormItem>
+            )}
+          />
         </div>
         
         {/* LinkedIn and Instagram IDs */}
@@ -1113,9 +1093,9 @@ useEffect(() => {
             name="studentData.linkedInUrl"
             render={({ field }) => (
               <FormItem className="flex-1 space-y-1 relative">
-                <Label className="text-xs sm:text-sm font-normal pl-3">Your LinkedIn ID (Not Compulsory)</Label>
+                <Label className="text-xs sm:text-sm font-normal pl-3">Your LinkedIn Profile Link (Not Compulsory)</Label>
                 <FormControl>
-                  <Input id="linkedInUrl" placeholder="linkedin.com/in" {...field} 
+                  <Input id="linkedInUrl" placeholder="linkedin.com/in/Mithu" {...field} 
                   onChange={(e) => {
                     const newValue = e.target.value.replace(/\s/g, "");
                     field.onChange(newValue);
@@ -1134,7 +1114,7 @@ useEffect(() => {
               <FormItem className="flex-1 space-y-1 relative">
                 <Label className="text-xs sm:text-sm font-normal pl-3">Your Instagram ID (Not Compulsory)</Label>
                 <FormControl>
-                  <Input id="instagramUrl" placeholder="@JohnDoe" {...field} 
+                  <Input id="instagramUrl" placeholder="@Mithu_" {...field} 
                   onChange={(e) => {
                     const newValue = e.target.value.replace(/\s/g, "");
                     field.onChange(newValue);
@@ -1306,7 +1286,9 @@ useEffect(() => {
                     placeholder="MM YYYY"
                     type="month"
                     className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border"
-                    id="graduationYear" {...field} disabled={isSaved} />
+                    id="graduationYear" {...field}
+                    max={new Date().toISOString().slice(0, 7)}
+                    disabled={isSaved} />
                 </FormControl>
                 <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
               </FormItem>
@@ -1429,12 +1411,13 @@ useEffect(() => {
                             id="durationFrom"
                             {...field}
                             disabled={isSaved}
+                            max={new Date().toISOString().slice(0, 7)}
                             className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border"
                           />
                         </FormControl>
                         <FormMessage className="text-xs sm:text-sm font-normal pl-3">
                           {errors.applicationData?.durationFrom && (
-                            <span className="text-red-500">{errors.applicationData.durationFrom.message}</span>
+                            <span className="text-red-500 text-sm">{errors.applicationData.durationFrom.message}</span>
                           )}
                         </FormMessage>
                       </FormItem>
@@ -1454,6 +1437,8 @@ useEffect(() => {
                             id="durationTo"
                             {...field}
                             disabled={isSaved}
+                            min={watch("applicationData.durationFrom") || undefined}
+                            max={new Date().toISOString().slice(0, 7)}
                             className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border"
                           />
                         </FormControl>
@@ -1498,7 +1483,9 @@ useEffect(() => {
                           placeholder="MM/YYYY" 
                           type="month"
                           className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border"
-                          id="companyStartDate" {...field} disabled={isSaved} />
+                          id="companyStartDate" {...field} 
+                          max={new Date().toISOString().slice(0, 7)}
+                          disabled={isSaved} />
                       </FormControl>
                       <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
                     </FormItem>
@@ -1524,6 +1511,7 @@ useEffect(() => {
                             id="durationFrom"
                             {...field}
                             disabled={isSaved}
+                            max={new Date().toISOString().slice(0, 7)}
                             className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border"
                           />
                         </FormControl>
@@ -1549,6 +1537,8 @@ useEffect(() => {
                             id="durationTo"
                             {...field}
                             disabled={isSaved}
+                            min={watch("applicationData.durationFrom") || undefined}
+                            max={new Date().toISOString().slice(0, 7)}
                             className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border"
                           />
                         </FormControl>
@@ -1582,6 +1572,7 @@ useEffect(() => {
                             id="durationFrom"
                             {...field}
                             disabled={isSaved}
+                            max={new Date().toISOString().slice(0, 7)}
                             className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border text-white"
                           />
                         </FormControl>
@@ -1607,6 +1598,8 @@ useEffect(() => {
                             id="durationTo"
                             {...field}
                             disabled={isSaved}
+                            min={watch("applicationData.durationFrom") || undefined}
+                            max={new Date().toISOString().slice(0, 7)}
                             className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border text-white"
                           />
                         </FormControl>
@@ -1953,7 +1946,7 @@ useEffect(() => {
               disabled={loading}
             >
               <div className='flex items-center gap-2'>
-                {loading ? 'Initializing Payment...' : `Pay INR ₹${studentData?.appliedCohorts[studentData.appliedCohorts.length - 1]?.cohortId?.cohortFeesDetail?.applicationFee || 0}.00`}`
+                {loading ? 'Initializing Payment...' : `Pay INR ₹${applicationFees || 0}.00`}`
               </div>
             </Button>
           ) : (
@@ -1965,7 +1958,7 @@ useEffect(() => {
             >
               <div className='flex items-center gap-2'>
                 <SaveIcon className='w-5 h-5' />
-                {loading ? 'Submitting...' : `Submit and Pay INR ₹${studentData?.appliedCohorts[studentData.appliedCohorts.length - 1]?.cohortId?.cohortFeesDetail?.applicationFee || 0}.00`}
+                {loading ? 'Submitting...' : `Submit and Pay INR ₹${fetchedStudentData?.appliedCohorts?.[fetchedStudentData?.appliedCohorts.length - 1]?.cohortId?.cohortFeesDetail?.applicationFee || 0}.00`}
               </div>
             </Button>
           )
@@ -1977,7 +1970,10 @@ useEffect(() => {
             variant="link"
             type='button'
             className='underline w-full sm:w-auto order-2 sm:order-1'
-            onClick={() => form.reset()}
+            onClick={() => {
+              form.reset();
+              localStorage.removeItem(`applicationDetailsForm-${studentData?.email}`);
+            }}          
           >
             Clear Form
           </Button>
@@ -2003,7 +1999,7 @@ useEffect(() => {
       <div>
         <div className="text-2xl font-semibold ">Admission Fee Payment</div>
         <div className="mt-2 text-xs sm:text-sm font-normal text-center">
-          Make an admission fee payment of INR 500 to move to the next step of your admission process
+          Make an admission fee payment of INR {applicationFees || 0}.00 to move to the next step of your admission process
         </div>
       </div>
       <div className="flex flex-col gap-3">

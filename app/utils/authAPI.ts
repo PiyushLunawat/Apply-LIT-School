@@ -50,7 +50,7 @@ export async function verifyOtp(data: { email: string; otp: string }) {
     throw new Error(
       `${
         errorDetails
-          ? `${errorDetails.message || JSON.stringify(errorDetails)}`
+          ? `${errorDetails.message || JSON.stringify(errorDetails.error)}`
           : ""
       }`
     );

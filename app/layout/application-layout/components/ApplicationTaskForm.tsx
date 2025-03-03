@@ -9,13 +9,9 @@ import { UserContext } from '~/context/UserContext';
 import { Button } from '~/components/ui/button';
 import {
   ArrowUpRight,
-  Download,
-  FileIcon,
   FileTextIcon,
   Link2Icon,
   LoaderCircle,
-  Phone,
-  RefreshCw,
   UploadIcon,
   XIcon,
 } from 'lucide-react';
@@ -27,7 +23,10 @@ import {
   FormControl,
   FormMessage,
 } from '~/components/ui/form';
-import { getCohorts, getCurrentStudent, submitApplicationTask } from '~/utils/studentAPI';
+import {
+  getCurrentStudent,
+  submitApplicationTask
+} from '~/utils/studentAPI';
 import { useNavigate } from '@remix-run/react';
 import axios from 'axios';
 
@@ -35,6 +34,8 @@ import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { Progress } from '~/components/ui/progress';
 import { Badge } from '~/components/ui/badge';
 
+// ------------------ ZOD Schema ------------------
+// The form itself collects top-level "courseDive" and an array of "tasks" with "configItems".
 const formSchema = z.object({
   courseDive: z.object({
     interest: z.string().nonempty('This field is required'),
@@ -46,9 +47,12 @@ const formSchema = z.object({
         z.object({
           type: z.string(),
           answer: z.union([
-            z.string().nonempty('This field is required').url('Please enter a valid Link URL'), // For links
-            z.string().nonempty('This field is required'), // For text inputs
-            z.array(z.any()).nonempty('This field is required'), // For file uploads
+            z
+              .string()
+              .nonempty('This field is required')
+              .url('Please enter a valid Link URL'), // For link fields
+            z.string().nonempty('This field is required'), // For short/long text
+            z.array(z.any()).nonempty('This field is required'), // For file arrays
           ]),
         })
       ),
@@ -56,6 +60,7 @@ const formSchema = z.object({
   ),
 });
 
+// ------------------ Types ------------------
 type FormSchema = z.infer<typeof formSchema>;
 
 interface ConfigItem {
@@ -67,13 +72,14 @@ interface Task {
   configItems: ConfigItem[];
 }
 
+// ------------------ Main Form ------------------
 const ApplicationTaskForm: React.FC = () => {
   const { studentData } = useContext(UserContext);
   const [cohort, setCohort] = useState<any>();
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();  
-  const [fetchedStudentData, setFetchedStudentData] = useState<any>(null);
 
+  // ------------------ React Hook Form Setup ------------------
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -84,23 +90,27 @@ const ApplicationTaskForm: React.FC = () => {
       tasks: [],
     },
   });
-
   const { control, handleSubmit, setValue, reset, watch } = form;
 
-  // ------------------ Fetch data from server and reset the form ------------------
+  // ------------------ Fetch Data + Initialize ------------------
   useEffect(() => {
     async function fetchData() {
-      try {        
+      try {
         const studentResp = await getCurrentStudent(studentData._id);
-
-        const applicationTasks = studentResp?.appliedCohorts[studentResp.appliedCohorts.length - 1]?.applicationDetails?.applicationTasks;
+        // Where application tasks might be stored
+        const applicationTasks = studentResp?.appliedCohorts?.[studentResp.appliedCohorts.length - 1]?.applicationDetails?.applicationTasks || [];
+        // The last submission's first item
         const lastTaskSubmission = applicationTasks[applicationTasks.length - 1]?.applicationTasks?.[0];
 
-        setCohort(studentResp?.appliedCohorts[studentResp.appliedCohorts.length - 1]?.cohortId);
-        const sDataTasks = lastTaskSubmission?.tasks || [];
-        const cohortTasks =
-          studentResp?.appliedCohorts[studentResp.appliedCohorts.length - 1]?.cohortId?.applicationFormDetail?.[0]?.task || [];
+        // The cohort data
+        const currentCohort = studentResp?.appliedCohorts?.[studentResp.appliedCohorts.length - 1]?.cohortId;
+        setCohort(currentCohort);
 
+        // If there's existing task data, map it out
+        const sDataTasks = lastTaskSubmission?.tasks || [];
+        const cohortTasks = currentCohort?.applicationFormDetail?.[0]?.task || [];
+
+        // Build final tasks structure for react-hook-form
         const finalTasks = cohortTasks.map((ct: any, tIndex: number) => {
           const existingTask = sDataTasks[tIndex]?.task || {};
           return {
@@ -109,10 +119,9 @@ const ApplicationTaskForm: React.FC = () => {
               switch (configItem.type) {
                 case 'long':
                 case 'short':
-                  answer =
-                    existingTask.text && existingTask.text[cIndex]
-                      ? existingTask.text[cIndex]
-                      : '';
+                  answer = existingTask.text && existingTask.text[cIndex]
+                    ? existingTask.text[cIndex]
+                    : '';
                   break;
                 case 'link':
                   answer = existingTask.links || [];
@@ -138,11 +147,13 @@ const ApplicationTaskForm: React.FC = () => {
           };
         });
 
+        // Fill in the "courseDive" text from last submission, if it exists
         const courseDiveData = {
           interest: lastTaskSubmission?.courseDive?.text1 || '',
           goals: lastTaskSubmission?.courseDive?.text2 || '',
         };
 
+        // Check localStorage: if empty, use the fetched data
         const storedFormJSON = localStorage.getItem(`applicationTaskForm-${studentData?.email}`);
         if (storedFormJSON) {
           const parsedForm = JSON.parse(storedFormJSON);
@@ -158,9 +169,11 @@ const ApplicationTaskForm: React.FC = () => {
               tasks: finalTasks,
             });
           } else {
+            // If localStorage has non-empty data, use that
             reset(parsedForm);
           }
         } else {
+          // No localStorage, use what we fetched from the server
           reset({
             courseDive: courseDiveData,
             tasks: finalTasks,
@@ -175,17 +188,19 @@ const ApplicationTaskForm: React.FC = () => {
     fetchData();
   }, [studentData, reset]);
 
-  // ------------------ LOCAL STORAGE SETUP ------------------
+  // ------------------ Local Storage: Initialize if none ------------------
   useEffect(() => {
     if (!studentData || !studentData._id) return;
     const existingData = localStorage.getItem(`applicationTaskForm-${studentData?.email}`);
     if (!existingData) {
       const initialData = form.getValues();
-      if (studentData?.email)
+      if (studentData?.email) {
         localStorage.setItem(`applicationTaskForm-${studentData?.email}`, JSON.stringify(initialData));
+      }
     }
   }, [studentData, form]);
 
+  // ------------------ Local Storage: Re-hydrate on refresh ------------------
   useEffect(() => {
     const storedFormJSON = localStorage.getItem(`applicationTaskForm-${studentData?.email}`);
     if (storedFormJSON) {
@@ -196,32 +211,36 @@ const ApplicationTaskForm: React.FC = () => {
         console.error("Error parsing form data from localStorage:", error);
       }
     }
-  }, [reset]);
+  }, [reset, studentData?.email]);
 
+  // ------------------ Local Storage: Save on changes ------------------
   useEffect(() => {
     const subscription = watch((value) => {
-      if (studentData?.email)
+      if (studentData?.email) {
         localStorage.setItem(`applicationTaskForm-${studentData?.email}`, JSON.stringify(value));
+      }
     });
     return () => subscription.unsubscribe();
   }, [watch, studentData?.email]);
 
-  // ------------------ End LOCAL STORAGE SETUP ------------------
-
+  // ------------------ Get the tasks from cohort data ------------------
   const tasks = cohort?.applicationFormDetail?.[0]?.task || [];
 
+  // ------------------ On Submit: Transform and send ------------------
   const onSubmit = async (data: FormSchema) => {
     try {
       setLoading(true);
 
-      // Transform each task so that only keys corresponding to the present config item types are added.
-      // Also include courseDive values from the form.
+      // Transform each item in `data.tasks` => final shape for your server
       const transformedTasks = data.tasks.map((task) => {
+        // "feedback" might just be an empty array if your server expects it
         const transformedTask: Record<string, any> = { feedback: [] };
+
         task.configItems.forEach((configItem) => {
           const type = configItem.type.toLowerCase();
           const answer = configItem.answer;
           let key: string | null = null;
+
           if (type === "link") {
             key = "links";
           } else if (type === "image") {
@@ -233,37 +252,43 @@ const ApplicationTaskForm: React.FC = () => {
           } else if (type === "long" || type === "short" || type === "text") {
             key = "text";
           }
+
           if (key) {
             if (!(key in transformedTask)) {
               transformedTask[key] = [];
             }
             if (Array.isArray(answer)) {
+              // If it's already an array (e.g. links/files), just set it
               transformedTask[key] = answer;
             } else {
+              // Otherwise, push the single text/short/long answer
               transformedTask[key].push(answer);
             }
           }
         });
+
         return transformedTask;
       });
 
+      // ------------------ Final payload in the desired shape ------------------
       const payload = {
-        _id: "67c4400edfb81b9c4ef535b2",
-        taskDataId: "67c4400edfb81b9c4ef535b3",
         tasks: [
           {
-            // Include the two strings from courseDive as text1 and text2 respectively.
+            // Pass the interest/goals as an array: [text1, text2]
             courseDive: [data.courseDive.interest, data.courseDive.goals],
             tasks: transformedTasks,
           },
         ],
       };
 
-      console.log("Payload:", payload);
+      console.log("Submitting Payload:", payload);
       const res = await submitApplicationTask(payload);
       console.log("Submission success => ", res);
-      navigate("/application/status");
+
+      // If success, clear local storage and navigate
       localStorage.removeItem(`applicationTaskForm-${studentData?.email}`);
+      navigate("/application/status");
+
     } catch (err) {
       console.error("Failed to submit application task:", err);
     } finally {
@@ -271,7 +296,12 @@ const ApplicationTaskForm: React.FC = () => {
     }
   };
 
-  const wordLimitHandler = (event: React.ChangeEvent<HTMLTextAreaElement>, field: any, maxWordLimit: number) => {
+  // ------------------ Helper for text area word limit ------------------
+  const wordLimitHandler = (
+    event: React.ChangeEvent<HTMLTextAreaElement>,
+    field: any,
+    maxWordLimit: number
+  ) => {
     const text = event.target.value;
     const wordCount = text.split(/\s+/).filter(Boolean).length;
     if (wordCount <= maxWordLimit) {
@@ -279,15 +309,17 @@ const ApplicationTaskForm: React.FC = () => {
     }
   };
 
+  // ------------------ Render ------------------
   return (
     <Form {...form}>
       <form onSubmit={handleSubmit(onSubmit)}>
-        {/* Course Dive Section */}
+        {/* --------------- Course Dive Section --------------- */}
         <div className="flex flex-col gap-6 mt-8">
           <div className="flex-1 bg-[#00A3FF]/[0.2] text-[#00A3FF] text-center py-4 text-2xl rounded-full">
             Course Dive
           </div>
           <div className="space-y-6">
+            {/* Why interested */}
             <FormField
               control={control}
               name="courseDive.interest"
@@ -309,6 +341,7 @@ const ApplicationTaskForm: React.FC = () => {
               )}
             />
 
+            {/* Career goals */}
             <FormField
               control={control}
               name="courseDive.goals"
@@ -332,11 +365,11 @@ const ApplicationTaskForm: React.FC = () => {
           </div>
         </div>
 
-        {/* Tasks Section */}
+        {/* --------------- Dynamic Tasks Section --------------- */}
         {tasks.map((task: any, taskIndex: number) => (
           <div key={taskIndex} className="flex flex-col gap-6 mt-8">
             <div className="flex-1 bg-[#FA69E5]/[0.2] text-[#FA69E5] text-center py-4 text-2xl rounded-full">
-              Task 0{taskIndex + 1}
+              Task {String(taskIndex + 1).padStart(2, '0')}
             </div>
             <div className="space-y-1">
               <div className="mb-4">
@@ -347,6 +380,7 @@ const ApplicationTaskForm: React.FC = () => {
                   {task.description}
                 </div>
               </div>
+
               {!cohort ? (
                 <div className="text-center text-white">
                   No tasks available. Please ensure the cohort data is loaded correctly.
@@ -368,6 +402,7 @@ const ApplicationTaskForm: React.FC = () => {
           </div>
         ))}
 
+        {/* --------------- Submit + Clear Buttons --------------- */}
         <div className="flex flex-col sm:flex-row gap-2 justify-end sm:justify-between items-center mt-8">
           <Button
             variant="link"
@@ -377,7 +412,12 @@ const ApplicationTaskForm: React.FC = () => {
           >
             Clear Form
           </Button>
-          <Button size="xl" className="w-full sm:w-fit space-y-1 order-1 sm:order-2" type="submit" disabled={loading}>
+          <Button
+            size="xl"
+            className="w-full sm:w-fit space-y-1 order-1 sm:order-2"
+            type="submit"
+            disabled={loading}
+          >
             {loading ? 'Submitting...' : 'Submit Application'}
           </Button>
         </div>
@@ -386,6 +426,7 @@ const ApplicationTaskForm: React.FC = () => {
   );
 };
 
+// --------------- Individual Config Item Handling ---------------
 interface TaskConfigItemProps {
   control: any;
   taskIndex: number;
@@ -393,10 +434,19 @@ interface TaskConfigItemProps {
   configItem: any;
 }
 
-const TaskConfigItem: React.FC<TaskConfigItemProps> = ({ control, taskIndex, configIndex, configItem }) => {
+const TaskConfigItem: React.FC<TaskConfigItemProps> = ({
+  control,
+  taskIndex,
+  configIndex,
+  configItem,
+}) => {
   const fieldName = `tasks.${taskIndex}.configItems.${configIndex}.answer`;
 
-  const wordLimitHandler = (event: React.ChangeEvent<HTMLTextAreaElement>, field: any, maxWordLimit: number) => {
+  const wordLimitHandler = (
+    event: React.ChangeEvent<HTMLTextAreaElement>,
+    field: any,
+    maxWordLimit: number
+  ) => {
     const text = event.target.value;
     const wordCount = text.split(/\s+/).filter(Boolean).length;
     if (wordCount <= maxWordLimit) {
@@ -426,6 +476,7 @@ const TaskConfigItem: React.FC<TaskConfigItemProps> = ({ control, taskIndex, con
           )}
         />
       );
+
     case 'image':
     case 'video':
     case 'file':
@@ -438,6 +489,7 @@ const TaskConfigItem: React.FC<TaskConfigItemProps> = ({ control, taskIndex, con
           )}
         />
       );
+
     case 'link':
       return (
         <FormField
@@ -454,7 +506,9 @@ const TaskConfigItem: React.FC<TaskConfigItemProps> = ({ control, taskIndex, con
                     <div key={index} className="relative">
                       <Input
                         type="url"
-                        className={`w-full text-white text-base mt-2 !pl-10 ${fieldState?.error ? 'border-red-500' : ''}`}
+                        className={`w-full text-white text-base mt-2 pl-10 ${
+                          fieldState.error ? 'border-red-500' : ''
+                        }`}
                         placeholder={`Enter URL ${index + 1}`}
                         value={field.value?.[index] || ''}
                         onChange={(e) => {
@@ -478,11 +532,13 @@ const TaskConfigItem: React.FC<TaskConfigItemProps> = ({ control, taskIndex, con
           )}
         />
       );
+
     default:
       return null;
   }
 };
 
+// --------------- File Upload Field ---------------
 interface FileUploadFieldProps {
   field: any;
   configItem: any;
@@ -491,6 +547,14 @@ interface FileUploadFieldProps {
 const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) => {
   const [files, setFiles] = useState<string[]>(field.value || []);
   const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [fileName, setFileName] = useState("");
+
+  // Sync local "files" state with form
+  useEffect(() => {
+    setFiles(field.value || []);
+  }, [field.value]);
 
   const appendFile = (fileUrl: string) => {
     const newFiles = [...files, fileUrl];
@@ -507,28 +571,25 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
 
   const showUploadButton = !configItem.maxFiles || files.length < configItem.maxFiles;
 
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [fileName, setFileName] = useState("");
-
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setError(null);
     setUploadProgress(0);
     const selectedFiles = e.target.files;
     if (!selectedFiles || selectedFiles.length === 0) return;
+
+    // For simplicity, let's handle one file at a time
     const file = selectedFiles[0];
     setFileName(file.name);
-    const CHUNK_SIZE = 100 * 1024 * 1024;
+    const CHUNK_SIZE = 100 * 1024 * 1024; // 100MB chunk threshold
     e.target.value = "";
+
     try {
       setUploading(true);
       let fileUrl = "";
       if (file.size <= CHUNK_SIZE) {
         fileUrl = await uploadDirect(file);
-        console.log("uploadDirect File URL:", fileUrl);
       } else {
         fileUrl = await uploadMultipart(file, CHUNK_SIZE);
-        console.log("uploadMultipart File URL:", fileUrl);
       }
       appendFile(fileUrl);
     } catch (err: any) {
@@ -539,12 +600,14 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
     }
   };
 
+  // ------------------ Direct Upload ------------------
   const uploadDirect = async (file: File) => {
     const { data } = await axios.post(`http://localhost:4000/student/generate-presigned-url`, {
       bucketName: "dev-application-portal",
       key: generateUniqueFileName(file.name),
     });
     const { url } = data;
+
     await axios.put(url, file, {
       headers: { "Content-Type": file.type },
       onUploadProgress: (evt: any) => {
@@ -553,23 +616,31 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
         setUploadProgress(percentComplete);
       },
     });
-    return `${url.split("?")[0]}`;
+
+    return url.split("?")[0];
   };
 
+  // ------------------ Multipart Upload ------------------
   const uploadMultipart = async (file: File, chunkSize: number) => {
     const uniqueKey = generateUniqueFileName(file.name);
+
+    // Initiate
     const initiateRes = await axios.post(`http://localhost:4000/student/initiate-multipart-upload`, {
       bucketName: "dev-application-portal",
       key: uniqueKey,
     });
     const { uploadId } = initiateRes.data;
+
+    // Upload chunks
     const totalChunks = Math.ceil(file.size / chunkSize);
     let totalBytesUploaded = 0;
     const parts: { ETag: string; PartNumber: number }[] = [];
+
     for (let i = 0; i < totalChunks; i++) {
       const start = i * chunkSize;
       const end = Math.min(start + chunkSize, file.size);
       const chunk = file.slice(start, end);
+
       const partRes = await axios.post(`http://localhost:4000/student/generate-presigned-url-part`, {
         bucketName: "dev-application-portal",
         key: uniqueKey,
@@ -577,6 +648,7 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
         partNumber: i + 1,
       });
       const { url } = partRes.data;
+
       const uploadRes = await axios.put(url, chunk, {
         headers: { "Content-Type": file.type },
         onUploadProgress: (evt: any) => {
@@ -586,14 +658,18 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
           setUploadProgress(Math.min(percent, 100));
         },
       });
+
       parts.push({ PartNumber: i + 1, ETag: uploadRes.headers.etag });
     }
+
+    // Complete
     await axios.post(`http://localhost:4000/student/complete-multipart-upload`, {
       bucketName: "dev-application-portal",
       key: uniqueKey,
       uploadId,
       parts,
     });
+
     return `https://dev-application-portal.s3.amazonaws.com/${uniqueKey}`;
   };
 
@@ -602,14 +678,19 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
     return `${timestamp}-${originalName}`;
   };
 
+  // ------------------ Render File List + Upload UI ------------------
   return (
     <FormItem>
       <FormControl>
         <div className="flex flex-col space-y-2 mt-2">
+          {/* Already-uploaded files (from state) */}
           {files.map((file, index) => {
             const isLink = typeof file === "string";
             return (
-              <div key={index} className="flex items-center bg-[#007AFF] h-[52px] text-white p-1.5 rounded-xl w-full">
+              <div
+                key={index}
+                className="flex items-center bg-[#007AFF] h-[52px] text-white p-1.5 rounded-xl w-full"
+              >
                 <Badge size="icon" className="bg-[#3698FB] rounded-xl mr-2">
                   <FileTextIcon className="w-5" />
                 </Badge>
@@ -618,13 +699,28 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
                 </span>
                 <div className="flex items-center space-x-2">
                   {isLink && (
-                    <Button size="icon" type="button" variant="ghost" className="bg-[#3698FB] rounded-xl">
-                      <a href={file as string} download target="_blank" rel="noopener noreferrer">
+                    <Button
+                      size="icon"
+                      type="button"
+                      variant="ghost"
+                      className="bg-[#3698FB] rounded-xl"
+                    >
+                      <a
+                        href={file as string}
+                        download
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         <ArrowUpRight className="w-5" />
                       </a>
                     </Button>
                   )}
-                  <Button size="icon" type="button" className="bg-[#3698FB] rounded-xl" onClick={() => removeFile(index)}>
+                  <Button
+                    size="icon"
+                    type="button"
+                    className="bg-[#3698FB] rounded-xl"
+                    onClick={() => removeFile(index)}
+                  >
                     <XIcon className="w-5" />
                   </Button>
                 </div>
@@ -632,13 +728,16 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
             );
           })}
 
+          {/* In-progress upload */}
           {uploading && (
             <div className="flex justify-between items-center bg-[#007AFF] h-[52px] text-white p-1.5 rounded-xl w-full">
               <div className="flex items-center gap-2">
                 <Badge size="icon" className="bg-[#3698FB] rounded-xl !p-0 mr-2">
                   <FileTextIcon className="w-5 h-5" />
                 </Badge>
-                <span className="flex-1 text-xs sm:text-base truncate mr-4">{fileName}</span>
+                <span className="flex-1 text-xs sm:text-base truncate mr-4">
+                  {fileName}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 {uploadProgress === 100 ? (
@@ -649,6 +748,7 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
                     <span>{uploadProgress}%</span>
                   </>
                 )}
+                {/* Cancel button not implemented here, but you could do so */}
                 <Button size="icon" type="button" className="bg-[#3698FB] rounded-xl">
                   <XIcon className="w-5" />
                 </Button>
@@ -656,6 +756,7 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
             </div>
           )}
 
+          {/* Upload button if under maxFiles */}
           {showUploadButton && (
             <div className="flex items-center justify-between w-full h-16 border-2 border-dashed rounded-xl p-1.5">
               <label className="w-full pl-3 text-muted-foreground">
@@ -671,29 +772,42 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
                       : configItem.type === 'file' &&
                         configItem.allowedTypes &&
                         !configItem.allowedTypes.includes('All')
-                      ? configItem.allowedTypes.map((type: string) => `.${type.toLowerCase()}`).join(',')
+                      ? configItem.allowedTypes
+                          .map((type: string) => `.${type.toLowerCase()}`)
+                          .join(',')
                       : '*/*'
                   }
                   onChange={handleFileUpload}
                 />
                 <span className="cursor-pointer text-xs sm:text-base">
-                  {`Upload ${configItem.type}${configItem.maxFiles > 1 ? 's' : ''} (Max size: ${configItem.maxFileSize || 15} MB)`}
+                  {`Upload ${configItem.type}${
+                    configItem.maxFiles > 1 ? 's' : ''
+                  } (Max size: ${configItem.maxFileSize || 15} MB)`}
                 </span>
               </label>
               <Button
                 type="button"
                 className="flex gap-2 text-white px-6 py-6 rounded-xl"
-                onClick={() => document.querySelector<HTMLInputElement>('input[type="file"]')?.click()}
+                onClick={() =>
+                  document
+                    .querySelector<HTMLInputElement>('input[type="file"]')
+                    ?.click()
+                }
               >
                 <UploadIcon className="w-4 h-4" /> Upload {configItem.type}
               </Button>
             </div>
           )}
+
+          {/* Info about how many files are uploaded so far */}
           {configItem.maxFiles && (
             <div className="text-sm text-muted-foreground pl-3">
-              Uploaded {files.length} of {configItem.maxFiles} file{configItem.maxFiles > 1 ? 's' : ''}
+              Uploaded {files.length} of {configItem.maxFiles} file
+              {configItem.maxFiles > 1 ? 's' : ''}
             </div>
           )}
+
+          {/* Error messages */}
           {error && <p className="text-red-500 text-sm">{error}</p>}
         </div>
       </FormControl>

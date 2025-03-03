@@ -7,47 +7,44 @@ import SubHeader from '~/components/organisms/SubHeader/SubHeader';
 
 export const ApplicationTask: React.FC = () => {
   const [studentData, setStudentData] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
-    const [subtitle, setSubtitle] = useState("");
-    const [submessage, setSubmessage] = useState("");
-    const [programName, setProgramName] = useState(studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]?.cohortId?.programDetail?.name || "");
+  const [student, setStudent] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const storedData = localStorage.getItem("studentData");
+    if (storedData) {
+      setStudentData(JSON.parse(storedData));
+    }
+  }, []);
   
-    // useNavigate hook for client-side transitions
-    const navigate = useNavigate();
-  
-    useEffect(() => {
-      const storedData = localStorage.getItem("studentData");
-      if (storedData) {
-        setStudentData(JSON.parse(storedData));
+  useEffect(() => {
+    async function fetchCurrentStudentData() {
+      if (!studentData?._id) {
+        setLoading(false);
+        return;
       }
-    }, []);
-  
-    useEffect(() => {
-      async function fetchCurrentStudentData() {
-        if (!studentData?._id) {
-          setLoading(false);
-          return;
+      try {
+        const res = await getCurrentStudent(studentData._id);  
+        console.log("application/task", res);
+        setStudent(res)
+        const status = res?.appliedCohorts?.[res?.appliedCohorts.length - 1]?.applicationDetails?.applicationStatus;
+        if (['under review', 'accepted' , 'rejected', 'Interview Scheduled', 'waitlist', 'selected', 'not qualified'].includes(status)) {
+          console.log("Navigating to /application/status:", status);
+          navigate("/application/status");
+        } else if (['initiated', 'on hold'].includes(status)) {
+          console.log("Navigating to /application/task:", status);
+          navigate("/application/task");
         }
-        try {
-          const res = await getCurrentStudent(studentData._id);  
-          const status = res.data?.applicationDetails?.applicationStatus;
-  
-          if (['under review', 'accepted' , 'rejected', 'Interview Scheduled', 'waitlist', 'selected', 'not qualified'].includes(status)) {
-            console.log("Navigating to /application/status:", status);
-            navigate("/application/status");
-          } else if (['initiated', 'on hold'].includes(status)) {
-            console.log("Navigating to /application/task:", status);
-            navigate("/application/task");
-          }
-        } catch (error) {
-          console.log("Error fetching student data:", error);
-        } finally {
-          setLoading(false);
-        }
+      } catch (error) {
+        console.log("Error fetching student data:", error);
+      } finally {
+        setLoading(false);
       }
-  
-      fetchCurrentStudentData();
-    }, [studentData, navigate]);
+    }
+
+    fetchCurrentStudentData();
+  }, [studentData]);
 
   return (
     <>
@@ -56,7 +53,7 @@ export const ApplicationTask: React.FC = () => {
           
         <div className="w-full px-4 justify-center items-center">
           <div className='max-w-[1000px] mx-auto'> 
-            <ApplicationTaskForm />
+            <ApplicationTaskForm  />
           </div>
         </div>
     </>

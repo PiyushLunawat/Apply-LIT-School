@@ -148,8 +148,8 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
       }
       
     } catch (error) {
-      console.error('OTP verification failed:', error);
-      form.setError('generalError', { type: 'manual', message: `OTP verification failed. ${error}` });
+      console.log('OTP failed:', error);
+      form.setError('otp', { type: 'manual', message: `${error}` });
     } finally {
       setLoading(false);
     }
@@ -160,11 +160,11 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
       setLoading(true);
       await resendOtp({ email: contactInfo });
       setTimer(60);
-      form.clearErrors("generalError");
+      form.clearErrors("otp");
       reset({ otp: '' });
     } catch (error) {
       console.error('Resend OTP failed:', error);
-      form.setError('generalError', { type: 'manual', message:`Failed to resend OTP. ${error}` });
+      form.setError('otp', { type: 'manual', message:`Failed to resend OTP. ${error}` });
     } finally {
       setLoading(false);
     }
