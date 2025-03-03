@@ -51,6 +51,7 @@ const StatusMessage: React.FC<StatusMessageProps> = ({
         );
         break;
       case 'Interview Scheduled':
+         case 'Interview Concluded':
         setHeadMessage(
           <>
             <span className="text-[#00A3FF]">Meeting!</span> Scheduled.
@@ -219,7 +220,7 @@ const StatusMessage: React.FC<StatusMessageProps> = ({
             {subMessage}
           </div>
 
-          {messageType === 'Interview Scheduled' &&
+          {['Interview Scheduled', 'Interview Concluded'].includes(messageType) &&
             <div className='mx-8 mt-4 sm:mx-16 text-xs sm:text-sm md:text-base text-center font-normal space-y-3'>
               <div className=''>
                 If you were unable to attend this interview you may choose to

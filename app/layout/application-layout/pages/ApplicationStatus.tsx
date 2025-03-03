@@ -98,7 +98,7 @@ export const ApplicationStatus: React.FC = () => {
   return (
     <>
       { (isPaymentVerified === null || isPaymentVerified === undefined) ?
-        (showReviewBlock  ? 
+        ((isInterviewScheduled !== 'Interview Scheduled' || showReviewBlock)  ? 
         <div className="max-w-[1216px] sm:mx-16 xl:mx-auto justify-center items-center space-y-20">
           <Review setIsPaymentVerified={setIsPaymentVerified}/>
           <div className="space-y-4 sm:space-y-6">

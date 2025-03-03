@@ -49,7 +49,6 @@ export function SchedulePresentation({ interviewer, eventCategory }: SchedulePre
         window.open(url, "_blank"); 
       };
     
-
   return (
     <div>
       <div className="grid gap-3">

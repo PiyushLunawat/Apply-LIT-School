@@ -96,7 +96,7 @@ const Review: React.FC<ReviewProps> = ({ setIsPaymentVerified }) => {
             {/* {['accepted', 'rejected'].includes(status) && 
               <TaskSubmission mediaItems={mediaItems} />
             } */}
-            {!['under review', 'concluded', 'Interview Scheduled'].includes(status) && 
+            {!['under review', 'concluded', 'Interview Scheduled', 'Interview Concluded'].includes(status) && 
               <Feedback setIsPaymentVerified={setIsPaymentVerified} status={status} feedbackList={appliData} setPass={setPass} booked={filledSeats}/>
             }
         </div>

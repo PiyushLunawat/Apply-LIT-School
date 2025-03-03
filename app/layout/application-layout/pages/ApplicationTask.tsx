@@ -53,7 +53,7 @@ export const ApplicationTask: React.FC = () => {
           
         <div className="w-full px-4 justify-center items-center">
           <div className='max-w-[1000px] mx-auto'> 
-            <ApplicationTaskForm  />
+            <ApplicationTaskForm student={student || studentData} />
           </div>
         </div>
     </>
