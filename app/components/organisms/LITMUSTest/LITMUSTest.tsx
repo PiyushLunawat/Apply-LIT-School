@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Button } from '~/components/ui/button';
-import { Upload, Clock, FileTextIcon, RefreshCw, X, Link2Icon, XIcon, UploadIcon, Download, ArrowUpRight, LoaderCircle } from 'lucide-react';
+import { Upload, Clock, FileTextIcon, RefreshCw, X, Link2Icon, XIcon, UploadIcon, Download, ArrowUpRight, LoaderCircle, Link2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -61,6 +61,7 @@ const LITMUSTest: React.FC = () => {
   const { studentData } = useContext(UserContext);
   const [cohorts, setCohorts] = useState<any[]>([]);
   const [stu, setStu] = useState("");
+  const [status, setStatus] = useState("");
   const [student, setStudent] = useState<any>();
   const [interviewOpen, setInterviewOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -94,9 +95,10 @@ const LITMUSTest: React.FC = () => {
     const fetchStudentData = async () => {
       try {
         const student = await getCurrentStudent(studentData._id); // Pass the actual student ID here
-        console.log("vsd",student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.litmusTestDetails?._id);
+        console.log("vsd",student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.litmusTestDetails);
         setStu(student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.litmusTestDetails?._id); 
         setStudent(student)
+        setStatus(student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.litmusTestDetails?.status)
 
       } catch (error) {
         console.error("Failed to fetch student data:", error);
@@ -114,7 +116,6 @@ const LITMUSTest: React.FC = () => {
   const tasks = studentData?.appliedCohorts?.[studentData?.appliedCohorts.length - 1]?.cohortId?.litmusTestDetail?.[0]?.litmusTasks || [];
   useEffect(() => {
     if (cohort?.litmusTestDetail?.[0]?.litmusTasks.length > 0) {
-      console.log("sfbsd",cohort?.litmusTestDetail?.[0]?.litmusTasks);
       
       setValue(
         'tasks',
@@ -152,7 +153,7 @@ const LITMUSTest: React.FC = () => {
           } else if (type === "file") {
             key = "files";
           } else if (type === "long" || type === "short" || type === "text") {
-            key = "text";
+            key = "texts";
           }
           if (key) {
             if (!(key in transformedTask)) {
@@ -283,14 +284,25 @@ const LITMUSTest: React.FC = () => {
             ))}
 
             {task?.resources?.resourceLinks.map((link: any, index: number) => (
-              <div key={index} className="w-full h-full  ">
-                <iframe
-                  src={link}
-                  title={link}
-                  className="rounded-xl h-[472px] w-full"
-                  allowFullScreen
-                ></iframe>
-                </div>
+              <div key={index} className="flex items-center justify-between w-full p-1.5 bg-[#2C2C2C] rounded-xl">
+              <div className="flex items-center space-x-2 truncate pr-12">
+                <Badge
+                  variant="outline"
+                  size="icon"
+                  className="text-white rounded-xl bg-[#09090b]"
+                >
+                  <Link2 className="w-5 h-5" />
+                </Badge>
+                <span className="text-white ">{link}</span>
+              </div>
+              <Button
+                variant="outline"
+                size="icon" type='button'
+                className="text-white rounded-xl hover:bg-[#1a1a1d]"
+              >
+                <ArrowUpRight className="w-5 h-5" />
+              </Button>
+            </div>
             ))}
           </div>
             
@@ -320,11 +332,18 @@ const LITMUSTest: React.FC = () => {
           ))}
         </>))}
 
+        {status === 'submitted' ?
+        <div className='w-full flex justify-between items-center '>
+          <Button size="xl" className='' type="button" disabled={loading} onClick={() => handleScheduleInterview()}>
+            {loading ? 'Scheduling...' : 'Schedule a Call'}
+          </Button>
+        </div> : 
         <div className='w-full flex justify-between items-center '>
             <Button size="xl" className='' type="submit" disabled={loading}>
             {loading ? 'Submitting...' : 'Submit and Book Presentation Session'}
           </Button>
         </div>
+        }
 
       </div>
     </form>

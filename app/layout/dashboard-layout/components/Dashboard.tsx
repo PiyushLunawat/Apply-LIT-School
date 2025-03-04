@@ -20,8 +20,8 @@ interface DashboardCardProps {
 const DashboardCard = ({ title, description, icon, to, bgColor, border, disable }: DashboardCardProps) => (
   <Link
      to={'#'} // Prevent navigation if disabled
-    className={`rounded-xl sm:rounded-2xl ${bgColor} ${border} border-b-8 hover:opacity-90 transition-opacity ${
-      disable ? "opacity-50 cursor-not-allowed" : ""
+    className={`rounded-xl sm:rounded-2xl ${bgColor} ${border} border-b-8 transition-opacity ${
+      disable ? "opacity-50 cursor-not-allowed" : "hover:opacity-90"
     }`}
     onClick={(e) => disable && e.preventDefault()} // Prevent link click if disabled
   >

@@ -67,7 +67,7 @@ export const ApplicationStatus: React.FC = () => {
     };
 
     fetchDataOnMount();
-  }, [studentData]);
+  }, []);
 
 //   let showReviewBlock = false;
 //   let meetingEnd: Date | null = null;
