@@ -41,7 +41,7 @@ const formSchema = z.object({
     courseOfInterest: z.string(),
     cohort: z.string(),
     isMobileVerified: z.boolean().optional(),
-    linkedInUrl: z.string().url('Please enter a valid LinkedIn URL').optional(),
+    linkedInUrl: z.string().optional(),
     instagramUrl: z.string().optional(),
     gender: z.enum(["Male", "Female", "Other"]),
   }),
