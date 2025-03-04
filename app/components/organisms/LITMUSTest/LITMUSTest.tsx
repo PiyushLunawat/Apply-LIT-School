@@ -332,7 +332,7 @@ const LITMUSTest: React.FC = () => {
           ))}
         </>))}
 
-        {status !== 'submitted' ?
+        {status === 'submitted' ?
         <div className='w-full flex justify-between items-center '>
           <Button size="xl" className='' type="button" disabled={loading} onClick={() => handleScheduleInterview()}>
             {loading ? 'Scheduling...' : 'Schedule a Call'}
