@@ -188,7 +188,7 @@ export default function FeePaymentSetup() {
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  <SelectItem value="oneShot">One Shot Payment</SelectItem>
+                  <SelectItem value="one-shot">One Shot Payment</SelectItem>
                   <SelectItem value="instalments">Instalments</SelectItem>
                 </SelectGroup>
               </SelectContent>
@@ -330,7 +330,7 @@ export default function FeePaymentSetup() {
         </p>
       </div>}
 
-      {student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.feeSetup?.paymentPlan === 'oneShot' ? 
+      {student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.feeSetup?.paymentPlan === 'one-shot' ? 
       <div className="">
         <div className="border rounded-xl mb-6">
               {/* Semester Header */}

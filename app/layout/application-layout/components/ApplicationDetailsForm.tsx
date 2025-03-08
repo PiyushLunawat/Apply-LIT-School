@@ -80,6 +80,17 @@ const formSchema = z.object({
   }),
 })
 .refine(
+  (data) => {
+    const url = data.studentData.linkedInUrl;
+    if (!url) return true; 
+    return typeof url === "string" && /^https:\/\/(www\.)?linkedin\.com\/.+$/.test(url);
+  },
+  {
+    message: "Please enter a valid LinkedIn URL.",
+    path: ["studentData.linkedInUrl"],
+  }
+)
+.refine(
   (data) => !data.applicationData.isExperienced || (data.applicationData.experienceType),
   {
     message: "Experience Type is required.",
@@ -858,7 +869,7 @@ useEffect(() => {
   };
   
   const handleRetry = () => {
-    setFailedDialogOpen(false); // Close the dialog
+    setFailedDialogOpen(false); 
     handlePayment();
   };
 
@@ -990,7 +1001,7 @@ useEffect(() => {
                 control={control}
                 name="studentData.currentStatus"
                 render={({ field }) => (
-                  <FormItem className='flex-1 space-y-1'>
+                  <FormItem className='flex-1 flex flex-col space-y-1 relative'>
                     <Label className="text-xs sm:text-sm font-normal pl-3">You are Currently a</Label>
                     <FormControl>
                       <Select disabled={isSaved} value={field.value} onValueChange={field.onChange}>
@@ -1095,7 +1106,7 @@ useEffect(() => {
               <FormItem className="flex-1 space-y-1 relative">
                 <Label className="text-xs sm:text-sm font-normal pl-3">Your LinkedIn Profile Link (Not Compulsory)</Label>
                 <FormControl>
-                  <Input id="linkedInUrl" placeholder="linkedin.com/in/Mithu" {...field} 
+                  <Input id="linkedInUrl" placeholder="https://www.linkedin.com/JohnDoe" {...field} 
                   onChange={(e) => {
                     const newValue = e.target.value.replace(/\s/g, "");
                     field.onChange(newValue);
@@ -1114,7 +1125,7 @@ useEffect(() => {
               <FormItem className="flex-1 space-y-1 relative">
                 <Label className="text-xs sm:text-sm font-normal pl-3">Your Instagram ID (Not Compulsory)</Label>
                 <FormControl>
-                  <Input id="instagramUrl" placeholder="@Mithu_" {...field} 
+                  <Input id="instagramUrl" placeholder="@john_doe" {...field} 
                   onChange={(e) => {
                     const newValue = e.target.value.replace(/\s/g, "");
                     field.onChange(newValue);
@@ -1265,7 +1276,7 @@ useEffect(() => {
             control={control}
             name="applicationData.institutionName"
             render={({ field }) => (
-              <FormItem className="flex-1 space-y-1">
+              <FormItem className="flex-1 flex flex-col space-y-1 relative">
                 <Label htmlFor="institutionName" className="text-xs sm:text-sm font-normal pl-3">Name of Institution</Label>
                 <FormControl>
                   <Input id="institutionName" placeholder="Type here" {...field} disabled={isSaved} />
@@ -1499,7 +1510,7 @@ useEffect(() => {
                 {/* Duration of Work */}
                 <div className='flex-1 space-y-1'>
                 <Label htmlFor="duration" className="text-xs sm:text-sm font-normal pl-3">Apx. Duration of Work</Label>
-                  <div className="grid sm:flex flex-1 items-center gap-2">
+                  <div className="grid sm:flex flex-1 items-start gap-2">
                   <FormField
                     control={control}
                     name="applicationData.durationFrom"
@@ -1524,7 +1535,7 @@ useEffect(() => {
                     )}
                   />
 
-                  <Minus className='w-4 h-4 mx-auto'/>
+                  <Minus className='w-4 h-16 mx-auto'/>
 
                   <FormField
                     control={control}
@@ -1631,7 +1642,7 @@ useEffect(() => {
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="emergencyFirstName" className="text-xs sm:text-sm font-normal pl-3">First Name</Label>
                 <FormControl>
-                  <Input id="emergencyFirstName" placeholder="John" {...field} disabled={isSaved} />
+                  <Input id="emergencyFirstName" placeholder="Mary" {...field} disabled={isSaved} />
                 </FormControl>
                 <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
               </FormItem>
@@ -1645,7 +1656,7 @@ useEffect(() => {
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="emergencyLastName" className="text-xs sm:text-sm font-normal pl-3">Last Name</Label>
                 <FormControl>
-                  <Input id="emergencyLastName" placeholder="Doe" {...field} disabled={isSaved} />
+                  <Input id="emergencyLastName" placeholder="Smith" {...field} disabled={isSaved} />
                 </FormControl>
                 <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
               </FormItem>
@@ -1704,7 +1715,7 @@ useEffect(() => {
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="fatherFirstName" className="text-xs sm:text-sm font-normal pl-3">Father's First Name</Label>
                 <FormControl>
-                  <Input id="fatherFirstName" placeholder="John" {...field} disabled={isSaved} />
+                  <Input id="fatherFirstName" placeholder="Richard" {...field} disabled={isSaved} />
                 </FormControl>
                 <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
               </FormItem>
@@ -1772,7 +1783,7 @@ useEffect(() => {
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="fatherEmail" className="text-xs sm:text-sm font-normal pl-3">Father's Email</Label>
                 <FormControl>
-                  <Input id="fatherEmail" placeholder="Doe" {...field} disabled={isSaved} />
+                  <Input id="fatherEmail" placeholder="richard@gmail.com" {...field} disabled={isSaved} />
                 </FormControl>
                 <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
               </FormItem>
@@ -1785,7 +1796,7 @@ useEffect(() => {
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="motherFirstName" className="text-xs sm:text-sm font-normal pl-3">Mother's First Name</Label>
                 <FormControl>
-                  <Input id="motherFirstName" placeholder="John" {...field} disabled={isSaved} />
+                  <Input id="motherFirstName" placeholder="Jane" {...field} disabled={isSaved} />
                 </FormControl>
                 <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
               </FormItem>
@@ -1853,7 +1864,7 @@ useEffect(() => {
               <FormItem className="flex-1 space-y-1">
                 <Label htmlFor="motherEmail" className="text-xs sm:text-sm font-normal pl-3">Mother's Email</Label>
                 <FormControl>
-                  <Input id="motherEmail" placeholder="John" {...field} disabled={isSaved} />
+                  <Input id="motherEmail" placeholder="jane@gmail.com" {...field} disabled={isSaved} />
                 </FormControl>
                 <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
               </FormItem>
@@ -1958,7 +1969,7 @@ useEffect(() => {
             >
               <div className='flex items-center gap-2'>
                 <SaveIcon className='w-5 h-5' />
-                {loading ? 'Submitting...' : `Submit and Pay INR ₹${fetchedStudentData?.appliedCohorts?.[fetchedStudentData?.appliedCohorts.length - 1]?.cohortId?.cohortFeesDetail?.applicationFee || 0}.00`}
+                {loading ? 'Submitting...' : `Submit and Pay INR ₹${applicationFees || 0}.00`}
               </div>
             </Button>
           )
@@ -1999,7 +2010,7 @@ useEffect(() => {
       <div>
         <div className="text-2xl font-semibold ">Admission Fee Payment</div>
         <div className="mt-2 text-xs sm:text-sm font-normal text-center">
-          Make an admission fee payment of INR {applicationFees || 0}.00 to move to the next step of your admission process
+          Make an admission fee payment of INR ₹{applicationFees || 0}.00 to move to the next step of your admission process
         </div>
       </div>
       <div className="flex flex-col gap-3">
@@ -2011,7 +2022,7 @@ useEffect(() => {
       </div>
     </DialogContent>
     </Dialog>
-    <PaymentSuccessDialog open={successDialogOpen} setOpen={setSuccessDialogOpen} type='step1' mail={studentData?.email || 'your email'} onContinue={handleContinueToDashboard}/>
+    <PaymentSuccessDialog open={successDialogOpen} setOpen={setSuccessDialogOpen} type='step1' mail={studentData?.email || 'your email'} fee={applicationFees || 0} onContinue={handleContinueToDashboard}/>
     <PaymentFailedDialog open={failedDialogOpen} setOpen={setFailedDialogOpen} type='step1' mail={studentData?.email || 'your email'} onContinue={handleRetry}/>
     <div id='recaptcha-container'>
 

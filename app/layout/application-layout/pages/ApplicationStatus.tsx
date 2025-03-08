@@ -9,9 +9,10 @@ import SubHeader from '~/components/organisms/SubHeader/SubHeader';
 import { UserContext } from '~/context/UserContext';
 
 export const ApplicationStatus: React.FC = () => {
+  const [studentData, setStudentData] = useState<any>(null);
+  const [student, setStudent] = useState<any>(null);
   const [isPaymentVerified, setIsPaymentVerified] = useState<string | null>(null);
   const [isInterviewScheduled, setIsInterviewScheduled] = useState<string | null>(null);
-  const { studentData, setStudentData } = useContext(UserContext); 
   const [latestCohort, setLatestCohort] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -21,31 +22,31 @@ export const ApplicationStatus: React.FC = () => {
   const [showReviewBlock, setShowReviewBlock] = useState(false);
 
   useEffect(() => {
+    const storedData = localStorage.getItem("studentData");
+    if (storedData) {
+      setStudentData(JSON.parse(storedData));
+    }
+  }, []);
+
+  useEffect(() => {
     const fetchDataOnMount = async () => {
       try {
         // setLoading(true);
           // 2) If there's a valid ID, fetch updated info
           if (studentData?._id) {
             const res = await getCurrentStudent(studentData._id);
-            setStudentData(res);
+            setStudent(res);
             const latest = res?.appliedCohorts[res.appliedCohorts.length - 1];
+            setLatestCohort(latest);
 
-          let meetingEnd: Date | null = null;
-          const lastInterview = latest?.applicationDetails?.applicationTestInterviews?.[latest?.applicationDetails?.applicationTestInterviews.length - 1];
-          if (lastInterview?.meetingDate && lastInterview?.endTime) {
-            // Use the meeting date's string (e.g. "Mon Jan 01 2020") and append the endTime (e.g. "1:40 PM")
-            meetingEnd = new Date(new Date(lastInterview.meetingDate).toDateString() + ' ' + lastInterview.endTime);
-            console.log("meetingEnd",(new Date() > meetingEnd));
-            if(new Date() > meetingEnd)
-              setShowReviewBlock(true);
-          }
-                        
-            // Check token fee verification status
             const isVerified =
               latest?.tokenFeeDetails?.verificationStatus;
               if(isVerified === 'pending') {
                 setSubtitle('Your Payment is being verified');
                 setSubmessage(`You may access your dashboard once your payment has been verified.`);
+              } else if(isVerified === 'verification pending') {
+                  setSubtitle('Your Payment verification failed');
+                  setSubmessage(`You may access your dashboard once your payment has been verified.`);
               } else if(isVerified === 'flagged') {
                 setSubtitle('Your Payment verification failed');
                 setSubmessage(`You may access your dashboard once your payment has been verified.`);
@@ -53,9 +54,8 @@ export const ApplicationStatus: React.FC = () => {
                 setSubtitle('Your Payment is verified');
                 setSubmessage(`You may access your dashboard.`);
               }
-              setLatestCohort(latest);
             setIsPaymentVerified(isVerified);
-            setIsInterviewScheduled(latest?.applicationDetails?.applicationStatus);
+
           }
 
           
@@ -67,17 +67,35 @@ export const ApplicationStatus: React.FC = () => {
     };
 
     fetchDataOnMount();
-  }, []);
+  }, [studentData]);
 
-//   let showReviewBlock = false;
-//   let meetingEnd: Date | null = null;
-//   const lastInterview = studentData?.appliedCohorts[studentData.appliedCohorts.length - 1]?.applicationDetails?.applicationTestInterviews?.[studentData?.applicationDetails?.applicationTestInterviews.length - 1];
-//   if (lastInterview?.meetingDate && lastInterview?.endTime) {
-//     // Use the meeting date's string (e.g. "Mon Jan 01 2020") and append the endTime (e.g. "1:40 PM")
-//     meetingEnd = new Date(new Date(lastInterview.meetingDate).toDateString() + ' ' + lastInterview.endTime);
-//     showReviewBlock = new Date() > meetingEnd;
-//   }
-// console.log("meetingEnd",meetingEnd);
+  useEffect(() => {
+    // Only run the interval if 'latest' is defined
+    if (!student) return;
+  
+    const interval = setInterval(() => {
+      let meetingEnd: Date | null = null;
+      const latest = student?.appliedCohorts[student.appliedCohorts.length - 1];
+      const lastInterview =
+        latest?.applicationDetails?.applicationTestInterviews?.[
+          latest?.applicationDetails?.applicationTestInterviews.length - 1
+        ];
+      if (lastInterview?.meetingDate && lastInterview?.endTime) {
+        // Construct meetingEnd using the meetingDate's string and the endTime.
+        meetingEnd = new Date(
+          new Date(lastInterview.meetingDate).toDateString() + ' ' + lastInterview.endTime
+        );
+        console.log("meetingEnd", new Date() > meetingEnd);
+        if (new Date() > meetingEnd) {
+          setShowReviewBlock(true);
+        }
+      }
+      setIsInterviewScheduled(latest?.applicationDetails?.applicationStatus);
+    }, 60000); 
+  
+    return () => clearInterval(interval);
+  }, [student]);
+  
 
   if (loading) {
     return (
@@ -99,30 +117,26 @@ export const ApplicationStatus: React.FC = () => {
     <>
       { (isPaymentVerified === null || isPaymentVerified === undefined) ?
         ((isInterviewScheduled !== 'Interview Scheduled' || showReviewBlock)  ? 
-        <div className="max-w-[1216px] sm:mx-16 xl:mx-auto justify-center items-center space-y-20">
-          <Review setIsPaymentVerified={setIsPaymentVerified}/>
-          <div className="space-y-4 sm:space-y-6">
-            <ProgressBar currentStage={2} />
-            <img
-              src="/assets/images/application-process-02.svg"
-              alt="Application Process Step 2"
-              className="w-screen object-cover h-[188px] sm:h-full sm:rounded-3xl"
-            />
-          </div>
-        </div> : 
-        <>
-          <SubHeader subtitle='Welcome to LIT' submessage='Your interview call is booked with our counsellors' />
-          <img src="/assets/images/application-process-02.svg" alt="BANNER" className="w-screen object-cover overflow-x-auto h-[188px] sm:h-full my-6 sm:my-12" />
-          <div className="mt-10 sm:mt-16 w-full px-4 justify-center items-center">
-             <InterviewDetails student={latestCohort}/>
-          </div>
-        </>
+          <div className="max-w-[1216px] sm:mx-16 xl:mx-auto justify-center items-center space-y-20">
+            <Review setIsPaymentVerified={setIsPaymentVerified} application={student}/>
+            <div className="space-y-4 sm:space-y-6">
+              <ProgressBar currentStage={2} />
+              <img src="/assets/images/application-process-02.svg" alt="Application Process Step 2" className="w-screen object-cover h-[188px] sm:h-full sm:rounded-3xl"/>
+            </div>
+          </div> : 
+          <>
+            <SubHeader subtitle='Welcome to LIT' submessage='Your interview call is booked with our counsellors' />
+            <img src="/assets/images/application-process-02.svg" alt="BANNER" className="w-screen object-cover overflow-x-auto h-[188px] sm:h-full my-6 sm:my-12" />
+            <div className="mt-10 sm:mt-16 w-full px-4 justify-center items-center">
+              <InterviewDetails student={student}/>
+            </div>
+          </>
         ) : (
           <>
             <SubHeader subtitle={subtitle} submessage={submessage} />
-            <img src="/assets/images/application-process-02-done.svg" alt="BANNER" className="w-screen object-center object-cover overflow-x-auto h-[188px] sm:h-full my-6 sm:my-12" />
+            <img src="/assets/images/application-process-02.svg" alt="BANNER" className="w-screen object-center object-cover overflow-x-auto h-[188px] sm:h-full my-6 sm:my-12" />
             <div className=" w-full px-4 justify-center items-center">
-              <AdmissionFee student={studentData}/>
+              <AdmissionFee student={student}/>
             </div>
           </>
       )}

@@ -3,38 +3,36 @@ import React, { useEffect, useState } from 'react';
 import { SchedulePresentation } from '~/components/organisms/schedule-presentation-dialog/schedule-presentation';
 import { Button } from '~/components/ui/button';
 import { Dialog, DialogContent } from '~/components/ui/dialog';
+import { Skeleton } from '~/components/ui/skeleton';
 import { GetInterviewers } from '~/utils/studentAPI';
 
 interface StatusMessageProps {
-  name: string;
-  messageType: string;
-  time?: string;
-  cohortId: string;
+  student: any;
 }
 
-const StatusMessage: React.FC<StatusMessageProps> = ({
-  name,
-  messageType,
-  time,
-  cohortId
-}) => {
+const StatusMessage: React.FC<StatusMessageProps> = ({ student }) => {
+
+  const latestCohort = student?.appliedCohorts?.[student?.appliedCohorts.length - 1];
+  const applicationDetails = latestCohort?.applicationDetails;
+  const applicationStatus = latestCohort?.applicationDetails?.applicationStatus;
+
   const [headMessage, setHeadMessage] = useState<string | JSX.Element>('');
-  const [subMessage, setSubMessage] = useState('');
+  const [subMessage, setSubMessage] = useState<string | JSX.Element>('');
   const [countdown, setCountdown] = useState<string>('');
   const [intervalId, setIntervalId] = useState<ReturnType<typeof setInterval> | null>(null); // Use ReturnType<typeof setInterval>
   const [interviewOpen, setInterviewOpen] = useState(false);
   const [interviewer, setInterviewer] = useState<any>([]);
   // Update headMessage and subMessage based on messageType
   useEffect(() => {
-    switch (messageType) {
+    switch (applicationStatus) {
       case 'under review':
-        setHeadMessage(`Hey ${name}, your application is under review...`);
+        setHeadMessage(`Hey ${student?.firstName}, your application is under review...`);
         setSubMessage(
           'Hold on tight, your application review will be made available to you within 24 hours! You will then proceed to schedule your interview call based on your performance.'
         );
         break;
       case 'on hold':
-        setHeadMessage(`Hey ${name}, your application review has been put on hold...`);
+        setHeadMessage(`Hey ${student?.firstName}, your application review has been put on hold...`);
         setSubMessage(
           'Looks like you missed out on a few deliverables. Your review process will continue once you review and re-submit your application with the required updates.'
         );
@@ -54,17 +52,17 @@ const StatusMessage: React.FC<StatusMessageProps> = ({
          case 'Interview Concluded':
         setHeadMessage(
           <>
-            <span className="text-[#00A3FF]">Meeting!</span> Scheduled.
+            Your Interview has Concluded.
           </>
         );
         setSubMessage(
-          'We have curated feedback based on your submission. Review your feedback and proceed to book your interview call with our counsellor.'
+          'A decision from your counsellor is pending. Once approved, you can proceed to secure your seat by completing the reservation fee payment.'
         );
         break;
       case 'rejected':
         setHeadMessage(
           <>
-            Hey {name}, we’re very sorry but we <span className="text-[#FF503D]">cannot move forward</span> with your application.
+            Hey {student?.firstName}, we’re very sorry but we <span className="text-[#FF503D]">cannot move forward</span> with your application.
           </>
         );
         setSubMessage(
@@ -88,7 +86,7 @@ const StatusMessage: React.FC<StatusMessageProps> = ({
         );
         break;
       case 'waitlist':
-        setHeadMessage(`Hey ${name}, you have been put on the waitlist.`);
+        setHeadMessage(`Hey ${student?.firstName}, you have been put on the waitlist.`);
         setSubMessage(
           'Thank you for taking the counselling interview. You have been waitlisted. You will be updated with regards to your seat approval before 24 October, 2024.'
         );
@@ -96,7 +94,7 @@ const StatusMessage: React.FC<StatusMessageProps> = ({
       case 'not qualified':
         setHeadMessage(
           <>
-            Hey {name}, you have <span className="text-[#FF503D]">not qualified</span> for the upcoming Creator Marketer Cohort.
+            Hey {student?.firstName}, you have <span className="text-[#FF503D]">not qualified</span> for the upcoming Creator Marketer Cohort.
           </>
         );
         setSubMessage(
@@ -104,15 +102,25 @@ const StatusMessage: React.FC<StatusMessageProps> = ({
         );
         break;
       default:
-        setHeadMessage('');
-        setSubMessage('');
+        setHeadMessage(
+          <div className='space-y-2'>
+            <Skeleton className="w-[250px] sm:w-[400px] md:w-[500px] bg-white/10 h-12 " />
+            <Skeleton className="w-[250px] sm:w-[400px] md:w-[500px] bg-white/10 h-12 " />
+          </div>
+          );
+        setSubMessage(
+          <div className='space-y-2'>
+            <Skeleton className="w-[280px] sm:w-[500px] md:w-[600px] lg:w-[900px] bg-white/10 h-4 " />
+            <Skeleton className="w-[280px] sm:w-[500px] md:w-[600px] lg:w-[900px] bg-white/10 h-4 " />
+          </div>
+        );
     }
-  }, [messageType, name]);
+  }, [student]);
 
   // Calculate and update the countdown
   useEffect(() => {
-    if (time) {
-      const targetTime = new Date(time).getTime() + 24 * 60 * 60 * 1000; // Add 24 hours to the provided time
+    if (applicationDetails?.updatedAt) {
+      const targetTime = new Date(applicationDetails?.updatedAt).getTime() + 24 * 60 * 60 * 1000; // Add 24 hours to the provided time
       const updateCountdown = () => {
         const now = Date.now();
         const remainingTime = targetTime - now;
@@ -141,12 +149,12 @@ const StatusMessage: React.FC<StatusMessageProps> = ({
         }
       };
     }
-  }, [time]);
+  }, [student]);
 
   const handleScheduleInterview = async () => {
   
       const data = {
-        cohortId: cohortId,
+        cohortId: latestCohort?.cohortId?._id,
         role: 'application_reviewer',
       };
 
@@ -194,9 +202,9 @@ const StatusMessage: React.FC<StatusMessageProps> = ({
 
   return (
     <>
-      <div className='bg-transparent flex relative h-[250px] sm:h-[350px] px-auto'>
+      <div className={`bg-transparent flex relative ${applicationStatus === 'Interview Scheduled' ? 'h-[300px] sm:h-[450px]' : 'h-[250px] sm:h-[350px]'} px-auto`}>
         <div className='w-full md:w-[850px] mx-auto flex flex-col gap-4 sm:gap-8 justify-center items-center'>
-          {(messageType === 'under review' || messageType === 'interview cancelled') && (
+          {(applicationStatus === 'under review' || applicationStatus === 'Interview Scheduled') && (
           <div className='space-y-2'>  
             <div
               className={`mx-auto w-fit flex justify-center items-center gap-2 px-6 py-2 sm:py-4 border-2 ${
@@ -220,8 +228,8 @@ const StatusMessage: React.FC<StatusMessageProps> = ({
             {subMessage}
           </div>
 
-          {['Interview Scheduled', 'Interview Concluded'].includes(messageType) &&
-            <div className='mx-8 mt-4 sm:mx-16 text-xs sm:text-sm md:text-base text-center font-normal space-y-3'>
+          {['Interview Scheduled', 'Interview Concluded'].includes(applicationStatus) &&
+            <div className='mx-8 sm:mt-4 sm:mx-16 text-xs sm:text-sm md:text-base text-center font-normal sm:space-y-3'>
               <div className=''>
                 If you were unable to attend this interview you may choose to
               </div>

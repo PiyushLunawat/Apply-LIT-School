@@ -1,4 +1,4 @@
-import FeePaymentSetupDashboard from "~/components/pages/fee-payment-setup";
+import FeePaymentSetupDashboard from "~/layout/dashboard-layout/pages/fee-payment-setup";
 
 export default function DashboardFeePaymentSetup() {
   return (

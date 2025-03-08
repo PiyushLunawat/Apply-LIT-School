@@ -189,7 +189,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({}) => {
               render={({ field }) => (
                 <FormItem className="flex-1 space-y-1 relative">
                   <Label className="text-xs sm:text-sm font-normal pl-3">First Name</Label>
-                  <Input placeholder="Mithu" {...field} />
+                  <Input placeholder="John" {...field} />
                   <FormMessage className="text-xs sm:text-sm font-normal pl-3"/>
                 </FormItem>
               )}
@@ -200,7 +200,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({}) => {
               render={({ field }) => (
                 <FormItem className="flex-1 space-y-1 relative">
                   <Label className="text-xs sm:text-sm font-normal pl-3">Last Name</Label>
-                  <Input placeholder="Pandey" {...field} />
+                  <Input placeholder="Doe" {...field} />
                   <FormMessage className="text-xs sm:text-sm font-normal pl-3"/>
                 </FormItem>
               )}
@@ -214,7 +214,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({}) => {
               render={({ field }) => (
                 <FormItem className="flex-1 space-y-1 relative">
                   <Label className="text-xs sm:text-sm font-normal pl-3">Email</Label>
-                  <Input placeholder="mithu@gmail.com" {...field} />
+                  <Input placeholder="john@gmail.com" {...field} />
                   <Mail className="absolute right-3 top-[46px] w-5 h-5" />
                   <FormMessage className="text-xs sm:text-sm font-normal pl-3"/>
                 </FormItem>
@@ -273,7 +273,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({}) => {
               control={form.control}
               name="qualification"
               render={({ field }) => (
-                <FormItem className="flex-1 space-y-1 relative">
+                <FormItem className="flex-1 flex flex-col space-y-1 relative">
                   <Label className="text-xs sm:text-sm font-normal pl-3">Qualification</Label>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <SelectTrigger>

@@ -115,8 +115,8 @@ const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({ open, setOpen, 
           {/* Bank Transfer Payment Option */}
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
-              <RadioGroupItem value="bank-transfer" id="bank-transfer" />
-              <Label htmlFor="bank-transfer" className='text-2xl'>Bank Transfer</Label>
+              <RadioGroupItem value="bank transfer" id="bank transfer" />
+              <Label htmlFor="bank transfer" className='text-2xl'>Bank Transfer</Label>
             </div>
               <div className="text-base text-muted-foreground text-start">
                 You will be provided LIT School’s bank account details. You may make a NEFT transaction to the same account. Once you have made a transaction please upload an acknowledgement receipt.
@@ -155,16 +155,18 @@ const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({ open, setOpen, 
             <>
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2">
-                  <RadioGroupItem value="bank-transfer" id="bank-transfer" checked />
-                  <Label htmlFor="bank-transfer" className='text-2xl'>Bank Transfer</Label>
+                  <RadioGroupItem value="bank transfer" id="bank transfer" checked />
+                  <Label htmlFor="bank transfer" className='text-2xl'>Bank Transfer</Label>
                 </div>
                 <div className=" text-start">
                   <div className="flex justify-start gap-2 mt-4 p-4 border border-[#2C2C2C] rounded-md">
                     <div className="flex flex-col text-left">
                       <p className='flex gap-2 items-center text-base font-medium'>
-                        <img src='/assets/images/institute-icon.svg' className='w-4 h-3'/>LITschool</p>
+                        <img src='/assets/images/institute-icon.svg' className='w-4 h-3'/>
+                        Disruptive Edu Private Limited
+                      </p>
                       <p className='text-sm'>Account No.: 50200082405270</p>
-                      <p className='text-sm'>IFS Code: HDFC0001079</p>
+                      <p className='text-sm'>IFSC Code: HDFC0001079</p>
                       <p className='text-sm'>Branch: Sadashivnagar</p>
                     </div>
                   </div>

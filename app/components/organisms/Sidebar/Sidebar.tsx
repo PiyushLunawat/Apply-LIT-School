@@ -11,17 +11,10 @@ import { getCurrentStudent } from "~/utils/studentAPI";
 
 const navItems = [
   {
-    title: "Home",
-    icon: House,
-    to: "/dashboard",
-    badge: null,
-    textColor: null,
-  },
-  {
     title: "Application Documents",
-    icon: FolderClosed,
+    icon: FileText,
     to: "/dashboard/application-documents",
-    badge: '!',
+    badge: null,
     bgColor: "bg-orange-600/20",
     textColor: "text-[#FF791F]"
   },
@@ -29,7 +22,7 @@ const navItems = [
     title: "Fee Payment",
     icon: ReceiptIndianRupee,
     to: "/dashboard/fee-payment-setup",
-    badge: '!',
+    badge: null,
     bgColor: "bg-blue-600/20",
     textColor: "text-[#1388FF]"
   },
@@ -37,15 +30,15 @@ const navItems = [
     title: "Account Details",
     icon: UserRound,
     to: "/dashboard/account-details",
-    badge: '!',
+    badge: null,
     bgColor: "bg-[#F8E000]/20",
     textColor: "text-[#F8E000]"
   },
   {
     title: "Personal Documents",
-    icon: FileText,
+    icon: FolderClosed,
     to: "/dashboard/personal-documents",
-    badge: '!',
+    badge: null,
     bgColor: "bg-emerald-600/20",
     textColor: "text-[#00CC92]"
   }
@@ -60,7 +53,7 @@ export default function Sidebar() {
       const fetchStudentData = async () => {
         try {
           const student = await getCurrentStudent(studentData._id); // Pass the actual student ID here
-          setStudent(student.data); // Store the fetched data in state
+          setStudent(student);          
         } catch (error) {
           console.error("Failed to fetch student data:", error);
         }
@@ -69,6 +62,7 @@ export default function Sidebar() {
     }, [studentData]);
 
   return (
+  <>
     <div className="hidden sm:block max-w-[360px] w-full text-white flex flex-col border-r" style={{ height: `calc(100vh - 52px)`}}>
       {/* User Profile Section */}
       <div className="h-[200px] border-b border-[#2C2C2C]">
@@ -79,13 +73,13 @@ export default function Sidebar() {
           </Avatar>
           <div>
             <h2 className="text -base font-semibold">{studentData?.firstName + ' ' + studentData?.lastName}</h2>
-            <p className="text-sm text-normal">{student?.studentDetails?.previousEducation?.nameOfInstitution}</p>
+            <p className="text-sm text-normal">{student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.applicationDetails?.studentDetails?.previousEducation?.nameOfInstitution}</p>
           </div>
         </div>
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex flex-col h-full flex-1   py-6">
+      <nav className="flex flex-col h-full flex-1 py-6">
         {navItems.map((item) => (
           <NavLink
             key={item.title}
@@ -109,5 +103,30 @@ export default function Sidebar() {
         ))}
       </nav>
     </div>
+
+    <div className="sm:hidden w-full h-[65px] bg- text-white bg-[#64748B1A]">
+      <div className="flex items-center justify-between px-8">
+        {navItems.slice(0, 2).map((item) => (
+          <NavLink key={item.title} to={item.to}
+            className={({ isActive }) => `flex flex-1 items-center justify-center py-4 transition-colors ${isActive ? item.textColor : ""}`}>
+            <item.icon className="w-6 h-6" />
+          </NavLink>
+        ))}
+        <NavLink to={'/dashboard'}
+          className={({ isActive }) => `flex flex-1 items-center justify-center py-1 transition-colors`}>
+            <Avatar className="w-12 h-12">
+              <AvatarImage src={studentData?.profileUrl} className="object-cover" alt={`${studentData?.firstName[0]}${studentData?.lastName[0]}`}/>
+              <AvatarFallback className="uppercase">{studentData?.firstName[0]}{studentData?.lastName[0]}</AvatarFallback>
+            </Avatar>
+        </NavLink>
+        {navItems.slice(2).map((item, index) => (
+          <NavLink key={item.title} to={item.to}
+            className={({ isActive }) => `flex flex-1 items-center justify-center py-4 transition-colors ${isActive ? item.textColor : ""}`}>
+            <item.icon className="w-6 h-6" />
+          </NavLink>
+        ))}
+      </div>
+    </div>
+  </>
   );
 }

@@ -143,12 +143,12 @@ const TokenVerification: React.FC<TokenVerificationProps> = ({  }) => {
 
   return (
     <div className="w-full">
-          {isPaymentVerified === "pending" &&
+          {/* {isPaymentVerified === "pending" &&
           <Header
             subtitle={isPaymentVerified === "pending" ? `Your Payment is being verified` : 
              isPaymentVerified === "paid" ? `Your Payment is verified` : `Your Payment verification failed`}
             submessage="You may access your dashboard once your payment has been verified"
-          />}
+          />} */}
           <img
             src="/assets/images/application-process-02-done.svg"
             alt="Payment Verification"
@@ -186,7 +186,7 @@ const TokenVerification: React.FC<TokenVerificationProps> = ({  }) => {
                 {isPaymentVerified !== "flagged" ? 
                 <div className="relative bg-[#64748B33] rounded-xl border border-[#2C2C2C] w-full h-[220px]">
                   <img
-                    src={reciptUrl || '/assets/images/default-receipt.svg'}
+                    src={reciptUrl}
                     alt="Uploaded receipt"
                     className="mx-auto h-full object-contain"
                   />

@@ -19,7 +19,7 @@ export const Footer: React.FC = () => {
         <div className="flex justify-between text-xs sm:text-lg font-normal">
             <div className='w-fit'>
                 <span className='text-muted-foreground'>&copy; </span>
-                2024 Disruptive Edu Pvt. Ltd.
+                2025 Disruptive Edu Pvt. Ltd.
             </div>
             <div className='w-fit'>All Rights Reserved</div>
         </div>

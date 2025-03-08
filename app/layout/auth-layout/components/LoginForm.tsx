@@ -75,7 +75,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ }) => {
             <FormItem className="flex-1 space-y-1 relative">
               <Label htmlFor="email" className="text-xs sm:text-sm font-normal pl-3">Enter your Email</Label>
               <FormControl>
-                <Input id="email" type="email" placeholder="mithu@gmail.com" {...field} />
+                <Input id="email" type="email" placeholder="john@gmail.com" {...field} />
               </FormControl>
               <Mail className="absolute right-3 top-[46px] w-5 h-5" />
               {errors.email && (

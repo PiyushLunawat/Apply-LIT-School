@@ -170,7 +170,7 @@ export default function AdmissionFee({ student }: AdmissionFeeProps) {
                 {isPaymentVerified !== "flagged" ? 
                 <div className="relative bg-[#64748B33] rounded-xl border border-[#2C2C2C] w-full h-[220px]">
                   <img
-                    src={reciptUrl || '/assets/images/default-receipt.svg'}
+                    src={reciptUrl}
                     alt="Uploaded receipt"
                     className="mx-auto h-full object-contain"
                   />

@@ -8,10 +8,11 @@ interface DialogProps {
   setOpen: (open: boolean) => void;
   type: string;
   mail: string;
-  onContinue: () => void; // New prop to handle continue action
+  onContinue: () => void;
+  fee?: any;
 }
 
-const PaymentSuccessDialog: React.FC<DialogProps> = ({ open, setOpen, type, mail, onContinue }) => (
+const PaymentSuccessDialog: React.FC<DialogProps> = ({ open, setOpen, type, mail, onContinue, fee }) => (
   <Dialog open={open} onOpenChange={setOpen}>
     <DialogContent className="max-w-[90vw] sm:max-w-[480px] bg-[#09090b] text-white rounded-lg px-8 py-16 text-center shadow-[0px_4px_32px_0px_rgba(0,0,0,0.75)]
 ">
@@ -20,8 +21,8 @@ const PaymentSuccessDialog: React.FC<DialogProps> = ({ open, setOpen, type, mail
         <div className="text-3xl font-bold ">Payment Successful!</div>
         <div className='text-base font-normal py-8'>
           {type === 'step1' ?
-           `Your payment of INR 500.00 was successful. A payment receipt has been emailed to ${mail}` :
-           `Your seat reservation fee payment of INR 25,000.00 was successful. A payment receipt has been emailed to ${mail}`}
+           `Your payment of INR ₹${fee || 0}.00 was successful. A payment receipt has been emailed to ${mail}` :
+           `Your seat reservation fee payment of INR ₹${fee}.00 was successful. A payment receipt has been emailed to ${mail}`}
         </div>
       </div>
       <div className="flex flex-col gap-3">

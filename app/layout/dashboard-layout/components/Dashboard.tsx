@@ -42,17 +42,16 @@ const DashboardCard = ({ title, description, icon, to, bgColor, border, disable 
 
 export default function ApplicationDashboard() {
 
-  const { studentData } = useContext(UserContext);
+  const { studentData, setStudentData } = useContext(UserContext);
   const [student, setStudent] = useState<any>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchStudentData = async () => {
       try {
-        const student = await getCurrentStudent(studentData._id);
-        console.log("fff",student);
-        
+        const student = await getCurrentStudent(studentData._id);        
         setStudent(student); 
+        setStudentData(student); 
       } catch (error) {
         console.error("Failed to fetch student data:", error);
       }
@@ -62,7 +61,8 @@ export default function ApplicationDashboard() {
 
   const latestCohort = student?.appliedCohorts?.[student?.appliedCohorts.length - 1];
   const cohortDetails = latestCohort?.cohortId;
-  const applicationId = latestCohort?.applicationDetails?._id;
+  const applicationDetails = latestCohort?.applicationDetails;
+  const litmusTestDetails = latestCohort?.litmusTestDetails;
   
   const handleExploreClick = () => {
     navigate('/dashboard/litmus-task');
@@ -117,10 +117,11 @@ export default function ApplicationDashboard() {
               <div className="spcae-y-2">
                 <div className="flex items-center gap-2 sm:gap-4">
                   <h2 className="text-base sm:text-xl font-semibold">LITMUS Test Submission</h2>
+                  {cohortDetails?.litmusTestDetail[0]?.litmusTestDuration && 
                   <Badge className="flex px-2 gap-1 sm:gap-2 items-center bg-black h-7">
                     <Clock className="text-[#00A3FF] w-3 h-3"/>
                     <div className="text-xs sm:text-base font-normal">{formatTestDuration(cohortDetails?.litmusTestDetail[0]?.litmusTestDuration)}</div>
-                  </Badge>
+                  </Badge>}
                 </div>
                 <p className="sm:w-3/4 text-xs sm:text-base">
                   Your submission deadline has been extended. You stand to receive a scholarship based on your performance.

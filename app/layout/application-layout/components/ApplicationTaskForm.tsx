@@ -77,6 +77,7 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
   const [id, setId] = useState("");
   const [taskId, setTaskId] = useState("");
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const navigate = useNavigate();
 
   // 1) A constant for the localStorage key
@@ -418,7 +419,7 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
             size="xl"
             className="w-full sm:w-fit space-y-1 order-1 sm:order-2"
             type="submit"
-            disabled={loading}
+            disabled={loading || uploading}
           >
             {loading ? 'Submitting...' : 'Submit Application'}
           </Button>
@@ -582,7 +583,9 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
     if (!selectedFiles || selectedFiles.length === 0) return;
 
     const file = selectedFiles[0];
-    setFileName(file.name);
+    const fileKey = generateUniqueFileName(file.name);
+    
+    setFileName(fileKey);
 
     // Example chunk threshold
     const CHUNK_SIZE = 100 * 1024 * 1024;
@@ -592,9 +595,9 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
       setUploading(true);
       let fileUrl = '';
       if (file.size <= CHUNK_SIZE) {
-        fileUrl = await uploadDirect(file);
+        fileUrl = await uploadDirect(file, fileKey);
       } else {
-        fileUrl = await uploadMultipart(file, CHUNK_SIZE);
+        fileUrl = await uploadMultipart(file, fileKey, CHUNK_SIZE);
       }
       appendFile(fileUrl);
     } catch (err: any) {
@@ -605,10 +608,10 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
     }
   };
 
-  const uploadDirect = async (file: File) => {
+  const uploadDirect = async (file: File, fileKey: string) => {
     const { data } = await axios.post('https://dev.apply.litschool.in/student/generate-presigned-url', {
       bucketName: 'dev-application-portal',
-      key: generateUniqueFileName(file.name),
+      key: fileKey,
     });
     const { url } = data;
 
@@ -623,8 +626,8 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
     return url.split('?')[0];
   };
 
-  const uploadMultipart = async (file: File, chunkSize: number) => {
-    const uniqueKey = generateUniqueFileName(file.name);
+  const uploadMultipart = async (file: File, fileKey: string, chunkSize: number) => {
+    const uniqueKey = fileKey;
 
     // Initiate
     const initiateRes = await axios.post('https://dev.apply.litschool.in/student/initiate-multipart-upload', {
@@ -677,8 +680,9 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
 
   const generateUniqueFileName = (originalName: string) => {
     const timestamp = Date.now();
-    return `${timestamp}-${originalName}`;
-  };
+    const sanitizedName = originalName.replace(/\s+/g, '-');
+    return `${timestamp}-${sanitizedName}`;
+  };  
 
   return (
     <FormItem>
@@ -735,11 +739,8 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
           {uploading && (
             <div className="flex justify-between items-center bg-[#007AFF] h-[52px] text-white p-1.5 rounded-xl w-full">
               <div className="flex items-center gap-2">
-                <Badge
-                  size="icon"
-                  className="bg-[#3698FB] rounded-xl !p-0 mr-2"
-                >
-                  <FileTextIcon className="w-5 h-5" />
+                <Badge size="icon" className="bg-[#3698FB] rounded-xl mr-2">
+                  <FileTextIcon className="w-5" />
                 </Badge>
                 <span className="flex-1 text-xs sm:text-base truncate mr-4">
                   {fileName}
@@ -797,6 +798,7 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
               </label>
               <Button
                 type="button"
+                disabled={uploading}
                 className="flex gap-2 text-white px-6 py-6 rounded-xl"
                 onClick={() =>
                   document

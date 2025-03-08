@@ -186,7 +186,7 @@ const BookYourSeat: React.FC<FeedbackProps> = ({ cohortId, booked, tokenFee, set
       <div className='flex justify-center'>
         <Button size="xl" className="mt-8 w-fit bg-[#00AB7B] hover:bg-[#00AB7B]/90 mx-auto" onClick={() => setPaymentDialogOpen(true)} disabled={!selectedSeatId}
         >
-          Pay INR {formatAmount(tokenFee)}.00 and Reserve
+          Pay INR ₹{formatAmount(tokenFee)}.00 and Reserve
         </Button>
       </div>
     </div>

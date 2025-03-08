@@ -1,7 +1,7 @@
-import Header from "../organisms/Header/Header";
-import Sidebar from "../organisms/Sidebar/Sidebar";
-import { Badge } from "../ui/badge";
-import FeePaymentSetup from "../organisms/FeePaymentSetup/FeePaymentSetup";
+import Header from "../../../components/organisms/Header/Header";
+import Sidebar from "../../../components/organisms/Sidebar/Sidebar";
+import { Badge } from "../../../components/ui/badge";
+import FeePaymentSetup from "../../../components/organisms/FeePaymentSetup/FeePaymentSetup";
 import { getCurrentStudent } from "~/utils/studentAPI";
 import { UserContext } from "~/context/UserContext";
 import { useContext, useEffect, useState } from "react";
