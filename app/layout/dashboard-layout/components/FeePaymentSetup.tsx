@@ -3,10 +3,10 @@
 import { useContext, useEffect, useState } from "react";
 import { getCurrentStudent, setupFeePayment, uploadFeeReceipt } from "~/utils/studentAPI"; 
 import { UserContext } from "~/context/UserContext";
-import { CircleCheck, FileTextIcon, UploadIcon, XIcon } from "lucide-react";
-import { Button } from "../../ui/button";
-import { Input } from "../../ui/input";
-import { Label } from "../../ui/label";
+import { CircleCheck, FileTextIcon, LoaderCircle, UploadIcon, XIcon } from "lucide-react";
+import { Button } from "../../../components/ui/button";
+import { Input } from "../../../components/ui/input";
+import { Label } from "../../../components/ui/label";
 import {
   Select,
   SelectContent,
@@ -14,9 +14,12 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../ui/select";
-import { Separator } from "../../ui/separator";
-import { Badge } from "../../ui/badge";
+} from "../../../components/ui/select";
+import { Separator } from "../../../components/ui/separator";
+import { Badge } from "../../../components/ui/badge";
+import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import axios from "axios";
+import { Progress } from "~/components/ui/progress";
 
 type FeePaymentData = {
   paymentMethod: string;
@@ -29,11 +32,21 @@ type FeePaymentData = {
   };
 };
 
-export default function FeePaymentSetup() {
-  const { studentData } = useContext(UserContext);
+interface FeePaymentSetupProps {
+  student: any
+}
+
+export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
+  console.log("student", student);
+
+  
+  const latestCohort = student?.appliedCohorts?.[student?.appliedCohorts.length - 1];
+  const cohortDetails = latestCohort?.cohortId;
+  const tokenFeeDetails = latestCohort?.tokenFeeDetails;
+  
+  const [paymentDetails, setPaymentDetails] = useState<any>(latestCohort?.paymentDetails);
 
   const [step, setStep] = useState(1);
-  const [student, setStudent] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expandedInstallment, setExpandedInstallment] = useState<string | null>(null);
@@ -49,26 +62,15 @@ export default function FeePaymentSetup() {
     }
   });
 
-  // Fetch the student data
-  useEffect(() => {
-    const fetchStudentData = async () => {
-      try {
-        const result = await getCurrentStudent(studentData._id);
-        setStudent(result?.appliedCohorts[result.appliedCohorts.length - 1]);
-
-        // If there's already a feeSetup, skip to step 2
-        if (
-          result?.appliedCohorts[result.appliedCohorts.length - 1]?.installmentDetails?.length > 0 &&
-          result?.appliedCohorts[result.appliedCohorts.length - 1]?.installmentDetails?.feeSetup
-        ) {
-          setStep(2);
-        }
-      } catch (err) {
-        console.error("Failed to fetch student data:", err);
+    useEffect(() => {
+      setPaymentDetails(latestCohort?.paymentDetails);
+      if (
+        latestCohort?.paymentDetails?.paymentPlan
+      ) {
+        setStep(2);
       }
-    };
-    fetchStudentData();
-  }, [studentData]);
+    }, [student]);  
+
 
   // Simple controlled inputs
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -114,6 +116,7 @@ export default function FeePaymentSetup() {
       console.log("Request Body:", payload);
       const response = await setupFeePayment(payload);
       console.log("Fee Payment Setup Successful", response);
+      setPaymentDetails(response.data)
       setStep(2);
     } catch (err: any) {
       console.error("Error during fee payment setup:", err);
@@ -294,7 +297,8 @@ export default function FeePaymentSetup() {
               You are required to make a total payment of INR 9,95,000.00
             </h2>
             <p>
-              Over a course of 9 instalments starting on 12th November, 2025. This
+              Over a course of {Number(cohortDetails?.cohortFeesDetail?.semesters) * Number(cohortDetails?.cohortFeesDetail?.installmentsPerSemester)} instalments
+              starting on {new Date(cohortDetails?.startDate).toDateString()}. This
               is inclusive of your scholarship waiver.
             </p>
             <Button variant={"link"} className="w-fit underline !py-0">
@@ -308,36 +312,36 @@ export default function FeePaymentSetup() {
         <div className="flex justify-between">
           <h2 className="flex gap-2.5 text-xl items-center font-semibold">
             <CircleCheck className="w-6 h-6 text-[#00AB7B]" />
-            INR 25,000.00
+            INR {(Number(cohortDetails?.cohortFeesDetail?.tokenFee)).toLocaleString()}
           </h2>
           <div className="flex h-5 items-center space-x-4 text-base">
             <div>Token Amount paid</div>
             <Separator orientation="vertical" />
-            <div>{new Date(student?.cousrseEnrolled?.[student.cousrseEnrolled?.length - 1]?.tokenFeeDetails?.updatedAt).toLocaleDateString()}</div>
+            <div>{new Date(tokenFeeDetails?.createdAt).toLocaleDateString()}</div>
           </div>
         </div>
       </div>
 
-      {student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.feeSetup?.modeOfPayment === "bank transfer" && 
       <div className="p-4 border rounded-xl space-y-4">
-        <Badge className="text-sm border-[#3698FB] text-[#3698FB] bg-[#3698FB]/10">
-          LIT School Bank Details
+        <Badge className="flex gap-2 w-fit text-sm border-[#3698FB] bg-[#3698FB]/10">
+          <img src='/assets/images/institute-icon.svg' className='w-4 h-3'/>
+          Disruptive Edu Private Limited
         </Badge>
         <p className="pl-3 font-thin">
           Account No: 50200082405270 <br />
           IFSC Code: HDFC0001079 <br />
           Branch: Sadashivnagar
         </p>
-      </div>}
+      </div>
 
-      {student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.feeSetup?.paymentPlan === 'one-shot' ? 
+      {paymentDetails?.paymentPlan === 'one-shot' ? 
       <div className="">
         <div className="border rounded-xl mb-6">
               {/* Semester Header */}
               <div className="flex items-center justify-between text-2xl rounded-t-xl p-6 bg-[#64748B33] font-medium">
                 <h3 className="text-lg font-semibold">One Shot Payment</h3>
                 <h3 className="text-lg font-semibold">
-                  ₹{student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.oneShotPayment?.amountPayable.toLocaleString()}.00
+                  ₹{paymentDetails?.oneShotPayment?.amountPayable.toLocaleString()}.00
                 </h3>
               </div>
               
@@ -349,7 +353,7 @@ export default function FeePaymentSetup() {
                       <div className="flex flex-col sm:flex-row sm:gap-4 text-right">
                           <Badge className="bg-[#64748B1F]/20 border-[#2C2C2C] text-base text-white px-4 py-2">
                           Due:{" "}
-                          {new Date(student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.oneShotPayment?.installmentDate).toLocaleDateString("en-GB", {
+                          {new Date(paymentDetails?.oneShotPayment?.installmentDate).toLocaleDateString("en-GB", {
                             day: "2-digit",
                             month: "long",
                             year: "numeric",
@@ -359,16 +363,16 @@ export default function FeePaymentSetup() {
                     </div>
 
                       <div className="mt-4 space-y-4">
-                        {student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.oneShotPayment.feedback && student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.oneShotPayment.feedback.length > 0 && (
+                        {paymentDetails?.oneShotPayment.feedback && paymentDetails?.oneShotPayment.feedback.length > 0 && (
                           <p>
-                            <strong>Feedback:</strong> {student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.oneShotPayment.feedback.join(", ")}
+                            <strong>Feedback:</strong> {paymentDetails?.oneShotPayment.feedback.join(", ")}
                           </p>
                         )}
 
-                        {student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.oneShotPayment.receiptUrls && student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.oneShotPayment.receiptUrls.length > 0 && (
+                        {paymentDetails?.oneShotPayment.receiptUrls && paymentDetails?.oneShotPayment.receiptUrls.length > 0 && (
                           <p>
                             <strong>Receipt:</strong>{" "}
-                            {student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.oneShotPayment.receiptUrls.map((url: string, urlIndex: number) => (
+                            {paymentDetails?.oneShotPayment.receiptUrls.map((url: string, urlIndex: number) => (
                               <a
                                 key={urlIndex}
                                 href={url}
@@ -386,6 +390,7 @@ export default function FeePaymentSetup() {
                         <FileUploadField
                           semester={1}
                           installment={1}
+                          studentPaymentId={paymentDetails?._id}
                         />
 
                         <div className="p-3 rounded-lg text-sm text-white/70 space-y-1">
@@ -394,30 +399,30 @@ export default function FeePaymentSetup() {
                             <span>Base Fee</span>
                             <span>
                               ₹
-                              {(student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.oneShotPayment.baseFee).toLocaleString()}
+                              {(paymentDetails?.oneShotPayment.baseFee).toLocaleString()}
                             </span>
                           </div>
                           <div className="flex justify-between">
                             <span>GST</span>
                             <span>
-                              ₹{(student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.oneShotPayment.baseFee * 0.18).toLocaleString()}
+                              ₹{(paymentDetails?.oneShotPayment.baseFee * 0.18).toLocaleString()}
                             </span>
                           </div>
                           <div className="flex justify-between text-[#F53F3F]">
                             <span>One Shot Payment Discount</span>
                             <span>
-                              - ₹{(student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.oneShotPayment.OneShotPaymentAmount).toLocaleString()}
+                              - ₹{(paymentDetails?.oneShotPayment.OneShotPaymentAmount).toLocaleString()}
                             </span>
                           </div>
                           <div className="flex justify-between text-[#F53F3F]">
                             <span>Scholarship Amount</span>
-                            <span>- ₹{(student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.oneShotPayment.baseFee * 
-                              student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.semesterFeeDetails?.scholarshipPercentage * 0.01).toLocaleString()}</span>
+                            <span>- ₹{(paymentDetails?.oneShotPayment.baseFee * 
+                              paymentDetails?.semesterFeeDetails?.scholarshipPercentage * 0.01).toLocaleString()}</span>
                           </div>
                           <div className="flex justify-between pt-1 border-t border-white/10">
                             <span className="font-medium text-white">Total</span>
                             <span className="font-medium text-white">
-                              ₹{student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.oneShotPayment.amountPayable.toLocaleString()}
+                              ₹{paymentDetails?.oneShotPayment.amountPayable.toLocaleString()}
                             </span>
                           </div>
                         </div>
@@ -426,7 +431,7 @@ export default function FeePaymentSetup() {
             </div>
       </div> : 
       <div className="space-y-4">
-        {student?.cousrseEnrolled[student?.cousrseEnrolled?.length - 1]?.installmentDetails.map(
+        {paymentDetails?.installments.map(
           (sem: any, semIndex: number) => (
             <div key={semIndex} className="border rounded-xl mb-6">
               {/* Semester Header */}
@@ -437,12 +442,12 @@ export default function FeePaymentSetup() {
                   {sem.installments
                     .reduce((total: number, inst: any) => total + inst.baseFee, 0)
                     .toLocaleString()}
-                  .00
+                  <span className="text-muted-foreground">.00</span>
                 </h3>
               </div>
 
               {/* Installments */}
-              {sem.installments.map((instal: any, iIndex: number) => {
+              {sem.installments.map((instalment: any, iIndex: number) => {
                 const installmentKey = `${semIndex}-${iIndex}`;
                 const isExpanded = expandedInstallment === installmentKey;
                 const toggleExpand = () => {
@@ -454,19 +459,19 @@ export default function FeePaymentSetup() {
                 return (
                   <div key={iIndex} className="bg-[#64748B1F] p-6 border-b border-gray-700">
                     <div
-                      className="flex justify-between items-center cursor-pointer"
+                      className="flex justify-between items-center cursor-pointer font-medium"
                       onClick={toggleExpand}
                     >
                       <Badge className="bg-[#3698FB]/20 border-[#3698FB] text-base text-white px-4 py-2 ">
-                        Installment {iIndex + 1}
+                        Installment 0{iIndex + 1}
                       </Badge>
                       <div className="flex flex-col sm:flex-row sm:gap-4 text-right">
                         <Badge className="bg-[#64748B1F]/20 border-[#2C2C2C] text-base text-white px-4 py-2">
-                          ₹{instal.amountPayable.toLocaleString()}
+                          ₹{instalment.amountPayable.toLocaleString()}
                         </Badge>
                         <Badge className="bg-[#64748B1F]/20 border-[#2C2C2C] text-base text-white px-4 py-2">
                           Due:{" "}
-                          {new Date(instal.installmentDate).toLocaleDateString("en-GB", {
+                          {new Date(instalment.installmentDate).toLocaleDateString("en-GB", {
                             day: "2-digit",
                             month: "long",
                             year: "numeric",
@@ -477,16 +482,16 @@ export default function FeePaymentSetup() {
 
                     {isExpanded && (
                       <div className="mt-4 space-y-4">
-                        {instal.feedback && instal.feedback.length > 0 && (
+                        {instalment.feedback && instalment.feedback.length > 0 && (
                           <p>
-                            <strong>Feedback:</strong> {instal.feedback.join(", ")}
+                            <strong>Feedback:</strong> {instalment.feedback.join(", ")}
                           </p>
                         )}
 
-                        {instal.receiptUrls && instal.receiptUrls.length > 0 && (
+                        {instalment.receiptUrls && instalment.receiptUrls.length > 0 && (
                           <p>
                             <strong>Receipt:</strong>{" "}
-                            {instal.receiptUrls.map((url: string, urlIndex: number) => (
+                            {instalment.receiptUrls.map((url: string, urlIndex: number) => (
                               <a
                                 key={urlIndex}
                                 href={url}
@@ -500,37 +505,39 @@ export default function FeePaymentSetup() {
                           </p>
                         )}
 
-                        {/* Show File Upload + Fee Breakdown */}
+                        {['pending', 'flagged'].includes(instalment.verificationStatus) &&
                         <FileUploadField
-                          semester={sem.semester}
-                          installment={iIndex + 1}
-                        />
+                            semester={sem.semester}
+                            installment={iIndex + 1}
+                            studentPaymentId={paymentDetails?._id}
+                          />
+                        }
 
                         <div className="p-3 rounded-lg text-sm text-white/70 space-y-1">
                           <p className="font-medium text-base text-white">Fee Breakdown</p>
-                          <div className="flex justify-between">
+                          <div className="flex justify-between text-sm">
                             <span>Base Fee</span>
                             <span>
                               ₹
-                              {(instal.baseFee + instal.scholarshipAmount).toLocaleString()}
+                              {(instalment.baseFee + instalment.scholarshipAmount).toLocaleString()}
                             </span>
                           </div>
-                          <div className="flex justify-between">
+                          <div className="flex justify-between text-sm">
                             <span>GST</span>
                             <span>
-                              ₹{(instal.baseFee * 0.18).toLocaleString()}
+                              ₹{(instalment.baseFee * 0.18).toLocaleString()}
                             </span>
                           </div>
-                          {instal.scholarshipAmount > 0 && (
-                            <div className="flex justify-between text-[#F53F3F]">
+                          {instalment.scholarshipAmount > 0 && (
+                            <div className="flex justify-between text-[#F53F3F] text-sm">
                               <span>Scholarship Amount</span>
-                              <span>- ₹{instal.scholarshipAmount.toLocaleString()}</span>
+                              <span>- ₹{instalment.scholarshipAmount.toLocaleString()}</span>
                             </div>
                           )}
-                          <div className="flex justify-between pt-1 border-t border-white/10">
+                          <div className="flex justify-between text-xl pt-1 border-t border-white/10">
                             <span className="font-medium text-white">Total</span>
-                            <span className="font-medium text-white">
-                              ₹{instal.amountPayable.toLocaleString()}
+                            <span className="font-medium text-[#1388FF]">
+                              ₹{instalment.amountPayable.toLocaleString()}
                             </span>
                           </div>
                         </div>
@@ -560,16 +567,23 @@ export default function FeePaymentSetup() {
 function FileUploadField({
   semester,
   installment,
+  studentPaymentId
 }: {
   semester: number;
   installment: number;
+  studentPaymentId: any;
 }) {
   const [reciptUrl, setReciptUrl] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [receiptFile, setReceiptFile] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    setError(null);
+    setUploadProgress(0);
+    
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
       const reader = new FileReader();
@@ -581,13 +595,97 @@ function FileUploadField({
       };
 
       reader.readAsDataURL(file);
-      setReceiptFile(file); // Store the selected file for upload
+      
+      const fileKey = generateUniqueFileName(file.name);
+    
+    setReceiptFile(fileKey);
+
+    const CHUNK_SIZE = 100 * 1024 * 1024;
+    event.target.value = "";
+
+    try {
+      setUploading(true);
+      let fileUrl = "";
+      if (file.size <= CHUNK_SIZE) {
+        fileUrl = await uploadDirect(file, fileKey);
+        console.log("uploadDirect File URL:", fileUrl);
+      } else {
+        fileUrl = await uploadMultipart(file, fileKey, CHUNK_SIZE);
+        console.log("uploadMultipart File URL:", fileUrl);
+      }
+      setReciptUrl(fileUrl);
+    } catch (err: any) {
+      console.error("Upload error:", err);
+      setError(err.message || "Error uploading file");
+    } finally {
+      setUploading(false);
     }
+    }
+  };
+
+  const uploadDirect = async (file: File, fileKey: string) => {
+    const { data } = await axios.post(`https://dev.apply.litschool.in/student/generate-presigned-url`, {
+      bucketName: "dev-application-portal",
+      key: fileKey,
+    });
+    const { url } = data;
+    await axios.put(url, file, {
+      headers: { "Content-Type": file.type },
+      onUploadProgress: (evt: any) => {
+        if (!evt.total) return;
+        const percentComplete = Math.round((evt.loaded / evt.total) * 100);
+        setUploadProgress(percentComplete);
+      },
+    });
+    return `${url.split("?")[0]}`;
+  };
+
+  const uploadMultipart = async (file: File, fileKey: string, chunkSize: number) => {
+    const uniqueKey = fileKey;
+
+    const initiateRes = await axios.post(`https://dev.apply.litschool.in/student/initiate-multipart-upload`, {
+      bucketName: "dev-application-portal",
+      key: uniqueKey,
+    });
+    const { uploadId } = initiateRes.data;
+    const totalChunks = Math.ceil(file.size / chunkSize);
+    let totalBytesUploaded = 0;
+    const parts: { ETag: string; PartNumber: number }[] = [];
+    for (let i = 0; i < totalChunks; i++) {
+      const start = i * chunkSize;
+      const end = Math.min(start + chunkSize, file.size);
+      const chunk = file.slice(start, end);
+      const partRes = await axios.post(`https://dev.apply.litschool.in/student/generate-presigned-url-part`, {
+        bucketName: "dev-application-portal",
+        key: uniqueKey,
+        uploadId,
+        partNumber: i + 1,
+      });
+      const { url } = partRes.data;
+      const uploadRes = await axios.put(url, chunk, {
+        headers: { "Content-Type": file.type },
+        onUploadProgress: (evt: any) => {
+          if (!evt.total) return;
+          totalBytesUploaded += evt.loaded;
+          const percent = Math.round((totalBytesUploaded / file.size) * 100);
+          setUploadProgress(Math.min(percent, 100));
+        },
+      });
+      parts.push({ PartNumber: i + 1, ETag: uploadRes.headers.etag });
+    }
+    await axios.post(`https://dev.apply.litschool.in/student/complete-multipart-upload`, {
+      bucketName: "dev-application-portal",
+      key: uniqueKey,
+      uploadId,
+      parts,
+    });
+    return `https://dev-application-portal.s3.amazonaws.com/${uniqueKey}`;
   };
 
   const removeFile = (index: number) => {
     setSelectedImage(null); 
-    setReceiptFile(null);
+    setReceiptFile("");
+    setReciptUrl("");
   };
 
   // Actually send the first file to the server
@@ -597,17 +695,20 @@ function FileUploadField({
       return;
     }
 
-    console.log("feeee",receiptFile, semester, installment,);
+    const payload = {
+      receiptUrl: reciptUrl.toString(),
+      semesterNumber: semester.toString(),
+      installmentNumber: installment.toString(),
+      studentPaymentId: studentPaymentId.toString(),
+    };
 
-    const formData = new FormData();
-    formData.append("recieptImage", receiptFile);
-    formData.append("semesterNumber", semester.toString());
-    formData.append("installmentNumber", installment.toString());
+    console.log("payload", payload);    
     
     try {
-      const response = await uploadFeeReceipt(formData);
+      const response = await uploadFeeReceipt(payload);
       console.log("Receipt uploaded successfully:", response);
-      setReceiptFile(null);
+      setReceiptFile("");
+      setReciptUrl("");
       setError(null);
     } catch (err: any) {
       console.error("Error uploading receipt:", err);
@@ -615,9 +716,34 @@ function FileUploadField({
     }
   };
 
+  const generateUniqueFileName = (originalName: string) => {
+    const timestamp = Date.now();
+    const sanitizedName = originalName.replace(/\s+/g, '-');
+    return `${timestamp}-${sanitizedName}`;
+  };  
+
   return (
     <div className="flex flex-col space-y-3 mt-2 rounded-lg p-4 bg-[#09090B]">
-      <h4 className="font-medium text-white">Fee Acknowledgement</h4>
+      <div className="flex justify-between items-center px-3">
+        <h4 className="font-medium text-white">Fee Acknowledgement</h4>
+        {uploading && (
+          <div className="">
+            <div className="flex items-center gap-2">
+              {uploadProgress === 100 ? (
+                <LoaderCircle className="h-4 w-4 animate-spin" />
+              ) : (
+                <>
+                  <Progress className="h-2 w-24" value={uploadProgress} />
+                  <span>{uploadProgress}%</span>
+                </>
+              )}
+              <Button size="icon" type="button" className="bg-[#3698FB] rounded-xl">
+                <XIcon className="w-5" />
+              </Button>
+            </div>
+          </div>
+          )}
+      </div>
 
       {/* Display selected files */}
       {/* {files.map((file, index) => (

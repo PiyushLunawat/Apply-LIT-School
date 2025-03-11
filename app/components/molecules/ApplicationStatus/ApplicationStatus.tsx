@@ -48,7 +48,7 @@ const StatusMessage: React.FC<StatusMessageProps> = ({ student }) => {
           'We have curated feedback based on your submission. Review your feedback and proceed to book your interview call with our counsellor.'
         );
         break;
-      case 'Interview Scheduled':
+      case 'interview schedulededuled':
          case 'Interview Concluded':
         setHeadMessage(
           <>
@@ -202,9 +202,9 @@ const StatusMessage: React.FC<StatusMessageProps> = ({ student }) => {
 
   return (
     <>
-      <div className={`bg-transparent flex relative ${applicationStatus === 'Interview Scheduled' ? 'h-[300px] sm:h-[450px]' : 'h-[250px] sm:h-[350px]'} px-auto`}>
+      <div className={`bg-transparent flex relative ${applicationStatus === 'interview schedulededuled' ? 'h-[300px] sm:h-[450px]' : 'h-[250px] sm:h-[350px]'} px-auto`}>
         <div className='w-full md:w-[850px] mx-auto flex flex-col gap-4 sm:gap-8 justify-center items-center'>
-          {(applicationStatus === 'under review' || applicationStatus === 'Interview Scheduled') && (
+          {(applicationStatus === 'under review' || applicationStatus === 'interview schedulededuled') && (
           <div className='space-y-2'>  
             <div
               className={`mx-auto w-fit flex justify-center items-center gap-2 px-6 py-2 sm:py-4 border-2 ${
@@ -228,7 +228,7 @@ const StatusMessage: React.FC<StatusMessageProps> = ({ student }) => {
             {subMessage}
           </div>
 
-          {['Interview Scheduled', 'Interview Concluded'].includes(applicationStatus) &&
+          {['interview schedulededuled', 'Interview Concluded'].includes(applicationStatus) &&
             <div className='mx-8 sm:mt-4 sm:mx-16 text-xs sm:text-sm md:text-base text-center font-normal sm:space-y-3'>
               <div className=''>
                 If you were unable to attend this interview you may choose to

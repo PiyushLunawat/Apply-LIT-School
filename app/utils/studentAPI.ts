@@ -331,8 +331,10 @@ export async function uploadFeeReceipt(formData: any) {
     `${baseUrl}/student/upload-semester-fee-installments`,
     {
       method: "POST",
-      // FormData automatically sets the proper `Content-Type` headers
-      body: formData,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(formData),
     }
   );
 
@@ -346,7 +348,7 @@ export async function uploadFeeReceipt(formData: any) {
       }`
     );
   }
-  return response;
+  return await response.json();
 }
 
 export async function updateStudentData(

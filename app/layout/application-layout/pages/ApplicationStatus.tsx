@@ -35,6 +35,8 @@ export const ApplicationStatus: React.FC = () => {
           // 2) If there's a valid ID, fetch updated info
           if (studentData?._id) {
             const res = await getCurrentStudent(studentData._id);
+            console.log("res",res);
+            
             setStudent(res);
             const latest = res?.appliedCohorts[res.appliedCohorts.length - 1];
             setLatestCohort(latest);
@@ -116,7 +118,7 @@ export const ApplicationStatus: React.FC = () => {
   return (
     <>
       { (isPaymentVerified === null || isPaymentVerified === undefined) ?
-        ((isInterviewScheduled !== 'Interview Scheduled' || showReviewBlock)  ? 
+        ((isInterviewScheduled !== 'interview schedulededuled' || showReviewBlock)  ? 
           <div className="max-w-[1216px] sm:mx-16 xl:mx-auto justify-center items-center space-y-20">
             <Review setIsPaymentVerified={setIsPaymentVerified} application={student}/>
             <div className="space-y-4 sm:space-y-6">

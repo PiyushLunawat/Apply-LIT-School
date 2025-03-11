@@ -331,46 +331,63 @@ export default function LitmusTest({ student }: LitmusTestProps) {
               </div>
             ))}
             {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks?.[index]?.links?.map((linkItem: string, id: number) => (
-              <div key={`link-${id}`} className="min-w-1/2 flex items-center gap-2 mt-2 p-3 border rounded-xl bg-[#09090b]">
+              <div key={`link-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 mt-2 p-2 border rounded-xl bg-[#09090b]">
+                <div className='flex gap-2 items-center'>
                 <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
                   <Link2Icon className="w-5 h-5" />
                 </Badge>
-                <a href={linkItem} target="_blank" rel="noopener noreferrer" className="text-white">
+                <span className=''>
                   {linkItem}
-                </a>
+                </span>
+                </div>
+                <Button size="icon" type="button" className="bg-[#1B1B1C] rounded-xl">
+                  <ArrowUpRight className="w-5" />
+                </Button>
               </div>
             ))}
             {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks?.[index]?.images?.map((imageItem: string, id: number) => (
-              <div key={`image-${id}`} className="min-w-1/2 flex items-center gap-2 mt-2 p-3 border rounded-xl bg-[#09090b]">
+              <div key={`image-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 mt-2 p-2 border rounded-xl bg-[#09090b]">
+                <div className='flex gap-2 items-center'>
                 <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
                   <ImageIcon className="w-5 h-5" />
                 </Badge>
-                <a href={imageItem} target="_blank" rel="noopener noreferrer" className="text-white">
-                {imageItem.split('/').pop()}
-                </a>
+                <span className=''>
+                  {imageItem.split('/').pop()}
+                </span>
+                </div>
+                <Button size="icon" type="button" className="bg-[#1B1B1C] rounded-xl">
+                  <Download className="w-5" />
+                </Button>
             </div>
             ))}
             {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks?.[index]?.videos?.map((videoItem: string, id: number) => (
-              <div key={`video-${id}`} className="min-w-1/2 flex items-center gap-2 mt-2 p-3 border rounded-xl bg-[#09090b]">
+              <div key={`video-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 mt-2 p-2 border rounded-xl bg-[#09090b]">
+                <div className='flex gap-2 items-center'>
                 <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
                   <VideoIcon className="w-5 h-5" />
                 </Badge>
-                <a href={videoItem} target="_blank" rel="noopener noreferrer" className="text-white">
+                <span className=''>
                   {videoItem.split('/').pop()}
-                </a>
+                </span>
+                </div>
+                <Button size="icon" type="button" className="bg-[#1B1B1C] rounded-xl">
+                  <Download className="w-5" />
+                </Button>
               </div>
             ))}
             {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks?.[index]?.files?.map((fileItem: string, id: number) => (
-              <div key={`file-${id}`} className="min-w-1/2 flex items-center gap-2 mt-2 p-3 border rounded-xl bg-[#09090b]">
-                <Badge
-                  size="icon"
-                  className="text-white rounded-lg bg-[#1B1B1C]"
-                >
-                  <FileTextIcon className="w-5 h-5" />
-                </Badge>
-                <a href={fileItem} target="_blank" rel="noopener noreferrer" className="text-white">
-                  {fileItem.split('/').pop()}
-                </a>
+              <div key={`file-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 mt-2 p-2 border rounded-xl bg-[#09090b]">
+                <div className='flex gap-2 items-center'>
+                  <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
+                    <FileTextIcon className="w-5 h-5" />
+                  </Badge>
+                  <span className=''>
+                    {fileItem.split('/').pop()}
+                  </span>
+                </div>
+                <Button size="icon" type="button" className="bg-[#1B1B1C] rounded-xl">
+                  <Download className="w-5" />
+                </Button>
               </div>
             ))}
       </div>}
@@ -388,15 +405,15 @@ export default function LitmusTest({ student }: LitmusTestProps) {
   }
 
    {/* <>
-          <InterviewFeedback
-          fileName="Application_0034.pdf"
-          strengths={strengths}
-          status={`rejected`}
-          weaknesses={weaknesses}
-          opportunities={opportunities}
-          threats={threats}
-          date="3 September, 2024"
-              />
+      <InterviewFeedback
+      fileName="Application_0034.pdf"
+      strengths={strengths}
+      status={`rejected`}
+      weaknesses={weaknesses}
+      opportunities={opportunities}
+      threats={threats}
+      date="3 September, 2024"
+          />
         </> */}
         
   <div className="flex flex-col items-start p-[52px] pt-2 space-y-8">
@@ -529,6 +546,9 @@ interface FileUploadFieldProps {
 const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) => {
   const [files, setFiles] = useState<string[]>(field.value || []);
   const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [fileName, setFileName] = useState("");
 
   const appendFile = (fileUrl: string) => {
     const newFiles = [...files, fileUrl];
@@ -545,27 +565,28 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
 
   const showUploadButton = !configItem.maxFiles || files.length < configItem.maxFiles;
 
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [fileName, setFileName] = useState("");
-
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setError(null);
     setUploadProgress(0);
     const selectedFiles = e.target.files;
     if (!selectedFiles || selectedFiles.length === 0) return;
+
     const file = selectedFiles[0];
-    setFileName(file.name);
+    const fileKey = generateUniqueFileName(file.name);
+    
+    setFileName(fileKey);
+
     const CHUNK_SIZE = 100 * 1024 * 1024;
     e.target.value = "";
+
     try {
       setUploading(true);
       let fileUrl = "";
       if (file.size <= CHUNK_SIZE) {
-        fileUrl = await uploadDirect(file);
+        fileUrl = await uploadDirect(file, fileKey);
         console.log("uploadDirect File URL:", fileUrl);
       } else {
-        fileUrl = await uploadMultipart(file, CHUNK_SIZE);
+        fileUrl = await uploadMultipart(file, fileKey, CHUNK_SIZE);
         console.log("uploadMultipart File URL:", fileUrl);
       }
       appendFile(fileUrl);
@@ -577,10 +598,10 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
     }
   };
 
-  const uploadDirect = async (file: File) => {
+  const uploadDirect = async (file: File, fileKey: string) => {
     const { data } = await axios.post(`https://dev.apply.litschool.in/student/generate-presigned-url`, {
       bucketName: "dev-application-portal",
-      key: generateUniqueFileName(file.name),
+      key: fileKey,
     });
     const { url } = data;
     await axios.put(url, file, {
@@ -594,8 +615,9 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
     return `${url.split("?")[0]}`;
   };
 
-  const uploadMultipart = async (file: File, chunkSize: number) => {
-    const uniqueKey = generateUniqueFileName(file.name);
+  const uploadMultipart = async (file: File, fileKey: string, chunkSize: number) => {
+    const uniqueKey = fileKey;
+
     const initiateRes = await axios.post(`https://dev.apply.litschool.in/student/initiate-multipart-upload`, {
       bucketName: "dev-application-portal",
       key: uniqueKey,
