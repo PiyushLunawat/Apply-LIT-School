@@ -93,7 +93,7 @@ export const ApplicationStatus: React.FC = () => {
         }
       }
       setIsInterviewScheduled(latest?.applicationDetails?.applicationStatus);
-    }, 60000); 
+    }, 1); 
   
     return () => clearInterval(interval);
   }, [student]);
