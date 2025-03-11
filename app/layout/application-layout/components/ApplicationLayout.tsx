@@ -35,7 +35,7 @@ export default function ApplicationLayout() {
         // } else if (["selected"].includes(status) && isVerified === 'paid') {
         //   navigate("/dashboard");
         // } else {
-        //     if(status === 'interview schedulededuled') {
+        //     if(status === 'interview scheduled') {
         //       setSubtitle('Welcome to LIT');
         //       setSubmessage(`Book your interview call with our counsellors.`);
         //     } else if(isVerified === 'pending') {

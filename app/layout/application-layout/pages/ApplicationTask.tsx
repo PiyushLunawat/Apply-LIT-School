@@ -29,7 +29,7 @@ export const ApplicationTask: React.FC = () => {
         console.log("application/task", res);
         setStudent(res)
         const status = res?.appliedCohorts?.[res?.appliedCohorts.length - 1]?.applicationDetails?.applicationStatus;
-        if (['under review', 'accepted' , 'rejected', 'interview schedulededuled', 'waitlist', 'selected', 'not qualified'].includes(status)) {
+        if (['under review', 'accepted' , 'rejected', 'interview scheduled', 'waitlist', 'selected', 'not qualified'].includes(status)) {
           console.log("Navigating to /application/status:", status);
           navigate("/application/status");
         } else if (['initiated', 'on hold'].includes(status)) {
