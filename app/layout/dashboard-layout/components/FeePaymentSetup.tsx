@@ -1,9 +1,8 @@
 "use client";
 
-import { useContext, useEffect, useState } from "react";
-import { getCurrentStudent, setupFeePayment, uploadFeeReceipt } from "~/utils/studentAPI"; 
-import { UserContext } from "~/context/UserContext";
-import { CircleCheck, FileTextIcon, LoaderCircle, UploadIcon, XIcon } from "lucide-react";
+import { useEffect, useState } from "react";
+import { setupFeePayment, uploadFeeReceipt } from "~/utils/studentAPI";
+import { AlertCircle, CheckCircle, CircleCheck, Eye, LoaderCircle, PauseCircle, UploadIcon, XIcon } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
@@ -46,6 +45,7 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
   
   const [paymentDetails, setPaymentDetails] = useState<any>(latestCohort?.paymentDetails);
 
+  const [open, setOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,15 +62,39 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
     }
   });
 
-    useEffect(() => {
-      setPaymentDetails(latestCohort?.paymentDetails);
-      if (
-        latestCohort?.paymentDetails?.paymentPlan
-      ) {
-        setStep(2);
-      }
-    }, [student]);  
+  useEffect(() => {
+    setPaymentDetails(latestCohort?.paymentDetails);
+    if (latestCohort?.paymentDetails?.paymentPlan)
+      setStep(2);
+  }, [student]);
 
+  const getInstallmentIcon = (verificationStatus: any) => {
+    switch (verificationStatus) {
+      case 'verifying':
+        return <PauseCircle className="w-4 h-4 text-[#FEBC10]" />;
+      case 'paid':
+        return <CheckCircle className="w-4 h-4 text-[#00AB7B]" />;
+      case 'flagged':
+        return <AlertCircle className="w-4 h-4 text-[#F53F3F]" />;
+      case 'pending':
+      default:
+        return null;
+    }
+  };
+
+  const getStatusColor = (verificationStatus: any) => {
+    switch (verificationStatus) {
+      case 'verifying':
+        return "text-[#FEBC10]";
+      case 'paid':
+        return "text-[#00AB7B]";
+      case 'flagged':
+        return "text-[#F53F3F]";
+      case 'pending':
+      default:
+        return null;
+    }
+  };
 
   // Simple controlled inputs
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -347,7 +371,7 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
               
                   <div className="bg-[#64748B1F] p-6 border-b border-gray-700">
                     <div className="flex justify-between items-center cursor-pointer">
-                      <Badge className="bg-[#3698FB]/20 border-[#3698FB] text-base text-white px-4 py-2 ">
+                      <Badge className="flex agp-2 bg-[#3698FB]/20 border-[#3698FB] text-base text-white px-4 py-2 ">
                         Installment 01
                       </Badge>
                       <div className="flex flex-col sm:flex-row sm:gap-4 text-right">
@@ -391,6 +415,7 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                           semester={1}
                           installment={1}
                           studentPaymentId={paymentDetails?._id}
+                          onUploadSuccess={(data) => setPaymentDetails(data)}
                         />
 
                         <div className="p-3 rounded-lg text-sm text-white/70 space-y-1">
@@ -462,33 +487,52 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                       className="flex justify-between items-center cursor-pointer font-medium"
                       onClick={toggleExpand}
                     >
-                      <Badge className="bg-[#3698FB]/20 border-[#3698FB] text-base text-white px-4 py-2 ">
+                      <Badge className="flex gap-2 bg-[#3698FB]/20 border-[#3698FB] text-base text-white px-4 py-2 ">
+                        {getInstallmentIcon(instalment?.verificationStatus)}
                         Installment 0{iIndex + 1}
                       </Badge>
-                      <div className="flex flex-col sm:flex-row sm:gap-4 text-right">
-                        <Badge className="bg-[#64748B1F]/20 border-[#2C2C2C] text-base text-white px-4 py-2">
+                      <div className="flex flex-col sm:flex-row sm:gap-4 text-right items-center">
+                        <Badge className={`${instalment?.verificationStatus === 'paid' ? 'border-[#00CC92] bg-[#00CC92]/10' : 'bg-[#64748B1F]/20 border-[#2C2C2C]'} text-base text-white px-4 py-2`}>
                           ₹{instalment.amountPayable.toLocaleString()}
                         </Badge>
-                        <Badge className="bg-[#64748B1F]/20 border-[#2C2C2C] text-base text-white px-4 py-2">
-                          Due:{" "}
-                          {new Date(instalment.installmentDate).toLocaleDateString("en-GB", {
-                            day: "2-digit",
-                            month: "long",
-                            year: "numeric",
-                          })}
-                        </Badge>
+                        {instalment?.verificationStatus === 'paid' ?
+                          <Badge className="flex gap-1 bg-[#64748B1F]/20 border-[#2C2C2C] text-base text-white px-4 py-2">
+                            <span className="font-light text-[#00CC92]">Paid on</span> {new Date(instalment?.receiptUrls?.[instalment?.receiptUrls.length - 1]?.uploadedAt).toLocaleDateString("en-GB", {day: "2-digit", month: "long", year: "numeric",})}
+                          </Badge> :
+                        instalment?.verificationStatus === 'verifying' ?
+                          <Badge className="flex gap-1 bg-[#64748B1F]/20 border-[#2C2C2C] text-base text-white px-4 py-2">
+                            <span className="font-light">Uploaded on</span> {new Date(instalment?.receiptUrls?.[instalment?.receiptUrls.length - 1]?.uploadedAt).toLocaleDateString("en-GB", {day: "2-digit", month: "long", year: "numeric",})}
+                          </Badge> :
+                        instalment?.verificationStatus === 'flagged' ?
+                          <Badge className="flex gap-1 bg-[#F53F3F]/20 border-[#F53F3F] text-base text-white px-4 py-2">
+                            <span className="font-light">Pay before</span>  {new Date(instalment?.installmentDate).toLocaleDateString("en-GB", {day: "2-digit", month: "long", year: "numeric",})}
+                          </Badge> :
+                          <Badge className="flex gap-1 bg-[#64748B1F]/20 border-[#2C2C2C] text-base text-white px-4 py-2">
+                            <span className="font-light">Due:</span> {new Date(instalment?.installmentDate).toLocaleDateString("en-GB", {day: "2-digit", month: "long", year: "numeric",})}
+                          </Badge>
+                        }
+                        {['verifying', 'paid'].includes(instalment?.verificationStatus) &&
+                          <div className="relative group w-10 h-10">
+                            <img
+                              src={instalment?.receiptUrls?.[instalment?.receiptUrls.length - 1]?.url}
+                              alt="Fee_Receipt"
+                              className="w-10 h-10 rounded-lg object-contain bg-white py-1"
+                            />
+                            {/* Eye icon overlay to open modal */}
+                            <div
+                              className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                              onClick={() => setOpen(true)}
+                            >
+                              <Eye className="text-white w-4 h-4" />
+                            </div>
+                          </div>
+                        }
                       </div>
                     </div>
 
                     {isExpanded && (
                       <div className="mt-4 space-y-4">
-                        {instalment.feedback && instalment.feedback.length > 0 && (
-                          <p>
-                            <strong>Feedback:</strong> {instalment.feedback.join(", ")}
-                          </p>
-                        )}
-
-                        {instalment.receiptUrls && instalment.receiptUrls.length > 0 && (
+                        {/* {instalment.receiptUrls && instalment.receiptUrls.length > 0 && (
                           <p>
                             <strong>Receipt:</strong>{" "}
                             {instalment.receiptUrls.map((url: string, urlIndex: number) => (
@@ -503,15 +547,39 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                               </a>
                             ))}
                           </p>
-                        )}
+                        )} */}
 
                         {['pending', 'flagged'].includes(instalment.verificationStatus) &&
                         <FileUploadField
                             semester={sem.semester}
                             installment={iIndex + 1}
                             studentPaymentId={paymentDetails?._id}
+                            onUploadSuccess={(data) => setPaymentDetails(data)}
                           />
                         }
+
+                        {instalment.history && instalment.history.slice().reverse().map((fleg: any, index: any) => (
+                          <div key={index} className="bg-[#09090b] p-3 flex gap-2 items-center">
+                            <div className="relative group w-[90px] h-[90px]">
+                              <img
+                                src={instalment?.receiptUrls?.[instalment.history.length-1 - index]?.url}
+                                alt="Fee_Receipt"
+                                className="w-[90px] h-[90px] rounded-lg object-contain bg-white py-1"
+                              />
+                              <div
+                                className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                onClick={() => setOpen(true)}
+                              >
+                                <Eye className="text-white w-7 h-7" />
+                              </div>
+                            </div>
+                            <div className="text-xs">
+                              <div className="text-[#F53F3F]">Your previously attached Acknowledgement Receipt has been marked invalid.</div>
+                              <div className="mt-1.5">Kindly upload a scanned copy of the receipt issued to you by our fee manager for this specific instalment.</div>
+                              <div className="mt-2 text-muted-foreground">Reason: {fleg?.feedback?.[0]}</div>
+                            </div>
+                          </div>
+                    ))}
 
                         <div className="p-3 rounded-lg text-sm text-white/70 space-y-1">
                           <p className="font-medium text-base text-white">Fee Breakdown</p>
@@ -567,11 +635,13 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
 function FileUploadField({
   semester,
   installment,
-  studentPaymentId
+  studentPaymentId,
+  onUploadSuccess
 }: {
   semester: number;
   installment: number;
   studentPaymentId: any;
+  onUploadSuccess: (data: any) => void; 
 }) {
   const [reciptUrl, setReciptUrl] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -707,6 +777,8 @@ function FileUploadField({
     try {
       const response = await uploadFeeReceipt(payload);
       console.log("Receipt uploaded successfully:", response);
+      onUploadSuccess(response.updatedPayment);
+
       setReceiptFile("");
       setReciptUrl("");
       setError(null);
@@ -796,7 +868,7 @@ function FileUploadField({
         </Button>
       </div>)}
 
-      <Button size={'xl'} disabled={!receiptFile}
+      <Button size={'xl'} disabled={uploading}
         className="text-white w-fit"
         onClick={handleSubmit}
       >

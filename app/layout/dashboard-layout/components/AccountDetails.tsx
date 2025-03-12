@@ -12,9 +12,17 @@ import { getCurrentStudent, updateStudentData } from "~/utils/studentAPI";
 
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import { Input } from "~/components/ui/input";
 
-const AccountDetails = () => {
+
+interface AccountDetailsProps {
+  student: any
+}
+
+export default function AccountDetails({ student }: AccountDetailsProps) {
+  
+  const latestCohort = student?.appliedCohorts?.[student?.appliedCohorts.length - 1];
+  const cohortDetails = latestCohort?.cohortId;
+
   const [open, setOpen] = useState(false);
   const { studentData, setStudentData } = useContext(UserContext);
   const [details, setDetails] = useState<any>();
@@ -493,5 +501,3 @@ const AccountDetails = () => {
     </div>
   );
 };
-
-export default AccountDetails;
