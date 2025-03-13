@@ -88,6 +88,7 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
   // ------------------ React Hook Form Setup ------------------
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
+    mode: 'onChange',
     defaultValues: {
       courseDive: {
         interest: '',
@@ -96,7 +97,7 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
       tasks: [],
     },
   });
-  const { control, handleSubmit, reset, watch } = form;
+  const { control, handleSubmit, reset, watch, formState: { isValid }, } = form;
 
   // ------------------ Fetch Data + Initialize ------------------
   useEffect(() => {
@@ -419,7 +420,7 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
             size="xl"
             className="w-full sm:w-fit space-y-1 order-1 sm:order-2"
             type="submit"
-            disabled={loading || uploading}
+            disabled={loading || uploading || !isValid}
           >
             {loading ? 'Submitting...' : 'Submit Application'}
           </Button>

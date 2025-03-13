@@ -6,6 +6,10 @@ interface LitIdBackProps {
 }
 
 const LitIdBack: React.FC<LitIdBackProps> = ({ data, ScanUrl }) => {
+  const latestCohort = data?.appliedCohorts?.[data?.appliedCohorts.length - 1];
+  const cohortDetails = latestCohort?.cohortId;
+  const applicationDetails = latestCohort?.applicationDetails;
+
   return (
     <div className="w-[400px] h-[590.11px] pb-[0.11px] bg-white flex-col justify-center items-center inline-flex">
       <div className="self-stretch h-[590px] flex-col justify-start items-start inline-flex">
@@ -18,10 +22,10 @@ const LitIdBack: React.FC<LitIdBackProps> = ({ data, ScanUrl }) => {
           </div>
           <div className="self-stretch h-[50px] flex-col justify-start items-start gap-2.5 flex">
             <div className="self-stretch text-[#4f4f4f] text-sm font-normal font-['Geist'] leading-tight">
-              Father’s Name: {data?.studentDetails?.parentInformation?.father?.firstName + ' ' + data?.studentDetails?.parentInformation?.father?.lastName || '--'}
+              Father’s Name: {applicationDetails?.studentDetails?.parentInformation?.father?.firstName + ' ' + data?.studentDetails?.parentInformation?.father?.lastName || '--'}
             </div>
             <div className="self-stretch text-[#4f4f4f] text-sm font-normal font-['Geist'] leading-tight">
-              Emergency Contact: {data?.studentDetails?.emergencyContact?.contactNumber || '--'}
+              Emergency Contact: {applicationDetails?.studentDetails?.emergencyContact?.contactNumber || '--'}
             </div>
             <div className="self-stretch text-[#4f4f4f] text-sm font-normal font-['Geist'] leading-tight">
               Blood Group: {data?.bloodGroup}
@@ -29,15 +33,15 @@ const LitIdBack: React.FC<LitIdBackProps> = ({ data, ScanUrl }) => {
           </div>
           <div className="self-stretch h-[30px] flex-col justify-start items-start gap-2.5 flex mt-2.5">
             <div className="self-stretch text-[#4f4f4f] text-sm font-normal font-['Geist'] leading-tight">
-              Address: {data?.studentDetails?.currentAddress?.streetAddress + ', ' + data?.studentDetails?.currentAddress?.city + ', ' + data?.studentDetails?.currentAddress?.postalCode}
+              Address: {applicationDetails?.studentDetails?.currentAddress?.streetAddress + ', ' + applicationDetails?.studentDetails?.currentAddress?.city + ', ' + applicationDetails?.studentDetails?.currentAddress?.postalCode}
             </div>
           </div>
           <div className="self-stretch h-[30px] flex-col justify-start items-start gap-2.5 flex">
             <div className="self-stretch text-[#4f4f4f] text-sm font-normal font-['Geist'] leading-tight">
-              Issued On: {new Date(data?.cohort?.startDate).toLocaleDateString()}
+              Issued On: {new Date(cohortDetails?.startDate).toLocaleDateString()}
             </div>
             <div className="self-stretch text-[#4f4f4f] text-sm font-semibold font-['Geist'] leading-tight">
-              Expiry Date: {new Date(data?.cohort?.endDate).toLocaleDateString()}
+              Expiry Date: {new Date(cohortDetails?.endDate).toLocaleDateString()}
             </div>
           </div>
           <div className="self-stretch justify-start items-center gap-2.5 inline-flex">

@@ -314,6 +314,8 @@ useEffect(() => {
       if(studentData._id)
       try {
         const student = await getCurrentStudent(studentData._id);
+        console.log("dbab",student);
+        
         setFetchedStudentData(student);
         
         const sData = student?.appliedCohorts[student.appliedCohorts.length - 1]?.applicationDetails?.studentDetails;
@@ -1049,7 +1051,14 @@ useEffect(() => {
                       <SelectValue placeholder="Select a Program" />
                     </SelectTrigger>
                     <SelectContent>
-                      {availablePrograms.map((programId) => (
+                      <SelectItem key={fetchedStudentData?.appliedCohorts?.[fetchedStudentData?.appliedCohorts.length - 1]?.cohortId?.programDetail?._id} value={fetchedStudentData?.appliedCohorts?.[fetchedStudentData?.appliedCohorts.length - 1]?.cohortId?.programDetail?._id}>
+                        {fetchedStudentData?.appliedCohorts?.[fetchedStudentData?.appliedCohorts.length - 1]?.cohortId?.programDetail?.name}
+                      </SelectItem>
+                      {availablePrograms
+                      .filter(programId => 
+                        programId !== fetchedStudentData?.appliedCohorts?.[fetchedStudentData?.appliedCohorts.length - 1]?.cohortId?.programDetail?._id
+                      )
+                      .map(programId => (
                         <SelectItem key={programId} value={programId}>
                           {getProgramName(programId)}
                         </SelectItem>
@@ -1081,10 +1090,15 @@ useEffect(() => {
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
                   <SelectContent>
-                    {filteredCohorts.map((cohort) => (
+                    <SelectItem key={fetchedStudentData?.appliedCohorts?.[fetchedStudentData?.appliedCohorts.length - 1]?.cohortId._id} value={fetchedStudentData?.appliedCohorts?.[fetchedStudentData?.appliedCohorts.length - 1]?.cohortId._id}>
+                      {formatDateToMonthYear(fetchedStudentData?.appliedCohorts?.[fetchedStudentData?.appliedCohorts.length - 1]?.cohortId.startDate)} ({fetchedStudentData?.appliedCohorts?.[fetchedStudentData?.appliedCohorts.length - 1]?.cohortId.timeSlot}),{" "}
+                      {getCenterName(fetchedStudentData?.appliedCohorts?.[fetchedStudentData?.appliedCohorts.length - 1]?.cohortId.centerDetail)}
+                    </SelectItem>
+                    {filteredCohorts
+                    .filter(cohort => cohort._id !== fetchedStudentData?.appliedCohorts?.[fetchedStudentData?.appliedCohorts.length - 1]?.cohortId._id)
+                    .map(cohort => (
                       <SelectItem key={cohort._id} value={cohort._id}>
-                        {formatDateToMonthYear(cohort.startDate)} ({cohort.timeSlot}),{" "}
-                        {getCenterName(cohort.centerDetail)}
+                        {formatDateToMonthYear(cohort.startDate)} ({cohort.timeSlot}), {getCenterName(cohort.centerDetail)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -1106,7 +1120,7 @@ useEffect(() => {
               <FormItem className="flex-1 space-y-1 relative">
                 <Label className="text-xs sm:text-sm font-normal pl-3">Your LinkedIn Profile Link (Not Compulsory)</Label>
                 <FormControl>
-                  <Input id="linkedInUrl" placeholder="https://www.linkedin.com/JohnDoe" {...field} 
+                  <Input className='pr-12' id="linkedInUrl" placeholder="https://www.linkedin.com/JohnDoe" {...field} 
                   onChange={(e) => {
                     const newValue = e.target.value.replace(/\s/g, "");
                     field.onChange(newValue);
@@ -1125,7 +1139,7 @@ useEffect(() => {
               <FormItem className="flex-1 space-y-1 relative">
                 <Label className="text-xs sm:text-sm font-normal pl-3">Your Instagram ID (Not Compulsory)</Label>
                 <FormControl>
-                  <Input id="instagramUrl" placeholder="@john_doe" {...field} 
+                  <Input className='pr-12' id="instagramUrl" placeholder="@john_doe" {...field} 
                   onChange={(e) => {
                     const newValue = e.target.value.replace(/\s/g, "");
                     field.onChange(newValue);
@@ -1568,6 +1582,19 @@ useEffect(() => {
 
             {watchExperienceType === 'Consultant' && (
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
+                <FormField
+                  control={control}
+                  name="applicationData.nameOfCompany"
+                  render={({ field }) => (
+                    <FormItem className="flex-1 space-y-1">
+                      <Label htmlFor="companyName" className="text-xs sm:text-sm font-normal pl-3">Name of Company (Latest or Current)</Label>
+                      <FormControl>
+                        <Input id="companyName" placeholder="Type here" {...field} disabled={isSaved} />
+                      </FormControl>
+                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                    </FormItem>
+                  )}
+                />
                 {/* Duration of Work */}
                 <div className='flex-1 space-y-1'>
                 <Label htmlFor="duration" className="text-xs sm:text-sm font-normal pl-3">Apx. Duration of Work</Label>

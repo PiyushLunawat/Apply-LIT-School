@@ -146,7 +146,7 @@ const Feedback: React.FC<FeedbackProps> = ({ student, setIsPaymentVerified }) =>
     />}
   <Dialog open={interviewOpen} onOpenChange={setInterviewOpen}>
     <DialogContent className="max-w-[90vw] sm:max-w-2xl">
-      <SchedulePresentation interviewer={interviewer} eventCategory='Application Test Review'/>
+      <SchedulePresentation student={student} interviewer={interviewer} eventCategory='Application Test Review'/>
     </DialogContent>
   </Dialog>
   </div>

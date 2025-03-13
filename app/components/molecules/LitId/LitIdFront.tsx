@@ -8,12 +8,12 @@ const LitIdFront: React.FC<LitIdFrontProps> = ({ data }) => {
   return (
     <div className="w-[400px] h-[590.11px] relative bg-white">
       <div className="!h-[150px] ">
-  <img
-    src={data?.profileUrl || "https://github.com/shadcn.png"}
-    className="object-cover w-[400px] h-[355px]"
-    alt="Profile"
-  />
-</div>
+        <img
+          src={data?.profileUrl || "https://github.com/shadcn.png"}
+          className="object-cover w-[400px] h-[355px]"
+          alt="Profile"
+        />
+      </div>
 
       <div className="w-[360px] bg-white rounded-3xl h-[238px] left-[20px] top-[330px] absolute flex-col justify-between items-start inline-flex">
         <div className="h-[108px] flex-col justify-start items-start gap-3.5 flex">

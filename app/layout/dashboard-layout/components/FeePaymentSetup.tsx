@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../../components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~/components/ui/tooltip";
 import { Separator } from "../../../components/ui/separator";
 import { Badge } from "../../../components/ui/badge";
 import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3";
@@ -36,9 +37,6 @@ interface FeePaymentSetupProps {
 }
 
 export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
-  console.log("student", student);
-
-  
   const latestCohort = student?.appliedCohorts?.[student?.appliedCohorts.length - 1];
   const cohortDetails = latestCohort?.cohortId;
   const tokenFeeDetails = latestCohort?.tokenFeeDetails;
@@ -71,11 +69,29 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
   const getInstallmentIcon = (verificationStatus: any) => {
     switch (verificationStatus) {
       case 'verifying':
-        return <PauseCircle className="w-4 h-4 text-[#FEBC10]" />;
+        return (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger className="max-w-[100px] truncate"><PauseCircle className="w-4 h-4 text-[#FEBC10]" /></TooltipTrigger>
+            <TooltipContent>
+              <p>Verification Pending</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        );
       case 'paid':
         return <CheckCircle className="w-4 h-4 text-[#00AB7B]" />;
       case 'flagged':
-        return <AlertCircle className="w-4 h-4 text-[#F53F3F]" />;
+        return (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger className="max-w-[100px] truncate"><AlertCircle className="w-4 h-4 text-[#F53F3F]" /></TooltipTrigger>
+            <TooltipContent>
+              <p>Receipt Rejected</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        );
       case 'pending':
       default:
         return null;

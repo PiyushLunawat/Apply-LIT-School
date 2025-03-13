@@ -52,7 +52,7 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
     if (!lastInterview) {
         return <div className="text-center">No interviews found.</div>;
     }
-  
+    
     return (
       <Card className="max-w-6xl min-h-[680px] mx-auto md:flex md:flex-row rounded-2xl sm:rounded-3xl ">
         {/* Left Section */}
@@ -120,11 +120,11 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
             >
               Join Meeting
             </Button>
-            <div className="flex justify-between">
-              <p className="mt-3 sm:mt-6 text-[#64748B] text-sm sm:text-base font-normal">
+            <div className="flex justify-between items-center mt-3 sm:mt-6">
+              <p className="text-[#64748B] text-sm sm:text-base font-normal">
                 Time zone: <span className="text-[#00A3FF] uppercase">IST ({formattedTime})</span>
               </p>
-              <Button variant="link" className="underline">
+              <Button variant="link" className="underline " onClick={() => window.open(`https://dev.cal.litschool.in/meetings/cancel/${lastInterview?._id}`, "_blank")}>
                 Cancel Meeting
               </Button>
             </div>

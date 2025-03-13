@@ -5,7 +5,7 @@ import Sidebar from "~/components/organisms/Sidebar/Sidebar";
 export default function DashboardLayout() {
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="">
         <Header classn="drop-shadow-lg" />
         <div className="flex flex-col sm:flex-row" style={{ height: `calc(100vh - 52px)`}}>
             <div className="max-w-[360px] w-full order-2 sm:order-1">

@@ -45,11 +45,11 @@ const navItems = [
 ];
 
 export default function Sidebar() {
+  const { studentData } = useContext(UserContext);
+  const [student, setStudent] = useState<any>([]);
 
-    const { studentData } = useContext(UserContext);
-    const [student, setStudent] = useState<any>([]);
-
-    useEffect(() => {
+  useEffect(() => {
+    if(studentData?._id)  {
       const fetchStudentData = async () => {
         try {
           const student = await getCurrentStudent(studentData._id); // Pass the actual student ID here
@@ -59,21 +59,23 @@ export default function Sidebar() {
         }
       };
       fetchStudentData();
-    }, [studentData]);
+    }
+  }, [studentData]);
 
   return (
   <>
     <div className="hidden sm:block max-w-[360px] w-full text-white flex flex-col border-r" style={{ height: `calc(100vh - 52px)`}}>
       {/* User Profile Section */}
       <div className="h-[200px] border-b border-[#2C2C2C]">
-        <div className="flex flex-col gap-5 p-8 mt-5">
+        <div className="flex flex-col gap-5 p-8 ">
           <Avatar className="w-[60px] h-[60px]">
-            <AvatarImage src={studentData?.profileUrl} className="object-cover" alt={studentData?.firstName[0]+studentData?.lastName[0]} />
-            <AvatarFallback className="uppercase">{studentData?.firstName[0]}{studentData?.lastName[0]}</AvatarFallback>
+            <AvatarImage src={student?.profileUrl} className="object-cover" />
+            <AvatarFallback className="uppercase">{student?.firstName?.[0] || '?'}{student?.lastName?.[0] || '?'}</AvatarFallback>
           </Avatar>
           <div>
-            <h2 className="text -base font-semibold">{studentData?.firstName + ' ' + studentData?.lastName}</h2>
-            <p className="text-sm text-normal">{student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.applicationDetails?.studentDetails?.previousEducation?.nameOfInstitution}</p>
+            <h2 className="text -base font-semibold">{student?.firstName} {student?.lastName}</h2>
+            <p className="text-sm text-normal">{student?.email}</p>
+            <p className="text-sm text-normal">{student?.mobileNumber}</p>
           </div>
         </div>
       </div>
@@ -115,8 +117,8 @@ export default function Sidebar() {
         <NavLink to={'/dashboard'}
           className={({ isActive }) => `flex flex-1 items-center justify-center py-1 transition-colors`}>
             <Avatar className="w-12 h-12">
-              <AvatarImage src={studentData?.profileUrl} className="object-cover" alt={`${studentData?.firstName[0]}${studentData?.lastName[0]}`}/>
-              <AvatarFallback className="uppercase">{studentData?.firstName[0]}{studentData?.lastName[0]}</AvatarFallback>
+              <AvatarImage src={student?.profileUrl} className="object-cover" />
+              <AvatarFallback className="uppercase">{student?.firstName?.[0] || '?'}{student?.lastName?.[0] || '?'}</AvatarFallback>
             </Avatar>
         </NavLink>
         {navItems.slice(2).map((item, index) => (

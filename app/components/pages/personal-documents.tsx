@@ -6,7 +6,7 @@ import Sidebar from "../organisms/Sidebar/Sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import PersonalDocuments from "../organisms/PersonalDocuments/PersonalDocuments";
+import PersonalDocuments from "../../layout/dashboard-layout/components/PersonalDocuments";
 import { getCurrentStudent } from "~/utils/studentAPI";
 import { UserContext } from "~/context/UserContext";
 import { useContext, useEffect, useState } from "react";
@@ -44,7 +44,6 @@ export default function PersonalDocumentsDashboard() {
         Maintain all your personal Identification Documents for this course.
         </p>
       </div>
-      <PersonalDocuments />
   </>
   );
 }

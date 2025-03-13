@@ -37,18 +37,12 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
   const pdfRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const fetchStudentData = async () => {
-      try {
-        const student = await getCurrentStudent(studentData._id);
-        setStudentData(student);
-        setDetails(student);
-        setBloodGroupInput(student.bloodGroup || "");
-      } catch (error) {
-        console.error("Failed to fetch student data:", error);
-      }
-    };
-    fetchStudentData();
-  }, []);
+    if (student) {
+      setStudentData(student);
+      setDetails(student);
+      setBloodGroupInput(student.bloodGroup || "");      
+    }
+  }, [student]);
 
   const handleDownloadPDF = async () => {
     if (!pdfRef.current) return;
@@ -292,7 +286,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                 <div className="text-sm ">Institute Name</div>
                 <div className="flex justify-between items-center border-b border-gray-700 pb-2">
                   <div className="text-xl">
-                    {details?.appliedCohorts?.[details?.appliedCohorts.length - 1]?.applicationDetails?.studenDetails?.previousEducation?.nameOfInstitution || "--"}
+                    {details?.appliedCohorts?.[details?.appliedCohorts.length - 1]?.applicationDetails?.studentDetails?.previousEducation?.nameOfInstitution || "c--"}
                   </div>
                   <CheckCircle className="h-4 w-4 text-[#00CC92]" />
                 </div>
@@ -422,7 +416,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
           <div className="relative flex items-center gap-4">
             <div className="relative group w-16 h-16">
               <img
-                src="/assets/images/lit-id-front.svg"
+                src={studentData?.profileUrl || `/assets/images/lit-id-front.svg`}
                 alt="LIT ID Card"
                 className="w-16 h-16 rounded-xl bg-white py-1"
               />
@@ -479,10 +473,10 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
           <DialogContent className="max-w-4xl py-2 px-6 h-[90vh] overflow-y-auto">
             <div className="flex gap-4 items-center justify-center">
               <div className="w-1/2">
-                <LitIdFront data={details} />
+                <LitIdFront data={studentData} />
               </div>
               <div className="w-1/2">
-                <LitIdBack data={details} ScanUrl="" />
+                <LitIdBack data={studentData} ScanUrl="" />
               </div>
             </div>
             {/* Download Button Inside Dialog */}

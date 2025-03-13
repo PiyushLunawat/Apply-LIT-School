@@ -16,36 +16,24 @@ import { UserContext } from "~/context/UserContext";
 import { getCohortById, getCurrentStudent } from "~/utils/studentAPI";
 
 interface SchedulePresentationProps {
+  student: any;
   interviewer: [];
   eventCategory: string
 }
 
-export function SchedulePresentation({ interviewer, eventCategory }: SchedulePresentationProps) {
+export function SchedulePresentation({ student, interviewer, eventCategory }: SchedulePresentationProps) {
     const [selectedInterviewer, setSelectedInterviewer] = useState<any | null>(null);
-    const { studentData, setStudentData } = useContext(UserContext);
-    const [ cohortData, setCohortData ] = useState<any>([]);
 
-    let latestCohort = studentData?.appliedCohorts?.[studentData?.appliedCohorts.length - 1];
+    let latestCohort = student?.appliedCohorts?.[student?.appliedCohorts.length - 1];
 
-    useEffect(() => {
-        const fetchStudentData = async () => {
-          try {
-            const cohort = await getCohortById(latestCohort?.cohortId?._id); // Use actual student ID here
-            setCohortData(cohort.data);            
-          } catch (error) {
-            console.error("Failed to fetch student data:", error);
-          }
-        };
-        fetchStudentData();
-    }, []);
 
     const handleSelect = (interviewer: any) => {
         setSelectedInterviewer(interviewer);
     };
 
     const handleScheduleRedirect = () => {
-        if (!selectedInterviewer || !studentData?._id || !latestCohort?.cohortId?._id) return;
-        const url = `https://dev.cal.litschool.in/${selectedInterviewer?.personalUrl}/${selectedInterviewer?.events[0]?.eventName || ''}?&litApplicationUserId=${studentData?._id}&cohortId=${latestCohort?.cohortId?._id}&eventCategory=${eventCategory}&eventId=${selectedInterviewer?.events[0]?._id} `;
+        if (!selectedInterviewer || !student?._id || !latestCohort?.cohortId?._id) return;
+        const url = `https://dev.cal.litschool.in/${selectedInterviewer?.personalUrl}/${selectedInterviewer?.events[0]?.eventName || ''}?&litApplicationUserId=${student?._id}&cohortId=${latestCohort?.cohortId?._id}&eventCategory=${eventCategory}&eventId=${selectedInterviewer?.events[0]?._id} `;
         window.open(url, "_blank"); 
       };
     
@@ -54,13 +42,19 @@ export function SchedulePresentation({ interviewer, eventCategory }: SchedulePre
       <div className="grid gap-3">
         {/* Profile Section */}
         <div className="space-y-1">
+            <div className="text-2xl font-medium">{eventCategory === 'Application Test Review' ? 'Application Review' : 'LITMUS Review'}</div>
             <h2 className="text-base font-semibold">
                 Select Your Interviewer
             </h2>
             <div className="flex gap-4 h-5 items-center">
-                <p className="text-sm text-muted-foreground">Program Application</p>
+                <p className="text-sm text-muted-foreground">{eventCategory === 'Application Test Review' ? 'Program Application' : 'LITMUS Test'}</p>
                 <Separator orientation="vertical" />
-                <p className="text-sm text-muted-foreground"> Submitted application on {new Date(latestCohort?.applicationDetails?.createdAt).toLocaleDateString()}</p>
+                <p className="text-sm text-muted-foreground">
+                  {eventCategory === 'Application Test Review' ?
+                    `Submitted application on ${new Date(latestCohort?.applicationDetails?.createdAt).toLocaleDateString()}` :
+                    `Submitted on ${new Date(latestCohort?.litmusDetails?.createdAt).toLocaleDateString()}`
+                  }
+                </p>
             </div>
         </div>
 

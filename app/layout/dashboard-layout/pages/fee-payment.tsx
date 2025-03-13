@@ -21,12 +21,11 @@ export default function FeePaymentSetupDashboard() {
   const [student, setStudent] = useState<any>([]);
   
   useEffect(() => {
-    if(studentData) {
-        const fetchStudentData = async () => {
+    if(studentData?._id)  {
+      const fetchStudentData = async () => {
         try {
-          const student = await getCurrentStudent(studentData._id);  
-                
-          setStudent(student); 
+          const student = await getCurrentStudent(studentData._id); // Pass the actual student ID here
+          setStudent(student);          
         } catch (error) {
           console.error("Failed to fetch student data:", error);
         }
@@ -45,8 +44,8 @@ export default function FeePaymentSetupDashboard() {
             </Badge>
           </div>
           <h1 className="text-4xl font-normal">
-            Creator Marketer
-            <div className="text-2xl">October, 2024</div>
+            {student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.cohortId?.programDetail?.name}
+            <div className="text-2xl">{new Date(student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.cohortId?.startDate).toLocaleDateString("en-US", { month: "long", year: "numeric",})}</div>
           </h1>
         </div>
         <p className="max-w-[360px] w-full text-base ">

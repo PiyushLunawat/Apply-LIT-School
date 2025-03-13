@@ -96,7 +96,7 @@ export default function ApplicationDashboard() {
         <div className="flex flex-row sm:flex-col gap-4 sm:gap-8 items-center sm:items-start">
           <Avatar className="w-16 h-16 sm:w-32 sm:h-32">
             <AvatarImage src={studentData?.profileUrl} className="object-cover" alt="@shadcn" />
-            <AvatarFallback className="uppercase text-2xl">{studentData?.firstName[0] + studentData?.lastName[0]}</AvatarFallback>
+            <AvatarFallback className="uppercase text-2xl">{studentData?.firstName[0]}{studentData?.lastName[0]}</AvatarFallback>
           </Avatar>
           <h1 className="text-xl sm:text-4xl font-normal">
             👋 Hey {studentData?.firstName+' '+studentData?.lastName},

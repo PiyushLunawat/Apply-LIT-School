@@ -432,7 +432,7 @@ export default function LitmusTest({ student }: LitmusTestProps) {
 
   <Dialog open={interviewOpen} onOpenChange={setInterviewOpen}>
     <DialogContent className="max-w-2xl">
-      <SchedulePresentation interviewer={interviewer} eventCategory='Litmus Test Review'/>
+      <SchedulePresentation student={student} interviewer={interviewer} eventCategory='Litmus Test Review'/>
     </DialogContent>
   </Dialog>
   </>
@@ -711,7 +711,7 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
                     <span>{uploadProgress}%</span>
                   </>
                 )}
-                <Button size="icon" type="button" className="bg-[#3698FB] rounded-xl">
+                <Button size="icon" type="button" className="bg-[#1B1B1C] rounded-xl">
                   <XIcon className="w-5" />
                 </Button>
               </div>

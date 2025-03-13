@@ -205,11 +205,11 @@ export async function submitLITMUSTest(formData: any) {
 }
 
 // New API for uploading student documents
-export async function uploadStudentDocuments(formData: FormData) {
+export async function uploadStudentDocuments(formData: any) {
   const response = await fetch(`${baseUrl}/student/documents`, {
     method: "POST",
-    // Do not set Content-Type headers, fetch will handle it for FormData
-    body: formData,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(formData),
   });
 
   if (!response.ok) {

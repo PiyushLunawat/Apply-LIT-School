@@ -147,7 +147,7 @@ const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({ open, setOpen, 
                   <Label htmlFor="cash" className='text-2xl'>Cash</Label>
                 </div>
                 <div className="text-base text-muted-foreground text-start">
-                  Uploading a soft copy of the acknowledgement receipt issued to you by our fee manager to access your dashboard.
+                  Upload a soft copy of the acknowledgement receipt issued to you by our fee manager to access your dashboard.
                 </div>
               </div>
             </>
@@ -171,7 +171,7 @@ const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({ open, setOpen, 
                     </div>
                   </div>
                   <p className="mt-4 text-sm text-muted-foreground">
-                    Uploading a soft copy of the acknowledgement receipt issued to you by our fee manager to access your dashboard.
+                    Upload a soft copy of the acknowledgement receipt issued to you by our fee manager to access your dashboard.
                   </p>
                 </div>
               </div>
