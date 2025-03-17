@@ -175,7 +175,7 @@ const TokenVerification: React.FC<TokenVerificationProps> = ({  }) => {
                         <img src="/assets/images/bank-transfer-type.svg" alt="M" className="w-4"/> :
                         <img src="/assets/images/cash-type.svg" alt="C" className="w-4"/>
                         }
-                        LITschool
+                        LIT School
                     </span>
                   </div>
                   {isPaymentVerified === 'paid' && (

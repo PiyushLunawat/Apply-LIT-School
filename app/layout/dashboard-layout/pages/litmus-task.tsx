@@ -10,7 +10,7 @@ export default function LitmusTask() {
   const [student, setStudent] = useState<any>([]);
 
   useEffect(() => {
-    if(studentData?.id)  {
+    if(studentData?._id)  {
       const fetchStudentData = async () => {
         try {
           const student = await getCurrentStudent(studentData._id); // Pass the actual student ID here
@@ -21,7 +21,7 @@ export default function LitmusTask() {
       };
       fetchStudentData();
     }
-  }, [studentData?.id]);
+  }, [studentData]);
 
   const latestCohort = student?.appliedCohorts?.[student?.appliedCohorts.length - 1];
   const cohortDetails = latestCohort?.cohortId;
@@ -45,7 +45,7 @@ export default function LitmusTask() {
         <div className="space-y-8">
           <div className="flex items-center gap-4 mb-2">
             <Badge className="text-sm border-[#3698FB] text-[#3698FB] bg-[#3698FB]/10">
-              Litmus Task
+              LITMUS Task
             </Badge>
             <Badge className="flex gap-2 items-center bg-black">
               <Clock className="text-[#00A3FF] w-3 h-3"/>

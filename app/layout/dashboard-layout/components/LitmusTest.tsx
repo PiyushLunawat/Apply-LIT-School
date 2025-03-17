@@ -75,12 +75,13 @@ export default function LitmusTest({ student }: LitmusTestProps) {
   });
   const form = useForm<LitmusTestFormValues>({
     resolver: zodResolver(litmusTestSchema),
+    mode: 'onChange',
     defaultValues: {
       tasks: [],
     },
   });
 
-  const { control, handleSubmit, setValue } = form; 
+  const { control, handleSubmit, setValue, formState: { isValid },  } = form; 
 
   const tasks = cohortDetails?.litmusTestDetail?.[0]?.litmusTasks || [];
   useEffect(() => {
@@ -152,6 +153,8 @@ export default function LitmusTest({ student }: LitmusTestProps) {
       // Submit the form data using the provided API function
       const response = await submitLITMUSTest(payload);
       console.log('Submission successful:', response.data);
+      setLitmusTestDetails(response.data);
+      setStatus(response.data?.status);
       handleScheduleInterview();
 
     } catch (error) {
@@ -211,93 +214,95 @@ export default function LitmusTest({ student }: LitmusTestProps) {
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="flex flex-col items-start p-[52px] bg-[#09090B] text-white shadow-md w-full mx-auto space-y-6">
             {cohortDetails?.litmusTestDetail?.[0]?.litmusTasks.map((task: any, taskIndex: number) => (
-              <>
-              <div>
-                <Badge className="text-sm my-4 border-[#3698FB] text-[#3698FB] bg-[#3698FB]/10">
-                  Task 0{taskIndex+1}
-                </Badge>
-                <h2 className="text-3xl font-semibold mb-2">
-                  {task.title}
-                </h2>
-                <p className="text-xl mb-4">
-                  {task.description}
-                </p>
-              </div>
+              <div className='space-y-7'>
+                <div>
+                  <Badge className="text-sm my-4 border-[#3698FB] text-[#3698FB] bg-[#3698FB]/10">
+                    Task 0{taskIndex+1}
+                  </Badge>
+                  <h2 className="text-3xl font-semibold mb-2">
+                    {task.title}
+                  </h2>
+                  <p className="text-xl mb-4">
+                    {task.description}
+                  </p>
 
-              <div className='w-full space-y-4'>
-                {task?.resources?.resourceFiles.map((file: any, index: number) => (
-                  <div key={index} className="flex items-center justify-between w-full p-1.5 bg-[#2C2C2C] rounded-xl">
-                    <div className="flex items-center space-x-2">
-                      <Badge
+                  <div className='w-full space-y-4'>
+                    {task?.resources?.resourceFiles.map((file: any, index: number) => (
+                      <div key={index} className="flex items-center justify-between w-full p-1.5 bg-[#2C2C2C] rounded-xl">
+                        <div className="flex items-center space-x-2">
+                          <Badge
+                            variant="outline"
+                            size="icon"
+                            className="text-white rounded-xl bg-[#09090b]"
+                          >
+                            <FileTextIcon className="w-5 h-5" />
+                          </Badge>
+                          <span className="text-white">{file.split('/').pop()}</span>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="icon" type='button'
+                          className="text-white rounded-xl hover:bg-[#1a1a1d]"
+                        >
+                          <Download className="w-5 h-5" />
+                        </Button>
+                      </div>
+                    ))}
+
+                    {task?.resources?.resourceLinks.map((link: any, index: number) => (
+                      <div key={index} className="flex items-center justify-between w-full p-1.5 bg-[#2C2C2C] rounded-xl">
+                      <div className="flex items-center space-x-2  w-[50vw] truncate pr-12">
+                        <Badge
+                          variant="outline"
+                          size="icon"
+                          className="text-white rounded-xl bg-[#09090b]"
+                        >
+                          <Link2 className="w-5 h-5" />
+                        </Badge>
+                        <span className="text-white">{link}</span>
+                      </div>
+                      <Button
                         variant="outline"
-                        size="icon"
-                        className="text-white rounded-xl bg-[#09090b]"
+                        size="icon" type='button'
+                        className="text-white rounded-xl hover:bg-[#1a1a1d]"
                       >
-                        <FileTextIcon className="w-5 h-5" />
-                      </Badge>
-                      <span className="text-white">{file.split('/').pop()}</span>
+                        <ArrowUpRight className="w-5 h-5" />
+                      </Button>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="icon" type='button'
-                      className="text-white rounded-xl hover:bg-[#1a1a1d]"
-                    >
-                      <Download className="w-5 h-5" />
-                    </Button>
+                    ))}
                   </div>
-                ))}
-
-                {task?.resources?.resourceLinks.map((link: any, index: number) => (
-                  <div key={index} className="flex items-center justify-between w-full p-1.5 bg-[#2C2C2C] rounded-xl">
-                  <div className="flex items-center space-x-2 truncate pr-12">
-                    <Badge
-                      variant="outline"
-                      size="icon"
-                      className="text-white rounded-xl bg-[#09090b]"
-                    >
-                      <Link2 className="w-5 h-5" />
-                    </Badge>
-                    <span className="text-white ">{link}</span>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="icon" type='button'
-                    className="text-white rounded-xl hover:bg-[#1a1a1d]"
-                  >
-                    <ArrowUpRight className="w-5 h-5" />
-                  </Button>
                 </div>
-                ))}
-              </div>
                 
-              <div className='w-full space-y-4'>
-                <div className="flex justify-between items-center">
-                  <div className="text-xl sm:text-3xl font-semibold">Judgement Criteria</div>
+                <div className='w-full space-y-4'>
+                  <div className="flex justify-between items-center">
+                    <div className="text-xl sm:text-3xl font-semibold">Judgement Criteria</div>
+                  </div>
+                  <div className="w-full grid grid-cols sm:grid-cols-2 gap-3">
+                    {cohortDetails?.litmusTestDetail?.[0]?.litmusTasks[0]?.judgmentCriteria.map((criteria: any, index: number) => ( 
+                      <JudgementCriteriaCard index={index} criteria={criteria?.name} maxPoint={criteria?.points} desc={criteria?.description} />
+                    ))}
+                  </div>
                 </div>
-                <div className="w-full grid grid-cols sm:grid-cols-2 gap-3">
-                  {cohortDetails?.litmusTestDetail?.[0]?.litmusTasks[0]?.judgmentCriteria.map((criteria: any, index: number) => ( 
-                    <JudgementCriteriaCard index={index} criteria={criteria?.name} maxPoint={criteria?.points} desc={criteria?.description} />
-                  ))}
-                </div>
-              </div>
 
-              { !cohortDetails ? 
-                <div className="text-center text-white">
-                  No tasks available. Please ensure the cohort data is loaded correctly.
-                </div> : 
-                task.submissionTypes.map((configItem: any, configIndex: number) => (
-                  <TaskConfigItem
-                    key={configIndex}
-                    control={control}
-                    taskIndex={taskIndex}
-                    configIndex={configIndex}
-                    configItem={configItem}
-                  />
-              ))}
-            </>))}
+                {cohortDetails ? 
+                  task.submissionTypes.map((configItem: any, configIndex: number) => (
+                    <TaskConfigItem
+                      key={configIndex}
+                      control={control}
+                      taskIndex={taskIndex}
+                      configIndex={configIndex}
+                      configItem={configItem}
+                    />
+                  )) :
+                  <div className="text-center text-white">
+                    No tasks available. Please ensure the cohort data is loaded correctly.
+                  </div> 
+                }
+            </div>
+          ))}
 
             <div className='w-full flex justify-between items-center '>
-              <Button size="xl" className='' type="submit" disabled={loading}>
+              <Button size="xl" className='' type="submit" disabled={loading || !isValid}>
                 Submit and Book Presentation Session
               </Button>
             </div>

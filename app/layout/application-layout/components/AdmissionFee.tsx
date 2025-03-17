@@ -14,24 +14,18 @@ export default function AdmissionFee({ student }: AdmissionFeeProps) {
   const navigate = useNavigate();
     
   const [loading, setLoading] = useState(false);
-  const [studentData, setStudentData] = useState<any>(null); 
-  const [isPaymentVerified, setIsPaymentVerified] = useState<string | null>(null);
+  const [tokenFeeDetails, setTokenFeeDetails] = useState<any>();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [reciptUrl, setReciptUrl] = useState("");
   const [receiptFile, setReceiptFile] = useState<File | null>(null); // State for the uploaded file
   const [error, setError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(5);
 
   const latestCohort = student?.appliedCohorts?.[student?.appliedCohorts.length - 1];
-  const tokenFeeDetails = latestCohort?.tokenFeeDetails;
 
   useEffect(() => {
-    if (tokenFeeDetails?.receiptUrl) {
-      setReciptUrl(tokenFeeDetails.receiptUrl[0]);
-    }
-    setIsPaymentVerified(tokenFeeDetails?.verificationStatus);
-  }, [tokenFeeDetails]);
+    setTokenFeeDetails(latestCohort?.tokenFeeDetails);
+  }, [student]);
 
 
   useEffect(() => {
@@ -76,23 +70,9 @@ export default function AdmissionFee({ student }: AdmissionFeeProps) {
     const handleEditImage = () => {
       document.getElementById('image-upload')?.click();
     };
-     
-    async function fetchCurrentStudentData() {
-      if (!studentData?._id) return;
-      try {
-        const res = await getCurrentStudent(studentData._id);
-        setStudentData(res)
-
-      } catch (err) {
-        setError('Failed to fetch student data. Please try again later.');
-      } finally {
-        setLoading(false);
-      }
-    }
  
    const handleSubmitImage = async () => {
      if (!receiptFile) {
-       alert('Please upload a receipt image.');
        return;
      }
  
@@ -107,8 +87,7 @@ export default function AdmissionFee({ student }: AdmissionFeeProps) {
        setLoading(true);
             
        const response = await submitTokenReceipt(formData);
- 
-       console.log('Receipt uploaded successfully:', response);
+       setTokenFeeDetails(response.data)
      } catch (error) {
        setUploadError('Error uploading receipt. Please try again.');
        console.error('Error uploading receipt:', error);
@@ -116,14 +95,6 @@ export default function AdmissionFee({ student }: AdmissionFeeProps) {
        setLoading(false);
      }
    };
- 
-   if (loading) {
-     return (
-       <div className="w-full flex items-center justify-center min-h-screen">
-         <div>Loading...</div>
-       </div>
-     );
-   }
  
    if (error) {
      return (
@@ -137,17 +108,18 @@ export default function AdmissionFee({ student }: AdmissionFeeProps) {
             <Card className="max-w-4xl mx-auto px-1 sm:px-6 py-6 sm:py-8">
               <div className="mx-4 space-y-4">
                 <div className="grid sm:flex justify-between items-center">
-                  {isPaymentVerified === "pending" && <div className="text-lg sm:text-2xl font-normal">Payment Receipt is being verified</div>}
-                  {isPaymentVerified === "paid" && <div className="text-lg sm:text-2xl font-normal">Payment Receipt is verified</div>}
-                  {isPaymentVerified === "flagged" && 
+                  {tokenFeeDetails?.verificationStatus === "pending" && <div className="text-lg sm:text-2xl font-normal">Payment Receipt is being verified</div>}
+                  {tokenFeeDetails?.verificationStatus === "paid" && <div className="text-lg sm:text-2xl font-normal">Payment Receipt is verified</div>}
+                  {tokenFeeDetails?.verificationStatus === "flagged" && 
                     <div className="text-[#FF503D] flex gap-2 items-center text-lg sm:text-2xl font-normal">
                       <AlertCircle className='w-5 h-5'/>Looks like your payment receipt was rejected
                     </div>
                   }
                   <div className="font-normal">{new Date().toLocaleDateString()}</div>
                 </div>
-                {isPaymentVerified === "flagged" &&
-                  <div className='p-3 bg-[#1B1B1C] rounded-md'>
+                {tokenFeeDetails?.verificationStatus === "flagged" &&
+                  <div className='p-3 bg-[#1B1B1C] rounded-xl'>
+                    <h2 className=''>Reason:</h2>
                     {tokenFeeDetails?.comment?.[tokenFeeDetails?.comment.length - 1]?.text}
                   </div>
                 }
@@ -159,18 +131,18 @@ export default function AdmissionFee({ student }: AdmissionFeeProps) {
                         <img src="/assets/images/bank-transfer-type.svg" alt="M" className="w-4"/> :
                         <img src="/assets/images/cash-type.svg" alt="C" className="w-4"/>
                         }
-                        LITschool
+                        LIT School
                     </span>
                   </div>
-                  {isPaymentVerified === 'paid' && (
+                  {tokenFeeDetails?.verificationStatus === 'paid' && (
                     <div className="text-muted-foreground text-sm -mt-2">Redirecting to Dashboard in {countdown} seconds...</div>
                   )}
                 </div>
                 
-                {isPaymentVerified !== "flagged" ? 
+                {tokenFeeDetails?.verificationStatus !== "flagged" ? 
                 <div className="relative bg-[#64748B33] rounded-xl border border-[#2C2C2C] w-full h-[220px]">
                   <img
-                    src={reciptUrl}
+                    src={tokenFeeDetails?.receiptUrl?.[tokenFeeDetails?.receiptUrl.length - 1]}
                     alt="Uploaded receipt"
                     className="mx-auto h-full object-contain"
                   />
@@ -226,7 +198,7 @@ export default function AdmissionFee({ student }: AdmissionFeeProps) {
 
                   <Button size="xl" variant="outline"
                     className="mt-8 w-fit border-[#00CC92] text-[#00CC92] mx-auto" 
-                    onClick={handleSubmitImage} disabled={loading}>{loading ? 'Re-Uploading...' : 'Re-Upload Receipt and Reserve'}</Button>
+                    onClick={handleSubmitImage} disabled={!receiptFile || loading}>{loading ? 'Re-Uploading...' : 'Re-Upload Receipt and Reserve'}</Button>
                 </div>}
               </div>
             </Card>

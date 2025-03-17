@@ -62,6 +62,8 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
 
   useEffect(() => {
     setPaymentDetails(latestCohort?.paymentDetails);
+    console.log("latestCohort?.paymentDetails", latestCohort?.paymentDetails);
+    
     if (latestCohort?.paymentDetails?.paymentPlan)
       setStep(2);
   }, [student]);
@@ -381,11 +383,13 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
               <div className="flex items-center justify-between text-2xl rounded-t-xl p-6 bg-[#64748B33] font-medium">
                 <h3 className="text-lg font-semibold">One Shot Payment</h3>
                 <h3 className="text-lg font-semibold">
-                  ₹{paymentDetails?.oneShotPayment?.amountPayable.toLocaleString()}.00
+                  {paymentDetails?.oneShotPayment?.amountPayable !== undefined 
+                  ? paymentDetails.oneShotPayment.amountPayable.toLocaleString() 
+                  : "N/A"}
                 </h3>
               </div>
               
-                  <div className="bg-[#64748B1F] p-6 border-b border-gray-700">
+                  <div className="bg-[#64748B1F] p-6 ">
                     <div className="flex justify-between items-center cursor-pointer">
                       <Badge className="flex agp-2 bg-[#3698FB]/20 border-[#3698FB] text-base text-white px-4 py-2 ">
                         Installment 01
@@ -434,39 +438,39 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                           onUploadSuccess={(data) => setPaymentDetails(data)}
                         />
 
-                        <div className="p-3 rounded-lg text-sm text-white/70 space-y-1">
+                        {/* <div className="p-3 rounded-lg text-sm text-white/70 space-y-1">
                           <p className="font-medium text-base text-white">Fee Breakdown</p>
                           <div className="flex justify-between">
                             <span>Base Fee</span>
                             <span>
                               ₹
-                              {(paymentDetails?.oneShotPayment.baseFee).toLocaleString()}
+                              {(paymentDetails?.oneShotPayment?.amountPayable).toLocaleString()}
                             </span>
                           </div>
                           <div className="flex justify-between">
                             <span>GST</span>
                             <span>
-                              ₹{(paymentDetails?.oneShotPayment.baseFee * 0.18).toLocaleString()}
+                              ₹{(paymentDetails?.oneShotPayment?.amountPayable * 0.18).toLocaleString()}
                             </span>
                           </div>
                           <div className="flex justify-between text-[#F53F3F]">
                             <span>One Shot Payment Discount</span>
                             <span>
-                              - ₹{(paymentDetails?.oneShotPayment.OneShotPaymentAmount).toLocaleString()}
+                              - ₹{(paymentDetails?.oneShotPayment?.OneShotPaymentAmount).toLocaleString()}
                             </span>
                           </div>
                           <div className="flex justify-between text-[#F53F3F]">
                             <span>Scholarship Amount</span>
-                            <span>- ₹{(paymentDetails?.oneShotPayment.baseFee * 
+                            <span>- ₹{(paymentDetails?.oneShotPayment?.amountPayable * 
                               paymentDetails?.semesterFeeDetails?.scholarshipPercentage * 0.01).toLocaleString()}</span>
                           </div>
                           <div className="flex justify-between pt-1 border-t border-white/10">
                             <span className="font-medium text-white">Total</span>
                             <span className="font-medium text-white">
-                              ₹{paymentDetails?.oneShotPayment.amountPayable.toLocaleString()}
+                              ₹{paymentDetails?.oneShotPayment?.amountPayable.toLocaleString()}
                             </span>
                           </div>
-                        </div>
+                        </div> */}
                       </div>
                   </div>
             </div>

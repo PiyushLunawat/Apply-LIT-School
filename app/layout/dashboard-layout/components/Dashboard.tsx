@@ -14,12 +14,12 @@ interface DashboardCardProps {
   to: string;
   bgColor: string;
   border: string;
-  disable: Boolean;
+  disable?: Boolean;
 }
 
 const DashboardCard = ({ title, description, icon, to, bgColor, border, disable }: DashboardCardProps) => (
   <Link
-     to={'#'} // Prevent navigation if disabled
+     to={to} // Prevent navigation if disabled
     className={`rounded-xl sm:rounded-2xl ${bgColor} ${border} border-b-8 transition-opacity ${
       disable ? "opacity-50 cursor-not-allowed" : "hover:opacity-90"
     }`}
@@ -49,7 +49,9 @@ export default function ApplicationDashboard() {
   useEffect(() => {
     const fetchStudentData = async () => {
       try {
-        const student = await getCurrentStudent(studentData._id);        
+        const student = await getCurrentStudent(studentData._id);  
+        console.log("dtid", student);
+              
         setStudent(student); 
         setStudentData(student); 
       } catch (error) {
@@ -76,7 +78,7 @@ export default function ApplicationDashboard() {
     navigate('/dashboard/fee-payment-setup');
   };
 
-  const isLitmusDetailsAvailable = !!student?.litmusTestDetails?.length;
+  const isLitmusDetailsAvailable = (litmusTestDetails?.status === 'completed');
 
   function formatTestDuration(durationDays: number): string {
     if (durationDays > 2) {
@@ -110,7 +112,7 @@ export default function ApplicationDashboard() {
       </div>
 
       {/* LITMUS Test Submission Card */}
-      <div className="p-6 sm:p-[52px] space-y-4">
+      <div className="p-6 sm:p-[52px] space-y-8">
         <div className="space-y-3">
           <div className="bg-[#64748B1A] p-4 sm:p-6 rounded-xl border" onClick={handleExploreClick}>
             <div className="flex justify-between items-center">
@@ -142,12 +144,12 @@ export default function ApplicationDashboard() {
                   Kindly setup your fee payment process to access your dashboard.
                 </p>
               </div>
-                <Button size={'xl'} className="hidden sm:block" onClick={handleFeePaymentClick}>
+                <Button size={'xl'} className="hidden sm:block" onClick={handleFeePaymentClick} disabled={!isLitmusDetailsAvailable}>
                   Setup Fee Payment
                 </Button>
             </div>
           </div>
-          <div className="bg-[#64748B1A] p-4 sm:p-6 rounded-xl border" onClick={handleDocumentClick}>
+          {/* <div className="bg-[#64748B1A] p-4 sm:p-6 rounded-xl border" onClick={handleDocumentClick}>
             <div className="flex justify-between items-center">
               <div className="spcae-y-2">
                 <div className="flex sm:flex-row flex-col items-start sm:items-center gap-2 sm:gap-4">
@@ -161,7 +163,7 @@ export default function ApplicationDashboard() {
                   Upload Documents
                 </Button>
             </div>
-          </div> 
+          </div>  */}
         </div>
         {/* Dashboard Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -172,7 +174,6 @@ export default function ApplicationDashboard() {
             to="/dashboard/application-documents"
             bgColor="bg-orange-600/10"
             border="border-orange-600"
-            disable={!isLitmusDetailsAvailable}
           />
           <DashboardCard
             title="Fee Payment"
@@ -190,7 +191,6 @@ export default function ApplicationDashboard() {
             to="/dashboard/account-details"
             bgColor="bg-[#F8E000]/10"
             border="border-[#F8E000]"
-            disable={!isLitmusDetailsAvailable}
           />
           <DashboardCard
             title="Personal Documents"
@@ -199,7 +199,6 @@ export default function ApplicationDashboard() {
             to="/dashboard/personal-documents"
             bgColor="bg-emerald-600/10"
             border="border-emerald-600"
-            disable={!isLitmusDetailsAvailable}
           />
         </div>
       </div>
