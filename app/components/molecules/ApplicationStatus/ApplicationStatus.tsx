@@ -13,6 +13,7 @@ interface StatusMessageProps {
 const StatusMessage: React.FC<StatusMessageProps> = ({ student }) => {
 
   const latestCohort = student?.appliedCohorts?.[student?.appliedCohorts.length - 1];
+  const cohortDetails = latestCohort?.cohortId;
   const applicationDetails = latestCohort?.applicationDetails;
   const applicationStatus = latestCohort?.applicationDetails?.applicationStatus;
 
@@ -82,7 +83,7 @@ const StatusMessage: React.FC<StatusMessageProps> = ({ student }) => {
           </>
         );
         setSubMessage(
-          'Reserve your seat for the Creator Marketer Cohort Scheduled for Oct 22, 2024 by completing the payment of your reservation fee.'
+          `Reserve your seat for the ${cohortDetails?.programDetail?.name} Cohort Scheduled for ${new Date(cohortDetails?.startDate).toDateString()} by completing the payment of your reservation fee.`
         );
         break;
       case 'waitlist':
@@ -94,7 +95,7 @@ const StatusMessage: React.FC<StatusMessageProps> = ({ student }) => {
       case 'not qualified':
         setHeadMessage(
           <>
-            Hey {student?.firstName}, you have <span className="text-[#FF503D]">not qualified</span> for the upcoming Creator Marketer Cohort.
+            Hey {student?.firstName}, you have <span className="text-[#FF503D]">not qualified</span> for the upcoming (cohortDetails?.programDetail?.name) Cohort.
           </>
         );
         setSubMessage(
@@ -233,7 +234,7 @@ const StatusMessage: React.FC<StatusMessageProps> = ({ student }) => {
               <div className=''>
                 If you were unable to attend this interview you may choose to
               </div>
-              <Button className='bg-[#FFFFFF2B] rounded' onClick={() => handleScheduleInterview()}>
+              <Button className='bg-[#FFFFFF2B] hover:bg-[#FFFFFF]/30 rounded' onClick={() => handleScheduleInterview()}>
                 Reschedule Your Interview
               </Button>
             </div>

@@ -87,13 +87,13 @@ export const ApplicationStatus: React.FC = () => {
         meetingEnd = new Date(
           new Date(lastInterview.meetingDate).toDateString() + ' ' + lastInterview.endTime
         );
-        console.log("meetingEnd", new Date() > meetingEnd);
+        // console.log("meetingEnd", new Date() > meetingEnd);
         if (new Date() > meetingEnd) {
           setShowReviewBlock(true);
         }
       }
       setIsInterviewScheduled(latest?.applicationDetails?.applicationStatus);
-    }, 1000); 
+    }, 100); 
   
     return () => clearInterval(interval);
   }, [student]);
@@ -118,7 +118,7 @@ export const ApplicationStatus: React.FC = () => {
   return (
     <>
       { (isPaymentVerified === null || isPaymentVerified === undefined) ?
-        ((isInterviewScheduled !== 'interview scheduled' || showReviewBlock)  ? 
+        (((isInterviewScheduled !== 'interview scheduled' || showReviewBlock) && isInterviewScheduled !== 'interview cancelled')  ? 
           <div className="max-w-[1216px] sm:mx-16 xl:mx-auto justify-center items-center space-y-20">
             <Review setIsPaymentVerified={setIsPaymentVerified} application={student}/>
             <div className="space-y-4 sm:space-y-6">

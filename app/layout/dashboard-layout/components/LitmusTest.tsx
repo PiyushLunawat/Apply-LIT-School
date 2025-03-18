@@ -243,6 +243,7 @@ export default function LitmusTest({ student }: LitmusTestProps) {
                           variant="outline"
                           size="icon" type='button'
                           className="text-white rounded-xl hover:bg-[#1a1a1d]"
+                          onClick={() => window.open(file, "_blank")}
                         >
                           <Download className="w-5 h-5" />
                         </Button>
@@ -265,6 +266,7 @@ export default function LitmusTest({ student }: LitmusTestProps) {
                         variant="outline"
                         size="icon" type='button'
                         className="text-white rounded-xl hover:bg-[#1a1a1d]"
+                        onClick={() => window.open(link, "_blank")}
                       >
                         <ArrowUpRight className="w-5 h-5" />
                       </Button>
@@ -702,8 +704,8 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
           {uploading && (
             <div className="flex justify-between items-center bg-[#007AFF] h-[52px] text-white p-1.5 rounded-xl w-full">
               <div className="flex items-center gap-2">
-                <Badge size="icon" className="bg-[#3698FB] rounded-xl !p-0 mr-2">
-                  <FileTextIcon className="w-5 h-5" />
+                <Badge size="icon" className="bg-[#3698FB] rounded-xl mr-2">
+                  <FileTextIcon className="w-5" />
                 </Badge>
                 <span className="flex-1 text-xs sm:text-base truncate mr-4">{fileName}</span>
               </div>

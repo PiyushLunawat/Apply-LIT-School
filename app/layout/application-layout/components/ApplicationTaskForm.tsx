@@ -9,7 +9,9 @@ import { UserContext } from '~/context/UserContext';
 import { Button } from '~/components/ui/button';
 import {
   ArrowUpRight,
+  Download,
   FileTextIcon,
+  Link2,
   Link2Icon,
   LoaderCircle,
   UploadIcon,
@@ -373,7 +375,7 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
             <div className="flex-1 bg-[#FA69E5]/[0.2] text-[#FA69E5] text-center py-4 text-2xl rounded-full">
               Task {String(taskIndex + 1).padStart(2, '0')}
             </div>
-            <div className="space-y-1">
+            <div className="space-y-4">
               <div className="mb-4">
                 <Label className="text-base font-normal text-[#FA69E5] pl-3">
                   {task.title}
@@ -381,6 +383,50 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
                 <div className="text-xl sm:text-2xl text-white mt-2 pl-3">
                   {task.description}
                 </div>
+              </div>
+
+              <div className='w-full space-y-2'>
+                {task?.resources?.resourceFiles.map((file: any, index: number) => (
+                  <div key={index} className="flex items-center justify-between w-full p-1.5 bg-[#2C2C2C] rounded-xl">
+                    <div className="flex items-center space-x-2">
+                      <Badge
+                        variant="outline"
+                        size="icon"
+                        className="text-white rounded-xl bg-[#09090b]"
+                      >
+                        <FileTextIcon className="w-5 h-5" />
+                      </Badge>
+                      <span className="text-white">{file.split('/').pop()}</span>
+                    </div>
+                    <Button variant="outline" size="icon" type='button'
+                      className="text-white rounded-xl hover:bg-[#1a1a1d]"
+                      onClick={() => window.open(file, "_blank")}
+                    >
+                      <Download className="w-5 h-5" />
+                    </Button>
+                  </div>
+                ))}
+
+                {task?.resources?.resourceLinks.map((link: any, index: number) => (
+                  <div key={index} className="flex items-center justify-between w-full p-1.5 bg-[#2C2C2C] rounded-xl">
+                  <div className="flex items-center space-x-2  w-[50vw] truncate pr-12">
+                    <Badge
+                      variant="outline"
+                      size="icon"
+                      className="text-white rounded-xl bg-[#09090b]"
+                    >
+                      <Link2 className="w-5 h-5" />
+                    </Badge>
+                    <span className="text-white">{link}</span>
+                  </div>
+                  <Button variant="outline" size="icon" type='button'
+                    className="text-white rounded-xl hover:bg-[#1a1a1d]"
+                    onClick={() => window.open(link, "_blank")}
+                  >
+                    <ArrowUpRight className="w-5 h-5" />
+                  </Button>
+                </div>
+                ))}
               </div>
 
               {/* If no cohort found */}

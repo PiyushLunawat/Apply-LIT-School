@@ -354,7 +354,7 @@ useEffect(() => {
               firstName: studentData?.firstName || '',
               lastName: studentData?.lastName || '',
               email: studentData?.email || '',
-              contact: studentData?.mobileNumber || '',
+              contact: student?.mobileNumber || studentData?.mobileNumber,
               dob: studentData?.dateOfBirth ? studentData.dateOfBirth.split('T')[0] : '',
               currentStatus: studentData?.qualification || '',
               courseOfInterest: studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]?.cohortId?.programDetail?._id || '',
@@ -931,23 +931,23 @@ useEffect(() => {
                 name="studentData.contact"
                 render={({ field }) => (
                   <FormItem className="flex-1 space-y-1 relative">
-                    {studentData?.isMobileVerified ? 
+                    {fetchedStudentData?.isMobileVerified ? 
                       <CheckCircle className="text-[#00CC92] absolute left-3 top-[52px] w-5 h-5 " /> : 
                       <Phone className="absolute left-3 top-[52px] w-5 h-5 " />
                     }
                     <Label className="text-xs sm:text-sm font-normal pl-3">Contact No.</Label>
                     <FormControl>
-                      <Input disabled={isSaved || studentData?.isMobileVerified}
+                      <Input disabled={isSaved || fetchedStudentData?.isMobileVerified}
                         id="contact"
                         type="tel"
                         placeholder="+91 95568 97688"
                         className='pl-10'
                         maxLength={14}
-                        defaultValue={studentData?.mobileNumber || "--"}
+                        defaultValue={fetchedStudentData?.mobileNumber || studentData?.mobileNumber || "--"}
                         {...field}
                       />
                     </FormControl>
-                    {studentData?.isMobileVerified ?
+                    {fetchedStudentData?.isMobileVerified ?
                       <Phone className="absolute right-3 top-[46px] w-5 h-5" /> : 
                       <Button size='sm' className='absolute right-3 top-10 rounded-full px-4 bg-[#00CC92]' disabled={otpLoading} onClick={() => handleVerifyClick(field.value || studentData?.mobileNumber)} type="button">
                         {otpLoading ? 'Sending OTP...' : 'Verify'}
@@ -956,7 +956,7 @@ useEffect(() => {
                       {errors?.studentData?.contact ? (
                         <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
                       ) : (
-                        !studentData?.isMobileVerified && (
+                        !fetchedStudentData?.isMobileVerified && (
                           <div className="text-[#FF503D] text-xs sm:text-sm font-normal pl-3">
                             Please verify your mobile number.
                           </div>
