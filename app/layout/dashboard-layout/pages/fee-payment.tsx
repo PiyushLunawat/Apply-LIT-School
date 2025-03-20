@@ -5,6 +5,7 @@ import FeePaymentSetup from "../components/FeePaymentSetup";
 import { getCurrentStudent } from "~/utils/studentAPI";
 import { UserContext } from "~/context/UserContext";
 import { useContext, useEffect, useState } from "react";
+import { Skeleton } from "~/components/ui/skeleton";
 
 type FeePaymentData = {
     paymentMode: string;
@@ -18,7 +19,7 @@ type FeePaymentData = {
 
 export default function FeePaymentSetupDashboard() {
   const { studentData } = useContext(UserContext);
-  const [student, setStudent] = useState<any>([]);
+  const [student, setStudent] = useState<any>();
   
   useEffect(() => {
     if(studentData?._id)  {
@@ -36,21 +37,27 @@ export default function FeePaymentSetupDashboard() {
 
   return (
   <>
-      <div className="flex justify-between items-end p-[52px] bg-[#3698FB1A] border-b">
-        <div className="space-y-8">
-          <div className="flex items-center gap-4 mb-2">
-            <Badge className="text-sm border-[#3698FB] text-[#3698FB] bg-[#3698FB]/10">
-              Fee Payment
-            </Badge>
+      <div className="py-8 sm:py-[52px] px-[52px] bg-[#3698FB1A] border-b space-y-4 sm:space-y-8">
+        <Badge className="text-sm border-[#3698FB] text-[#3698FB] bg-[#3698FB]/10">
+          Fee Payment
+        </Badge>
+        <div className="flex lg:flex-row flex-col gap-2 justify-between items-start lg:items-end">
+          <div>
+            {student ?
+              <h1 className="text-3xl sm:text-4xl font-normal">
+                {student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.cohortId?.programDetail?.name}
+                <div className="text-xl sm:text-2xl">{new Date(student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.cohortId?.startDate).toLocaleDateString("en-US", { month: "long", year: "numeric",})}</div>
+              </h1> :
+              <div className="space-y-2">
+                <Skeleton className="w-[150px] sm:w-[200px] bg-white/10 h-9 " />
+                <Skeleton className="w-[300px] sm:w-[250px] bg-white/10 h-6 " />
+              </div>
+            }
           </div>
-          <h1 className="text-4xl font-normal">
-            {student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.cohortId?.programDetail?.name}
-            <div className="text-2xl">{new Date(student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.cohortId?.startDate).toLocaleDateString("en-US", { month: "long", year: "numeric",})}</div>
-          </h1>
+          <p className="max-w-[360px] w-full text-sm sm:text-base ">
+            Set up your fee payment process, clear your timely fee instalments and record all your transactions.
+          </p>
         </div>
-        <p className="max-w-[360px] w-full text-base ">
-          Set up your fee payment process, clear your timely fee instalments and record all your transactions.
-        </p>
       </div>
       <FeePaymentSetup student={student}/>
   </>

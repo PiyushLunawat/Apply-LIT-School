@@ -164,7 +164,7 @@ const BookYourSeat: React.FC<FeedbackProps> = ({ cohortId, booked, tokenFee, set
                   src={`/assets/images/${isBooked ? 'seat' : isSelected ? 'selected-seat' : 'seat'}-icon.svg`}
 
                   className={`
-                    'lg:w-7 lg:h-7 rounded -mx-[4px] transition-all transform hover:scale-110 
+                    'w-auto h-3 sm:h-4 md:h-5 lg:h-6 xl:h-7 rounded -mx-[10px] sm:-mx-[12px] md:-mx-[10px] lg:-mx-[5px] xl:-mx-[4px] transition-all transform hover:scale-110 
                     ${isSelected ? 'bg-[#ff791f]/[0.3] shadow-[0px_0px_20px_rgba(255,121,31,1)]' : 
                     !isBooked ? ' hover:shadow-[0px_0px_20px_rgba(255,121,31,1)] hover:bg-[#ff791f]/[0.3]' : 
                     'opacity-20 cursor-disabled'}
@@ -184,8 +184,7 @@ const BookYourSeat: React.FC<FeedbackProps> = ({ cohortId, booked, tokenFee, set
       </div>
       
       <div className='flex justify-center'>
-        <Button size="xl" className="mt-8 w-fit bg-[#00AB7B] hover:bg-[#00AB7B]/90 mx-auto" onClick={() => setPaymentDialogOpen(true)} disabled={!selectedSeatId}
-        >
+        <Button size="xl" className="mt-8 w-fit bg-[#00AB7B] hover:bg-[#00AB7B]/90 mx-auto" onClick={() => setPaymentDialogOpen(true)} disabled={!selectedSeatId}>
           Pay INR ₹{formatAmount(tokenFee)}.00 and Reserve
         </Button>
       </div>

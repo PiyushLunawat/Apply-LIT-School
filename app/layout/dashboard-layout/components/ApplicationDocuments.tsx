@@ -1,10 +1,7 @@
 "use client";
 
 import { useContext, useEffect, useState } from "react";
-import { Button } from "~/components/ui/button";
-import { Dialog, DialogContent, DialogTrigger } from "~/components/ui/dialog";
-import { File as FileIcon, Download, Upload, FilePenLine, FilePen } from "lucide-react";
-import { getCurrentStudent, uploadStudentDocuments } from "~/utils/studentAPI"; // Ensure correct path
+import { getCurrentStudent } from "~/utils/studentAPI"; // Ensure correct path
 import { UserContext } from "~/context/UserContext";
 
 interface Document {
@@ -13,12 +10,16 @@ interface Document {
   description?: string;
 }
 
-const ApplicationDocuments = () => {
+interface ApplicationDocumentsProps {
+  student: any
+}
+
+export default function ApplicationDocuments({ student }: ApplicationDocumentsProps) {
   const [documents, setDocuments] = useState<Document[]>([
     {
       id: "1",
       name: "Personal and General Details",
-      description: "Access your submitted application document, which contains all your personal and general information.",
+      description: "Access your personal and general information.",
     },
     {
       id: "2",
@@ -54,19 +55,16 @@ const ApplicationDocuments = () => {
   }, []);
 
   return (
-    <div className="p-8 space-y-4">
+    <div className="px-4 sm:px-8 py-8 space-y-4">
       {documents.map((doc) => (
-        <div
-          key={doc.id}
-          className="flex items-center justify-between p-6 bg-[#64748B1F] border rounded-xl"
-        >
+        <div key={doc.id} className="flex items-center justify-between p-4 sm:p-6 bg-[#64748B1F] border rounded-xl cursor-pointer">
           <div className="flex items-center gap-4">
-            <div className="h-16 w-16 justify-center flex items-center rounded-full bg-[#00CC921F]">
+            <div className="h-16 !w-16 justify-center flex items-center rounded-full bg-[#00CC921F]">
               <img src="/assets/images/personal-document-icon.svg" className="w-6 h-6"/>
             </div>
-            <div>
-              <h3 className="font-medium text-2xl text-white">{doc.name}</h3>
-              <p className="text-base text-">
+            <div className="flex-1">
+              <h3 className="font-medium text-lg/5 sm:text-2xl text-white">{doc.name}</h3>
+              <p className="text-xs sm:text-base text-">
                 {doc.description}
               </p>
             </div>
@@ -76,5 +74,3 @@ const ApplicationDocuments = () => {
     </div>
   );
 };
-
-export default ApplicationDocuments;

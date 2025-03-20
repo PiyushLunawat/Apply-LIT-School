@@ -8,9 +8,7 @@ interface LitIdBackProps {
 const LitIdBack: React.FC<LitIdBackProps> = ({ data, ScanUrl }) => {
   const latestCohort = data?.appliedCohorts?.[data?.appliedCohorts.length - 1];
   const cohortDetails = latestCohort?.cohortId;
-  const applicationDetails = latestCohort?.applicationDetails;
-  console.log(applicationDetails);
-  
+  const applicationDetails = latestCohort?.applicationDetails;  
 
   return (
     <div className="w-[400px] h-[590.11px] pb-[0.11px] bg-white flex-col justify-center items-center inline-flex">

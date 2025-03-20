@@ -213,9 +213,15 @@ export async function uploadStudentDocuments(formData: any) {
   });
 
   if (!response.ok) {
-    throw new Error("Failed to upload student documents");
+    const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
+    throw new Error(
+      `${
+        errorDetails
+          ? `${errorDetails.message || JSON.stringify(errorDetails)}`
+          : ""
+      }`
+    );
   }
-
   return await response.json();
 }
 

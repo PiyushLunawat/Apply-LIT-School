@@ -64,7 +64,7 @@ export default function Sidebar() {
 
   return (
   <>
-    <div className="hidden sm:block max-w-[360px] w-full text-white flex flex-col border-r" style={{ height: `calc(100vh - 52px)`}}>
+    <div className="hidden sm:block max-w-[300px] lg:max-w-[360px] w-full text-white flex flex-col border-r" style={{ height: `calc(100vh - 52px)`}}>
       {/* User Profile Section */}
       <div className="h-[200px] border-b border-[#2C2C2C]">
         <div className="flex flex-col gap-5 p-8 ">
@@ -81,7 +81,7 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex flex-col h-full flex-1 py-6">
+      <nav className="flex flex-col flex-1 py-6">
         {navItems.map((item) => (
           <NavLink
             key={item.title}
@@ -106,8 +106,8 @@ export default function Sidebar() {
       </nav>
     </div>
 
-    <div className="sm:hidden w-full h-[65px] bg- text-white bg-[#64748B1A]">
-      <div className="flex items-center justify-between px-8">
+    <div className="sm:hidden w-[100vw] h-[65px] text-white bg-[#64748B1A]">
+      <div className="flex flex-1 items-center justify-between px-8">
         {navItems.slice(0, 2).map((item) => (
           <NavLink key={item.title} to={item.to}
             className={({ isActive }) => `flex flex-1 items-center justify-center py-4 transition-colors ${isActive ? item.textColor : ""}`}>

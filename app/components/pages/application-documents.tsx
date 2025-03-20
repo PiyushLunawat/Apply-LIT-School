@@ -1,4 +1,4 @@
-import ApplicationDocuments from "../organisms/ApplicationDocuments/ApplicationDocuments";
+import ApplicationDocuments from "../../layout/dashboard-layout/components/ApplicationDocuments";
 import Header from "../organisms/Header/Header";
 import Sidebar from "../organisms/Sidebar/Sidebar";
 import { Badge } from "../ui/badge";
@@ -39,7 +39,7 @@ export default function ApplicationDocumentsDashboard() {
           Access all your submission documents, task reports and personal information forms 
         </p>
       </div>
-      <ApplicationDocuments />
+      {/* <ApplicationDocuments /> */}
   </>
   );
 }

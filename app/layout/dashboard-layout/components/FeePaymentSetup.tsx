@@ -322,7 +322,7 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
   // STEP 2: Show installments, file upload, etc.
   const renderStep2 = () => (
     <div className="space-y-4">
-      <p className="text-base text-gray-500">
+      <p className="text-xs sm:text-base text-gray-500">
         Embrace financial flexibility while advancing your education with The LIT
         School's zero-interest instalment plan.<br />
         This plan is meticulously designed to ease the burden of lump-sum payments
@@ -331,7 +331,7 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
         financial strain.
       </p>
 
-      <div className="bg-[#64748B1A] p-6 rounded-xl mb-8">
+      <div className="bg-[#64748B1A] p-4 sm:p-6 rounded-xl mb-8">
         <div className="flex items-center gap-6">
           <img src="/assets/images/fee-payment-setup-icon.svg" alt="" />
           <div className="flex flex-col gap-1">
@@ -350,13 +350,13 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
         </div>
       </div>
 
-      <div className="bg-[#64748B1A] p-6 rounded-xl mb-8">
-        <div className="flex justify-between">
-          <h2 className="flex gap-2.5 text-xl items-center font-semibold">
-            <CircleCheck className="w-6 h-6 text-[#00AB7B]" />
+      <div className="bg-[#64748B1A] p-4 sm:p-6 rounded-xl mb-8">
+        <div className="flex flex-col sm:flex-row sm:gap-2 sm:justify-between">
+          <h2 className="flex gap-2.5 text-lg sm:text-xl items-center font-semibold">
+            <CircleCheck className="w-4 sm:w-6 h-4 sm:h-6 text-[#00AB7B]" />
             INR {(Number(cohortDetails?.cohortFeesDetail?.tokenFee)).toLocaleString()}
           </h2>
-          <div className="flex h-5 items-center space-x-4 text-base">
+          <div className="flex h-5 items-center space-x-4 text-sm sm:text-base">
             <div>Token Amount paid</div>
             <Separator orientation="vertical" />
             <div>{new Date(tokenFeeDetails?.createdAt).toLocaleDateString()}</div>
@@ -364,12 +364,12 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
         </div>
       </div>
 
-      <div className="p-4 border rounded-xl space-y-4">
+      <div className="p-4 border rounded-xl space-y-2 sm:space-y-4">
         <Badge className="flex gap-2 w-fit text-sm border-[#3698FB] bg-[#3698FB]/10">
           <img src='/assets/images/institute-icon.svg' className='w-4 h-3'/>
           Disruptive Edu Private Limited
         </Badge>
-        <p className="pl-3 font-thin">
+        <p className="pl-3 font-thin text-sm sm:text-base">
           Account No: 50200082405270 <br />
           IFSC Code: HDFC0001079 <br />
           Branch: Sadashivnagar
@@ -389,7 +389,7 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                 </h3>
               </div>
               
-                  <div className="bg-[#64748B1F] p-6 ">
+                  <div className="bg-[#64748B1F] p-4 sm:p-6 ">
                     <div className="flex justify-between items-center cursor-pointer">
                       <Badge className="flex agp-2 bg-[#3698FB]/20 border-[#3698FB] text-base text-white px-4 py-2 ">
                         Installment 01
@@ -480,7 +480,7 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
           (sem: any, semIndex: number) => (
             <div key={semIndex} className="border rounded-xl mb-6">
               {/* Semester Header */}
-              <div className="flex items-center justify-between text-2xl rounded-t-xl p-6 bg-[#64748B33] font-medium">
+              <div className="flex items-center justify-between text-2xl rounded-t-xl p-4 sm:p-6 bg-[#64748B33] font-medium">
                 <h3 className="text-lg font-semibold">Semester 0{sem.semester}</h3>
                 <h3 className="text-lg font-semibold">
                   ₹
@@ -502,32 +502,32 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                 };
 
                 return (
-                  <div key={iIndex} className="bg-[#64748B1F] p-6 border-b border-gray-700">
+                  <div key={iIndex} className="bg-[#64748B1F] p-4 sm:p-6 border-b border-gray-700">
                     <div
-                      className="flex justify-between items-center cursor-pointer font-medium"
+                      className="flex flex-col sm:flex-row gap-2 sm:justify-between sm:items-center cursor-pointer font-medium"
                       onClick={toggleExpand}
                     >
-                      <Badge className="flex gap-2 bg-[#3698FB]/20 border-[#3698FB] text-base text-white px-4 py-2 ">
+                      <Badge className="flex w-fit gap-2 bg-[#3698FB]/20 border-[#3698FB] text-base text-white px-4 py-2 ">
                         {getInstallmentIcon(instalment?.verificationStatus)}
                         Installment 0{iIndex + 1}
                       </Badge>
-                      <div className="flex flex-col sm:flex-row sm:gap-4 text-right items-center">
-                        <Badge className={`${instalment?.verificationStatus === 'paid' ? 'border-[#00CC92] bg-[#00CC92]/10' : 'bg-[#64748B1F]/20 border-[#2C2C2C]'} text-base text-white px-4 py-2`}>
+                      <div className="flex gap-2 sm:gap-4 text-right sm:items-center">
+                        <Badge className={`${instalment?.verificationStatus === 'paid' ? 'border-[#00CC92] bg-[#00CC92]/10' : 'bg-[#64748B1F]/20 border-[#2C2C2C]'} text-sm sm:text-base text-white px-4 py-2`}>
                           ₹{instalment.amountPayable.toLocaleString()}
                         </Badge>
                         {instalment?.verificationStatus === 'paid' ?
-                          <Badge className="flex gap-1 bg-[#64748B1F]/20 border-[#2C2C2C] text-base text-white px-4 py-2">
+                          <Badge className="flex gap-1 bg-[#64748B1F]/20 border-[#2C2C2C] text-sm sm:text-base text-white px-4 py-2">
                             <span className="font-light text-[#00CC92]">Paid on</span> {new Date(instalment?.receiptUrls?.[instalment?.receiptUrls.length - 1]?.uploadedAt).toLocaleDateString("en-GB", {day: "2-digit", month: "long", year: "numeric",})}
                           </Badge> :
                         instalment?.verificationStatus === 'verifying' ?
-                          <Badge className="flex gap-1 bg-[#64748B1F]/20 border-[#2C2C2C] text-base text-white px-4 py-2">
+                          <Badge className="flex gap-1 bg-[#64748B1F]/20 border-[#2C2C2C] text-sm sm:text-base text-white px-4 py-2">
                             <span className="font-light">Uploaded on</span> {new Date(instalment?.receiptUrls?.[instalment?.receiptUrls.length - 1]?.uploadedAt).toLocaleDateString("en-GB", {day: "2-digit", month: "long", year: "numeric",})}
                           </Badge> :
                         instalment?.verificationStatus === 'flagged' ?
-                          <Badge className="flex gap-1 bg-[#F53F3F]/20 border-[#F53F3F] text-base text-white px-4 py-2">
+                          <Badge className="flex gap-1 bg-[#F53F3F]/20 border-[#F53F3F] text-sm sm:text-base text-white px-4 py-2">
                             <span className="font-light">Pay before</span>  {new Date(instalment?.installmentDate).toLocaleDateString("en-GB", {day: "2-digit", month: "long", year: "numeric",})}
                           </Badge> :
-                          <Badge className="flex gap-1 bg-[#64748B1F]/20 border-[#2C2C2C] text-base text-white px-4 py-2">
+                          <Badge className="flex gap-1 bg-[#64748B1F]/20 border-[#2C2C2C] text-sm sm:text-base text-white px-4 py-2">
                             <span className="font-light">Due:</span> {new Date(instalment?.installmentDate).toLocaleDateString("en-GB", {day: "2-digit", month: "long", year: "numeric",})}
                           </Badge>
                         }
@@ -642,7 +642,7 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
   );
 
   return (
-    <div className="p-8">
+    <div className="px-4 sm:px-8 py-8">
       {step === 1 ? renderStep1() : renderStep2()}
     </div>
   );

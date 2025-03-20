@@ -4,15 +4,14 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { Card, CardHeader, CardFooter, CardContent } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Dialog, DialogContent } from "~/components/ui/dialog";
-import { Eye, Download, CheckCircle, Pencil, Camera } from "lucide-react";
+import { Eye, Download, CheckCircle, Pencil, Camera, FileLock } from "lucide-react";
 import LitIdFront from "~/components/molecules/LitId/LitIdFront";
 import LitIdBack from "~/components/molecules/LitId/LitIdBack";
 import { UserContext } from "~/context/UserContext";
-import { getCurrentStudent, updateStudentData } from "~/utils/studentAPI";
+import { updateStudentData } from "~/utils/studentAPI";
 
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-
 
 interface AccountDetailsProps {
   student: any
@@ -38,7 +37,6 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
 
   useEffect(() => {
     if (student) {
-      setStudentData(student);
       setDetails(student);
       setBloodGroupInput(student.bloodGroup || "");      
     }
@@ -200,12 +198,12 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
   
 
   return (
-    <div className="p-8 space-y-6 text-white">
+    <div className="px-4 sm:px-8 py-8 space-y-6">
       {/* 1) User Details Card */}
       <Card className="bg-[#64748B1F] rounded-xl text-white">
-        <CardContent className="p-6 space-y-2 sm:space-y-4">
-          <div className="flex sm:flex-row flex-col gap-4">
-            <div className="w-full sm:w-[315px] h-[355px] bg-[#1F1F1F] flex flex-col items-center justify-center rounded-xl text-sm space-y-4">
+        <CardContent className="p-6 ">
+          <div className="flex md:flex-row flex-col items-center gap-4 sm:gap-6">
+            <div className="w-full sm:w-[250px] h-[285px] bg-[#1F1F1F] flex flex-col items-center justify-center rounded-xl text-sm space-y-4">
               {studentData?.profileUrl || selectedImage ? (
                 <div className="w-full h-full relative">
                   <img
@@ -214,19 +212,12 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                     className="w-full h-full object-cover rounded-lg"
                   />
                   <div className="absolute top-3 right-2 flex space-x-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
+                    <Button variant="outline" size="icon"
                       className="w-8 h-8 bg-white/[0.2] border border-white rounded-full shadow hover:bg-white/[0.4]"
                       onClick={handleEditImage}
                     >
                       <Pencil className="w-4 h-4" />
-                      <input
-                        id="passport-input"
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleImageChange}
+                      <input id="passport-input" type="file" accept="image/*" className="hidden" onChange={handleImageChange}
                       />
                     </Button>
                   </div>
@@ -239,88 +230,79 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                   <div className="text-center my-auto text-muted-foreground">
                     <Camera className="mx-auto mb-2 w-8 h-8" />
                     <div className="text-wrap">
-                      {loading ? 'Uploading...' : 'Upload a Passport size Image of Yourself. Ensure that your face covers 60% of this picture.'}
+                      {loading ? 'Uploading your Profile Image...' : 'Upload a Passport size Image of Yourself. Ensure that your face covers 60% of this picture.'}
                     </div>
                   </div>
-                  <input
-                    id="passport-input"
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleImageChange}
+                  <input id="passport-input" type="file" accept="image/*"className="hidden" onChange={handleImageChange}
                   />
                 </label>
               )}
             </div>
-            <div className="w-full space-y-2">
+            <div className="w-full">
               {/* Full Name */}
-              <div className="flex justify-between items-center border-b border-gray-700 pb-2">
-                <div className="flex flex-col gap-2">
-                  <div className="text-sm font-normal">Full Name</div>
-                  <div className="text-xl">
-                    {studentData?.firstName + " " + studentData?.lastName || "--"}
-                  </div>
+              <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
+                <div className="text-sm font-light">Full Name</div>
+                <div className="text-xl">
+                  {studentData?.firstName + " " + studentData?.lastName || "--"}
                 </div>
               </div>
 
               {/* Email */}
-              <div className="flex flex-col gap-2">
-                <div className="text-sm ">Email</div>
-                <div className="flex justify-between items-center border-b border-gray-700 pb-2">
+              <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
+                <div className="text-sm font-light">Email</div>
+                <div className="flex justify-between items-center">
                   <div className="text-xl">{studentData?.email || "--"}</div>
                   <CheckCircle className="h-4 w-4 text-[#00CC92]" />
                 </div>
               </div>
 
               {/* Contact No. */}
-              <div className="flex flex-col gap-2">
-                <div className="text-sm ">Contact No.</div>
-                <div className="flex justify-between items-center border-b border-gray-700 pb-2">
+              <div className="flex flex-col gap-2 border-b md:border-none border-gray-700 py-4">
+                <div className="text-sm font-light">Contact No.</div>
+                <div className="flex justify-between items-center">
                   <div className="text-xl">{studentData?.mobileNumber || "--"}</div>
                   <CheckCircle className="h-4 w-4 text-[#00CC92]" />
-                </div>
-              </div>
-
-              {/* Institute Name */}
-              <div className="flex flex-col gap-2">
-                <div className="text-sm ">Institute Name</div>
-                <div className="flex justify-between items-center border-b border-gray-700 pb-2">
-                  <div className="text-xl">
-                    {details?.appliedCohorts?.[details?.appliedCohorts.length - 1]?.applicationDetails?.studentDetails?.previousEducation?.nameOfInstitution || "c--"}
-                  </div>
-                  <CheckCircle className="h-4 w-4 text-[#00CC92]" />
-                </div>
-              </div>
-
-              {/* Date of Birth */}
-              <div className="flex justify-between items-center border-b border-gray-700 pb-2">
-                <div className="flex flex-col gap-2">
-                  <div className="text-sm ">Date of Birth</div>
-                  <div className="text-xl">
-                    {studentData?.dateOfBirth
-                      ? new Date(studentData?.dateOfBirth).toLocaleDateString()
-                      : "--"}
-                  </div>
                 </div>
               </div>
             </div>
           </div>
 
+          {/* Institute Name */}
+          <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
+            <div className="text-sm font-light">Institute Name</div>
+            <div className="flex justify-between items-center">
+              <div className="text-xl">
+                {details?.appliedCohorts?.[details?.appliedCohorts.length - 1]?.applicationDetails?.studentDetails?.previousEducation?.nameOfInstitution || "c--"}
+              </div>
+              <CheckCircle className="h-4 w-4 text-[#00CC92]" />
+            </div>
+          </div>
+
+          {/* Date of Birth */}
+          <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
+            <div className="text-sm font-light">Date of Birth</div>
+            <div className="text-xl">
+              {studentData?.dateOfBirth
+                ? new Date(studentData?.dateOfBirth).toLocaleDateString()
+                : "--"}
+            </div>
+          </div>
+
           {/* Gender & Blood Group */}
-          <div className="flex sm:flex-row flex-col sm:items-center gap-2 border-b border-gray-700 pb-2">
-            <div className="flex-1 space-y-2 border-b border-gray-700 pb-2 sm:pb-0 sm:border-none">
-              <div className="text-sm">Gender</div>
+          <div className="flex lg:flex-row flex-col lg:items-center">
+            <div className="flex-1 flex flex-col gap-2 border-b border-gray-700 py-4">
+              <div className="text-sm font-light">Gender</div>
               <div className="text-xl text-white">{studentData?.gender || "--"}</div>
             </div>
-            <div className="flex-1  flex items-center">
+            <div className="flex-1 flex items-center border-b border-gray-700 py-4">
               {studentData?.bloodGroup ? (
-                <div className="flex-1 space-y-2 justify-between items-center">
-                  <div className="text-sm">Blood Group</div>
+                <div className="flex-1 flex flex-col gap-2">
+                  <div className="text-sm font-light">Blood Group</div>
                   <div className="text-xl text-white">{studentData?.bloodGroup}</div>
                 </div>
               ) : (
-                <div className="flex-1 space-y-2 w-full items-center gap-2">
-                  <div className="text-sm">Blood Group</div>
+                <div className="flex-1 flex flex-col gap-2">
+                  <div className="text-sm font-light">Blood Group</div>
                   <input
                     type="text"
                     value={bloodGroupInput}
@@ -338,11 +320,11 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
           </div>
 
           {/* LinkedIn ID + Instagram ID */}
-          <div className="flex sm:flex-row flex-col justify-between sm:items-center gap-2 border-b border-gray-700 pb-2">
+          <div className="flex lg:flex-row flex-col justify-between lg:items-center">
             {/* LinkedIn URL */}
-            <div className="flex flex-1 justify-between items-center border-b border-gray-700 pb-2 sm:pb-0 sm:border-none">
+            <div className="flex flex-1 justify-between items-center border-b border-gray-700 py-4">
               <div className="flex flex-col space-y-2">
-                <div className="text-sm">LinkedIn ID</div>
+                <div className="text-sm font-light">LinkedIn ID</div>
                 {(studentData?.linkedInUrl !== "" && linkedInInput === "") ? (
                   <div className="text-xl">{studentData?.linkedInUrl || "--"}</div>
                 ) : (
@@ -374,9 +356,9 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
             </div>
 
             {/* Instagram URL */}
-            <div className="flex flex-1 justify-between items-center">
+            <div className="flex flex-1 justify-between items-center border-b border-gray-700 py-4">
               <div className="flex flex-col space-y-2">
-                <div className="text-sm">Instagram ID</div>
+                <div className="text-sm font-light">Instagram ID</div>
                 {(studentData?.instagramUrl !== "" && instagramInput === "") ? (
                   <div className="text-xl">{studentData?.instagramUrl || "--"}</div>
                 ) : (
@@ -420,53 +402,49 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                 alt="LIT ID Card"
                 className="w-16 h-16 rounded-xl bg-white py-1"
               />
-              {/* Eye icon overlay to open modal */}
-              <div
-                className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                onClick={() => setOpen(true)}
-              >
-                <Eye className="text-white w-6 h-6" />
-              </div>
+              {student?.bloodGroup ?
+                <div className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  onClick={() => setOpen(true)}>
+                    <Eye className="text-white w-6 h-6" />
+                </div> :
+                <div className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                  <FileLock className="text-white w-6 h-6" />
+                </div>
+              }
             </div>
-            <div>
-              <h4 className="text-2xl font-medium">LIT ID Card</h4>
-              <p className="text-base">
-                Carry your identity as a creator, innovator, and learner wherever you go.
+            <div className="flex-1">
+              <h4 className="text-xl sm:text-2xl font-medium">LIT ID Card</h4>
+              <p className="text-sm sm:text-base">
+                {student?.bloodGroup ? 
+                  'Carry your identity as a creator, innovator, and learner wherever you go.' : 
+                  'Complete filling in your blood group to generate your ID Card'
+                }
               </p>
             </div>
           </div>
 
-          <Button
-            size="xl"
-            variant="outline"
-            className="flex items-center gap-2"
-            onClick={handleDownloadPDF}
-          >
-            <Download className="h-4 w-4" />
-            {isGeneratingPDF? 'Downloading...' : 'Download'}
-          </Button>
+          {student?.bloodGroup &&
+            <Button size="xl" variant="outline" className="flex items-center gap-2" onClick={handleDownloadPDF}>
+              <Download className="h-4 w-4" />
+              {isGeneratingPDF? 'Downloading...' : 'Download'}
+            </Button>
+          }
         </Card>
 
-        {/* Hidden PDF Content */}
         <div
-  style={{
-    position: 'absolute',
-    top: '-10000px',
-    left: '-10000px',
-    width: '400px',
-  }}
-  ref={pdfRef}
-  id="pdf-content"
->
-  <div className="flex flex-col gap-6 items-center justify-center p-4">
-    <div id="front">
-      <LitIdFront data={details} />
-    </div>
-    <div id="back">
-      <LitIdBack data={details} ScanUrl="" />
-    </div>
-  </div>
-</div>
+          style={{ position: 'absolute', top: '-10000px', left: '-10000px', width: '400px', }}
+          ref={pdfRef}
+          id="pdf-content"
+        >
+          <div className="flex flex-col gap-6 items-center justify-center p-4">
+            <div id="front">
+              <LitIdFront data={details} />
+            </div>
+            <div id="back">
+              <LitIdBack data={details} ScanUrl="" />
+            </div>
+          </div>
+        </div>
 
 
         <Dialog open={open} onOpenChange={setOpen}>
@@ -479,13 +457,9 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                 <LitIdBack data={studentData} ScanUrl="" />
               </div>
             </div>
-            {/* Download Button Inside Dialog */}
-            <Button
-              size="xl"
-              variant="outline"
-              className="w-fit flex items-center gap-2 mx-auto mt-4"
-              onClick={handleDownloadPDF}
-            >
+            
+            <Button size="xl" variant="outline" className="w-fit flex items-center gap-2 mx-auto mt-4"
+              onClick={handleDownloadPDF} >
               <Download className="h-4 w-4" />
               {isGeneratingPDF? 'Downloading...' : 'Download'}
             </Button>

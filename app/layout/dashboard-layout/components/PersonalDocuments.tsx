@@ -3,7 +3,7 @@
 import { useContext, useEffect, useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "~/components/ui/dialog";
-import { File as FileIcon, Download, Upload, FilePenLine, FilePen, Eye, Pen, LoaderCircle, XIcon } from "lucide-react";
+import { File as FileIcon, Download, Upload, FilePenLine, FilePen, Eye, Pen, LoaderCircle, XIcon, SquarePen } from "lucide-react";
 import { getCurrentStudent, uploadStudentDocuments } from "~/utils/studentAPI"; // Ensure correct path
 import { UserContext } from "~/context/UserContext";
 import axios from "axios";
@@ -36,11 +36,12 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
   const latestCohort = student?.appliedCohorts?.[student?.appliedCohorts.length - 1];
   const cohortDetails = latestCohort?.cohortId;
 
-  const [personalDocs, setPersonalDocs] = useState<any>();
-  const [docUrl, setDocUrl] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [uploadStates, setUploadStates] = useState<{ [docId: string]: UploadState }>({});
+  // console.log("latestCohort", latestCohort);
 
+  const [error, setError] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
+  const [uploadStates, setUploadStates] = useState<{ [docId: string]: UploadState }>({});
+  const [docs, setDocs] = useState<any[]>([]);
   const [documents, setDocuments] = useState<Document[]>([
     {
       id: "1",
@@ -71,10 +72,9 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
       docType: "graduationMarkSheet"
     },
   ]);
-  const [docs, setDocs] = useState<any>();
   
   useEffect(() => {
-    setDocs(student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.personalDocs);
+    setDocs(latestCohort?.personalDocs?.documents || []);
   }, [student]);
 
   const handleFileDownload = (fileUrl: string, docType: string) => {
@@ -82,13 +82,13 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
       console.error("No file URL available for download.");
       return;
     }
-  
-    const link = document.createElement("a");
-    link.href = fileUrl;
-    link.setAttribute('download', `${student?.firstName}_${docType}.pdf`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    window.open(fileUrl, "_blank")  
+    // const link = document.createElement("a");
+    // link.href = fileUrl;
+    // link.setAttribute('download', `${student?.firstName}_${docType}.pdf`);
+    // document.body.appendChild(link);
+    // link.click();
+    // document.body.removeChild(link);
   };
 
   const handleFileChange = async ( e: React.ChangeEvent<HTMLInputElement>, docId: string, docType: string
@@ -126,7 +126,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
       const payload = {
         type: docType,
         cohortId: cohortDetails?._id,
-        // docId: "67c81216d2ecd4704d9188a4",
+        docId: latestCohort?.personalDocs?._id,
         fileUrl: fileUrl,
       };
 
@@ -135,7 +135,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
       // Call the API function with FormData
       const response = await uploadStudentDocuments(payload);
       console.log("Upload response:", response);
-      setDocs(response.data);
+      // setDocs(response.data);
 
     } catch (error) {
       console.error("Error uploading file:", error);
@@ -221,188 +221,156 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
   
 
   return (
-    <div className="p-8 space-y-4">
-      {documents.map((doc) => (
-        <div
-          key={doc.id}
-          className="flex items-center justify-between p-6 bg-[#64748B1F] border rounded-xl"
-        >
-          <div className="flex items-center gap-4">
-          {docs && docs[doc.docType] && docs[doc.docType].length > 0 ? (
-            <div className="cursor-pointer h-16 w-16 justify-center flex items-center rounded-full bg-[#00CC921F]">
-              PDF
+    <div className="px-4 sm:px-8 py-8 space-y-4">
+      {documents.map((doc) => {
+        // Find the document from `docs` array where name matches doc.docType
+        const docDetail = docs.length > 0 ? docs.find((d: any) => d.name === doc.docType) : null;
+
+        return (
+          <div key={doc.id} className="flex lg:flex-row flex-col gap-2 lg:items-center items-start lg:justify-between p-4 sm:p-6 bg-[#64748B1F] border rounded-xl">
+            <div className="flex items-center gap-4">
+              {docDetail ? (
+               <div className="relative group h-16 w-16 justify-center flex items-center rounded-full bg-[#00CC921F] overflow-hidden">
+                <iframe src={docDetail?.url} className="w-full h-full" style={{ border: 'none' }}></iframe>
+                <div className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  onClick={() => setOpen(true)}>
+                  <Eye className="text-white w-6 h-6" />
+                </div>
+              </div>
+              ) : (
+                <div className="h-16 w-16 justify-center flex items-center rounded-full bg-[#00CC921F]">
+                  <img src="/assets/images/personal-document-icon.svg" className="w-6 h-6"/>
+                </div>
+              )}
+              <div className="flex-1 ">
+                <h3 className="font-medium text-lg/5 sm:text-2xl text-white">{doc.name}</h3>
+                <p className="text-xs sm:text-base text-gray-400 mt-2 sm:mt-0">
+                  PDF •{" "}
+                  {docDetail ? (
+                    <>
+                      <span className={`capitalize  ${docDetail.status === "pending" ? "text-white" : docDetail.status === "verified" ? "text-[#00CC92]" : "text-[#FF503D] underline"}`} >
+                        {docDetail.status}
+                      </span>
+                      <span className="text-muted-foreground underline-0"> • {new Date(docDetail?.date).toLocaleDateString()}</span>
+                    </>
+                  ) : (
+                    <span
+                      className={doc.description?.toLowerCase() === "mandatory" ? "text-[#00CC92]" : "text-[#F8E000]"}
+                    >
+                      {doc.description}
+                    </span>
+                  )}
+                </p>
+              </div>
             </div>
-          ) : (
-            <div className="h-16 w-16 justify-center flex items-center rounded-full bg-[#00CC921F]">
-              <img src="/assets/images/personal-document-icon.svg" className="w-6 h-6"/>
-            </div>
-          )}
-            <div>
-              <h3 className="font-medium text-2xl text-white">{doc.name}</h3>
-              <p className="text-base text-gray-400">
-                PDF •{" "}
-                {docs && docs[doc.docType] && docs[doc.docType].length > 0 ?
-                  <><span
-                    className={`capitalize 
-                      ${docs[doc.docType][docs[doc.docType].length-1].status === "updated"
-                        ? "text-white"
-                        : docs[doc.docType][docs[doc.docType].length-1].status === "verified"
-                        ? "text-[#00CC92]"
-                        : "text-[#FF503D] underline"}
-                    `}
-                  >
-                    {docs[doc.docType][docs[doc.docType].length-1].status}
-                  </span>  
-                    <span className="text-muted-foreground underline-0"> •{" "}{new Date(docs?.updatedAt).toLocaleDateString()}</span>
-                  </> :
-                  <span
-                    className={
-                      doc.description?.toLowerCase() === "mandatory"
-                        ? "text-[#00CC92]"
-                        : "text-[#F8E000]"
-                    }
-                  >
-                    {doc.description}
-                  </span>
-                }
-              </p>
-            </div>
-          </div>
 
-          <div className="flex items-center gap-4">
-          {docs && docs[doc.docType] && docs[doc.docType].length > 0 && (
-            (docs[doc.docType][docs[doc.docType].length-1].status === "verified" || docs[doc.docType][docs[doc.docType].length-1].status === "updated") && (
-              <>
-                <Button
-                  size="xl"
-                  variant="ghost"
-                  className="border bg-[#1B1B1C]"
-                  onClick={() => handleFileDownload(docs[doc.docType][docs[doc.docType].length-1].url || "", doc.docType)}
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Download
-                </Button>
-                <input
-                  type="file"
-                  accept="application/pdf,image/*"
-                  className="hidden"
-                  id={`file-input-${doc.id}`}
-                  onChange={(e) => handleFileChange(e, doc.id, doc.docType)}
-                />
-                <Button
-                  size="xl"
-                  variant="ghost"
-                  className="border bg-[#1B1B1C] !px-4"
-                  onClick={() =>
-                    document.getElementById(`file-input-${doc.id}`)?.click()
-                  }
-                >
-                  <Pen className="h-4 w-4" />
-                </Button>
-              </>  
-              ))}
-
-            {docs && docs[doc.docType] && docs[doc.docType].length > 0 && (
-            (docs[doc.docType][docs[doc.docType].length-1].status === "flagged") && (
-              uploadStates[doc.id]?.uploading ?
-              <div className="flex items-center gap-2">
-                {uploadStates[doc.id]?.uploadProgress === 100 ? (
-                  <LoaderCircle className="h-4 w-4 animate-spin" />
-                ) : (
-                  <>
-                    <Progress className="h-2 w-24" value={uploadStates[doc.id]?.uploadProgress} />
-                    <span>{uploadStates[doc.id]?.uploadProgress}%</span>
-                  </>
-                )}
-                <Button size="icon" type="button" className="bg-[#1B1B1C] rounded-xl">
-                  <XIcon className="w-5" />
-                </Button>
-              </div> : <>
-                <input
-                  type="file"
-                  accept="application/pdf,image/*"
-                  className="hidden"
-                  id={`file-input-${doc.id}`}
-                  onChange={(e) => handleFileChange(e, doc.id, doc.docType)}
-                />
-                <Button
-                  size="xl"
-                  variant="default"
-                  onClick={() =>
-                    document.getElementById(`file-input-${doc.id}`)?.click()
-                  }
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                    Re-Upload File
-                </Button>
-              </>
-            
-            ))}
-
-            {((docs === undefined || (docs[doc.docType] && docs[doc.docType].length === 0))) && (
-              uploadStates[doc.id]?.uploading ?
-              <div className="flex items-center gap-2">
-                {uploadStates[doc.id]?.uploadProgress === 100 ? (
-                  <LoaderCircle className="h-4 w-4 animate-spin" />
-                ) : (
-                  <>
-                    <Progress className="h-2 w-24" value={uploadStates[doc.id]?.uploadProgress} />
-                    <span>{uploadStates[doc.id]?.uploadProgress}%</span>
-                  </>
-                )}
-                <Button size="icon" type="button" className="bg-[#1B1B1C] rounded-xl">
-                  <XIcon className="w-5" />
-                </Button>
-              </div> : <>
-                <input
-                  type="file"
-                  accept="application/pdf,image/*"
-                  className="hidden"
-                  id={`file-input-${doc.id}`}
-                  onChange={(e) => handleFileChange(e, doc.id, doc.docType)}
-                />
-                <Button
-                  size="xl"
-                  variant="default"
-                  onClick={() =>
-                    document.getElementById(`file-input-${doc.id}`)?.click()
-                  }
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                    Upload File
-                </Button>
-              </>
-            )}
-
-            {doc.fileUrl && (
-              <Dialog>
-                <DialogTrigger asChild>
+            <div className="flex items-center gap-4">
+              {docDetail && docDetail.status === "verified" || docDetail?.status === "pending" ? (
+                <>
                   <Button
                     size="xl"
                     variant="ghost"
-                    className="!p-[18px] border bg-[#1B1B1C]"
+                    className="border bg-[#1B1B1C]"
+                    onClick={() => handleFileDownload(docDetail.url || "", doc.docType)}
                   >
-                    <Pen className="h-4 w-4" />
+                    <Download className="h-4 w-4 mr-2" />
+                    Download
                   </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <div className="text-white">
-                    {/* Replace with actual PDF viewer */}
-                    <p>Preview for {doc.name}</p>
+                  <input
+                    type="file"
+                    accept="application/pdf,image/*"
+                    className="hidden"
+                    id={`file-input-${doc.id}`}
+                    onChange={(e) => handleFileChange(e, doc.id, doc.docType)}
+                  />
+                  <Button
+                    size="xl"
+                    variant="ghost"
+                    className="border bg-[#1B1B1C] !px-4"
+                    onClick={() => document.getElementById(`file-input-${doc.id}`)?.click()}
+                  >
+                    <SquarePen className="h-4 w-4" />
+                  </Button>
+                </>
+              ) : docDetail && docDetail.status === "flagged" ? (
+                uploadStates[doc.id]?.uploading ? (
+                  <div className="flex items-center gap-2">
+                    {uploadStates[doc.id]?.uploadProgress === 100 ? (
+                      <LoaderCircle className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Progress className="h-2 w-24" value={uploadStates[doc.id]?.uploadProgress} />
+                        <span>{uploadStates[doc.id]?.uploadProgress}%</span>
+                      </>
+                    )}
+                    <Button size="icon" type="button" className="bg-[#1B1B1C] rounded-xl">
+                      <XIcon className="w-5" />
+                    </Button>
                   </div>
-                </DialogContent>
-              </Dialog>
-            )}
-          </div>
-        </div>
-      ))}
+                ) : (
+                  <>
+                    <input
+                      type="file"
+                      accept="application/pdf,image/*"
+                      className="hidden"
+                      id={`file-input-${doc.id}`}
+                      onChange={(e) => handleFileChange(e, doc.id, doc.docType)}
+                    />
+                    <Button
+                      size="xl"
+                      variant="default"
+                      onClick={() => document.getElementById(`file-input-${doc.id}`)?.click()}
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      Re-Upload File
+                    </Button>
+                  </>
+                )
+              ) : (
+                <>
+                  <input
+                    type="file"
+                    accept="application/pdf,image/*"
+                    className="hidden"
+                    id={`file-input-${doc.id}`}
+                    onChange={(e) => handleFileChange(e, doc.id, doc.docType)}
+                  />
+                  <Button
+                    size="xl"
+                    variant="default"
+                    onClick={() => document.getElementById(`file-input-${doc.id}`)?.click()}
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Upload File
+                  </Button>
+                </>
+              )}
 
-      <div className="text-3xl pt-4 px-6">Additional Documents</div>
-      {docs?.adminUploadedocuments?.length > 0 && docs?.adminUploadedocuments.map((doc: any) => (
-        <div
-          key={doc?._id}
-          className="flex items-center justify-between p-6 bg-[#64748B1F] border rounded-xl"
-        >
+              {docDetail && docDetail.url && (
+                <Dialog open={open} onOpenChange={setOpen}>
+                  <DialogContent className="max-w-5xl py-2 px-6 h-[90vh] overflow-y-auto">
+                    <div className="flex flex-col gap-4 justify-center">
+                      <p>Preview for {doc.name}</p>
+                      <div className="max-w-5xl h-[70vh] justify-center flex items-center rounded-2xl bg-[#09090b] border ">
+                        <iframe src={docDetail?.url} className="mx-auto w-[70%] h-full" style={{ border: 'none' }}></iframe>
+                      </div>
+                      <Button size="xl" variant="ghost" className="mx-auto border bg-[#1B1B1C]"
+                        onClick={() => handleFileDownload(docDetail.url || "", doc.docType)}>
+                          <Download className="h-4 w-4 mr-2" />Download
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              )}
+            </div>
+          </div>
+        );
+      })}
+
+      {latestCohort?.personalDocs?.length > 0 && latestCohort?.personalDocs.map((doc: any) => (
+      <>
+        <div className="text-3xl pt-4 px-6">Additional Documents</div>
+        <div key={doc?._id} className="flex items-center justify-between p-6 bg-[#64748B1F] border rounded-xl">
           <div className="flex items-center gap-4">
             <div className="cursor-pointer h-16 w-16 justify-center flex items-center rounded-full bg-[#00CC921F]">
               DOC
@@ -427,7 +395,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
             </Button>
           </div>
         </div>
-      ))}
+      </>))}
     </div>
   );
 };
