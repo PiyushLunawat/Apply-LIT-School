@@ -117,7 +117,7 @@ export const ApplicationStatus: React.FC = () => {
 
   return (
     <>
-      { !(isPaymentVerified === null || isPaymentVerified === undefined) ?
+      { (isPaymentVerified === null || isPaymentVerified === undefined) ?
         (((isInterviewScheduled !== 'interview scheduled' || showReviewBlock) && isInterviewScheduled !== 'interview cancelled')  ? 
           <div className="max-w-[1216px] sm:mx-16 xl:mx-auto justify-center items-center space-y-20">
             <Review setIsPaymentVerified={setIsPaymentVerified} application={student}/>
