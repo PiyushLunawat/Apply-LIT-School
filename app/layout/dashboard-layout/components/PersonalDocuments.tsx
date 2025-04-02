@@ -10,6 +10,19 @@ import axios from "axios";
 import { Badge } from "~/components/ui/badge";
 import { Progress } from "~/components/ui/progress";
 
+import {
+  S3Client,
+  DeleteObjectCommand,
+} from "@aws-sdk/client-s3";
+
+const s3Client = new S3Client({
+  region: typeof window !== "undefined" && window.ENV ? window.ENV.AWS_REGION : process.env.AWS_REGION, // Fallback to server-side environment variable
+  credentials: {
+    accessKeyId: typeof window !== "undefined" && window.ENV ? window.ENV.AWS_ACCESS_KEY_ID : process.env.AWS_ACCESS_KEY_ID as string, // Fallback to server-side environment variable
+    secretAccessKey: typeof window !== "undefined" && window.ENV ? window.ENV.AWS_SECRET_ACCESS_KEY : process.env.AWS_SECRET_ACCESS_KEY as string, // Fallback to server-side environment variable
+  },
+});
+
 interface Document {
   id: string;
   name: string;
@@ -35,8 +48,6 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
   
   const latestCohort = student?.appliedCohorts?.[student?.appliedCohorts.length - 1];
   const cohortDetails = latestCohort?.cohortId;
-
-  // console.log("latestCohort", latestCohort);
 
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
@@ -91,8 +102,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
     // document.body.removeChild(link);
   };
 
-  const handleFileChange = async ( e: React.ChangeEvent<HTMLInputElement>, docId: string, docType: string
-  ) => {
+  const handleFileChange = async ( e: React.ChangeEvent<HTMLInputElement>, docId: string, docType: string) => {
     setError(null);
 
     setUploadStates(prev => ({
@@ -264,16 +274,30 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
               </div>
             </div>
 
-            <div className="flex items-center gap-4">
+          {uploadStates[doc.id]?.uploading ?
+            <div className="flex items-center gap-2">
+              {uploadStates[doc.id]?.uploadProgress === 100 ? (
+                <LoaderCircle className="h-4 w-4 animate-spin" />
+              ) : (
+                <>
+                  <Progress className="h-2 w-24" value={uploadStates[doc.id]?.uploadProgress} />
+                  <span>{uploadStates[doc.id]?.uploadProgress}%</span>
+                </>
+              )}
+              <Button size="icon" type="button" className="bg-[#1B1B1C] rounded-xl">
+                <XIcon className="w-5" />
+              </Button>
+            </div> :
+            <div className="flex items-center gap-4 w-full sm:w-fit">
               {docDetail && docDetail.status === "verified" || docDetail?.status === "pending" ? (
                 <>
                   <Button
                     size="xl"
                     variant="ghost"
-                    className="border bg-[#1B1B1C]"
+                    className="flex gap-2 items-center border bg-[#1B1B1C] flex-1"
                     onClick={() => handleFileDownload(docDetail.url || "", doc.docType)}
                   >
-                    <Download className="h-4 w-4 mr-2" />
+                    <Download className="h-4 w-4" />
                     Download
                   </Button>
                   <input
@@ -293,21 +317,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                   </Button>
                 </>
               ) : docDetail && docDetail.status === "flagged" ? (
-                uploadStates[doc.id]?.uploading ? (
-                  <div className="flex items-center gap-2">
-                    {uploadStates[doc.id]?.uploadProgress === 100 ? (
-                      <LoaderCircle className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <>
-                        <Progress className="h-2 w-24" value={uploadStates[doc.id]?.uploadProgress} />
-                        <span>{uploadStates[doc.id]?.uploadProgress}%</span>
-                      </>
-                    )}
-                    <Button size="icon" type="button" className="bg-[#1B1B1C] rounded-xl">
-                      <XIcon className="w-5" />
-                    </Button>
-                  </div>
-                ) : (
+                 (
                   <>
                     <input
                       type="file"
@@ -319,9 +329,10 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                     <Button
                       size="xl"
                       variant="default"
+                      className="flex gap-2 items-center flex-1"
                       onClick={() => document.getElementById(`file-input-${doc.id}`)?.click()}
                     >
-                      <Upload className="h-4 w-4 mr-2" />
+                      <Upload className="h-4 w-4" />
                       Re-Upload File
                     </Button>
                   </>
@@ -338,9 +349,10 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                   <Button
                     size="xl"
                     variant="default"
+                    className="flex gap-2 items-center flex-1"
                     onClick={() => document.getElementById(`file-input-${doc.id}`)?.click()}
                   >
-                    <Upload className="h-4 w-4 mr-2" />
+                    <Upload className="h-4 w-4" />
                     Upload File
                   </Button>
                 </>
@@ -362,7 +374,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                   </DialogContent>
                 </Dialog>
               )}
-            </div>
+            </div>}
           </div>
         );
       })}

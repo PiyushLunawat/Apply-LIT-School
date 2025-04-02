@@ -1,11 +1,9 @@
-// const baseUrl = "http://51.21.131.240:4000";
-// const baseUrl = "http://localhost:4000";
-const baseUrl = "https://dev.apply.litschool.in";
-// const baseUrl = "https://myfashionfind.shop";
+// utils/authAPI.ts
 
-// const baseUrl = `${
-//   typeof process !== "undefined" ? process.env.API_BASE_URL : ""
-// }`;
+export const baseUrl =
+  typeof window !== "undefined" && window.ENV
+    ? window.ENV.API_BASE_URL
+    : "http://localhost:4000";
 
 // Fetch all cohorts
 export async function getCohorts() {
@@ -73,27 +71,8 @@ export async function getPrograms() {
   return response.json();
 }
 
-export async function getStudents() {
-  const response = await fetch(`${baseUrl}/admin/students`, {
-    method: "GET",
-    headers: { "Content-Type": "application/json" },
-  });
-
-  if (!response.ok) {
-    const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
-    throw new Error(
-      `${
-        errorDetails
-          ? `${errorDetails.message || JSON.stringify(errorDetails)}`
-          : ""
-      }`
-    );
-  }
-  return response.json();
-}
-
 export async function getCurrentStudent(id: string) {
-  const response = await fetch(`${baseUrl}/student/${id}`, {
+  const response = await fetch(`${baseUrl}/student/profile/${id}`, {
     method: "GET",
     // headers: { "Content-Type": "application/json" },
   });
@@ -270,17 +249,11 @@ export async function submitTokenReceipt(formData: FormData) {
   return await response.json();
 }
 
-export async function payApplicationFee(amount: number, currency: string) {
+export async function payApplicationFee(feePayLoad: any) {
   const response = await fetch(`${baseUrl}/student/pay-application-fee`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      appFeeData: {
-        currency,
-        amount: amount * 100, // Convert to smallest currency unit
-        receipt: "",
-      },
-    }),
+    body: JSON.stringify({ feePayLoad }),
   });
 
   if (!response.ok) {
@@ -296,28 +269,13 @@ export async function payApplicationFee(amount: number, currency: string) {
   return response.json();
 }
 
-export async function verifyApplicationFeePayment(data: {
-  appFeeData: {
-    currency: string;
-    amount: number;
-    receipt: string;
-  };
-  studentId: string;
-  cohortId: string;
-  razorpay_order_id: string;
-  razorpay_payment_id: string;
-  razorpay_signature: string;
-}) {
-  const response = await fetch(
-    `${baseUrl}/student/verify-application-fee-payement`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    }
-  );
+export async function verifyApplicationFeePayment(orderId: string) {
+  const response = await fetch(`${baseUrl}/student/payment/status/${orderId}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
 
   if (!response.ok) {
     const errorDetails = await response.json().catch(() => null);

@@ -16,10 +16,22 @@ import {
 } from "../../../components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~/components/ui/tooltip";
 import { Separator } from "../../../components/ui/separator";
-import { Badge } from "../../../components/ui/badge";
-import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { Badge } from "../../../components/ui/badge"; 
 import axios from "axios";
 import { Progress } from "~/components/ui/progress";
+
+import {
+  S3Client,
+  DeleteObjectCommand,
+} from "@aws-sdk/client-s3";
+
+const s3Client = new S3Client({
+  region: typeof window !== "undefined" && window.ENV ? window.ENV.AWS_REGION : process.env.AWS_REGION, // Fallback to server-side environment variable
+  credentials: {
+    accessKeyId: typeof window !== "undefined" && window.ENV ? window.ENV.AWS_ACCESS_KEY_ID : process.env.AWS_ACCESS_KEY_ID as string, // Fallback to server-side environment variable
+    secretAccessKey: typeof window !== "undefined" && window.ENV ? window.ENV.AWS_SECRET_ACCESS_KEY : process.env.AWS_SECRET_ACCESS_KEY as string, // Fallback to server-side environment variable
+  },
+});
 
 type FeePaymentData = {
   paymentMethod: string;
@@ -356,8 +368,8 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
             <CircleCheck className="w-4 sm:w-6 h-4 sm:h-6 text-[#00AB7B]" />
             INR {(Number(cohortDetails?.cohortFeesDetail?.tokenFee)).toLocaleString()}
           </h2>
-          <div className="flex h-5 items-center space-x-4 text-sm sm:text-base">
-            <div>Token Amount paid</div>
+          <div className="flex h-5 items-center gap-2 text-sm sm:text-base">
+            <div>Admission Fee paid</div>
             <Separator orientation="vertical" />
             <div>{new Date(tokenFeeDetails?.createdAt).toLocaleDateString()}</div>
           </div>
@@ -622,7 +634,7 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                               <span>- ₹{instalment.scholarshipAmount.toLocaleString()}</span>
                             </div>
                           )}
-                          <div className="flex justify-between text-xl pt-1 border-t border-white/10">
+                          <div className="flex justify-between text-lg sm:text-xl pt-1 border-t border-white/10">
                             <span className="font-medium text-white">Total</span>
                             <span className="font-medium text-[#1388FF]">
                               ₹{instalment.amountPayable.toLocaleString()}
@@ -876,7 +888,7 @@ function FileUploadField({
             accept="image/*"
             onChange={handleImageChange}
           />
-          <span className="cursor-pointer">Upload Acknowledgement Receipt</span>
+          <span className="text-xs sm:text-base cursor-pointer">Upload Acknowledgement Receipt</span>
         </label>
         <Button
           className="flex gap-2 text-white px-6 py-6 rounded-xl"

@@ -15,14 +15,14 @@ const { studentData } = useContext(UserContext);
         try {
           const student = await getCurrentStudent(studentData._id); // Pass the actual student ID here
           setStudent(student);   
-          console.log("PersonalDocumentsDashboard")       
+          console.log("PersonalDocumentsDashboard", student)       
         } catch (error) {
           console.error("Failed to fetch student data:", error);
         }
       };
       fetchStudentData();
     }
-  }, [studentData._id]);
+  }, [studentData?._id]);
 
   return (
   <>

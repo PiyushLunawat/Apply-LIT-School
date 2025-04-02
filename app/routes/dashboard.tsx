@@ -1,20 +1,30 @@
 
-import { LoaderFunctionArgs, redirect } from "@remix-run/node";
+import { LoaderFunction, LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { Outlet } from "@remix-run/react";
+import { accessTokenCookie, refreshTokenCookie, userIdCookie } from "~/cookies/cookies";
 import DashboardLayout from "~/layout/dashboard-layout/components/DashboardLayout";
+import { RegisterInterceptor } from "~/utils/interceptor";
 
-// export async function loader({ request }: LoaderFunctionArgs) {
-//   const session = await getSession(request.headers.get("Cookie"));
-//   const token = session.get("userToken");
+export const loader: LoaderFunction = async ({ request }) => {
+  // Parse the cookie from the incoming request
+  const cookieHeader = request.headers.get("Cookie");
+    const accessToken = await accessTokenCookie.parse(cookieHeader);
+    const refreshToken = await refreshTokenCookie.parse(cookieHeader);
+  const userId = await userIdCookie.parse(cookieHeader);
+  
+  if (accessToken) {
+      RegisterInterceptor(accessToken);
+    }
 
-//   // If no token, or if it's expired (session is empty), redirect to login
-//   if (!token) {
-//     return redirect("/auth/login");
-//   }
+  // Now you can use `userId` in your logic
+  if (!userId) {
+    return redirect("/auth/login");
+  }
 
-//   // Otherwise, proceed with your loader logic
-//   return null; // or return some data
-// }
+  // ... fetch user data, etc. ...
+  return { userId };
+};
+
 
 export default function DashboardIndex() {
   return(

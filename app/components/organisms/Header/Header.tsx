@@ -13,11 +13,14 @@ export const Header: React.FC<HeaderProps> = ({ classn }) => {
     const navigate = useNavigate();
     const { studentData, setStudentData } = useContext(UserContext);
 
-    const handleLogout = () => {
-      Cookies.remove('user-token');
-      localStorage.removeItem('studentData');
-      setStudentData(null);
-      navigate('../auth/login');
+    const handleLogout = async () => {
+      const response = await fetch("/logout", { method: "POST" });
+    
+      if (response.ok) {
+        localStorage.removeItem('studentData');
+        setStudentData(null);
+        navigate('../auth/login');
+      }
     };
     
   return (

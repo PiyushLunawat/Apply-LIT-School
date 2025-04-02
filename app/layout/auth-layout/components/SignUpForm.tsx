@@ -214,7 +214,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({}) => {
               render={({ field }) => (
                 <FormItem className="flex-1 space-y-1 relative">
                   <Label className="text-xs sm:text-sm font-normal pl-3">Email</Label>
-                  <Input placeholder="john@gmail.com" {...field} />
+                  <Input placeholder="john@gmail.com" className='pr-10' {...field} />
                   <Mail className="absolute right-3 top-[46px] w-5 h-5" />
                   <FormMessage className="text-xs sm:text-sm font-normal pl-3"/>
                 </FormItem>
@@ -226,8 +226,8 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({}) => {
               render={({ field }) => (
                 <FormItem className="flex-1 space-y-1 relative">
                   <Label className="text-xs sm:text-sm font-normal pl-3">Contact No.</Label>
-                  <Input  type="tel" maxLength={14} placeholder="+91 00000 00000" {...field}
-                  value={field.value || "+91 "}
+                  <Input  type="tel" maxLength={14} placeholder="+91 00000 00000" className='pr-10' {...field}
+                  value={field.value}
                   onInput={(e) => {
                     const target = e.target as HTMLInputElement;
                     target.value = target.value.replace(/[^0-9+ ]/g, '');

@@ -33,6 +33,18 @@ import { useNavigate } from '@remix-run/react';
 import axios from 'axios';
 import { Progress } from '~/components/ui/progress';
 import { Badge } from '~/components/ui/badge';
+import {
+  S3Client,
+  DeleteObjectCommand,
+} from "@aws-sdk/client-s3";
+
+const s3Client = new S3Client({
+  region: typeof window !== "undefined" && window.ENV ? window.ENV.AWS_REGION : process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: typeof window !== "undefined" && window.ENV ? window.ENV.AWS_ACCESS_KEY_ID : process.env.AWS_ACCESS_KEY_ID as string,
+    secretAccessKey: typeof window !== "undefined" && window.ENV ? window.ENV.AWS_SECRET_ACCESS_KEY : process.env.AWS_SECRET_ACCESS_KEY as string,
+  },
+});
 
 // ------------------ ZOD Schema ------------------
 const formSchema = z.object({
@@ -168,10 +180,18 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
         if (storedFormJSON) {
           const parsedForm = JSON.parse(storedFormJSON);
           const isEmpty =
-            parsedForm?.courseDive?.interest === '' &&
-            parsedForm?.courseDive?.goals === '' &&
+            parsedForm?.courseDive?.interest === "" &&
+            parsedForm?.courseDive?.goals === "" &&
             Array.isArray(parsedForm?.tasks) &&
-            parsedForm.tasks.length === 0;
+            parsedForm.tasks.every( (task: any) =>
+                Array.isArray(task.configItems) &&
+                task.configItems.every((configItem: any) => {
+                  if (["short", "long"].includes(configItem.type)) return configItem.answer === "";
+                  if (["file", "image", "video", "link"].includes(configItem.type))
+                    return Array.isArray(configItem.answer) && configItem.answer.length === 0;
+                  return true; // If new types are added later, they should default to "empty"
+                })
+            );
 
           if (isEmpty) {
             // If localStorage is empty, use server data
@@ -725,6 +745,35 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
     return `https://dev-application-portal.s3.amazonaws.com/${uniqueKey}`;
   };
 
+  const handleDeleteFile = async (fileKey: string, index?: number) => {
+    try {
+      if (!fileKey) {
+        console.error("Invalid file fURL:", fileKey);
+        return;
+      }
+  
+      // Make sure `fileKey` is actually a string
+      if (typeof fileKey === "string") {
+        const deleteCommand = new DeleteObjectCommand({
+          Bucket: "dev-application-portal",
+          Key: fileKey,
+        });
+        await s3Client.send(deleteCommand);
+        console.log("File deleted successfully from S3:", fileKey);
+  
+        // Remove it from the UI
+        if (index !== undefined) {
+          removeFile(index);
+        }
+      } else {
+        console.error("The file URL is not valid...", fileKey);
+      }
+    } catch (error) {
+      console.error("Error deleting file:", error);
+      setError("Failed to delete file. Try again.");
+    }
+  };  
+
   const generateUniqueFileName = (originalName: string) => {
     const timestamp = Date.now();
     const sanitizedName = originalName.replace(/\s+/g, '-');
@@ -773,7 +822,7 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
                     size="icon"
                     type="button"
                     className="bg-[#3698FB] rounded-xl"
-                    onClick={() => removeFile(index)}
+                    onClick={() => handleDeleteFile(fileName, index)}
                   >
                     <XIcon className="w-5" />
                   </Button>
@@ -807,6 +856,7 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
                   size="icon"
                   type="button"
                   className="bg-[#3698FB] rounded-xl"
+                  onClick={() => handleDeleteFile(fileName)}
                 >
                   <XIcon className="w-5" />
                 </Button>

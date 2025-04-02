@@ -242,10 +242,10 @@ const StatusMessage: React.FC<StatusMessageProps> = ({ student }) => {
         </div>
       </div>
       <Dialog open={interviewOpen} onOpenChange={setInterviewOpen}>
-    <DialogContent className="max-w-[90vw] sm:max-w-2xl">
-      <SchedulePresentation student={student} interviewer={interviewer} eventCategory='Application Test Review'/>
-    </DialogContent>
-  </Dialog>
+        <DialogContent className="max-w-[90vw] sm:max-w-2xl">
+          <SchedulePresentation student={student} interviewer={interviewer} eventCategory='Application Test Review'/>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

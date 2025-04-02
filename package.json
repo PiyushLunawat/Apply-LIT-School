@@ -50,6 +50,7 @@
     "jspdf": "^2.5.2",
     "lucide-react": "^0.451.0",
     "next": "^15.1.4",
+    "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.3.1",
@@ -59,6 +60,7 @@
     "tailwind-merge": "^2.5.3",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.0.0",
+    "vcards-js": "^2.10.0",
     "whatwg-fetch": "^3.6.20",
     "zod": "^3.23.8"
   },
@@ -68,6 +70,7 @@
     "@types/js-cookie": "^3.0.6",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.2.7",
+    "@types/vcards-js": "^2.10.5",
     "@typescript-eslint/eslint-plugin": "^6.7.4",
     "@typescript-eslint/parser": "^6.7.4",
     "autoprefixer": "^10.4.19",

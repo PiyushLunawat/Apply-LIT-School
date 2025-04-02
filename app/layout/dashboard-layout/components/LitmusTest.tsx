@@ -15,9 +15,21 @@ import { useNavigate } from '@remix-run/react';
 import { Badge } from '~/components/ui/badge';
 import { Dialog, DialogContent } from '~/components/ui/dialog';
 import { Progress } from '~/components/ui/progress';
-import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import axios from 'axios';
 import { SchedulePresentation } from '~/components/organisms/schedule-presentation-dialog/schedule-presentation';
+
+import {
+  S3Client,
+  DeleteObjectCommand,
+} from "@aws-sdk/client-s3";
+
+const s3Client = new S3Client({
+  region: typeof window !== "undefined" && window.ENV ? window.ENV.AWS_REGION : process.env.AWS_REGION, // Fallback to server-side environment variable
+  credentials: {
+    accessKeyId: typeof window !== "undefined" && window.ENV ? window.ENV.AWS_ACCESS_KEY_ID : process.env.AWS_ACCESS_KEY_ID as string, // Fallback to server-side environment variable
+    secretAccessKey: typeof window !== "undefined" && window.ENV ? window.ENV.AWS_SECRET_ACCESS_KEY : process.env.AWS_SECRET_ACCESS_KEY as string, // Fallback to server-side environment variable
+  },
+});
 
 const getColor = (index: number) => {
   const colors = [ 'text-emerald-600', 'text-[#3698FB]', 'text-[#FA69E5]', 'text-orange-600'];
@@ -57,6 +69,7 @@ export default function LitmusTest({ student }: LitmusTestProps) {
   
   const latestCohort = student?.appliedCohorts?.[student?.appliedCohorts.length - 1];
   const cohortDetails = latestCohort?.cohortId;
+  console.log("whwhw",latestCohort);
   
   const [litmusTestDetails, setLitmusTestDetails] = useState<any>(latestCohort?.litmusTestDetails);
   const [status, setStatus] = useState<string>(litmusTestDetails?.status);

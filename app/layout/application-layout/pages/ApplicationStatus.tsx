@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { getCurrentStudent, submitTokenReceipt } from '~/utils/studentAPI';
+import { getCurrentStudent } from '~/utils/studentAPI';
 import { Pencil, X } from 'lucide-react';
 import ProgressBar from '~/components/molecules/ProgressBar/ProgressBar';
 import Review from '~/components/organisms/Review/Review';
@@ -57,10 +57,7 @@ export const ApplicationStatus: React.FC = () => {
                 setSubmessage(`You may access your dashboard.`);
               }
             setIsPaymentVerified(isVerified);
-
           }
-
-          
       } catch (err: any) {
         setError(err);
       } finally {

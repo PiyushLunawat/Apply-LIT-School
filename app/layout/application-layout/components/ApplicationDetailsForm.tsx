@@ -43,7 +43,7 @@ const formSchema = z.object({
     isMobileVerified: z.boolean().optional(),
     linkedInUrl: z.string().optional(),
     instagramUrl: z.string().optional(),
-    gender: z.enum(["Male", "Female", "Other"]),
+    gender: z.enum(["male", "female", "other"]),
   }),
   profileUrl: z.any().optional(),
   applicationData: z.object({  
@@ -361,7 +361,7 @@ useEffect(() => {
               cohort: studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]?.cohortId._id || '',
               linkedInUrl: studentData?.linkedInUrl || '',
               instagramUrl: studentData?.instagramUrl || '',
-              gender: studentData?.gender || 'Male',
+              gender: studentData?.gender || 'male',
             },
             applicationData: {
               address: sData?.currentAddress?.streetAddress || '',
@@ -417,7 +417,7 @@ useEffect(() => {
             currentStatus: existingData?.studentData?.currentStatus ||  studentData?.qualification || "",
             linkedInUrl: existingData?.studentData?.linkedInUrl || studentData?.linkedInUrl || "",
             instagramUrl: existingData?.studentData?.instagramUrl || studentData?.instagramUrl || "",
-            gender: existingData?.studentData?.gender || studentData?.gender || "Male",
+            gender: existingData?.studentData?.gender || studentData?.gender || "male",
           },
   
           applicationData: {
@@ -673,6 +673,13 @@ useEffect(() => {
         setLoading(false);
         return;
       }
+
+      const verifyPaymentStatus=async (orderId:any)=>{
+
+        const res= await fetch('')
+    console.log(res);
+    
+      }
   
       // Fetch application fee amount
       const applicationFee = applicationFees || 500;
@@ -680,7 +687,9 @@ useEffect(() => {
       const cId = fetchedStudentData.appliedCohorts[fetchedStudentData.appliedCohorts.length - 1].cohortId._id;
   
       // Call the API to create an order
-      const feeResponse = await payApplicationFee(applicationFees, "INR");
+
+      const feePayLoad = { studentId: sId, cohortId: cId }
+      const feeResponse = await payApplicationFee(feePayLoad);
       console.log("Fee payment response:", feeResponse);
   
       // Configure Razorpay options
@@ -693,28 +702,13 @@ useEffect(() => {
         image: 'https://example.com/your_logo', // Replace with your logo URL
         order_id: feeResponse.data.id, // Use the order ID returned from the server
         handler: async function (response: any) {
-          console.log('Payment successful:', response);
-  
-          // Prepare payload for payment verification
-          const verifyPayload = {
-            appFeeData: {
-              currency: "INR",
-              amount: applicationFee,
-              receipt: "",
-            },
-            studentId: sId,
-            cohortId: cId,
-            razorpay_order_id: response.razorpay_order_id,
-            razorpay_payment_id: response.razorpay_payment_id,
-            razorpay_signature: response.razorpay_signature,
-          };
-  
+          
           // Verify the payment on the server
           try {
-            const verifyResponse = await verifyApplicationFeePayment(verifyPayload);
+            const verifyResponse = await verifyApplicationFeePayment(response.razorpay_order_id);
             console.log("Payment verification response:", verifyResponse);
   
-            if (verifyResponse.status === 'ok') {
+            if (verifyResponse.success) {
               setIsPaymentDone(true);
               setSuccessDialogOpen(true);
             } 
@@ -1166,15 +1160,15 @@ useEffect(() => {
                   className="flex space-x-6 mt-2"
                 >
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="Male" id="male" />
+                    <RadioGroupItem value="male" id="male" />
                     <Label htmlFor="male" className="text-sm sm:text-base font-normal">Male</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="Female" id="female" />
+                    <RadioGroupItem value="female" id="female" />
                     <Label htmlFor="female" className="text-sm sm:text-base font-normal">Female</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="Other" id="other" />
+                    <RadioGroupItem value="other" id="other" />
                     <Label htmlFor="other" className="text-sm sm:text-base font-normal">Other</Label>
                   </div>
                 </RadioGroup>
@@ -2050,7 +2044,7 @@ useEffect(() => {
     </DialogContent>
     </Dialog>
     <PaymentSuccessDialog open={successDialogOpen} setOpen={setSuccessDialogOpen} type='step1' mail={studentData?.email || 'your email'} fee={applicationFees || 0} onContinue={handleContinueToDashboard}/>
-    <PaymentFailedDialog open={failedDialogOpen} setOpen={setFailedDialogOpen} type='step1' mail={studentData?.email || 'your email'} onContinue={handleRetry}/>
+    <PaymentFailedDialog open={failedDialogOpen} setOpen={setFailedDialogOpen} type='step1' mail={studentData?.email || 'your email'} onContinue={handleRetry} amount={applicationFees}/>
     <div id='recaptcha-container'>
 
     </div>

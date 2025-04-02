@@ -10,6 +10,7 @@ interface DialogProps {
   mail: string;
   onContinue: () => void;
   fee?: any;
+  amount?: any;
 }
 
 const PaymentSuccessDialog: React.FC<DialogProps> = ({ open, setOpen, type, mail, onContinue, fee }) => (
@@ -39,7 +40,7 @@ const PaymentSuccessDialog: React.FC<DialogProps> = ({ open, setOpen, type, mail
   </Dialog>
 );
 
-const PaymentFailedDialog: React.FC<DialogProps> = ({ open, setOpen, type, mail }) => (
+const PaymentFailedDialog: React.FC<DialogProps> = ({ open, setOpen, type, amount, mail, onContinue }) => (
   <Dialog open={open} onOpenChange={setOpen}>
     <DialogContent className="max-w-[90vw] sm:max-w-[480px] bg-[#09090b] text-white rounded-lg px-8 py-16 text-center shadow-[0px_4px_32px_0px_rgba(0,0,0,0.75)]
 ">
@@ -51,12 +52,12 @@ const PaymentFailedDialog: React.FC<DialogProps> = ({ open, setOpen, type, mail 
         </div>
         <div className='text-base font-normal py-8'>
           {type === 'step1' ?
-           `Your payment of INR 500.00 was unsuccessful.` :
-           `Your seat reservation fee payment of INR 25,000.00 was unsuccessful.`}
+           `Your payment of INR ${amount}.00 was unsuccessful.` :
+           `Your seat reservation fee payment of INR ${amount}.00 was unsuccessful.`}
         </div>
       </div>
       <div className="flex flex-col gap-3">
-        <Button size="xl" className="w-fit mx-auto bg-[#FF791F] hover:bg-[#FF791F]/90">
+        <Button size="xl" className="w-fit mx-auto bg-[#FF791F] hover:bg-[#FF791F]/90" onClick={() => onContinue()}>
           Try Again
         </Button>
         <Button variant="link" className="" onClick={() => setOpen(false)}>Cancel</Button>

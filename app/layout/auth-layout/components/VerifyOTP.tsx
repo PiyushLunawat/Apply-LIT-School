@@ -5,7 +5,7 @@ import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '~/comp
 import { Button } from '~/components/ui/button';
 import { MailIcon, Phone } from 'lucide-react';
 import { Label } from '~/components/ui/label';
-import { useNavigate } from '@remix-run/react';
+import { useNavigate, useRevalidator } from '@remix-run/react';
 import {
   Form,
   FormControl,
@@ -24,9 +24,7 @@ import { PhoneAuthProvider, signInWithCredential } from 'firebase/auth';
 import { auth } from 'firebase.config';
 
 const formSchema = z.object({
-  otp: z
-    .string()
-    .length(6, { message: "OTP must be 6 digits" })
+  otp: z.string().length(6, { message: "OTP must be 6 digits" })
     .regex(/^\d+$/, { message: "OTP must contain only numbers" }),
     generalError: z.string().optional(),
 });
@@ -53,7 +51,8 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
     const { studentData, setStudentData } = useContext(UserContext);
     const [timer, setTimer] = useState(59);
     const [loading, setLoading] = useState(false);
-
+    const { revalidate } = useRevalidator();
+    
     const form = useForm<FormValues>({
       resolver: zodResolver(formSchema),
       defaultValues: {
@@ -77,30 +76,58 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
 
       if(verificationType === 'email'){
         const res = await verifyOtp({ email: contactInfo, otp: data.otp });
-        Cookies.set('user-token', res.token, { expires: 4});
+
+        if (res.success) {
+          // If OTP is verified successfully, send the response to the server-side action
+          const response = await fetch('/set-cookies', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              accessToken: res.accessToken,
+              refreshToken: res.refreshToken,
+              userId: res.user.id,
+            }),
+          });
+  
+          const result = await response.json();
+  
+          if (result.success) {
+            // Optionally store student data in context or local storage
+            localStorage.setItem('studentData', JSON.stringify(res.user));
+            setStudentData(res.user);
+          } else {
+            form.setError('otp', { type: 'manual', message: result.message });
+          }
+        } else {
+          form.setError('otp', { type: 'manual', message: 'OTP verification failed' });
+        }
 
         console.log("resp",res)
+        revalidate();
         // Store studentData in localStorage
-        if (res.studentData) {
-        localStorage.setItem('studentData', JSON.stringify(res.studentData));
+
+        const student = await getCurrentStudent(res.user.id);
+        if (student) {
+          localStorage.setItem('studentData', JSON.stringify(student));
           const storedData = localStorage.getItem('studentData');
           if (storedData) {
             setStudentData(JSON.parse(storedData));
           }
         }
-        if (res.studentData?.appliedCohorts[res.studentData?.appliedCohorts.length - 1]?.status === 'enrolled'){
+
+        if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'enrolled'){
           navigate('../../dashboard');
-        }
-        else if (res.studentData?.appliedCohorts[res.studentData?.appliedCohorts.length - 1]?.status === 'reviewing'){
+        } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'reviewing'){
           navigate('../../application/status');
-        }
-        else if (res.studentData?.appliedCohorts[res.studentData?.appliedCohorts.length - 1]?.status === 'applied'){
+        } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'applied'){
           navigate('../../application/task');
-        }
-        else if (res.studentData?.appliedCohorts[res.studentData?.appliedCohorts.length - 1]?.status === 'initiated'){
+        } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'initiated'){
           navigate('../../application');
-        }
-        else{
+        } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'dropped'){
+          navigate('../../application/new-application');
+        } else {
           navigate('../../application');
         }
       }
@@ -136,15 +163,6 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
         } catch (error) {
           console.error("Error verifying OTP:", error);
         }
-
-        // if (res?.data) {
-        //   localStorage.setItem('studentData', JSON.stringify(res.data));
-        //   setStudentData(res.data); 
-        //   if (setIsDialogOpen) { // Ensure it's defined
-        //     setIsDialogOpen(false); 
-        //   }
-        //   console.log('Mobile number verified successfully.');
-        // }
       }
       
     } catch (error) {

@@ -4,7 +4,7 @@ import ApplicationTask from "~/layout/application-layout/pages/ApplicationTask";
 
 export const meta: MetaFunction = () => {
   return [
-    { title: "Application | Task" },
+    { title: "Application | Application Task" },
     { name: "description", content: "Complete your assigned task or assignment." },
   ];
 };

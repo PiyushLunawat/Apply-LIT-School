@@ -9,12 +9,8 @@ import { startTransition, StrictMode } from "react";
 import { hydrateRoot } from "react-dom/client";
 import { RegisterInterceptor } from "./utils/interceptor";
 import 'whatwg-fetch'; 
-import { getCohorts } from "./utils/api";
 
 startTransition(() => {
-  // Register the interceptor
-  RegisterInterceptor();
-
   hydrateRoot(
     document,
     <StrictMode>

@@ -57,8 +57,8 @@ const ApplicationQNA: React.FC = () => {
               key={index} onClick={() => toggleQuestion(index)}
               className={`text-white text-base font-semibold transition-all duration-300 space-y-1.5 cursor-pointer ${activeQuestion === index ? '' : ''}`}>
               <div className="min-h-[100px] flex justify-between items-center py-4 sm:py-8 px-6 sm:px-10 rounded-xl sm:rounded-3xl bg-[#1F1F1F] w-full ">
-                <span className='text-sm sm:text-base'>{q.question}</span>
-                {activeQuestion === index ? <ArrowUp className='h-4 sm:h-6'/>: <ArrowDown className='h-4 sm:h-6'/>}
+                <span className='flex-1 text-sm sm:text-base'>{q.question}</span>
+                {activeQuestion === index ? <ArrowUp className='ml-3 h-4 sm:h-6'/>: <ArrowDown className='ml-3 h-4 sm:h-6'/>}
               </div>
                 <div className={`min-h-[100px] flex justify-between items-center py-4 sm:py-8 px-6 sm:px-10 rounded-xl sm:rounded-3xl bg-[#FF791F] transition-all duration-300 ${activeQuestion === index ? '' : 'hidden'}`}>
                   <p className="text-sm sm:text-base text-gray-100">{q.answer}</p>

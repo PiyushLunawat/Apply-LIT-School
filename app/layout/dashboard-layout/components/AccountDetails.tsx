@@ -4,7 +4,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { Card, CardHeader, CardFooter, CardContent } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Dialog, DialogContent } from "~/components/ui/dialog";
-import { Eye, Download, CheckCircle, Pencil, Camera, FileLock } from "lucide-react";
+import { Eye, Download, CheckCircle, Pencil, Camera, FileLock, SquarePen, Plus } from "lucide-react";
 import LitIdFront from "~/components/molecules/LitId/LitIdFront";
 import LitIdBack from "~/components/molecules/LitId/LitIdBack";
 import { UserContext } from "~/context/UserContext";
@@ -31,63 +31,60 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
 
   const [bloodGroupInput, setBloodGroupInput] = useState<string>("");
   const [linkedInInput, setLinkedInInput] = useState<string>("");
+  const [editLinkedInInput, setEditLinkedInInput] = useState<boolean>(student?.linkedInUrl);
   const [instagramInput, setInstagramInput] = useState<string>("");
+  const [editInstagramInput, setEditInstagramInput] = useState<boolean>(studentData?.instagramUrl);
+  const [addSocials, setAddSocials] = useState<boolean>(false);
 
   const pdfRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (student) {
       setDetails(student);
-      setBloodGroupInput(student.bloodGroup || "");      
+      setBloodGroupInput(student.bloodGroup || "");
+      setLinkedInInput(student?.linkedInUrl || "");
+      setEditLinkedInInput(!(student?.linkedInUrl))
+      setInstagramInput(student?.instagramUrl || "");
+      setEditInstagramInput(!(student?.instagramUrl));
+      setAddSocials((student?.linkedInUrl && student?.instagramUrl))
     }
   }, [student]);
 
   const handleDownloadPDF = async () => {
     if (!pdfRef.current) return;
-    setIsGeneratingPDF(true); // Optional: For loading state
-    try {
-      // Capture LitIdFront
-      const frontElement = pdfRef.current.querySelector('#front') as HTMLElement;
-      if (!frontElement) {
-        throw new Error('Front element not found');
-      }
-      const frontCanvas = await html2canvas(frontElement, {
-        scale: 1, 
-        useCORS: true, 
-        logging: true, 
-      });
-      const frontImgData = frontCanvas.toDataURL('image/png');
+    setIsGeneratingPDF(true);
   
-      // Capture LitIdBack
+    try {
+      const frontElement = pdfRef.current.querySelector('#front') as HTMLElement;
       const backElement = pdfRef.current.querySelector('#back') as HTMLElement;
-      if (!backElement) {
-        throw new Error('Back element not found');
+  
+      if (!frontElement || !backElement) {
+        throw new Error('One or both elements not found');
       }
-      const backCanvas = await html2canvas(backElement, {
-        scale: 2,
+  
+      const options = {
+        scale: 2, // Ensures high quality rendering
         useCORS: true,
-        logging: true,
-      });
+        logging: false,
+      };
+  
+      const frontCanvas = await html2canvas(frontElement, options);
+      const backCanvas = await html2canvas(backElement, options);
+  
+      const frontImgData = frontCanvas.toDataURL('image/png');
       const backImgData = backCanvas.toDataURL('image/png');
   
-      // Initialize jsPDF
       const pdf = new jsPDF('portrait', 'mm', 'a4');
-  
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
   
-      // Add LitIdFront to PDF
-      const imgPropsFront = pdf.getImageProperties(frontImgData);
-      const frontPdfHeight = (imgPropsFront.height * pdfWidth) / imgPropsFront.width;
-      pdf.addImage(frontImgData, 'PNG', 0, 0, pdfWidth, frontPdfHeight);
+      // Add Front Page
+      pdf.addImage(frontImgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
   
-      // Add LitIdBack as a new page
+      // Add Back Page
       pdf.addPage();
-      const imgPropsBack = pdf.getImageProperties(backImgData);
-      const backPdfHeight = (imgPropsBack.height * pdfWidth) / imgPropsBack.width;
-      pdf.addImage(backImgData, 'PNG', 0, 0, pdfWidth, backPdfHeight);
+      pdf.addImage(backImgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
   
-      // Save the PDF
       pdf.save('LitID.pdf');
     } catch (err) {
       console.error('Failed to generate PDF:', err);
@@ -95,8 +92,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
     } finally {
       setIsGeneratingPDF(false);
     }
-  };
-  
+  };  
 
   const handleEditImage = () => {
     document.getElementById("passport-input")?.click();
@@ -167,7 +163,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
   
       if (response.status) {
         setStudentData({ ...studentData, linkedInUrl: linkedInInput });
-        setLinkedInInput("");
+        setEditLinkedInInput(false)
       }
     } catch (error) {
       console.error("Error updating LinkedIn URL:", error);
@@ -186,7 +182,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
   
       if (response.status) {
         setStudentData({ ...studentData, instagramUrl: instagramInput });
-        setInstagramInput("");
+        setEditInstagramInput(false)
       }
     } catch (error) {
       console.error("Error updating Instagram URL:", error);
@@ -241,26 +237,26 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
             <div className="w-full">
               {/* Full Name */}
               <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-                <div className="text-sm font-light">Full Name</div>
-                <div className="text-xl">
+                <div className="text-xs sm:text-sm font-light">Full Name</div>
+                <div className="text-base sm:text-xl">
                   {studentData?.firstName + " " + studentData?.lastName || "--"}
                 </div>
               </div>
 
               {/* Email */}
               <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-                <div className="text-sm font-light">Email</div>
+                <div className="text-xs sm:text-sm font-light">Email</div>
                 <div className="flex justify-between items-center">
-                  <div className="text-xl">{studentData?.email || "--"}</div>
+                  <div className="text-base sm:text-xl">{studentData?.email || "--"}</div>
                   <CheckCircle className="h-4 w-4 text-[#00CC92]" />
                 </div>
               </div>
 
               {/* Contact No. */}
               <div className="flex flex-col gap-2 border-b md:border-none border-gray-700 py-4">
-                <div className="text-sm font-light">Contact No.</div>
+                <div className="text-xs sm:text-sm font-light">Contact No.</div>
                 <div className="flex justify-between items-center">
-                  <div className="text-xl">{studentData?.mobileNumber || "--"}</div>
+                  <div className="text-base sm:text-xl">{studentData?.mobileNumber || "--"}</div>
                   <CheckCircle className="h-4 w-4 text-[#00CC92]" />
                 </div>
               </div>
@@ -269,9 +265,9 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
 
           {/* Institute Name */}
           <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-            <div className="text-sm font-light">Institute Name</div>
+            <div className="text-xs sm:text-sm font-light">Institute Name</div>
             <div className="flex justify-between items-center">
-              <div className="text-xl">
+              <div className="text-base sm:text-xl">
                 {details?.appliedCohorts?.[details?.appliedCohorts.length - 1]?.applicationDetails?.studentDetails?.previousEducation?.nameOfInstitution || "c--"}
               </div>
               <CheckCircle className="h-4 w-4 text-[#00CC92]" />
@@ -280,8 +276,8 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
 
           {/* Date of Birth */}
           <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-            <div className="text-sm font-light">Date of Birth</div>
-            <div className="text-xl">
+            <div className="text-xs sm:text-sm font-light">Date of Birth</div>
+            <div className="text-base sm:text-xl">
               {studentData?.dateOfBirth
                 ? new Date(studentData?.dateOfBirth).toLocaleDateString()
                 : "--"}
@@ -291,24 +287,24 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
           {/* Gender & Blood Group */}
           <div className="flex lg:flex-row flex-col lg:items-center">
             <div className="flex-1 flex flex-col gap-2 border-b border-gray-700 py-4">
-              <div className="text-sm font-light">Gender</div>
-              <div className="text-xl text-white">{studentData?.gender || "--"}</div>
+              <div className="text-xs sm:text-sm font-light">Gender</div>
+              <div className="text-base sm:text-xl text-white">{studentData?.gender || "--"}</div>
             </div>
             <div className="flex-1 flex items-center border-b border-gray-700 py-4">
               {studentData?.bloodGroup ? (
                 <div className="flex-1 flex flex-col gap-2">
-                  <div className="text-sm font-light">Blood Group</div>
-                  <div className="text-xl text-white">{studentData?.bloodGroup}</div>
+                  <div className="text-xs sm:text-sm font-light">Blood Group</div>
+                  <div className="text-base sm:text-xl text-white">{studentData?.bloodGroup}</div>
                 </div>
               ) : (
                 <div className="flex-1 flex flex-col gap-2">
-                  <div className="text-sm font-light">Blood Group</div>
+                  <div className="text-xs sm:text-sm font-light">Blood Group</div>
                   <input
                     type="text"
                     value={bloodGroupInput}
                     onChange={(e) => setBloodGroupInput(e.target.value)}
                     placeholder="O+"
-                    className="bg-transparent text-xl focus-visible:none border-none focus-visible:outline-none focus-border-none w-full"
+                    className="bg-transparent text-base sm:text-xl focus-visible:none border-none focus-visible:outline-none focus-border-none w-full"
                   />
                 </div>
               )}
@@ -322,79 +318,82 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
           {/* LinkedIn ID + Instagram ID */}
           <div className="flex lg:flex-row flex-col justify-between lg:items-center">
             {/* LinkedIn URL */}
-            <div className="flex flex-1 justify-between items-center border-b border-gray-700 py-4">
-              <div className="flex flex-col space-y-2">
-                <div className="text-sm font-light">LinkedIn ID</div>
-                {(studentData?.linkedInUrl !== "" && linkedInInput === "") ? (
-                  <div className="text-xl">{studentData?.linkedInUrl || "--"}</div>
-                ) : (
-                  <input
-                    value={linkedInInput}
-                    onChange={(e) => setLinkedInInput(e.target.value)}
-                    placeholder="Enter LinkedIn URL"
-                    className="bg-transparent text-muted-foreground text-xl focus-visible:none border-none focus-visible:outline-none focus-border-none w-full"
-                  />
-                )}
+            {(addSocials || student?.linkedInUrl) &&
+              <div className="flex flex-1 justify-between items-center border-b border-gray-700 py-4">
+                <div className="flex flex-1 flex-col space-y-2">
+                  <div className="text-xs sm:text-sm font-light">LinkedIn ID</div>
+                    <input
+                      readOnly={!editLinkedInInput}
+                      value={linkedInInput}
+                      onChange={(e) => setLinkedInInput(e.target.value)}
+                      placeholder="Enter LinkedIn URL"
+                      className="bg-transparent text-white text-base sm:text-xl focus-visible:none border-none focus-visible:outline-none focus-border-none w-full"
+                    />
+                </div>
+                <Button
+                  className={`${(editLinkedInInput) ? "" : "bg-transparent hover:bg-[#09090b]"} rounded-lg lg:mr-4`}
+                  size={(editLinkedInInput) ? "lg" : "icon"}
+                  onClick={() => {
+                    if (editLinkedInInput) {
+                      handleLinkedInSave();
+                    } else {
+                      setEditLinkedInInput(true);
+                    }
+                  }}
+                >
+                  {(editLinkedInInput) ? (
+                    'Save'
+                  ) : (
+                    <SquarePen className="h-4 w-4" />
+                  )}
+                </Button>
               </div>
-              <Button
-                className={`${(studentData?.linkedInUrl !== "" && linkedInInput === "") ? "bg-transparent" : ""} rounded-lg`}
-                size={(studentData?.linkedInUrl !== "" && linkedInInput === "") ? "icon" : "lg"}
-                onClick={() => {
-                  if (studentData?.linkedInUrl !== "" && linkedInInput === "") {
-                    setLinkedInInput(studentData?.linkedInUrl || "");
-                  } else {
-                    handleLinkedInSave();
-                  }
-                }}
-              >
-                {(studentData?.linkedInUrl !== "" && linkedInInput === "") ? (
-                  <Pencil className="h-4 w-4 text-white" />
-                ) : (
-                  'Save'
-                )}
-              </Button>
-            </div>
+            }
 
             {/* Instagram URL */}
-            <div className="flex flex-1 justify-between items-center border-b border-gray-700 py-4">
-              <div className="flex flex-col space-y-2">
-                <div className="text-sm font-light">Instagram ID</div>
-                {(studentData?.instagramUrl !== "" && instagramInput === "") ? (
-                  <div className="text-xl">{studentData?.instagramUrl || "--"}</div>
-                ) : (
-                  <input
-                    value={instagramInput}
-                    onChange={(e) => setInstagramInput(e.target.value)}
-                    placeholder="Enter Instagram URL"
-                    className="bg-transparent text-muted-foreground text-xl focus-visible:none border-none focus-visible:outline-none focus-border-none w-full"
-                  />
-                )}
+            {(addSocials || student?.instagramUrl) &&
+              <div className="flex flex-1 justify-between items-center border-b border-gray-700 py-4">
+                <div className="flex flex-1 flex-col space-y-2">
+                  <div className="text-xs sm:text-sm font-light">Instagram ID</div>
+                    <input
+                      readOnly={!editInstagramInput}
+                      value={instagramInput}
+                      onChange={(e) => setInstagramInput(e.target.value)}
+                      placeholder="Enter Instagram URL"
+                      className="bg-transparent text-base sm:text-xl focus-visible:none border-none focus-visible:outline-none focus-border-none w-full"
+                    />
+                </div>
+                <Button
+                  className={`${(editInstagramInput) ? "" : "bg-transparent hover:bg-[#09090b]"} rounded-lg`}
+                  size={(editInstagramInput) ? "lg" : "icon"}
+                  onClick={() => {
+                    if ((editInstagramInput)) {
+                      handleInstagramSave();
+                    } else {
+                      setEditInstagramInput(true);
+                    }
+                  }}
+                >
+                  {(editInstagramInput) ? (
+                    'Save'
+                  ) : (
+                    <SquarePen className="flex-1 h-4 w-4" />
+                  )}
+                </Button>
               </div>
-              <Button
-                className={`${(studentData?.instagramUrl !== "" && instagramInput === "") ? "bg-transparent" : ""} rounded-lg`}
-                size={(studentData?.instagramUrl !== "" && instagramInput === "") ? "icon" : "lg"}
-                onClick={() => {
-                  if ((studentData?.instagramUrl !== "" && instagramInput === "")) {
-                    setInstagramInput(studentData?.instagramUrl || "");
-                  } else {
-                    handleInstagramSave();
-                  }
-                }}
-              >
-                {(studentData?.instagramUrl !== "" && instagramInput === "") ? (
-                  <Pencil className="h-4 w-4 text-white" />
-                ) : (
-                  'Save'
-                )}
-              </Button>
-            </div>
+            }
           </div>
+          {!addSocials &&
+            <Button size={'xl'} className="w-full sm:w-fit my-2" onClick={() => setAddSocials(true)}>
+              <Plus className="h-4 w-4" /> Add Social
+            </Button>
+          }
         </CardContent>
       </Card>
 
       {/* 2) LIT ID Card Section */}
       <div className="space-y-6">
-        <Card className="relative flex items-center justify-between border p-4 bg-[#64748B1F]">
+        <Card className="relative flex flex-col lg:flex-row gap-3 items-center justify-between border p-4 bg-[#64748B1F]">
           <div className="relative flex items-center gap-4">
             <div className="relative group w-16 h-16">
               <img
@@ -424,7 +423,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
           </div>
 
           {student?.bloodGroup &&
-            <Button size="xl" variant="outline" className="flex items-center gap-2" onClick={handleDownloadPDF}>
+            <Button size="xl" variant="outline" className="flex w-full lg:w-fit items-center gap-2" onClick={handleDownloadPDF}>
               <Download className="h-4 w-4" />
               {isGeneratingPDF? 'Downloading...' : 'Download'}
             </Button>
@@ -448,21 +447,23 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
 
 
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogContent className="max-w-4xl py-2 px-6 h-[90vh] overflow-y-auto">
-            <div className="flex gap-4 items-center justify-center">
-              <div className="w-1/2">
-                <LitIdFront data={studentData} />
+          <DialogContent className="flex justify-center items-start max-w-[90vw] sm:max-w-4xl py-2 px-6 h-[90vh] overflow-y-auto">
+            <div className="flex flex-col justify-center">
+              <div className="flex flex-col sm:flex-row mx-auto gap-4 items-center justify-center">
+                <div className="w-1/2 sm:w-full">
+                  <LitIdFront data={studentData} />
+                </div>
+                <div className="w-1/2 sm:w-full">
+                  <LitIdBack data={studentData} ScanUrl="" />
+                </div>
               </div>
-              <div className="w-1/2">
-                <LitIdBack data={studentData} ScanUrl="" />
-              </div>
+              
+              <Button size="xl" variant="outline" className="w-fit flex items-center gap-2 mx-auto mt-4"
+                onClick={handleDownloadPDF} >
+                <Download className="h-4 w-4" />
+                {isGeneratingPDF? 'Downloading...' : 'Download'}
+              </Button>
             </div>
-            
-            <Button size="xl" variant="outline" className="w-fit flex items-center gap-2 mx-auto mt-4"
-              onClick={handleDownloadPDF} >
-              <Download className="h-4 w-4" />
-              {isGeneratingPDF? 'Downloading...' : 'Download'}
-            </Button>
           </DialogContent>
         </Dialog>
       </div>

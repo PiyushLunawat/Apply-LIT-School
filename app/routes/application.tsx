@@ -1,24 +1,30 @@
 // app/routes/application.tsx
-import { LoaderFunctionArgs } from "@remix-run/node";
+import { LoaderFunction, LoaderFunctionArgs } from "@remix-run/node";
 import { Outlet, redirect } from "@remix-run/react";
+import { accessTokenCookie, refreshTokenCookie, userIdCookie } from "~/cookies/cookies";
 import ApplicationLayout from "~/layout/application-layout/components/ApplicationLayout";
+import { RegisterInterceptor } from "~/utils/interceptor";
 
-// export async function loader({ request }: LoaderFunctionArgs) {
-//   const session = await getSession(request.headers.get("Cookie"));
-//   const token = session.get("userToken");
+export const loader: LoaderFunction = async ({ request }) => {
+  // Parse the cookie from the incoming request
+  const cookieHeader = request.headers.get("Cookie");
+  const accessToken = await accessTokenCookie.parse(cookieHeader);
+  const refreshToken = await refreshTokenCookie.parse(cookieHeader);
+  const userId = await userIdCookie.parse(cookieHeader);
 
-//   console.log("app Token",token);
+  if (accessToken) {
+    RegisterInterceptor(accessToken);
+  }
+
+  console.log("userId", userId);
   
+  // Now you can use `userId` in your logic
+  if (!userId) {
+    // return redirect("/auth/login");
+  }
 
-//   // If no token, or if it's expired (session is empty), redirect to login
-//   if (!token) {    
-//   console.log("fucckkkkk");
-//   return redirect("/auth/login");
-//   }
-
-//   // Otherwise, proceed with your loader logic
-//   return null; // or return some data
-// }
+  return { userId };
+};
 
 export default function ApplicationRoute() {
   return (

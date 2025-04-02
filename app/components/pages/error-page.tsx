@@ -51,7 +51,7 @@ export const ErrorPage: FC<ErrorPageProps> = ({ code, statusText, errorMessages,
               ) : (
                 <>
                   <h1 className="text-4xl font-bold my-10">
-                    {code}: {statusText}
+                    {code}: {statusText}gsg
                   </h1>
                   <p className="text-muted-foreground">{errorMessages}</p>
                 </>

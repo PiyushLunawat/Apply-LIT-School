@@ -1,4 +1,5 @@
 import React from 'react';
+import { QRCodeCanvas } from "qrcode.react";
 
 interface LitIdBackProps {
   data: any;
@@ -10,11 +11,27 @@ const LitIdBack: React.FC<LitIdBackProps> = ({ data, ScanUrl }) => {
   const cohortDetails = latestCohort?.cohortId;
   const applicationDetails = latestCohort?.applicationDetails;  
 
+  const vCardParams = new URLSearchParams({
+    firstName: data?.firstName || "",
+    lastName: data?.lastName || "",
+    phone: data?.mobileNumber || "",
+    email: data?.email || "",
+    profileUrl: data?.profileUrl || "",
+    linkedIn: data?.linkedInUrl || "",
+    instagram: data?.instagramUrl || "",
+  });
+
+  const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://apply-lit-school.vercel.app";
+  // Construct the dynamic vCard URL with the user ID and query params
+  const vCardURL = `${baseUrl}/id/${data?._id}?${vCardParams.toString()}`;
+
   return (
     <div className="w-[400px] h-[590.11px] pb-[0.11px] bg-white flex-col justify-center items-center inline-flex">
       <div className="self-stretch h-[590px] flex-col justify-start items-start inline-flex">
         <div className="self-stretch px-2.5 pt-20 pb-10 justify-center items-center gap-2.5 inline-flex">
-          <div className="w-[168px] h-[168px] bg-[#ededed] rounded-xl"></div>
+          <div className="w-[168px] h-[168px] bg-[#ededed] rounded-xl">
+            <QRCodeCanvas value={vCardURL} size={168} />
+          </div>
         </div>
         <div className="self-stretch h-[302px] p-6 flex-col justify-start items-start gap-5 flex">
           <div className="w-[48.36px] h-[54px] relative">

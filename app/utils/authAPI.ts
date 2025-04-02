@@ -1,11 +1,9 @@
-// const baseUrl = "http://51.21.131.240:4000";
-// const baseUrl = "http://localhost:4000";
-const baseUrl = "https://dev.apply.litschool.in";
-// const baseUrl = "https://myfashionfind.shop";
+// utils/authAPI.ts
 
-// const baseUrl = `${
-//   typeof process !== "undefined" ? process.env.API_BASE_URL : ""
-// }`;
+export const baseUrl =
+  typeof window !== "undefined" && window.ENV
+    ? window.ENV.API_BASE_URL
+    : "http://localhost:4000";
 
 // Sign-up function
 export async function signUp(data: {

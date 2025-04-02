@@ -7,23 +7,38 @@ import {
     CardFooter 
   } from "~/components/ui/card"
   import { Button } from "~/components/ui/button"
-  import { CalendarIcon, Mail, Clock, XOctagon, TimerOff } from "lucide-react"  
+  import { CalendarIcon, Mail, Clock, XOctagon, TimerOff, ScreenShare } from "lucide-react"  
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
+import { Dialog, DialogContent } from "~/components/ui/dialog";
+import { SchedulePresentation } from "~/components/organisms/schedule-presentation-dialog/schedule-presentation";
+import { useEffect, useState } from "react";
+import { GetInterviewers } from "~/utils/studentAPI";
+import Feedback from "~/components/molecules/Feedback/Feedback";
 
   interface InterviewDetailsCardProps {
     student: any
   }
   
 export default function InterviewDetailsCard({ student }: InterviewDetailsCardProps) {
-
+  const [interviewOpen, setInterviewOpen] = useState(false);
+  const [interviewer, setInterviewer] = useState<any>([]);
+  
     const latestCohort = student?.appliedCohorts?.[student?.appliedCohorts.length - 1];
     const cohortDetails = latestCohort?.cohortId;
     const applicationDetails = latestCohort?.applicationDetails;
     const lastInterview = latestCohort?.applicationDetails?.applicationTestInterviews?.[latestCohort?.applicationDetails?.applicationTestInterviews.length - 1];
     
-    const currentTime = new Date();
-    const formattedTime = currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+    const [formattedTime, setFormattedTime]= useState(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }));
+  
+    useEffect(() => {
+      const interval = setInterval(() => {
+        setFormattedTime(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true }));
+      }, 1000);
+  
+      return () => clearInterval(interval); // Cleanup interval on unmount
+    }, []);
 
+    
     const formattedDate = new Date(lastInterview?.meetingDate).toLocaleDateString('en-US', {
         weekday: 'long',  // Full day name (e.g., "Monday")
         month: 'long',    // Full month name (e.g., "October")
@@ -37,7 +52,7 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
     // Enable the Join Meeting button if the current time is at least 10 minutes before the meeting start time.
     // That is, current time must be >= (meetingStart - 10 minutes).
     const joinMeetingEnabled = meetingStart
-      ? currentTime.getTime() >= meetingStart.getTime() - 10 * 60000
+      ? new Date().getTime() >= meetingStart.getTime() - 10 * 60000
       : false;
 
       let durationMin = "";
@@ -54,18 +69,72 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
         return <div className="text-center">No interviews found.</div>;
     }
 
+    const handleScheduleInterview = async () => {
+  
+      const data = {
+        cohortId: latestCohort?.cohortId?._id,
+        role: 'application_reviewer',
+      };
+      
+      const response = await GetInterviewers(data);
+    
+      const payload = {
+        emails: response.data,
+        eventCategory: "Application Test Review", 
+      };
+      try {
+        const response = await fetch(
+          "https://dev.cal.litschool.in/api/application-portal/get-all-users",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          }
+        );
+        
+        setInterviewOpen(true);
+        if (!response.ok) {
+          throw new Error(`Failed to schedule interview: ${response.statusText}`);
+        }
+    
+        const result = await response.json();
+        setInterviewer(result.data)
+        // console.log("Interview scheduled successfully:", result.data);
+      } 
+      catch (error) {
+        console.error("Error scheduling interview:", error);
+        // alert("Failed to schedule interview. Please try again later.");
+      }
+    };
+
     const handleCancel = () => {
-    const url = `https://dev.cal.litschool.in/meetings/cancel/${lastInterview?._id}`;
+    const url = `https://dev.cal.litschool.in/meetings/cancel/67ebab5dffb2539c4ce9ef98`;
     console.log(url); // Logs the URL to the console
     window.open(url, "_blank");
     };
 
     return (
       <div className="space-y-6">
+
+        {applicationDetails?.applicationStatus === 'interview cancelled' && 
+          <Card className="max-w-6xl mx-auto px-8 py-6 flex justify-between items-center">
+            <div className="flex gap-2 items-center">
+              <ScreenShare className="w-4 h-4" />
+              Proceed to reschedule your interview call with our counsellor.
+            </div>
+            <Button size={'xl'} variant="default" onClick={() => handleScheduleInterview()}
+            >
+              Schedule an Interview
+            </Button>
+          </Card>
+        }
+
         {applicationDetails?.applicationTestInterviews.slice().reverse().map((interview: any, index: any) => (
-          <Card key={index} className={`max-w-6xl mx-auto md:flex md:flex-row rounded-2xl sm:rounded-3xl ${interview?.meetingStatus === 'interview cancelled' ? 'border-[#FF503D66]' : ''} ${index === 0 ? 'min-h-[680px]' : 'opacity-50 min-h-[500px]'} `}>
+          <Card key={index} className={`max-w-6xl mx-auto md:flex md:flex-row rounded-2xl sm:rounded-3xl ${interview?.meetingStatus === 'Cancelled' ? 'border-[#FF503D66] opacity-50 min-h-[680px]' : index === 0 ? 'min-h-[680px]' : 'opacity-50 min-h-[500px]'} `}>
             {/* Left Section */}
-            <div className={`md:w-1/2 px-8 py-12 flex flex-col justify-between ${interview?.meetingStatus === 'interview cancelled' ? 'bg-[#FF503D66]' : 'bg-[#1B1B1C]'} !rounded-tl-2xl sm:!rounded-tl-3xl rounded-t-2xl sm:rounded-l-3xl sm:rounded-t-none rounded-l-none`}>
+            <div className={`md:w-1/2 px-8 py-12 flex flex-col justify-between ${interview?.meetingStatus === 'Cancelled' ? 'bg-[#FF503D66] ' : 'bg-[#1B1B1C]'} !rounded-tl-2xl sm:!rounded-tl-3xl rounded-t-2xl sm:rounded-l-3xl sm:rounded-t-none rounded-l-none`}>
               <div className="space-y-4 sm:space-y-6">
                 <div className="text-2xl sm:text-3xl font-semibold">
                   LIT Admissions Interview - {cohortDetails?.programDetail?.name} Program
@@ -93,21 +162,19 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
       
             {/* Right Section */}
             <div className="md:w-1/2 px-8 py-12 space-y-6 flex flex-col justify-between">
-              {index !== 0 &&
-                <>
-                  {interview?.meetingStatus == 'interview cancelled' ?
+              {(interview?.meetingStatus !== 'Cancelled' && index !== 0) &&
+                <div className="flex gap-2 items-center text-2xl">
+                  <TimerOff className="w-6 h-6 "/>
+                  This meeting is over
+                </div>
+              }
+              <div className="space-y-10 sm:space-y-12">
+                {interview?.meetingStatus === 'Cancelled' &&
                   <div className="flex gap-2 items-center text-2xl text-[#FF503D]">
                     <XOctagon className="w-6 h-6 "/>
                     This meeting was cancelled by you
-                  </div> :
-                  <div className="flex gap-2 items-center text-2xl">
-                    <TimerOff className="w-6 h-6 "/>
-                    This meeting is over
                   </div>
                 }
-                </>
-              }
-              <div className="space-y-10 sm:space-y-12">
                 <div className="space-y-2 sm:space-y-4">
                     <p className="text-sm sm:text-base font-normal text-[#64748B]">
                         Your Counselling Session has been booked for
@@ -132,7 +199,15 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
                 </div>
               </div>
       
-              {index === 0 ?
+              {interview?.meetingStatus == 'Cancelled' ?
+              <div className="space-y-6">
+                <div className="">
+                  <div className="text-base text-muted-foreground">{new Date(interview?.updatedAt).toLocaleDateString()}</div>
+                  <div className="text-xl text-muted-foreground">Reason for Cancelling:</div>
+                </div>
+                <div className="text-xl">{interview?.feedback}</div>
+              </div> : 
+              index === 0 &&
                 <div>
                   <Button size={'xl'} variant="default" className="w-full"
                     onClick={() => window.open(interview?.meetingUrl, "_blank")} 
@@ -148,19 +223,17 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
                       Cancel Meeting
                     </Button>
                   </div>
-                </div> :
-                <div>
-                <Button size={'xl'} variant="default" className="w-full"
-                  onClick={() => window.open(interview?.meetingUrl, "_blank")} 
-                  disabled
-                >
-                  Join Meeting
-                </Button>
-              </div>
-            }
+                </div>
+              }
             </div>
           </Card>
         ))}
+
+      <Dialog open={interviewOpen} onOpenChange={setInterviewOpen}>
+        <DialogContent className="max-w-[90vw] sm:max-w-2xl">
+          <SchedulePresentation student={student} interviewer={interviewer} eventCategory='Application Test Review'/>
+        </DialogContent>
+      </Dialog>
       </div >
     )
   }
