@@ -3,7 +3,7 @@
 export const baseUrl =
   typeof window !== "undefined" && window.ENV
     ? window.ENV.API_BASE_URL
-    : "http://localhost:4000";
+    : "https://dev.apply.litschool.in";
 
 // Fetch all cohorts
 export async function getCohorts() {
