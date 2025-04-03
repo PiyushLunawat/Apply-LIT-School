@@ -12,7 +12,7 @@ export const ApplicationDetails: React.FC = () => {
           
         <div className="w-full px-4 justify-center items-center">
           <div className='max-w-[1000px] mx-auto'> 
-            {/* <ApplicationDetailsForm /> */}
+            <ApplicationDetailsForm />
           </div>
         </div>
     </>

@@ -59,7 +59,7 @@ export default function FeePaymentSetupDashboard() {
           </p>
         </div>
       </div>
-      {/* <FeePaymentSetup student={student}/> */}
+      <FeePaymentSetup student={student}/>
   </>
   );
 }

@@ -47,7 +47,7 @@ export default function AccountDetailsDashboard() {
           </p>
         </div>
       </div>
-      {/* <AccountDetails student={student} /> */}
+      <AccountDetails student={student} />
   </>
   );
 }

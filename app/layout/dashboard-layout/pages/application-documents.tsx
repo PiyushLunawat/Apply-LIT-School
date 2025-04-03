@@ -46,7 +46,7 @@ export default function ApplicationDocumentsDashboard() {
         </p>
         </div>
       </div>
-      {/* <ApplicationDocuments student={student} /> */}
+      <ApplicationDocuments student={student} />
   </>
   );
 }

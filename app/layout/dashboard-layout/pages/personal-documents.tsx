@@ -48,7 +48,7 @@ const { studentData } = useContext(UserContext);
           </p>
         </div>
       </div>
-      {/* <PersonalDocuments student={student} /> */}
+      <PersonalDocuments student={student} />
   </>
   );
 }
