@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { verifyOtp, resendOtp, verifyMobileOTP } from '~/utils/authAPI';
+import { verifyOtp, resendOtp, verifyMobileOTP } from '~/api/authAPI';
 import Cookies from 'js-cookie';
 import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '~/components/ui/input-otp';
 import { Button } from '~/components/ui/button';
@@ -19,7 +19,7 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { UserContext } from '~/context/UserContext';
-import { getCurrentStudent, updateStudentData } from '~/utils/studentAPI';
+import { getCurrentStudent, updateStudentData } from '~/api/studentAPI';
 import { PhoneAuthProvider, signInWithCredential } from 'firebase/auth';
 import { auth } from 'firebase.config';
 

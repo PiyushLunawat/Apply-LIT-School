@@ -13,7 +13,7 @@ import { useContext, useEffect, useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Separator } from "~/components/ui/separator";
 import { UserContext } from "~/context/UserContext";
-import { getCohortById, getCurrentStudent } from "~/utils/studentAPI";
+import { getCohortById, getCurrentStudent } from "~/api/studentAPI";
 
 interface SchedulePresentationProps {
   student: any;

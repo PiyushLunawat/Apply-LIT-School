@@ -4,7 +4,7 @@ import Footer from "~/components/organisms/Footer/Footer";
 import Header from "~/components/organisms/Header/Header";
 import { Skeleton } from "~/components/ui/skeleton";
 import { UserContext } from "~/context/UserContext";
-import { getCurrentStudent } from "~/utils/studentAPI";
+import { getCurrentStudent } from "~/api/studentAPI";
 
 export default function ApplicationLayout() {
   const { studentData, setStudentData } = useContext(UserContext); 

@@ -8,7 +8,7 @@ import { Eye, Download, CheckCircle, Pencil, Camera, FileLock, SquarePen, Plus }
 import LitIdFront from "~/components/molecules/LitId/LitIdFront";
 import LitIdBack from "~/components/molecules/LitId/LitIdBack";
 import { UserContext } from "~/context/UserContext";
-import { updateStudentData } from "~/utils/studentAPI";
+import { updateStudentData } from "~/api/studentAPI";
 
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";

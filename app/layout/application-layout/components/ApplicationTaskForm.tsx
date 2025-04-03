@@ -28,7 +28,7 @@ import {
 import {
   getCurrentStudent,
   submitApplicationTask
-} from '~/utils/studentAPI';
+} from '~/api/studentAPI';
 import { useNavigate } from '@remix-run/react';
 import axios from 'axios';
 import { Progress } from '~/components/ui/progress';

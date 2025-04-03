@@ -1,9 +1,7 @@
 // utils/authAPI.ts
+import { getEnvValue } from "~/atoms/envAtoms";
 
-export const baseUrl =
-  typeof window !== "undefined" && window.ENV
-    ? window.ENV.API_BASE_URL
-    : "https://dev.apply.litschool.in";
+const baseUrl = getEnvValue("REMIX_PUBLIC_API_BASE_URL");
 
 // Fetch all cohorts
 export async function getCohorts() {

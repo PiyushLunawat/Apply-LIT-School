@@ -8,7 +8,7 @@ import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from '@remix-run/react';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '~/components/ui/form';
-import { loginOTP } from '~/utils/authAPI';
+import { loginOTP } from '~/api/authAPI';
 import { Dialog, DialogContent } from '~/components/ui/dialog';
 import VerifyOTP from './VerifyOTP';
 

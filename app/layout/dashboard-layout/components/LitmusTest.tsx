@@ -4,7 +4,7 @@ import { Upload, Clock, FileTextIcon, RefreshCw, X, Link2Icon, XIcon, UploadIcon
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { GetInterviewers, submitLITMUSTest } from '~/utils/studentAPI'; // Import your API function
+import { GetInterviewers, submitLITMUSTest } from '~/api/studentAPI'; // Import your API function
 import { UserContext } from '~/context/UserContext';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '~/components/ui/form';
 import { Textarea } from '~/components/ui/textarea';

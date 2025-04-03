@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { getCurrentStudent } from '~/utils/studentAPI';
+import { getCurrentStudent } from '~/api/studentAPI';
 import { Pencil, X } from 'lucide-react';
 import ProgressBar from '~/components/molecules/ProgressBar/ProgressBar';
 import Review from '~/components/organisms/Review/Review';

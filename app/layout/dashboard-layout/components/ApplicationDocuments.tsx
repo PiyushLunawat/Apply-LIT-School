@@ -1,7 +1,7 @@
 "use client";
 
 import { useContext, useEffect, useState } from "react";
-import { getCurrentStudent } from "~/utils/studentAPI"; // Ensure correct path
+import { getCurrentStudent } from "~/api/studentAPI"; // Ensure correct path
 import { UserContext } from "~/context/UserContext";
 
 interface Document {

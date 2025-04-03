@@ -18,10 +18,10 @@ import {
 } from '~/components/ui/form';
 import { Calendar, Camera, CheckCircle, Instagram, Linkedin, Mail, Minus, Phone, SaveIcon, XIcon } from 'lucide-react';
 import { UserContext } from '~/context/UserContext';
-import { getCentres, getCohorts, getCurrentStudent, getPrograms, payApplicationFee, submitApplication, verifyApplicationFeePayment } from '~/utils/studentAPI';
+import { getCentres, getCohorts, getCurrentStudent, getPrograms, payApplicationFee, submitApplication, verifyApplicationFeePayment } from '~/api/studentAPI';
 import { Badge } from '~/components/ui/badge';
 import { Dialog, DialogContent } from '~/components/ui/dialog';
-import { verifyNumber } from '~/utils/authAPI';
+import { verifyNumber } from '~/api/authAPI';
 import { format } from 'date-fns';
 import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 import { auth } from 'firebase.config';

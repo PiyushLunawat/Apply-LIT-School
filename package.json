@@ -46,6 +46,7 @@
     "html2canvas": "^1.4.1",
     "input-otp": "^1.2.4",
     "isbot": "^4.1.0",
+    "jotai": "^2.12.2",
     "js-cookie": "^3.0.5",
     "jspdf": "^2.5.2",
     "lucide-react": "^0.451.0",
@@ -66,6 +67,7 @@
   },
   "devDependencies": {
     "@remix-run/dev": "^2.12.1",
+    "@tanstack/react-query": "^5.71.5",
     "@types/firebase": "^2.4.32",
     "@types/js-cookie": "^3.0.6",
     "@types/react": "^18.3.12",

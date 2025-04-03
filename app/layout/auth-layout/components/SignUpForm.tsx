@@ -19,8 +19,8 @@ import { format } from 'date-fns';
 import { z } from 'zod';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { signUp } from '~/utils/authAPI';
-import { getCentres, getCohorts, getPrograms } from '~/utils/studentAPI';
+import { signUp } from '~/api/authAPI';
+import { getCentres, getCohorts, getPrograms } from '~/api/studentAPI';
 import VerifyOTP from './VerifyOTP';
 import { Dialog, DialogContent } from '~/components/ui/dialog';
 

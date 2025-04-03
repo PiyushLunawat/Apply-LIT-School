@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import StatusMessage from '~/components/molecules/ApplicationStatus/ApplicationStatus';
 import InterviewFeedback from '../InterviewFeedback/InterviewFeedback';
 import BookYourSeat from '../../molecules/BookYourSeat/BookYourSeat';
-import { getCurrentStudent } from '~/utils/studentAPI';
+import { getCurrentStudent } from '~/api/studentAPI';
 import Feedback from '~/components/molecules/Feedback/Feedback';
 import { log } from 'node:console';
 import TaskSubmission from '~/components/molecules/TaskSubmission/TaskSubmission';

@@ -2,7 +2,7 @@ import { Link, useNavigate } from "@remix-run/react";
 import { Clock, ClockArrowUp, FileText, FolderClosed, ReceiptIndianRupee, UserIcon } from "lucide-react";
 import { UserContext } from "~/context/UserContext";
 import { useContext, useEffect, useState } from "react";
-import { getCurrentStudent } from "~/utils/studentAPI";
+import { getCurrentStudent } from "~/api/studentAPI";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";

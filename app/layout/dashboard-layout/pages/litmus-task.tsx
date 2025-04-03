@@ -1,6 +1,6 @@
 import { Clock } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
-import { getCurrentStudent } from "~/utils/studentAPI";
+import { getCurrentStudent } from "~/api/studentAPI";
 import { UserContext } from "~/context/UserContext";
 import { useContext, useEffect, useState } from "react";
 import LitmusTest from "../components/LitmusTest";

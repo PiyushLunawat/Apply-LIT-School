@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Dialog, DialogContent } from "~/components/ui/dialog";
 import { Download, Upload, Eye, LoaderCircle, XIcon, SquarePen } from "lucide-react";
-import { uploadStudentDocuments } from "~/utils/studentAPI";
+import { uploadStudentDocuments } from "~/api/studentAPI";
 import axios from "axios";
 import { Progress } from "~/components/ui/progress";
 

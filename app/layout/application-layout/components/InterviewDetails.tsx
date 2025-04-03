@@ -12,7 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Dialog, DialogContent } from "~/components/ui/dialog";
 import { SchedulePresentation } from "~/components/organisms/schedule-presentation-dialog/schedule-presentation";
 import { useEffect, useState } from "react";
-import { GetInterviewers } from "~/utils/studentAPI";
+import { GetInterviewers } from "~/api/studentAPI";
 import Feedback from "~/components/molecules/Feedback/Feedback";
 
   interface InterviewDetailsCardProps {

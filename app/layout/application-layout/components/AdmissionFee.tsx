@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { getCurrentStudent, submitTokenReceipt } from '~/utils/studentAPI';
+import { getCurrentStudent, submitTokenReceipt } from '~/api/studentAPI';
 import { Card } from '~/components/ui/card';
 import { Button } from '~/components/ui/button';
 import { AlertCircle, LoaderCircle, Pencil, X } from 'lucide-react';

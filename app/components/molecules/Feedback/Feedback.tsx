@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Button } from '~/components/ui/button'; // Assuming you have a Button component
 import BookYourSeat from '../BookYourSeat/BookYourSeat';
-import { getCurrentStudent, GetInterviewers } from '~/utils/studentAPI';
+import { getCurrentStudent, GetInterviewers } from '~/api/studentAPI';
 import { UserContext } from '~/context/UserContext';
 import { useNavigate } from '@remix-run/react';
 import { Dialog, DialogContent } from '~/components/ui/dialog';

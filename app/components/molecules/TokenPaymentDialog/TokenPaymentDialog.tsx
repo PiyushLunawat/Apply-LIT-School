@@ -6,7 +6,7 @@ import { Label } from '~/components/ui/label';
 import { ArrowLeft, LoaderCircle, Pencil, X, XIcon } from 'lucide-react';
 import { useNavigate } from '@remix-run/react';
 import { useState } from 'react';
-import { submitTokenReceipt } from '~/utils/studentAPI';
+import { submitTokenReceipt } from '~/api/studentAPI';
 import axios from 'axios';
 
 import {

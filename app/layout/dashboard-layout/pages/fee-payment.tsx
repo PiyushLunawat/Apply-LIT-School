@@ -2,7 +2,7 @@ import Header from "../../../components/organisms/Header/Header";
 import Sidebar from "../../../components/organisms/Sidebar/Sidebar";
 import { Badge } from "../../../components/ui/badge";
 import FeePaymentSetup from "../components/FeePaymentSetup";
-import { getCurrentStudent } from "~/utils/studentAPI";
+import { getCurrentStudent } from "~/api/studentAPI";
 import { UserContext } from "~/context/UserContext";
 import { useContext, useEffect, useState } from "react";
 import { Skeleton } from "~/components/ui/skeleton";

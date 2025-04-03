@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { setupFeePayment, uploadFeeReceipt } from "~/utils/studentAPI";
+import { setupFeePayment, uploadFeeReceipt } from "~/api/studentAPI";
 import { AlertCircle, CheckCircle, CircleCheck, Eye, LoaderCircle, PauseCircle, UploadIcon, XIcon } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";

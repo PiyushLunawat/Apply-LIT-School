@@ -4,7 +4,7 @@ import { SchedulePresentation } from '~/components/organisms/schedule-presentati
 import { Button } from '~/components/ui/button';
 import { Dialog, DialogContent } from '~/components/ui/dialog';
 import { Skeleton } from '~/components/ui/skeleton';
-import { GetInterviewers } from '~/utils/studentAPI';
+import { GetInterviewers } from '~/api/studentAPI';
 
 interface StatusMessageProps {
   student: any;

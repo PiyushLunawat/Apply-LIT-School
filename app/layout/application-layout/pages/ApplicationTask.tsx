@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import ApplicationTaskForm from '../components/ApplicationTaskForm';
 import { useNavigate } from '@remix-run/react';
-import { getCurrentStudent } from '~/utils/studentAPI';
+import { getCurrentStudent } from '~/api/studentAPI';
 import SubHeader from '~/components/organisms/SubHeader/SubHeader';
 
 export const ApplicationTask: React.FC = () => {
