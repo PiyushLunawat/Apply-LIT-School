@@ -5,7 +5,7 @@ import { getCurrentStudent } from "~/utils/studentAPI"; // Ensure correct path
 import { UserContext } from "~/context/UserContext";
 
 interface Document {
-  id: string;
+  // id: string;
   name: string;
   description?: string;
 }
@@ -17,22 +17,18 @@ interface ApplicationDocumentsProps {
 export default function ApplicationDocuments({ student }: ApplicationDocumentsProps) {
   const [documents, setDocuments] = useState<Document[]>([
     {
-      id: "1",
       name: "Personal and General Details",
       description: "Access your personal and general information.",
     },
     {
-      id: "2",
       name: "Course Dive",
       description: "Access your submitted tasks and feedback",
     },
     {
-      id: "3",
       name: "Interview Feedback",
       description: "Access your first interview feedback",
     },
     {
-      id: "4",
       name: "LITMUS Test",
       description: "Access your LITMUS Test submission along with the accompanying feedback.",
     },
@@ -56,8 +52,8 @@ export default function ApplicationDocuments({ student }: ApplicationDocumentsPr
 
   return (
     <div className="px-4 sm:px-8 py-8 space-y-4">
-      {documents.map((doc) => (
-        <div key={doc.id} className="flex items-center justify-between p-4 sm:p-6 bg-[#64748B1F] border rounded-xl cursor-pointer">
+      {documents.map((doc: any, index: any) => (
+        <div key={index} className="flex items-center justify-between p-4 sm:p-6 bg-[#64748B1F] border rounded-xl cursor-pointer">
           <div className="flex items-center gap-4">
             <div className="h-16 !w-16 justify-center flex items-center rounded-full bg-[#00CC921F]">
               <img src="/assets/images/personal-document-icon.svg" className="w-6 h-6"/>

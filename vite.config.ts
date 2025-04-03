@@ -12,7 +12,7 @@ export default defineConfig({
   experimental: {
     renderBuiltUrl(filename) {
       return {
-        runtime: `(typeof window !== 'undefined' ? window.PUBLIC_URL : process.env.PUBLIC_URL) + ${JSON.stringify(
+        runtime: `import.meta.env.VITE_PUBLIC_URL + ${JSON.stringify(
           filename
         )}`,
       };
@@ -25,6 +25,7 @@ export default defineConfig({
   ],
   build: {
     outDir: "dist",
+    sourcemap: false,
     rollupOptions: {
       external: [
         "@remix-run/node", // Exclude node modules from client-side bundle

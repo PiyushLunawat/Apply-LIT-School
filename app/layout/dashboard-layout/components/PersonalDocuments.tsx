@@ -1,27 +1,12 @@
 "use client";
 
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "~/components/ui/button";
-import { Dialog, DialogContent, DialogTrigger } from "~/components/ui/dialog";
-import { File as FileIcon, Download, Upload, FilePenLine, FilePen, Eye, Pen, LoaderCircle, XIcon, SquarePen } from "lucide-react";
-import { getCurrentStudent, uploadStudentDocuments } from "~/utils/studentAPI"; // Ensure correct path
-import { UserContext } from "~/context/UserContext";
+import { Dialog, DialogContent } from "~/components/ui/dialog";
+import { Download, Upload, Eye, LoaderCircle, XIcon, SquarePen } from "lucide-react";
+import { uploadStudentDocuments } from "~/utils/studentAPI";
 import axios from "axios";
-import { Badge } from "~/components/ui/badge";
 import { Progress } from "~/components/ui/progress";
-
-import {
-  S3Client,
-  DeleteObjectCommand,
-} from "@aws-sdk/client-s3";
-
-const s3Client = new S3Client({
-  region: typeof window !== "undefined" && window.ENV ? window.ENV.AWS_REGION : process.env.AWS_REGION, // Fallback to server-side environment variable
-  credentials: {
-    accessKeyId: typeof window !== "undefined" && window.ENV ? window.ENV.AWS_ACCESS_KEY_ID : process.env.AWS_ACCESS_KEY_ID as string, // Fallback to server-side environment variable
-    secretAccessKey: typeof window !== "undefined" && window.ENV ? window.ENV.AWS_SECRET_ACCESS_KEY : process.env.AWS_SECRET_ACCESS_KEY as string, // Fallback to server-side environment variable
-  },
-});
 
 interface Document {
   id: string;
@@ -31,7 +16,7 @@ interface Document {
   status?: "verified" | "flagged" | "updated" | "";
   uploadDate?: string;
   fileUrl?: string;
-  docType: string; // Add this property to map doc name to a type
+  docType: string; 
 }
 
 interface UploadState {
@@ -93,13 +78,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
       console.error("No file URL available for download.");
       return;
     }
-    window.open(fileUrl, "_blank")  
-    // const link = document.createElement("a");
-    // link.href = fileUrl;
-    // link.setAttribute('download', `${student?.firstName}_${docType}.pdf`);
-    // document.body.appendChild(link);
-    // link.click();
-    // document.body.removeChild(link);
+    window.open(fileUrl, "_blank")
   };
 
   const handleFileChange = async ( e: React.ChangeEvent<HTMLInputElement>, docId: string, docType: string) => {
