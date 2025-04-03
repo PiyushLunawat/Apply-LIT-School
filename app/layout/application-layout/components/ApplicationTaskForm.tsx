@@ -289,7 +289,6 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
 
       // Final payload
       const payload = {
-        _id: id,
         taskDataId: taskId,
         tasks: [
           {
