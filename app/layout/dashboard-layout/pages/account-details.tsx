@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { getCurrentStudent } from "~/utils/studentAPI";
 import { UserContext } from "~/context/UserContext";
 import { Badge } from "~/components/ui/badge";
-import AccountDetails from "~/layout/dashboard-layout/components/AccountDetails";
+// import AccountDetails from "~/layout/dashboard-layout/components/AccountDetails";
 import { Skeleton } from "~/components/ui/skeleton";
 
 
@@ -47,7 +47,7 @@ export default function AccountDetailsDashboard() {
           </p>
         </div>
       </div>
-      <AccountDetails student={student} />
+      {/* <AccountDetails student={student} /> */}
   </>
   );
 }
