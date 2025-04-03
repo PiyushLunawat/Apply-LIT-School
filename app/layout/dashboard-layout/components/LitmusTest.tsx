@@ -24,11 +24,7 @@ import {
 } from "@aws-sdk/client-s3";
 
 const s3Client = new S3Client({
-  region: typeof window !== "undefined" && window.ENV ? window.ENV.AWS_REGION : process.env.AWS_REGION, // Fallback to server-side environment variable
-  credentials: {
-    accessKeyId: typeof window !== "undefined" && window.ENV ? window.ENV.AWS_ACCESS_KEY_ID : process.env.AWS_ACCESS_KEY_ID as string, // Fallback to server-side environment variable
-    secretAccessKey: typeof window !== "undefined" && window.ENV ? window.ENV.AWS_SECRET_ACCESS_KEY : process.env.AWS_SECRET_ACCESS_KEY as string, // Fallback to server-side environment variable
-  },
+  
 });
 
 const getColor = (index: number) => {
