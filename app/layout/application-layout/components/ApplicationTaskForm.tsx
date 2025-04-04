@@ -289,7 +289,7 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
 
       // Final payload
       const payload = {
-        taskDataId: taskId || "",
+        taskDataId: taskId,
         tasks: [
           {
             courseDive: [data.courseDive.interest, data.courseDive.goals],
