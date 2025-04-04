@@ -73,11 +73,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({ }) => {
           name="email"
           render={({ field }) => (
             <FormItem className="flex-1 space-y-1 relative">
-              <Label htmlFor="email" className="text-xs sm:text-sm font-normal pl-3">Enter your Email</Label>
+              <Label htmlFor="email" className="text-sm font-normal pl-3">Enter your Email</Label>
               <FormControl>
                 <Input id="email" type="email" className='pr-10' placeholder="john@gmail.com" {...field} />
               </FormControl>
-              <Mail className="absolute right-3 top-[46px] w-5 h-5" />
+              <Mail className="absolute right-3 top-[42px] w-5 h-5" />
               {errors.email && (
                 <Label className="flex gap-1 items-center text-[#FF503D] text-xs sm:text-sm font-normal pl-3">
                   {errors.email.message}

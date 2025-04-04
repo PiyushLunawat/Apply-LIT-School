@@ -188,7 +188,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({}) => {
               name="firstName"
               render={({ field }) => (
                 <FormItem className="flex-1 space-y-1 relative">
-                  <Label className="text-xs sm:text-sm font-normal pl-3">First Name</Label>
+                  <Label className="text-sm font-normal pl-3">First Name</Label>
                   <Input placeholder="John" {...field} />
                   <FormMessage className="text-xs sm:text-sm font-normal pl-3"/>
                 </FormItem>
@@ -199,7 +199,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({}) => {
               name="lastName"
               render={({ field }) => (
                 <FormItem className="flex-1 space-y-1 relative">
-                  <Label className="text-xs sm:text-sm font-normal pl-3">Last Name</Label>
+                  <Label className="text-sm font-normal pl-3">Last Name</Label>
                   <Input placeholder="Doe" {...field} />
                   <FormMessage className="text-xs sm:text-sm font-normal pl-3"/>
                 </FormItem>
@@ -213,9 +213,9 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({}) => {
               name="email"
               render={({ field }) => (
                 <FormItem className="flex-1 space-y-1 relative">
-                  <Label className="text-xs sm:text-sm font-normal pl-3">Email</Label>
-                  <Input placeholder="john@gmail.com" className='pr-10' {...field} />
-                  <Mail className="absolute right-3 top-[46px] w-5 h-5" />
+                  <Label className="text-sm font-normal pl-3">Email</Label>
+                  <Input type="email" placeholder="john@gmail.com" className='pr-10' {...field} />
+                  <Mail className="absolute right-3 top-[42px] w-5 h-5" />
                   <FormMessage className="text-xs sm:text-sm font-normal pl-3"/>
                 </FormItem>
               )}
@@ -225,15 +225,16 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({}) => {
               name="mobileNumber"
               render={({ field }) => (
                 <FormItem className="flex-1 space-y-1 relative">
-                  <Label className="text-xs sm:text-sm font-normal pl-3">Contact No.</Label>
-                  <Input  type="tel" maxLength={14} placeholder="+91 00000 00000" className='pr-10' {...field}
+                  <Label className="text-sm font-normal pl-3">Contact No.</Label>
+                  <div className="absolute left-3 top-[40px]">+91</div>
+                  <Input  type="tel" maxLength={14} placeholder="00000 00000" className='px-10' {...field}
                   value={field.value}
                   onInput={(e) => {
                     const target = e.target as HTMLInputElement;
                     target.value = target.value.replace(/[^0-9+ ]/g, '');
                     field.onChange(target.value);
                   }}/>
-                  <Phone className="absolute right-3 top-[46px] w-5 h-5" />
+                  <Phone className="absolute right-3 top-[42px] w-5 h-5" />
                   <FormMessage className="text-xs sm:text-sm font-normal pl-3"/>
                 </FormItem>
               )}
@@ -250,7 +251,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({}) => {
                 const maxDateString = maxDate.toISOString().split('T')[0];
                 return (
                   <FormItem className="flex-1 flex flex-col space-y-1 relative">
-                    <Label className="text-xs sm:text-sm font-normal pl-3">Date of Birth</Label>
+                    <Label className="text-sm font-normal pl-3">Date of Birth</Label>
                     <input
                       type="date"
                       className="!h-[64px] bg-[#09090B] px-3 uppercase rounded-xl border w-full"
@@ -274,7 +275,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({}) => {
               name="qualification"
               render={({ field }) => (
                 <FormItem className="flex-1 flex flex-col space-y-1 relative">
-                  <Label className="text-xs sm:text-sm font-normal pl-3">Qualification</Label>
+                  <Label className="text-sm font-normal pl-3">Qualification</Label>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select" />
@@ -302,7 +303,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({}) => {
                 name="program"
                 render={({ field }) => (
                   <FormItem className="flex-1 space-y-1 relative">
-                    <Label className="text-xs sm:text-sm font-normal pl-3">Course of Interest</Label>
+                    <Label className="text-sm font-normal pl-3">Course of Interest</Label>
                     <Select onValueChange={(value) => { field.onChange(value); (value); }} defaultValue={field.value} >
                       <SelectTrigger>
                         <SelectValue placeholder="Select" />
@@ -325,7 +326,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({}) => {
                 name="cohort"
                 render={({ field }) => (
                   <FormItem className="flex-1 space-y-1 relative">
-                    <Label className="text-xs sm:text-sm font-normal pl-3">Select Cohort</Label>
+                    <Label className="text-sm font-normal pl-3">Select Cohort</Label>
                     <Select onValueChange={(value) => { field.onChange(value); (value); }} defaultValue={field.value} disabled={!form.watch("program")}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select" />

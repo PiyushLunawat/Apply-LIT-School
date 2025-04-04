@@ -289,7 +289,7 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
 
       // Final payload
       const payload = {
-        taskDataId: taskId,
+        taskDataId: taskId || "",
         tasks: [
           {
             courseDive: [data.courseDive.interest, data.courseDive.goals],
@@ -402,8 +402,8 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
 
               <div className='w-full space-y-2'>
                 {task?.resources?.resourceFiles.map((file: any, index: number) => (
-                  <div key={index} className="flex items-center justify-between w-full p-1.5 bg-[#2C2C2C] rounded-xl">
-                    <div className="flex items-center space-x-2">
+                  <div key={index} className="flex gap-2 items-center justify-between w-full p-1.5 bg-[#2C2C2C] rounded-xl">
+                    <div className="flex flex-1 items-center space-x-2 truncate text-ellipsis">
                       <Badge
                         variant="outline"
                         size="icon"
@@ -411,20 +411,20 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
                       >
                         <FileTextIcon className="w-5 h-5" />
                       </Badge>
-                      <span className="text-white">{file.split('/').pop()}</span>
+                      <span className="text-white truncate">{file.split('/').pop()}</span>
                     </div>
                     <Button variant="outline" size="icon" type='button'
                       className="text-white rounded-xl hover:bg-[#1a1a1d]"
                       onClick={() => window.open(file, "_blank")}
                     >
-                      <Download className="w-5 h-5" />
+                      <ArrowUpRight className="w-5 h-5" />
                     </Button>
                   </div>
                 ))}
 
                 {task?.resources?.resourceLinks.map((link: any, index: number) => (
-                  <div key={index} className="flex items-center justify-between w-full p-1.5 bg-[#2C2C2C] rounded-xl">
-                  <div className="flex items-center space-x-2  w-[50vw] truncate pr-12">
+                  <div key={index} className="flex gap-2 items-center justify-between w-full p-1.5 bg-[#2C2C2C] rounded-xl">
+                  <div className="flex items-center space-x-2 flex-1 w-[50vw] truncate text-ellipsis">
                     <Badge
                       variant="outline"
                       size="icon"
@@ -432,7 +432,7 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
                     >
                       <Link2 className="w-5 h-5" />
                     </Badge>
-                    <span className="text-white">{link}</span>
+                    <span className="text-white truncate">{link}</span>
                   </div>
                   <Button variant="outline" size="icon" type='button'
                     className="text-white rounded-xl hover:bg-[#1a1a1d]"
