@@ -13,10 +13,11 @@ import ScholarshipSlabCard from '~/components/molecules/scholarshipSlabCard/scho
 import JudgementCriteriaCard from '~/components/molecules/JudgementCriteriaCard/JudgementCriteriaCard';
 import { useNavigate } from '@remix-run/react';
 import { Badge } from '~/components/ui/badge';
-import { Dialog, DialogContent } from '~/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '~/components/ui/dialog';
 import { Progress } from '~/components/ui/progress';
 import axios from 'axios';
 import { SchedulePresentation } from '~/components/organisms/schedule-presentation-dialog/schedule-presentation';
+import InterviewDetailsCard from './InterviewDetails';
 
 import {
   S3Client,
@@ -323,11 +324,13 @@ export default function LitmusTest({ student }: LitmusTestProps) {
       </Form>
     }
 
-  {['submitted', 'completed'].includes(status) &&
+  {['submitted', 'interview scheduled', 'interview cancelled', 'completed'].includes(status) &&
   <div className='flex flex-col items-start p-[52px] bg-[#09090B] text-white shadow-md w-full mx-auto space-y-8'>
     <div className=''>
       <div className='text-2xl font-medium'>Congratulations on making your LITMUS Challenge submission!</div>
-      <div className='text-xl font-normal'>You are now required to schedule a call with us to present your work.</div>
+      {status === 'submitted' && <div className='text-xl font-normal'>You are now required to schedule a call with us to present your work.</div>}
+      {status === 'interview scheduled' && <div className='text-xl font-normal'>You are now required to present your work at the selected date and time .</div>}
+      {status === 'interview cancelled' && <div className='text-xl font-normal'>You are now required to select a presentation date and time to present your work.</div>}
     </div>
     <div className='bg-[#2C2C2C99] p-4 w-full rounded-xl'>
       <div className='pl-3'>Your LITMUS Challenge Submissions:</div>
@@ -340,82 +343,86 @@ export default function LitmusTest({ student }: LitmusTestProps) {
         </Badge>
       </div>
       {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks && 
-          <div className="flex flex-wrap gap-2">
-            {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks?.[index]?.texts?.map((textItem: string, id: number) => (
-              <div key={`text-${id}`} className="w-full flex items-center gap-2 mt-2 px-4 py-2 border rounded-xl bg-[#09090b]">
-                {textItem}
+        <div className="flex flex-wrap gap-2">
+          {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks?.[index]?.texts?.map((textItem: string, id: number) => (
+            <div key={`text-${id}`} className="w-full flex items-center gap-2 mt-2 px-4 py-2 border rounded-xl bg-[#09090b]">
+              {textItem}
+            </div>
+          ))}
+          {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks?.[index]?.links?.map((linkItem: string, id: number) => (
+            <div key={`link-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 mt-2 p-2 border rounded-xl bg-[#09090b]">
+              <div className='flex gap-2 items-center'>
+              <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
+                <Link2Icon className="w-5 h-5" />
+              </Badge>
+              <span className=''>
+                {linkItem}
+              </span>
               </div>
-            ))}
-            {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks?.[index]?.links?.map((linkItem: string, id: number) => (
-              <div key={`link-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 mt-2 p-2 border rounded-xl bg-[#09090b]">
-                <div className='flex gap-2 items-center'>
-                <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
-                  <Link2Icon className="w-5 h-5" />
-                </Badge>
-                <span className=''>
-                  {linkItem}
-                </span>
-                </div>
-                <Button size="icon" type="button" className="bg-[#1B1B1C] rounded-xl">
-                  <ArrowUpRight className="w-5" />
-                </Button>
-              </div>
-            ))}
-            {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks?.[index]?.images?.map((imageItem: string, id: number) => (
-              <div key={`image-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 mt-2 p-2 border rounded-xl bg-[#09090b]">
-                <div className='flex gap-2 items-center'>
+              <Button size="icon" type="button" className="bg-[#1B1B1C] rounded-xl">
+                <ArrowUpRight className="w-5" />
+              </Button>
+            </div>
+          ))}
+          {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks?.[index]?.images?.map((imageItem: string, id: number) => (
+            <div key={`image-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 mt-2 p-2 border rounded-xl bg-[#09090b]">
+              <div className='flex gap-2 items-center'>
                 <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
                   <ImageIcon className="w-5 h-5" />
                 </Badge>
                 <span className=''>
                   {imageItem.split('/').pop()}
                 </span>
-                </div>
-                <Button size="icon" type="button" className="bg-[#1B1B1C] rounded-xl">
-                  <Download className="w-5" />
-                </Button>
+              </div>
+              <Button size="icon" type="button" className="bg-[#1B1B1C] rounded-xl">
+                <Download className="w-5" />
+              </Button>
             </div>
-            ))}
-            {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks?.[index]?.videos?.map((videoItem: string, id: number) => (
-              <div key={`video-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 mt-2 p-2 border rounded-xl bg-[#09090b]">
-                <div className='flex gap-2 items-center'>
+          ))}
+          {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks?.[index]?.videos?.map((videoItem: string, id: number) => (
+            <div key={`video-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 mt-2 p-2 border rounded-xl bg-[#09090b]">
+              <div className='flex gap-2 items-center'>
+              <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
+                <VideoIcon className="w-5 h-5" />
+              </Badge>
+              <span className=''>
+                {videoItem.split('/').pop()}
+              </span>
+              </div>
+              <Button size="icon" type="button" className="bg-[#1B1B1C] rounded-xl">
+                <Download className="w-5" />
+              </Button>
+            </div>
+          ))}
+          {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks?.[index]?.files?.map((fileItem: string, id: number) => (
+            <div key={`file-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 mt-2 p-2 border rounded-xl bg-[#09090b]">
+              <div className='flex gap-2 items-center'>
                 <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
-                  <VideoIcon className="w-5 h-5" />
+                  <FileTextIcon className="w-5 h-5" />
                 </Badge>
                 <span className=''>
-                  {videoItem.split('/').pop()}
+                  {fileItem.split('/').pop()}
                 </span>
-                </div>
-                <Button size="icon" type="button" className="bg-[#1B1B1C] rounded-xl">
-                  <Download className="w-5" />
-                </Button>
               </div>
-            ))}
-            {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks?.[index]?.files?.map((fileItem: string, id: number) => (
-              <div key={`file-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 mt-2 p-2 border rounded-xl bg-[#09090b]">
-                <div className='flex gap-2 items-center'>
-                  <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
-                    <FileTextIcon className="w-5 h-5" />
-                  </Badge>
-                  <span className=''>
-                    {fileItem.split('/').pop()}
-                  </span>
-                </div>
-                <Button size="icon" type="button" className="bg-[#1B1B1C] rounded-xl">
-                  <Download className="w-5" />
-                </Button>
-              </div>
-            ))}
-      </div>}
+              <Button size="icon" type="button" className="bg-[#1B1B1C] rounded-xl">
+                <Download className="w-5" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      }
       </div>
       ))}
       </div>
     </div>
-    <div className='w-full flex justify-between items-center '>
-      <Button size="xl" className='' type="button" disabled={loading} onClick={() => handleScheduleInterview()}>
-        {loading ? 'Scheduling...' : 'Schedule a Call'}
-      </Button>
-    </div>
+    {['submitted', 'interview cancelled'].includes(status) &&
+      <div className='w-full flex justify-between items-center '>
+        <Button size="xl" className='' type="button" disabled={loading} onClick={() => handleScheduleInterview()}>
+          {loading ? 'Scheduling...' : 'Schedule a Call'}
+        </Button>
+      </div>
+    }
+    <InterviewDetailsCard student={student}/> 
   </div>
 
   }
@@ -447,6 +454,7 @@ export default function LitmusTest({ student }: LitmusTestProps) {
   </div>
 
   <Dialog open={interviewOpen} onOpenChange={setInterviewOpen}>
+  <DialogTitle></DialogTitle>
     <DialogContent className="max-w-2xl">
       <SchedulePresentation student={student} interviewer={interviewer} eventCategory='Litmus Test Review'/>
     </DialogContent>

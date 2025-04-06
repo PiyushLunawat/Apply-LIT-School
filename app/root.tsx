@@ -9,6 +9,7 @@ import { RegisterInterceptor } from "./utils/interceptor";
 import { Dialog, DialogContent } from "./components/ui/dialog";
 import { Button } from "./components/ui/button";
 import { useInitializeEnv } from "./hooks/useEnv";
+import { DialogTitle } from "@radix-ui/react-dialog";
 
 export const loader: LoaderFunction = async ({ request }) => {
   const cookieHeader = request.headers.get("Cookie");
@@ -77,6 +78,7 @@ export default function App() {
     <StrictMode>
       <UserProvider>
       <Dialog open={isUnauthorized} onOpenChange={setIsUnauthorized}>
+        <DialogTitle></DialogTitle>
         <DialogContent className='flex flex-col gap-3 px-8 sm:px-16 py-8 sm:gap-6 bg-[#1C1C1C] rounded-3xl max-w-[90vw] sm:max-w-xl mx-auto'>
           <div className="space-y-1">
             <div className="text-base sm:text-2xl">Session Expired</div>

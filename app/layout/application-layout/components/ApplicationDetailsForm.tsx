@@ -20,7 +20,7 @@ import { Calendar, Camera, CheckCircle, Instagram, Linkedin, Mail, Minus, Phone,
 import { UserContext } from '~/context/UserContext';
 import { getCentres, getCohorts, getCurrentStudent, getPrograms, payApplicationFee, submitApplication, verifyApplicationFeePayment } from '~/api/studentAPI';
 import { Badge } from '~/components/ui/badge';
-import { Dialog, DialogContent } from '~/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '~/components/ui/dialog';
 import { verifyNumber } from '~/api/authAPI';
 import { format } from 'date-fns';
 import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
@@ -688,7 +688,10 @@ useEffect(() => {
   
       // Call the API to create an order
 
-      const feePayLoad = { studentId: sId, cohortId: cId }
+      const feePayLoad = {
+        studentId: sId,
+        cohortId: cId 
+      }
       const feeResponse = await payApplicationFee(feePayLoad);
       console.log("Fee payment response:", feeResponse);
   
@@ -885,7 +888,7 @@ useEffect(() => {
                 <FormItem className='flex-1 space-y-1'>
                   <Label className="text-sm font-normal pl-3">Full Name</Label>
                   <FormControl>
-                    <Input id="fullName" defaultValue={((studentData?.firstName || "-")+' '+(studentData?.lastName || "-"))} placeholder="John Doe" disabled/>
+                    <Input id="fullName" value={((fetchedStudentData?.firstName || "")+' '+(fetchedStudentData?.lastName || ""))} placeholder="John Doe" disabled/>
                   </FormControl>
                   <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
                 </FormItem>
@@ -908,7 +911,7 @@ useEffect(() => {
                         disabled
                         placeholder="johndoe@gmail.com"
                         className='pl-10'
-                        defaultValue={studentData?.email || "--"}
+                        value={fetchedStudentData?.email || ""}
                       />
                     </FormControl>
                     <Mail className="absolute right-3 top-[42px] w-5 h-5 " />
@@ -2009,6 +2012,7 @@ useEffect(() => {
       </form>
     </Form>
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+    <DialogTitle></DialogTitle>
       <DialogContent className='flex flex-col bg-[#1C1C1C] gap-6 sm:gap rounded-3xl max-w-[90vw] sm:max-w-2xl lg:max-w-4xl mx-auto !p-0'>
         <VerifyOTP
           verificationType="contact" 
@@ -2020,6 +2024,7 @@ useEffect(() => {
       </DialogContent>
     </Dialog>
     <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+    <DialogTitle></DialogTitle>
     <DialogContent className="max-w-[90vw] sm:max-w-[500px] mx-auto bg-[#1C1C1C] text-white rounded-lg px-8 py-16 text-center shadow-[0px_4px_32px_0px_rgba(0,0,0,0.75)]">
       <img src='/assets/images/make-payment.svg' className="mx-auto mb-8" />
       <div>

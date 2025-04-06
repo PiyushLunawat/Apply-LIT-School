@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "~/components/ui/button";
-import { Dialog, DialogContent } from "~/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "~/components/ui/dialog";
 import { Download, Upload, Eye, LoaderCircle, XIcon, SquarePen } from "lucide-react";
 import { uploadStudentDocuments } from "~/api/studentAPI";
 import axios from "axios";
@@ -339,6 +339,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
 
               {docDetail && docDetail.url && (
                 <Dialog open={open} onOpenChange={setOpen}>
+                  <DialogTitle></DialogTitle> 
                   <DialogContent className="max-w-5xl py-2 px-6 h-[90vh] overflow-y-auto">
                     <div className="flex flex-col gap-4 justify-center">
                       <p>Preview for {doc.name}</p>

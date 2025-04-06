@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Dialog, DialogContent } from '~/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '~/components/ui/dialog';
 import { RadioGroup, RadioGroupItem } from '~/components/ui/radio-group'; 
 import { Button } from '~/components/ui/button'; 
 import { Label } from '~/components/ui/label';
@@ -220,59 +220,71 @@ const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({ open, setOpen, 
   return (
   <>  
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto h-fit max-w-2xl mx-4 bg-[#09090b] text-white rounded-lg px-8 py-8 text-center shadow-[0px_4px_32px_0px_rgba(0,0,0,0.75)]">
-        <div className="flex justify-center mb-6">
-          <img src='/assets/images/lit-cash-icon.svg' className="w-[60px]" />
+    <DialogTitle></DialogTitle>
+      <DialogContent className="max-h-[90vh] overflow-y-auto max-w-[100vw] sm:max-w-xl mx-auto space-y-6 sm:space-y-9 bg-[#09090b] rounded-lg px-8 py-16 text-center shadow-[0px_4px_32px_0px_rgba(0,0,0,0.75)]">
+        <div className='space-y-6'>
+          <div className="flex justify-center">
+            <img src='/assets/images/lit-cash-icon.svg' className="w-[60px]" />
+          </div>
+          <div className='space-y-1'>
+            <div className="text-base font-medium ">STEP 01</div>
+            <div className="text-3xl font-semibold">Select Payment Mode</div>
+          </div>
         </div>
-        
-        <div className="text-base font-medium ">STEP 01</div>
-        <div className="text-3xl font-semibold mb-4">Select Payment Mode</div>
 
-        {/* Radio Group for Payment Selection */}
-        <RadioGroup className="flex flex-col gap-4" value={selectedPayment}
-          onValueChange={(value) => setSelectedPayment(value as 'cash' | 'bank transfer')}
-        >
+        <RadioGroup className="flex flex-col gap-4 sm:gap-6" value={selectedPayment}
+          onValueChange={(value) => setSelectedPayment(value as 'cash' | 'bank transfer')}>
           <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 cursor-pointer">
               <RadioGroupItem value="cash" id="cash" />
-              <Label htmlFor="cash" className='text-2xl'>Cash</Label>
+              <Label htmlFor="cash" className='text-2xl cursor-pointer'>Cash</Label>
             </div>
-              <div className="text-base text-muted-foreground text-start">
-                You may make a cash payment in person, following which you will receive a receipt. On uploading a soft copy of the receipt on the portal you will be able to access your dashboard.
-              </div>
+            <div className="text-base text-muted-foreground text-start">
+              You may make a cash payment in person, following which you will receive a receipt. On uploading a soft copy of the receipt on the portal you will be able to access your dashboard.
+            </div>
           </div>
 
           <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 cursor-pointer">
               <RadioGroupItem value="bank transfer" id="bank transfer" />
-              <Label htmlFor="bank transfer" className='text-2xl'>Bank Transfer</Label>
+              <Label htmlFor="bank transfer" className='text-2xl cursor-pointer'>Bank Transfer</Label>
             </div>
-              <div className="text-base text-muted-foreground text-start">
-                You will be provided LIT School’s bank account details. You may make a NEFT transaction to the same account. Once you have made a transaction please upload an acknowledgement receipt.
-              </div>
+            <div className="text-base text-muted-foreground text-start">
+              You will be provided LIT School’s bank account details. You may make a NEFT transaction to the same account. Once you have made a transaction please upload an acknowledgement receipt.
+            </div>
           </div>
         </RadioGroup>
-        <Button size="xl" variant="outline" className="mt-8 w-fit border-[#00CC92] text-[#00CC92] mx-auto" onClick={handleNextClick}>Next</Button>
-     
+
+        <Button size="xl" variant="outline" className="mt-8 w-fit border-[#00CC92] text-[#00CC92] mx-auto" 
+          onClick={handleNextClick}>
+            Next
+        </Button>
       </DialogContent>
     </Dialog>
 
     <Dialog open={secondDialogOpen} onOpenChange={setSecondDialogOpen}>
-      <DialogContent className="min-h-[90vh] overflow-y-auto max-w-2xl mx-4 bg-[#09090b] text-white rounded-lg px-8 py-8 text-center shadow-[0px_4px_32px_0px_rgba(0,0,0,0.75)] h-[600px] overflow-hidden overflow-y-auto">
-        <ArrowLeft className='w-6 h-6 cursor-pointer absolute top-10 left-8' onClick={() => setSecondDialogOpen(false)} />
-        <div className="flex justify-center mb-6">
-          <img src='/assets/images/lit-cash-icon.svg' className="w-[60px]" />
+    <DialogTitle></DialogTitle>
+      <DialogContent className=" max-h-[100vh] !h-fit overflow-y-auto max-w-[100vw] sm:max-w-xl mx-auto space-y-6 bg-[#09090b] rounded-lg px-8 py-8 text-center shadow-[0px_4px_32px_0px_rgba(0,0,0,0.75)] h-[600px] overflow-hidden overflow-y-auto">
+        <div>
+          <ArrowLeft className='w-6 h-6 cursor-pointer absolute top-10 left-8' onClick={() => setSecondDialogOpen(false)} />
+          <div className='space-y-6'>
+              <div className="flex justify-center">
+                  <img src='/assets/images/lit-cash-icon.svg' className="w-[60px]" />
+              </div>
+              <div className='space-y-1'>
+                  <div className="text-base font-medium ">STEP 02</div>
+                  <div className="text-3xl font-semibold">Upload your Payment Receipt</div>
+              </div>
+          </div>
         </div>
-      
-        <div className="text-base font-medium ">STEP 02</div>
-        <div className="text-3xl font-semibold mb-4">Upload your Payment Receipt</div>
 
+        <div className='space-y-4 sm:space-y-6'>
           <RadioGroup>{selectedPayment === 'cash' ? (
             <>
               <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 cursor-pointer">
                   <RadioGroupItem value="cash" id="cash" checked />
-                  <Label htmlFor="cash" className='text-2xl'>Cash</Label>
+                  <Label htmlFor="cash" className='text-2xl cursor-pointer'>Cash</Label>
                 </div>
                 <div className="text-base text-muted-foreground text-start">
                   Upload a soft copy of the acknowledgement receipt issued to you by our fee manager to access your dashboard.
@@ -282,98 +294,98 @@ const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({ open, setOpen, 
           ) : (
             <>
               <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 cursor-pointer">
                   <RadioGroupItem value="bank transfer" id="bank transfer" checked />
-                  <Label htmlFor="bank transfer" className='text-2xl'>Bank Transfer</Label>
-                </div>
-                <div className=" text-start">
-                  <div className="flex justify-start gap-2 mt-4 p-4 border border-[#2C2C2C] rounded-md">
-                    <div className="flex flex-col text-left">
-                      <p className='flex gap-2 items-center text-base font-medium'>
-                        <img src='/assets/images/institute-icon.svg' className='w-4 h-3'/>
-                        Disruptive Edu Private Limited
-                      </p>
-                      <p className='text-sm'>Account No.: 50200082405270</p>
-                      <p className='text-sm'>IFSC Code: HDFC0001079</p>
-                      <p className='text-sm'>Branch: Sadashivnagar</p>
+                  <Label htmlFor="bank transfer" className='text-2xl cursor-pointer'>Bank Transfer</Label>
                     </div>
+                    <div className="text-base text-muted-foreground text-start">
+                        Upload a soft copy of the acknowledgement receipt issued to you by our fee manager to access your dashboard.
+                    </div>
+                    <div className="flex justify-start gap-2 mt-2 p-4 border border-[#2C2C2C] rounded-lg">
+                        <div className="flex flex-col text-left">
+                          <p className='flex gap-2 items-center text-base font-medium'>
+                            <img src='/assets/images/institute-icon.svg' className='w-4 h-3'/>
+                            Disruptive Edu Private Limited
+                          </p>
+                          <p className='text-sm'>Account No.: 50200082405270</p>
+                          <p className='text-sm'>IFSC Code: HDFC0001079</p>
+                          <p className='text-sm'>Branch: Sadashivnagar</p>
+                        </div>
+                      </div>
                   </div>
-                  <p className="mt-4 text-sm text-muted-foreground">
-                    Upload a soft copy of the acknowledgement receipt issued to you by our fee manager to access your dashboard.
-                  </p>
+                </>
+              )}
+              </RadioGroup>
+            <div className="flex flex-col items-center">
+              {receiptUrl ? (
+                <div className="relative bg-[#64748B33] rounded-xl border border-[#2C2C2C] w-full h-[220px]">
+                  <img
+                    src={receiptUrl}
+                    alt="Uploaded receipt"
+                    className="mx-auto h-full"
+                  />
+                  <div className="absolute top-3 right-3 flex space-x-2">
+                    <Button variant="outline" size="icon"
+                      className="w-8 h-8 bg-white/[0.2] border border-white rounded-full shadow hover:bg-white/[0.4]"
+                      onClick={() => handleEditImage()}
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                    <Button variant="outline" size="icon"
+                      className="w-8 h-8 bg-white/[0.2] border border-white rounded-full shadow hover:bg-white/[0.4]"
+                      onClick={() => handleDeleteImage(fileName)}
+                    >
+                      <X className="w-5 h-5" />
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </>
-          )}
-          </RadioGroup>
-          <div className="flex flex-col items-center">
-      {receiptUrl ? (
-        <div className="relative bg-[#64748B33] rounded-xl border border-[#2C2C2C] w-full h-[220px]">
-          <img
-            src={receiptUrl}
-            alt="Uploaded receipt"
-            className="mx-auto h-full"
-          />
-          <div className="absolute top-3 right-3 flex space-x-2">
-            <Button variant="outline" size="icon"
-              className="w-8 h-8 bg-white/[0.2] border border-white rounded-full shadow hover:bg-white/[0.4]"
-              onClick={() => handleEditImage()}
-            >
-              <Pencil className="w-4 h-4" />
-            </Button>
-            <Button variant="outline" size="icon"
-              className="w-8 h-8 bg-white/[0.2] border border-white rounded-full shadow hover:bg-white/[0.4]"
-              onClick={() => handleDeleteImage(fileName)}
-            >
-              <X className="w-5 h-5" />
-            </Button>
-          </div>
+              ) : (
+                <label
+                  htmlFor="image-upload"
+                  className="cursor-pointer flex flex-col items-center justify-center bg-[#64748B33] p-4 rounded-xl border-[#2C2C2C] w-full h-[220px]"
+                >
+                  <div className="flex flex-col items-center space-y-3">
+                    <img
+                      src="/assets/images/receipt-icon.svg"
+                      alt="Upload icon"
+                      className="w-14 h-14"
+                    />
+                    {uploading ? 
+                      <div className="">
+                        <div className="flex items-center gap-2">
+                          {uploadProgress === 100 ? (
+                            <LoaderCircle className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <>
+                              <Progress className="h-2 w-24" value={uploadProgress} />
+                              <span>{uploadProgress}%</span>
+                            </>
+                          )}
+                          {/* <XIcon className="w-5" onClick={() => handleDeleteImage(fileName)}/> */}
+                        </div>
+                      </div> :
+                      <p className="text-sm">Upload your Acknowledgement Receipt</p>
+                    }
+                  </div>
+                  <input
+                    id="image-upload"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageChange}
+                  />
+                </label>
+              )}
+            </div>
         </div>
-      ) : (
-        <label
-          htmlFor="image-upload"
-          className="cursor-pointer flex flex-col items-center justify-center bg-[#64748B33] p-4 rounded-xl border-[#2C2C2C] w-full h-[220px]"
-        >
-          <div className="flex flex-col items-center space-y-3">
-            <img
-              src="/assets/images/receipt-icon.svg"
-              alt="Upload icon"
-              className="w-14 h-14"
-            />
-            {uploading ? 
-              <div className="">
-                <div className="flex items-center gap-2">
-                  {uploadProgress === 100 ? (
-                    <LoaderCircle className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <>
-                      <Progress className="h-2 w-24" value={uploadProgress} />
-                      <span>{uploadProgress}%</span>
-                    </>
-                  )}
-                  {/* <XIcon className="w-5" onClick={() => handleDeleteImage(fileName)}/> */}
-                </div>
-              </div> :
-              <p className="text-sm">Upload your Acknowledgement Receipt</p>
-            }
-          </div>
-          <input
-            id="image-upload"
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleImageChange}
-          />
-        </label>
-      )}
-    </div>
 
-          {/* Submit Button */}
-          <Button size="xl" variant="outline"
-            className="mt-8 w-fit border-[#00CC92] text-[#00CC92] mx-auto" 
-            onClick={handleSubmitImage} disabled={loading || !receiptUrl}>{loading ? 'Submitting...' : 'Submit'}</Button>
-        </DialogContent>
-      </Dialog>
+        <Button size="xl" variant="outline"
+          className="mt-8 w-fit border-[#00CC92] text-[#00CC92] mx-auto" 
+          onClick={handleSubmitImage} disabled={loading || !receiptUrl}>
+            {loading ? 'Submitting...' : 'Submit'}
+        </Button>
+      </DialogContent>
+    </Dialog>
   </>
 
   );

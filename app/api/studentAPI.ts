@@ -251,7 +251,7 @@ export async function payApplicationFee(feePayLoad: any) {
   const response = await fetch(`${baseUrl}/student/pay-application-fee`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ feePayLoad }),
+    body: JSON.stringify(feePayLoad),
   });
 
   if (!response.ok) {

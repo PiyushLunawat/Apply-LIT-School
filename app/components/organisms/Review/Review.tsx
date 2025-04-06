@@ -35,7 +35,7 @@ const Review: React.FC<ReviewProps> = ({ setIsPaymentVerified, application }) =>
   
   return (
     <div className='h-fit mb-16 sm:mb-24' >
-        <div className={`${['on hold', 'waitlist'].includes(applicationStatus) ? 'grayscale h-[400px] sm:h-[500px] ' : ['accepted', 'interview cancelled', 'selected'].includes(applicationStatus) ? 'h-[400px] sm:h-[500px] grayscale-0' : ['rejected', 'not qualified'].includes(applicationStatus) ? 'h-[400px] sm:h-[500px] grayscale-0' : ['interview scheduled'].includes(applicationStatus) ? 'h-[300px] sm:h-[450px] grayscale-0' : 'h-[250px] sm:h-[350px] grayscale-0'} absolute top-0 left-0 right-0 mt-[50px] absolute bg-black-to-b from-blue-900 to-transparent mb-24`} style={{
+        <div className={`${['on hold', 'waitlist'].includes(applicationStatus) ? 'grayscale h-[400px] sm:h-[500px] ' : ['accepted', 'interview cancelled', 'selected'].includes(applicationStatus) ? 'h-[400px] sm:h-[500px] grayscale-0' : ['rejected', 'not qualified'].includes(applicationStatus) ? 'h-[400px] sm:h-[500px] grayscale-0' : ['interview scheduled', 'interview concluded'].includes(applicationStatus) ? 'h-[300px] sm:h-[450px] grayscale-0' : 'h-[250px] sm:h-[350px] grayscale-0'} absolute top-0 left-0 right-0 mt-[50px] absolute bg-black-to-b from-blue-900 to-transparent mb-24`} style={{
           backgroundImage: `url('/assets/images/application-review-banner.svg')`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',

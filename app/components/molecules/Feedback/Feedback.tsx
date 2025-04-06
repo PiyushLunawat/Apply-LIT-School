@@ -4,7 +4,7 @@ import BookYourSeat from '../BookYourSeat/BookYourSeat';
 import { getCurrentStudent, GetInterviewers } from '~/api/studentAPI';
 import { UserContext } from '~/context/UserContext';
 import { useNavigate } from '@remix-run/react';
-import { Dialog, DialogContent } from '~/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '~/components/ui/dialog';
 import { SchedulePresentation } from '~/components/organisms/schedule-presentation-dialog/schedule-presentation';
 
 interface FeedbackProps {
@@ -18,6 +18,7 @@ const Feedback: React.FC<FeedbackProps> = ({ student, setIsPaymentVerified }) =>
   const applicationDetails = latestCohort?.applicationDetails;
   const applicationStatus = latestCohort?.applicationDetails?.applicationStatus;
   
+  const [interviewLoading, setInterviewLoading] = useState(false);
   const [interviewOpen, setInterviewOpen] = useState(false);
   const [interviewer, setInterviewer] = useState<any>([]);
   const navigate = useNavigate();
@@ -29,13 +30,14 @@ const Feedback: React.FC<FeedbackProps> = ({ student, setIsPaymentVerified }) =>
 
   const handleScheduleInterview = async () => {
 
+    setInterviewLoading(true);
     const data = {
       cohortId: student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.cohortId?._id,
       role: 'application_reviewer',
     };
     
     const response = await GetInterviewers(data);
-    console.log("list", response.data);
+    console.log("list", data, response.data);
   
     const payload = {
       emails: response.data,
@@ -70,6 +72,8 @@ const Feedback: React.FC<FeedbackProps> = ({ student, setIsPaymentVerified }) =>
     catch (error) {
       console.error("Error scheduling interview:", error);
       // alert("Failed to schedule interview. Please try again later.");
+    } finally {
+      setInterviewLoading(true)
     }
   };
   
@@ -125,7 +129,7 @@ const Feedback: React.FC<FeedbackProps> = ({ student, setIsPaymentVerified }) =>
     )}
     {['accepted', 'interview cancelled', 'on hold'].includes(applicationStatus) &&
     <div className="flex justify-center mt-8">
-      <Button size="xl" className="w-full sm:w-fit mx-auto px-8"
+      <Button size="xl" className="w-full sm:w-fit mx-auto px-8" disabled={interviewLoading}
         onClick={() => {
           if (applicationStatus === "on hold") {
             handleReviseApplication();
@@ -144,11 +148,12 @@ const Feedback: React.FC<FeedbackProps> = ({ student, setIsPaymentVerified }) =>
         tokenFee={student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.cohortId?.cohortFeesDetail?.tokenFee}
         setIsPaymentVerified={setIsPaymentVerified}
     />}
-  <Dialog open={interviewOpen} onOpenChange={setInterviewOpen}>
-    <DialogContent className="max-w-[90vw] sm:max-w-2xl">
-      <SchedulePresentation student={student} interviewer={interviewer} eventCategory='Application Test Review'/>
-    </DialogContent>
-  </Dialog>
+      <Dialog open={interviewOpen} onOpenChange={setInterviewOpen}>
+      <DialogTitle></DialogTitle>
+        <DialogContent className="max-w-[90vw] sm:max-w-2xl">
+          <SchedulePresentation student={student} interviewer={interviewer} eventCategory='Application Test Review'/>
+        </DialogContent>
+      </Dialog>
   </div>
   );
 };

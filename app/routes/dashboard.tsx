@@ -17,7 +17,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     }
 
   // Now you can use `userId` in your logic
-  if (!userId) {
+  if (!accessToken) {
     return redirect("/auth/login");
   }
 

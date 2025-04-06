@@ -25,8 +25,8 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
   
     const latestCohort = student?.appliedCohorts?.[student?.appliedCohorts.length - 1];
     const cohortDetails = latestCohort?.cohortId;
-    const applicationDetails = latestCohort?.applicationDetails;
-    const lastInterview = latestCohort?.applicationDetails?.applicationTestInterviews?.[latestCohort?.applicationDetails?.applicationTestInterviews.length - 1];
+    const litmusTestDetails = latestCohort?.litmusTestDetails;
+    const lastInterview = latestCohort?.litmusTestDetails?.litmusTestInterviews?.[latestCohort?.litmusTestDetails?.litmusTestInterviews.length - 1];
     
     const [formattedTime, setFormattedTime]= useState(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }));
   
@@ -110,15 +110,15 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
     };
 
     const handleCancel = (bookingId: string) => {
-    const url = `https://dev.cal.litschool.in/meetings/cancel/${bookingId}`;
-    console.log(url); // Logs the URL to the console
-    window.open(url, "_blank");
+      const url = `https://dev.cal.litschool.in/meetings/cancel/${bookingId}`;
+      console.log(url); 
+      window.open(url, "_blank");
     };
 
     return (
       <div className="space-y-6">
 
-        {applicationDetails?.applicationStatus === 'interview cancelled' && 
+        {litmusTestDetails?.status === 'interview cancelled' && 
           <Card className="max-w-6xl mx-auto px-8 py-6 flex justify-between items-center">
             <div className="flex gap-2 items-center">
               <ScreenShare className="w-4 h-4" />
@@ -131,13 +131,13 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
           </Card>
         }
 
-        {applicationDetails?.applicationTestInterviews.slice().reverse().map((interview: any, index: any) => (
+        {litmusTestDetails?.litmusTestInterviews.slice().reverse().map((interview: any, index: any) => (
           <Card key={index} className={`max-w-6xl mx-auto md:flex md:flex-row rounded-2xl sm:rounded-3xl ${interview?.meetingStatus === 'Cancelled' ? 'border-[#FF503D66] opacity-50 min-h-[680px]' : index === 0 ? 'min-h-[680px]' : 'opacity-50 min-h-[500px]'} `}>
             {/* Left Section */}
             <div className={`md:w-1/2 px-8 py-12 flex flex-col justify-between ${interview?.meetingStatus === 'Cancelled' ? 'bg-[#FF503D66] ' : 'bg-[#1B1B1C]'} !rounded-tl-2xl sm:!rounded-tl-3xl rounded-t-2xl sm:rounded-l-3xl sm:rounded-t-none rounded-l-none`}>
               <div className="space-y-4 sm:space-y-6">
                 <div className="text-2xl sm:text-3xl font-semibold">
-                  LIT Admissions Interview - {cohortDetails?.programDetail?.name} Program
+                  LIT Challenge Presentaion - {cohortDetails?.programDetail?.name} Program
                 </div>
                 <div className="w-fit px-3 py-2 flex items-center gap-2 text-sm font-medium rounded-full border border-[#00A3FF]">
                   <Clock className="h-4 w-4 text-[#00A3FF]" />
@@ -177,7 +177,7 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
                 }
                 <div className="space-y-2 sm:space-y-4">
                     <p className="text-sm sm:text-base font-normal text-[#64748B]">
-                        Your Counselling Session has been booked for
+                      Your Presentation Session has been booked for
                     </p>
                     <h3 className="text-2xl sm:text-3xl font-semibold">
                         {formattedDate} 

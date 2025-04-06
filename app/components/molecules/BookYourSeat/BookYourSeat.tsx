@@ -189,6 +189,7 @@ const BookYourSeat: React.FC<FeedbackProps> = ({ cohortId, booked, tokenFee, set
         </Button>
       </div>
     </div>
+    
     <TokenPaymentDialog cohortId={cohortId} open={PaymentDialogOpen} setOpen={setPaymentDialogOpen} setIsPaymentVerified={setIsPaymentVerified}/>
   </>  
   );

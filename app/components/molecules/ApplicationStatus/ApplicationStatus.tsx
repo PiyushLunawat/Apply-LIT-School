@@ -2,7 +2,7 @@ import { CirclePause, Clock } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { SchedulePresentation } from '~/components/organisms/schedule-presentation-dialog/schedule-presentation';
 import { Button } from '~/components/ui/button';
-import { Dialog, DialogContent } from '~/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '~/components/ui/dialog';
 import { Skeleton } from '~/components/ui/skeleton';
 import { GetInterviewers } from '~/api/studentAPI';
 
@@ -50,7 +50,7 @@ const StatusMessage: React.FC<StatusMessageProps> = ({ student }) => {
         );
         break;
       case 'interview scheduled':
-         case 'Interview Concluded':
+         case 'interview concluded':
         setHeadMessage(
           <>
             Your Interview has Concluded.
@@ -203,9 +203,9 @@ const StatusMessage: React.FC<StatusMessageProps> = ({ student }) => {
 
   return (
     <>
-      <div className={`bg-transparent flex relative ${applicationStatus === 'interview scheduled' ? 'h-[300px] sm:h-[450px]' : 'h-[250px] sm:h-[350px]'} px-auto`}>
+      <div className={`bg-transparent flex relative ${['interview scheduled', 'interview concluded'].includes(applicationStatus) ? 'h-[300px] sm:h-[450px]' : 'h-[250px] sm:h-[350px]'} px-auto`}>
         <div className='w-full md:w-[850px] mx-auto flex flex-col gap-4 sm:gap-8 justify-center items-center'>
-          {(applicationStatus === 'under review' || applicationStatus === 'interview scheduled') && (
+          {['under review', 'interview scheduled', 'interview concluded'].includes(applicationStatus) && (
           <div className='space-y-2'>  
             <div
               className={`mx-auto w-fit flex justify-center items-center gap-2 px-6 py-2 sm:py-4 border-2 ${
@@ -229,7 +229,7 @@ const StatusMessage: React.FC<StatusMessageProps> = ({ student }) => {
             {subMessage}
           </div>
 
-          {['interview scheduled', 'Interview Concluded'].includes(applicationStatus) &&
+          {['interview scheduled', 'interview concluded'].includes(applicationStatus) &&
             <div className='mx-8 sm:mt-4 sm:mx-16 text-xs sm:text-sm md:text-base text-center font-normal sm:space-y-3'>
               <div className=''>
                 If you were unable to attend this interview you may choose to
@@ -242,6 +242,7 @@ const StatusMessage: React.FC<StatusMessageProps> = ({ student }) => {
         </div>
       </div>
       <Dialog open={interviewOpen} onOpenChange={setInterviewOpen}>
+      <DialogTitle></DialogTitle>
         <DialogContent className="max-w-[90vw] sm:max-w-2xl">
           <SchedulePresentation student={student} interviewer={interviewer} eventCategory='Application Test Review'/>
         </DialogContent>

@@ -3,7 +3,7 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { Card, CardHeader, CardFooter, CardContent } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
-import { Dialog, DialogContent } from "~/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "~/components/ui/dialog";
 import { Eye, Download, CheckCircle, Pencil, Camera, FileLock, SquarePen, Plus } from "lucide-react";
 import LitIdFront from "~/components/molecules/LitId/LitIdFront";
 import LitIdBack from "~/components/molecules/LitId/LitIdBack";
@@ -447,6 +447,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
 
 
         <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTitle></DialogTitle>
           <DialogContent className="flex justify-center items-start max-w-[90vw] sm:max-w-4xl py-2 px-6 h-[90vh] overflow-y-auto">
             <div className="flex flex-col justify-center">
               <div className="flex flex-col sm:flex-row mx-auto gap-4 items-center justify-center">

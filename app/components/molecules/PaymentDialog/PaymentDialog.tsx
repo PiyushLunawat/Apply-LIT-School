@@ -15,8 +15,8 @@ interface DialogProps {
 
 const PaymentSuccessDialog: React.FC<DialogProps> = ({ open, setOpen, type, mail, onContinue, fee }) => (
   <Dialog open={open} onOpenChange={setOpen}>
-    <DialogContent className="max-w-[90vw] sm:max-w-[480px] bg-[#09090b] text-white rounded-lg px-8 py-16 text-center shadow-[0px_4px_32px_0px_rgba(0,0,0,0.75)]
-">
+    <DialogTitle></DialogTitle>
+    <DialogContent className="max-w-[90vw] sm:max-w-[480px] bg-[#09090b] text-white rounded-lg px-8 py-16 text-center shadow-[0px_4px_32px_0px_rgba(0,0,0,0.75)]">
       <CheckCircle className="w-12 h-12 text-[#00CC92] mx-auto" />
       <div>
         <div className="text-3xl font-bold ">Payment Successful!</div>
@@ -42,8 +42,8 @@ const PaymentSuccessDialog: React.FC<DialogProps> = ({ open, setOpen, type, mail
 
 const PaymentFailedDialog: React.FC<DialogProps> = ({ open, setOpen, type, amount, mail, onContinue }) => (
   <Dialog open={open} onOpenChange={setOpen}>
-    <DialogContent className="max-w-[90vw] sm:max-w-[480px] bg-[#09090b] text-white rounded-lg px-8 py-16 text-center shadow-[0px_4px_32px_0px_rgba(0,0,0,0.75)]
-">
+    <DialogTitle></DialogTitle>
+    <DialogContent className="max-w-[90vw] sm:max-w-[480px] bg-[#09090b] text-white rounded-lg px-8 py-16 text-center shadow-[0px_4px_32px_0px_rgba(0,0,0,0.75)]">
       <AlertCircle className="w-12 h-12 text-orange-500 mx-auto " />
       <div>
         <div className="text-3xl font-bold ">Oops!</div>

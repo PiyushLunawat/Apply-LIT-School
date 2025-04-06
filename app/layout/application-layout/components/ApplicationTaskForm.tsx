@@ -312,6 +312,16 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
     }
   };
 
+  function handleClearForm() {
+    localStorage.removeItem(storageKey);
+  
+    form.reset({
+      courseDive: { interest: '', goals: '' },
+      tasks: [],
+    });
+  }
+  
+
   // A helper for limiting word count
   const wordLimitHandler = (
     event: React.ChangeEvent<HTMLTextAreaElement>,
@@ -387,61 +397,66 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
         {/* Tasks Section */}
         {tasks.map((task: any, taskIndex: number) => (
           <div key={taskIndex} className="flex flex-col gap-6 mt-8">
-            <div className="flex-1 bg-[#FA69E5]/[0.2] text-[#FA69E5] text-center py-4 text-2xl rounded-full">
-              Task {String(taskIndex + 1).padStart(2, '0')}
-            </div>
-            <div className="space-y-4">
-              <div className="mb-4">
-                <Label className="text-base font-normal text-[#FA69E5] pl-3">
-                  {task.title}
-                </Label>
-                <div className="text-xl sm:text-2xl text-white mt-2 pl-3">
-                  {task.description}
-                </div>
+              <div className="flex-1 bg-[#FA69E5]/[0.2] text-[#FA69E5] text-center py-4 text-2xl rounded-full">
+                Task {String(taskIndex + 1).padStart(2, '0')}
               </div>
+              <div className="space-y-5">
+              <div className='flex flex-col gap-3'>
+                <div className="">
+                  <Label className="text-base font-normal text-[#FA69E5] pl-3">
+                    {task.title}
+                  </Label>
+                  <div className="text-xl sm:text-2xl text-white mt-2 pl-3">
+                    {task.description}
+                  </div>
+                </div>
 
-              <div className='w-full space-y-2'>
-                {task?.resources?.resourceFiles.map((file: any, index: number) => (
-                  <div key={index} className="flex gap-2 items-center justify-between w-full p-1.5 bg-[#2C2C2C] rounded-xl">
-                    <div className="flex flex-1 items-center space-x-2 truncate text-ellipsis">
+                <div className='w-full space-y-2'>
+                  <div className="text-lg font-normal text-muted-foreground pl-3">
+                    Resources
+                  </div>
+                  {task?.resources?.resourceFiles.map((file: any, index: number) => (
+                    <div key={index} className="flex gap-2 items-center justify-between w-full p-1.5 bg-[#2C2C2C] rounded-xl">
+                      <div className="flex flex-1 items-center space-x-2 truncate">
+                        <Badge
+                          variant="outline"
+                          size="icon"
+                          className="text-white rounded-xl bg-[#09090b]"
+                          >
+                          <FileTextIcon className="w-5 h-5" />
+                        </Badge>
+                        <span className="text-white truncate">{file.split('/').pop()}</span>
+                      </div>
+                      <Button variant="outline" size="icon" type='button'
+                        className="text-white rounded-xl hover:bg-[#1a1a1d]"
+                        onClick={() => window.open(file, "_blank")}
+                        >
+                        <ArrowUpRight className="w-5 h-5" />
+                      </Button>
+                    </div>
+                  ))}
+
+                  {task?.resources?.resourceLinks.map((link: any, index: number) => (
+                    <div key={index} className="flex gap-2 items-center justify-between w-full p-1.5 bg-[#2C2C2C] rounded-xl">
+                    <div className="flex items-center space-x-2 flex-1 w-[50vw] truncate">
                       <Badge
                         variant="outline"
                         size="icon"
                         className="text-white rounded-xl bg-[#09090b]"
-                      >
-                        <FileTextIcon className="w-5 h-5" />
+                        >
+                        <Link2 className="w-5 h-5" />
                       </Badge>
-                      <span className="text-white truncate">{file.split('/').pop()}</span>
+                      <span className="text-white truncate">{link}</span>
                     </div>
                     <Button variant="outline" size="icon" type='button'
                       className="text-white rounded-xl hover:bg-[#1a1a1d]"
-                      onClick={() => window.open(file, "_blank")}
-                    >
+                      onClick={() => window.open(link, "_blank")}
+                      >
                       <ArrowUpRight className="w-5 h-5" />
                     </Button>
                   </div>
-                ))}
-
-                {task?.resources?.resourceLinks.map((link: any, index: number) => (
-                  <div key={index} className="flex gap-2 items-center justify-between w-full p-1.5 bg-[#2C2C2C] rounded-xl">
-                  <div className="flex items-center space-x-2 flex-1 w-[50vw] truncate text-ellipsis">
-                    <Badge
-                      variant="outline"
-                      size="icon"
-                      className="text-white rounded-xl bg-[#09090b]"
-                    >
-                      <Link2 className="w-5 h-5" />
-                    </Badge>
-                    <span className="text-white truncate">{link}</span>
-                  </div>
-                  <Button variant="outline" size="icon" type='button'
-                    className="text-white rounded-xl hover:bg-[#1a1a1d]"
-                    onClick={() => window.open(link, "_blank")}
-                  >
-                    <ArrowUpRight className="w-5 h-5" />
-                  </Button>
+                  ))}
                 </div>
-                ))}
               </div>
 
               {/* If no cohort found */}
@@ -451,16 +466,21 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
                 </div>
               ) : (
                 // Else show each config item
-                <div className="space-y-3">
-                  {task.config.map((configItem: any, configIndex: number) => (
-                    <TaskConfigItem
-                      key={configIndex}
-                      control={control}
-                      taskIndex={taskIndex}
-                      configIndex={configIndex}
-                      configItem={configItem}
-                    />
-                  ))}
+                <div className="">
+                  <div className="text-lg font-normal text-[#00A0E9] pl-3">
+                    Your Submission
+                  </div>
+                  <div className='space-y-3'>
+                    {task.config.map((configItem: any, configIndex: number) => (
+                      <TaskConfigItem
+                        key={configIndex}
+                        control={control}
+                        taskIndex={taskIndex}
+                        configIndex={configIndex}
+                        configItem={configItem}
+                      />
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -473,7 +493,7 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
             variant="link"
             type="button"
             className="underline order-2 sm:order-1"
-            onClick={() => form.reset()}
+            onClick={handleClearForm}
           >
             Clear Form
           </Button>
@@ -741,32 +761,32 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
   };
 
   const handleDeleteFile = async (fileKey: string, index?: number) => {
-    try {
-      if (!fileKey) {
-        console.error("Invalid file fURL:", fileKey);
-        return;
-      }
+    // try {
+    //   if (!fileKey) {
+    //     console.error("Invalid file fURL:", fileKey);
+    //     return;
+    //   }
   
-      // Make sure `fileKey` is actually a string
-      if (typeof fileKey === "string") {
-        const deleteCommand = new DeleteObjectCommand({
-          Bucket: "dev-application-portal",
-          Key: fileKey,
-        });
-        await s3Client.send(deleteCommand);
-        console.log("File deleted successfully from S3:", fileKey);
+    //   // Make sure `fileKey` is actually a string
+    //   if (typeof fileKey === "string") {
+    //     const deleteCommand = new DeleteObjectCommand({
+    //       Bucket: "dev-application-portal",
+    //       Key: fileKey,
+    //     });
+    //     await s3Client.send(deleteCommand);
+    //     console.log("File deleted successfully from S3:", fileKey);
   
-        // Remove it from the UI
+    //     // Remove it from the UI
         if (index !== undefined) {
           removeFile(index);
         }
-      } else {
-        console.error("The file URL is not valid...", fileKey);
-      }
-    } catch (error) {
-      console.error("Error deleting file:", error);
-      setError("Failed to delete file. Try again.");
-    }
+    //   } else {
+    //     console.error("The file URL is not valid...", fileKey);
+    //   }
+    // } catch (error) {
+    //   console.error("Error deleting file:", error);
+    //   setError("Failed to delete file. Try again.");
+    // }
   };  
 
   const generateUniqueFileName = (originalName: string) => {
@@ -783,43 +803,25 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
           {files.map((file, index) => {
             const isLink = typeof file === 'string';
             return (
-              <div
-                key={index}
-                className="flex items-center bg-[#007AFF] h-[52px] text-white p-1.5 rounded-xl w-full"
-              >
-                <Badge size="icon" className="bg-[#3698FB] rounded-xl mr-2">
-                  <FileTextIcon className="w-5" />
-                </Badge>
-                <span className="flex-1 text-xs sm:text-base truncate mr-4">
-                  {isLink
-                    ? (file as string).split('/').pop()
-                    : (file as File).name}
-                </span>
+              <div key={index} className="flex items-center justify-between bg-[#007AFF] h-[52px] text-white p-1.5 rounded-xl w-full">
+                <div className="flex items-center gap-2 flex-1 w-[50vw] truncate">
+                  <Badge size="icon" className="bg-[#3698FB] rounded-xl">
+                    <FileTextIcon className="w-5" />
+                  </Badge>
+                  <span className="flex-1 truncate mr-4">
+                    {isLink ? (file as string).split('/').pop() : (file as File).name}
+                  </span>
+                </div>
                 <div className="flex items-center space-x-2">
                   {isLink && (
-                    <Button
-                      size="icon"
-                      type="button"
-                      variant="ghost"
-                      className="bg-[#3698FB] rounded-xl"
-                    >
-                      <a
-                        href={file as string}
-                        download
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
+                    <Button size="icon" type="button" variant="ghost" className="bg-white/20 hover:bg-white/30 rounded-xl"
+                      onClick={() => window.open(file, "_blank")} >
                         <ArrowUpRight className="w-5" />
-                      </a>
                     </Button>
                   )}
-                  <Button
-                    size="icon"
-                    type="button"
-                    className="bg-[#3698FB] rounded-xl"
-                    onClick={() => handleDeleteFile(fileName, index)}
-                  >
-                    <XIcon className="w-5" />
+                  <Button size="icon" type="button" className="bg-white/20 hover:bg-white/30 rounded-xl"
+                    onClick={() => handleDeleteFile(fileName, index)} >
+                      <XIcon className="w-5" />
                   </Button>
                 </div>
               </div>
@@ -829,11 +831,11 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
           {/* Upload in-progress */}
           {uploading && (
             <div className="flex justify-between items-center bg-[#007AFF] h-[52px] text-white p-1.5 rounded-xl w-full">
-              <div className="flex items-center gap-2">
-                <Badge size="icon" className="bg-[#3698FB] rounded-xl mr-2">
+              <div className="flex flex-1 truncate items-center gap-2">
+                <Badge size="icon" className="bg-[#3698FB] rounded-xl">
                   <FileTextIcon className="w-5" />
                 </Badge>
-                <span className="flex-1 text-xs sm:text-base truncate mr-4">
+                <span className="flex-1 truncate mr-4">
                   {fileName}
                 </span>
               </div>
@@ -842,7 +844,7 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
                   <LoaderCircle className="h-4 w-4 animate-spin" />
                 ) : (
                   <>
-                    <Progress className="h-2 w-24" value={uploadProgress} />
+                    <Progress className="h-2 w-20 sm:w-24" value={uploadProgress} />
                     <span>{uploadProgress}%</span>
                   </>
                 )}
@@ -850,7 +852,7 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
                 <Button
                   size="icon"
                   type="button"
-                  className="bg-[#3698FB] rounded-xl"
+                  className="bg-white/20 hover:bg-white/30 rounded-xl"
                   onClick={() => handleDeleteFile(fileName)}
                 >
                   <XIcon className="w-5" />
