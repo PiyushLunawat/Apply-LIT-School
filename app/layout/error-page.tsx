@@ -1,16 +1,7 @@
 import { Link, Link as ReLink } from '@remix-run/react'
 import { FC } from 'react'
 import { Button } from '~/components/ui/button'
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from '~/components/ui/drawer'
+import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger,} from '~/components/ui/drawer'
 
 export interface ErrorPageProps {
   code: number
@@ -51,7 +42,7 @@ export const ErrorPage: FC<ErrorPageProps> = ({ code, statusText, errorMessages,
               ) : (
                 <>
                   <h1 className="text-4xl font-bold my-10">
-                    {code}: {statusText}gsg
+                    {code}: {statusText}
                   </h1>
                   <p className="text-muted-foreground">{errorMessages}</p>
                 </>

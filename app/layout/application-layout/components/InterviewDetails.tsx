@@ -73,7 +73,7 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
   
       const data = {
         cohortId: latestCohort?.cohortId?._id,
-        role: 'application_reviewer',
+        role: 'interviewer',
       };
       
       const response = await GetInterviewers(data);

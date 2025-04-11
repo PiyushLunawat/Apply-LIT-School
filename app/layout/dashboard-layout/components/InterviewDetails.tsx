@@ -66,21 +66,21 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
       }
       
     if (!lastInterview) {
-        return <div className="text-center">No interviews found.</div>;
+        return null;
     }
 
     const handleScheduleInterview = async () => {
   
       const data = {
         cohortId: latestCohort?.cohortId?._id,
-        role: 'application_reviewer',
+        role: 'Litmus_test_reviewer',
       };
       
       const response = await GetInterviewers(data);
     
       const payload = {
         emails: response.data,
-        eventCategory: "Application Test Review", 
+        eventCategory: "Litmus Test Review", 
       };
       try {
         const response = await fetch(
@@ -126,15 +126,15 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
             </div>
             <Button size={'xl'} variant="default" onClick={() => handleScheduleInterview()}
             >
-              Schedule an Interview
+              Schedule an Presentation
             </Button>
           </Card>
         }
 
         {litmusTestDetails?.litmusTestInterviews.slice().reverse().map((interview: any, index: any) => (
-          <Card key={index} className={`max-w-6xl mx-auto md:flex md:flex-row rounded-2xl sm:rounded-3xl ${interview?.meetingStatus === 'Cancelled' ? 'border-[#FF503D66] opacity-50 min-h-[680px]' : index === 0 ? 'min-h-[680px]' : 'opacity-50 min-h-[500px]'} `}>
+          <Card key={index} className={`max-w-6xl mx-auto md:flex md:flex-row rounded-2xl sm:rounded-3xl ${interview?.meetingStatus === 'cancelled' ? 'border-[#FF503D66] opacity-50 min-h-[680px]' : index === 0 ? 'min-h-[680px]' : 'opacity-50 min-h-[500px]'} `}>
             {/* Left Section */}
-            <div className={`md:w-1/2 px-8 py-12 flex flex-col justify-between ${interview?.meetingStatus === 'Cancelled' ? 'bg-[#FF503D66] ' : 'bg-[#1B1B1C]'} !rounded-tl-2xl sm:!rounded-tl-3xl rounded-t-2xl sm:rounded-l-3xl sm:rounded-t-none rounded-l-none`}>
+            <div className={`md:w-1/2 px-8 py-12 flex flex-col justify-between ${interview?.meetingStatus === 'cancelled' ? 'bg-[#FF503D66] ' : 'bg-[#1B1B1C]'} !rounded-tl-2xl sm:!rounded-tl-3xl rounded-t-2xl sm:rounded-l-3xl sm:rounded-t-none rounded-l-none`}>
               <div className="space-y-4 sm:space-y-6">
                 <div className="text-2xl sm:text-3xl font-semibold">
                   LIT Challenge Presentaion - {cohortDetails?.programDetail?.name} Program
@@ -162,14 +162,14 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
       
             {/* Right Section */}
             <div className="md:w-1/2 px-8 py-12 space-y-6 flex flex-col justify-between">
-              {(interview?.meetingStatus !== 'Cancelled' && index !== 0) &&
+              {(interview?.meetingStatus !== 'cancelled' && index !== 0) &&
                 <div className="flex gap-2 items-center text-2xl">
                   <TimerOff className="w-6 h-6 "/>
                   This meeting is over
                 </div>
               }
               <div className="space-y-10 sm:space-y-12">
-                {interview?.meetingStatus === 'Cancelled' &&
+                {interview?.meetingStatus === 'cancelled' &&
                   <div className="flex gap-2 items-center text-2xl text-[#FF503D]">
                     <XOctagon className="w-6 h-6 "/>
                     This meeting was cancelled by you
@@ -199,7 +199,7 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
                 </div>
               </div>
       
-              {interview?.meetingStatus == 'Cancelled' ?
+              {interview?.meetingStatus == 'cancelled' ?
               <div className="space-y-6">
                 <div className="">
                   <div className="text-base text-muted-foreground">{new Date(interview?.updatedAt).toLocaleDateString()}</div>

@@ -226,10 +226,10 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({}) => {
               render={({ field }) => (
                 <FormItem className="flex-1 space-y-1 relative">
                   <Label className="text-sm font-normal pl-3">Contact No.</Label>
-                  <div className="absolute left-3 top-[40px]">+91</div>
-                  <Input  type="tel" maxLength={14} placeholder="00000 00000" className='px-10' {...field}
-                  value={field.value}
-                  onInput={(e) => {
+                  <div className="absolute left-3 top-[39.5px]">+91</div>
+                  <Input  type="tel" maxLength={10} placeholder="00000 00000" className='px-10' {...field}
+                    value={field.value}
+                    onInput={(e) => {
                     const target = e.target as HTMLInputElement;
                     target.value = target.value.replace(/[^0-9+ ]/g, '');
                     field.onChange(target.value);

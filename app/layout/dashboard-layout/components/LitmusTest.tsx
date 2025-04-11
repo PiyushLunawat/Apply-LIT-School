@@ -70,6 +70,7 @@ export default function LitmusTest({ student }: LitmusTestProps) {
   
   const [litmusTestDetails, setLitmusTestDetails] = useState<any>(latestCohort?.litmusTestDetails);
   const [status, setStatus] = useState<string>(litmusTestDetails?.status);
+  
   const [interviewOpen, setInterviewOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [interviewer, setInterviewer] = useState<any>([]);
@@ -180,6 +181,8 @@ export default function LitmusTest({ student }: LitmusTestProps) {
       cohortId: student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.cohortId?._id,
       role: 'Litmus_test_reviewer',
     };
+
+    setLoading(true);
     
     const response = await GetInterviewers(data);
     console.log("list", response.data);
@@ -214,17 +217,21 @@ export default function LitmusTest({ student }: LitmusTestProps) {
     } 
     catch (error) {
       console.error("Error scheduling interview:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <>
-    {['', 'pending'].includes(status) && 
+    {status === undefined ? 
+    <div className=''></div> : 
+    ['', 'pending'].includes(status) ? 
     <Form {...form}>  
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="flex flex-col items-start p-[52px] bg-[#09090B] text-white shadow-md w-full mx-auto space-y-6">
             {cohortDetails?.litmusTestDetail?.[0]?.litmusTasks.map((task: any, taskIndex: number) => (
-              <div className='space-y-7'>
+              <div key={taskIndex} className='space-y-7'>
                 <div>
                   <Badge className="text-sm my-4 border-[#3698FB] text-[#3698FB] bg-[#3698FB]/10">
                     Task 0{taskIndex+1}
@@ -322,9 +329,8 @@ export default function LitmusTest({ student }: LitmusTestProps) {
           </div>
         </form>
       </Form>
-    }
-
-  {['submitted', 'interview scheduled', 'interview cancelled', 'completed'].includes(status) &&
+    :
+  // {['submitted', 'interview scheduled', 'interview cancelled', 'completed'].includes(status) &&
   <div className='flex flex-col items-start p-[52px] bg-[#09090B] text-white shadow-md w-full mx-auto space-y-8'>
     <div className=''>
       <div className='text-2xl font-medium'>Congratulations on making your LITMUS Challenge submission!</div>
@@ -415,10 +421,10 @@ export default function LitmusTest({ student }: LitmusTestProps) {
       ))}
       </div>
     </div>
-    {['submitted', 'interview cancelled'].includes(status) &&
+    {['submitted'].includes(status) &&
       <div className='w-full flex justify-between items-center '>
         <Button size="xl" className='' type="button" disabled={loading} onClick={() => handleScheduleInterview()}>
-          {loading ? 'Scheduling...' : 'Schedule a Call'}
+          {loading ? 'Scheduling...' : 'Schedule a Presentation'}
         </Button>
       </div>
     }
@@ -448,7 +454,7 @@ export default function LitmusTest({ student }: LitmusTestProps) {
     </div>
     <div className="w-full grid grid-cols sm:grid-cols-2 gap-3">
       {cohortDetails?.litmusTestDetail?.[0]?.scholarshipSlabs.map((slab: any, index: number) => ( 
-        <ScholarshipSlabCard title={slab?.name} waiverAmount={slab?.percentage+"%"} clearanceRange={slab?.clearance+"%"} desc={slab?.description} color={getColor(index)} bg={getBgColor(index)} />
+        <ScholarshipSlabCard ind={index} title={slab?.name} waiverAmount={slab?.percentage+"%"} clearanceRange={slab?.clearance+"%"} desc={slab?.description} color={getColor(index)} bg={getBgColor(index)} />
       ))}
     </div>
   </div>

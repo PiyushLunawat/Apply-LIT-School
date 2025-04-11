@@ -19,7 +19,8 @@ export const Header: React.FC<HeaderProps> = ({ classn }) => {
       if (response.ok) {
         localStorage.removeItem('studentData');
         setStudentData(null);
-        navigate('../auth/login');
+        window.location.reload();
+        // navigate('../auth/login');
       }
     };
     

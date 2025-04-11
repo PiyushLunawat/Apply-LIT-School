@@ -1,4 +1,4 @@
-// app/routes/api/set-cookies.ts
+// app/routes/set-cookies.ts
 import { json } from "@remix-run/node";
 import {
   accessTokenCookie,

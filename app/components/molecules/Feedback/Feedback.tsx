@@ -33,7 +33,7 @@ const Feedback: React.FC<FeedbackProps> = ({ student, setIsPaymentVerified }) =>
     setInterviewLoading(true);
     const data = {
       cohortId: student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.cohortId?._id,
-      role: 'application_reviewer',
+      role: 'interviewer',
     };
     
     const response = await GetInterviewers(data);

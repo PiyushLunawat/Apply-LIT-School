@@ -683,7 +683,7 @@ useEffect(() => {
   
       // Fetch application fee amount
       const applicationFee = applicationFees || 500;
-      const sId = studentData._id;
+      const sId = fetchedStudentData._id;
       const cId = fetchedStudentData.appliedCohorts[fetchedStudentData.appliedCohorts.length - 1].cohortId._id;
   
       // Call the API to create an order
@@ -692,6 +692,8 @@ useEffect(() => {
         studentId: sId,
         cohortId: cId 
       }
+      console.log("sdfdv",feePayLoad);
+      
       const feeResponse = await payApplicationFee(feePayLoad);
       console.log("Fee payment response:", feeResponse);
   
@@ -703,12 +705,12 @@ useEffect(() => {
         name: 'The LIT School',
         description: 'Application Fee',
         image: 'https://example.com/your_logo', // Replace with your logo URL
-        order_id: feeResponse.data.id, // Use the order ID returned from the server
+        order_id: feeResponse.data.orderId, // Use the order ID returned from the server
         handler: async function (response: any) {
           
           // Verify the payment on the server
           try {
-            const verifyResponse = await verifyApplicationFeePayment(response.razorpay_order_id);
+            const verifyResponse = await verifyApplicationFeePayment(feeResponse.data.orderId,);
             console.log("Payment verification response:", verifyResponse);
   
             if (verifyResponse.success) {
@@ -936,7 +938,7 @@ useEffect(() => {
                         type="tel"
                         placeholder="+91 95568 97688"
                         className='pl-10'
-                        maxLength={14}
+                        maxLength={13}
                         defaultValue={fetchedStudentData?.mobileNumber || studentData?.mobileNumber || "--"}
                         {...field}
                       />
@@ -1689,12 +1691,13 @@ useEffect(() => {
               control={control}
               name="applicationData.emergencyContact"
               render={({ field }) => (
-                <FormItem className="flex-1 space-y-1">
+                <FormItem className="flex-1 space-y-1 relative">
                   <Label htmlFor="emergencyContact" className="text-sm font-normal pl-3">Contact No.</Label>
+                    <div className="absolute left-3 top-[39.5px]">+91</div>
                   <FormControl>
-                    <Input id="emergencyContact" type='tel' placeholder="+91 00000 00000" {...field} maxLength={14}
-                    value={field.value || "+91 "}
-                    onInput={(e) => {
+                    <Input id="emergencyContact" type='tel' className='px-10' placeholder="00000 00000" {...field} maxLength={10}
+                      value={field.value}
+                      onInput={(e) => {
                       const target = e.target as HTMLInputElement;
                       target.value = target.value.replace(/[^0-9+ ]/g, '');
                       field.onChange(target.value);
@@ -1763,11 +1766,12 @@ useEffect(() => {
               control={control}
               name="applicationData.fatherContact"
               render={({ field }) => (
-                <FormItem className="flex-1 space-y-1">
+                <FormItem className="flex-1 space-y-1 relative">
                   <Label htmlFor="fatherContact" className="text-sm font-normal pl-3">Father's Contact No.</Label>
+                  <div className="absolute left-3 top-[39.5px]">+91</div>
                   <FormControl>
-                    <Input id="fatherContact" type='tel' placeholder="+91 00000 00000" {...field} maxLength={14}
-                    value={field.value || "+91 "}
+                    <Input id="fatherContact" type='tel' className='px-10' placeholder="00000 00000" {...field} maxLength={10}
+                    value={field.value}
                     onInput={(e) => {
                       const target = e.target as HTMLInputElement;
                       target.value = target.value.replace(/[^0-9+ ]/g, '');
@@ -1844,11 +1848,12 @@ useEffect(() => {
               control={control}
               name="applicationData.motherContact"
               render={({ field }) => (
-                <FormItem className="flex-1 space-y-1">
+                <FormItem className="flex-1 space-y-1 relative">
                   <Label htmlFor="motherContact" className="text-sm font-normal pl-3">Mother's Contact No.</Label>
+                  <div className="absolute left-3 top-[39.5px]">+91</div>
                   <FormControl>
-                    <Input id="motherContact" type='tel' placeholder="+91 00000 00000" {...field} maxLength={14}
-                    value={field.value || "+91 "}
+                    <Input id="motherContact" type='tel' className='px-10' placeholder="00000 00000" {...field} maxLength={10}
+                    value={field.value}
                     onInput={(e) => {
                       const target = e.target as HTMLInputElement;
                       target.value = target.value.replace(/[^0-9+ ]/g, '');

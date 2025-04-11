@@ -1,6 +1,7 @@
 import React from 'react';
 
 interface ScholarshipSlabCardProps {
+  ind: any;
   title: string;
   waiverAmount: string;
   clearanceRange: string;
@@ -9,10 +10,10 @@ interface ScholarshipSlabCardProps {
   bg: string
 }
 
-const ScholarshipSlabCard: React.FC<ScholarshipSlabCardProps> = ({ title, waiverAmount, clearanceRange, desc, color, bg }) => {
+const ScholarshipSlabCard: React.FC<ScholarshipSlabCardProps> = ({ ind, title, waiverAmount, clearanceRange, desc, color, bg }) => {
 
   return (
-    <div className={`flex flex-col p-4 bg-[#09090B] border rounded-xl text-white space-y-6`}>
+    <div key={ind} className={`flex flex-col p-4 bg-[#09090B] border rounded-xl text-white space-y-6`}>
       <div className="flex flex-col gap-2">
         <div className={`${color} text-base font-medium`}>
           {title}

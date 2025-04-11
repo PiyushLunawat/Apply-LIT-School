@@ -1,15 +1,17 @@
 import "./tailwind.css";
-import { isRouteErrorResponse, json, Links, Meta, Outlet, Scripts, ScrollRestoration, useLoaderData, useRouteError, } from "@remix-run/react";
+import { StrictMode, useContext, useEffect, useState } from "react";
+import { isRouteErrorResponse, json, Links, Meta, Outlet, Scripts, ScrollRestoration, useLoaderData, useNavigate, useRouteError, } from "@remix-run/react";
 import type { LinksFunction, LoaderFunction } from "@remix-run/node";
-import { StrictMode, useEffect, useState } from "react";
-import { ErrorPage } from "./components/pages/error-page";
-import { UserProvider } from "./context/UserContext";
+
+import { Dialog, DialogContent, DialogTitle } from "./components/ui/dialog";
+import { Button } from "./components/ui/button";
+
+import { ErrorPage } from "./layout/error-page";
+
+import { UserContext, UserProvider } from "./context/UserContext";
 import { accessTokenCookie, refreshTokenCookie } from "./cookies/cookies";
 import { RegisterInterceptor } from "./utils/interceptor";
-import { Dialog, DialogContent } from "./components/ui/dialog";
-import { Button } from "./components/ui/button";
 import { useInitializeEnv } from "./hooks/useEnv";
-import { DialogTitle } from "@radix-ui/react-dialog";
 
 export const loader: LoaderFunction = async ({ request }) => {
   const cookieHeader = request.headers.get("Cookie");
@@ -62,20 +64,26 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   useInitializeEnv();
-  const { accessToken } = useLoaderData<{ accessToken?: string }>();
+  const { accessToken, refreshToken } = useLoaderData<{ accessToken?: string, refreshToken?: string }>();
   const [isUnauthorized, setIsUnauthorized] = useState(false);
-
+  const navigate = useNavigate();
+  const { studentData, setStudentData } = useContext(UserContext);
+  
   useEffect(() => {
-    if (accessToken) {
-      RegisterInterceptor(
-        accessToken, 
-        // setIsUnauthorized
-      );
-    }
+      RegisterInterceptor(accessToken, refreshToken, setIsUnauthorized );
   }, [accessToken]);
 
+  const handleLogout = async () => {
+    const response = await fetch("/logout", { method: "POST" });
+  
+    if (response.ok) {
+      localStorage.removeItem('studentData');
+      setStudentData(null);
+      navigate('../auth/login');
+    }
+  };
+
   return (
-    <StrictMode>
       <UserProvider>
       <Dialog open={isUnauthorized} onOpenChange={setIsUnauthorized}>
         <DialogTitle></DialogTitle>
@@ -85,27 +93,25 @@ export default function App() {
             <div className="text-sm sm:text-base">Your session has expired. Please log in again.</div>
           </div>
           <div className="flex justify-center sm:justify-end">
-            <Button size="xl"className='w-full sm:w-fit px-8 bg-[#00AB7B] hover:bg-[#00AB7B]/90'>
-                Log in
+            <Button size="xl"className='w-full sm:w-fit px-8 bg-[#00AB7B] hover:bg-[#00AB7B]/90' onClick={handleLogout}>
+              Log in
             </Button>
           </div>
         </DialogContent>
       </Dialog>
         <Outlet />
       </UserProvider>
-    </StrictMode>
   );
 }
 
 export const ErrorBoundary = () => {
   const error = useRouteError()
-
   // when true, this is what used to go to `CatchBoundary`
   if (isRouteErrorResponse(error)) {
     return (
-        <StrictMode>
-          <ErrorPage code={error.status} statusText={error.statusText} errorMessages={error.data.message ?? error.data} />
-        </StrictMode>
+      <StrictMode>
+        <ErrorPage code={error.status} statusText={error.statusText} errorMessages={error.data.message ?? error.data} />
+      </StrictMode>
     )
   }
 
@@ -115,11 +121,10 @@ export const ErrorBoundary = () => {
     errorMessage = error.message
     trace = error.stack
   }
-
   return (
-      <StrictMode>
-        <ErrorPage code={401} traceTitle={errorMessage} trace={trace} />
-      </StrictMode>
+    <StrictMode>
+      <ErrorPage code={401} traceTitle={errorMessage} trace={trace} />
+    </StrictMode>
   )
 }
 

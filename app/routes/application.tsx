@@ -12,14 +12,12 @@ export const loader: LoaderFunction = async ({ request }) => {
   const refreshToken = await refreshTokenCookie.parse(cookieHeader);
   const userId = await userIdCookie.parse(cookieHeader);
 
-  if (accessToken) {
-    RegisterInterceptor(accessToken);
-  }
+    RegisterInterceptor(accessToken, refreshToken);
 
   console.log("userId", userId);
   
   // Now you can use `userId` in your logic
-  if (!accessToken) {
+  if (!accessToken && !refreshToken) {
     return redirect("/auth/login");
   }
 

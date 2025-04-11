@@ -88,7 +88,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
       pdf.save('LitID.pdf');
     } catch (err) {
       console.error('Failed to generate PDF:', err);
-      alert('An error occurred while generating the PDF.');
+      // alert('An error occurred while generating the PDF.');
     } finally {
       setIsGeneratingPDF(false);
     }
@@ -113,7 +113,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
         }
       } catch (error) {
         console.error("Error uploading image:", error);
-        alert("An error occurred while uploading the image.");
+        // alert("An error occurred while uploading the image.");
       } finally {
         setLoading(false);
       }
@@ -148,7 +148,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
       }
     } catch (error) {
       console.error("Error updating blood group:", error);
-      alert("An error occurred while updating the blood group.");
+      // alert("An error occurred while updating the blood group.");
     } finally {
       setLoading(false);
     }
@@ -167,7 +167,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
       }
     } catch (error) {
       console.error("Error updating LinkedIn URL:", error);
-      alert("Failed to update LinkedIn URL.");
+      // alert("Failed to update LinkedIn URL.");
     } finally {
       setLoading(false);
     }
@@ -186,13 +186,12 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
       }
     } catch (error) {
       console.error("Error updating Instagram URL:", error);
-      alert("Failed to update Instagram URL.");
+      // alert("Failed to update Instagram URL.");
     } finally {
       setLoading(false);
     }
   };
   
-
   return (
     <div className="px-4 sm:px-8 py-8 space-y-6">
       {/* 1) User Details Card */}

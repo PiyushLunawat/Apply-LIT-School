@@ -156,7 +156,7 @@ const StatusMessage: React.FC<StatusMessageProps> = ({ student }) => {
   
       const data = {
         cohortId: latestCohort?.cohortId?._id,
-        role: 'application_reviewer',
+        role: 'interviewer',
       };
 
       console.log("liffffst", data);
