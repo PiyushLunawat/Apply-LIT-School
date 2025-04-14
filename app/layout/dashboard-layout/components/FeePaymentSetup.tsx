@@ -440,8 +440,7 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
 
                         {/* Show File Upload + Fee Breakdown */}
                         <FileUploadField
-                          semester={1}
-                          installment={1}
+                          oneShot={true}
                           studentPaymentId={paymentDetails?._id}
                           onUploadSuccess={(data) => setPaymentDetails(data)}
                         />
@@ -581,6 +580,7 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                         <FileUploadField
                             semester={sem.semester}
                             installment={iIndex + 1}
+                            oneShot={false}
                             studentPaymentId={paymentDetails?._id}
                             onUploadSuccess={(data) => setPaymentDetails(data)}
                           />
@@ -663,11 +663,13 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
 function FileUploadField({
   semester,
   installment,
+  oneShot,
   studentPaymentId,
   onUploadSuccess
 }: {
-  semester: number;
-  installment: number;
+  semester?: number;
+  installment?: number;
+  oneShot: boolean;
   studentPaymentId: any;
   onUploadSuccess: (data: any) => void; 
 }) {
@@ -793,12 +795,22 @@ function FileUploadField({
       return;
     }
 
-    const payload = {
-      receiptUrl: reciptUrl.toString(),
-      semesterNumber: semester.toString(),
-      installmentNumber: installment.toString(),
-      studentPaymentId: studentPaymentId.toString(),
-    };
+    let payload;
+
+    if(oneShot) {
+      payload = {
+        receiptUrl: reciptUrl.toString(),
+        studentPaymentId: studentPaymentId.toString(),
+        oneShotPayment:true
+      };
+    } else if (semester && installment)  {
+      payload = {
+        receiptUrl: reciptUrl.toString(),
+        semesterNumber: semester.toString(),
+        installmentNumber: installment.toString(),
+        studentPaymentId: studentPaymentId.toString(),
+      };
+    }
 
     console.log("payload", payload);    
     

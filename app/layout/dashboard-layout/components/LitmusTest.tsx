@@ -66,7 +66,7 @@ export default function LitmusTest({ student }: LitmusTestProps) {
   
   const latestCohort = student?.appliedCohorts?.[student?.appliedCohorts.length - 1];
   const cohortDetails = latestCohort?.cohortId;
-  console.log("whwhw",latestCohort);
+  // console.log("whwhw",latestCohort);
   
   const [litmusTestDetails, setLitmusTestDetails] = useState<any>(latestCohort?.litmusTestDetails);
   const [status, setStatus] = useState<string>(litmusTestDetails?.status);

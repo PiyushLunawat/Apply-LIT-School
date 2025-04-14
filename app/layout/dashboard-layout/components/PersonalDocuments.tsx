@@ -36,6 +36,8 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
 
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const [selectedDoc, setSelectedDoc] = useState("");
+  const [selectedDocName, setSelectedDocName] = useState("");
   const [uploadStates, setUploadStates] = useState<{ [docId: string]: UploadState }>({});
   const [docs, setDocs] = useState<any[]>([]);
   const [documents, setDocuments] = useState<Document[]>([
@@ -81,7 +83,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
     window.open(fileUrl, "_blank")
   };
 
-  const handleFileChange = async ( e: React.ChangeEvent<HTMLInputElement>, docId: string, docType: string) => {
+  const handleFileChange = async ( e: React.ChangeEvent<HTMLInputElement>, docId: string, docType: string, editId?: string) => {
     setError(null);
 
     setUploadStates(prev => ({
@@ -115,7 +117,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
       const payload = {
         type: docType,
         cohortId: cohortDetails?._id,
-        docId: latestCohort?.personalDocs?._id,
+        docId: editId,
         fileUrl: fileUrl,
       };
 
@@ -124,7 +126,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
       // Call the API function with FormData
       const response = await uploadStudentDocuments(payload);
       console.log("Upload response:", response);
-      // setDocs(response.data);
+      setDocs(response.data.documents);
 
     } catch (error) {
       console.error("Error uploading file:", error);
@@ -208,6 +210,11 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
     return `${timestamp}-${sanitizedName}`;
   };  
   
+  const handleOpenDoc = (url: string, name: string) => {
+    setSelectedDoc(url);
+    setSelectedDocName(name)
+    setOpen(true);
+  }
 
   return (
     <div className="px-4 sm:px-8 py-8 space-y-4">
@@ -222,7 +229,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                <div className="relative group h-16 w-16 justify-center flex items-center rounded-full bg-[#00CC921F] overflow-hidden">
                 <iframe src={docDetail?.url} className="w-full h-full" style={{ border: 'none' }}></iframe>
                 <div className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                  onClick={() => setOpen(true)}>
+                  onClick={() => handleOpenDoc(docDetail?.url, doc.name)}>
                   <Eye className="text-white w-6 h-6" />
                 </div>
               </div>
@@ -284,7 +291,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                     accept="application/pdf,image/*"
                     className="hidden"
                     id={`file-input-${doc.id}`}
-                    onChange={(e) => handleFileChange(e, doc.id, doc.docType)}
+                    onChange={(e) => handleFileChange(e, doc.id, doc.docType, docDetail?._id)}
                   />
                   <Button
                     size="xl"
@@ -303,7 +310,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                       accept="application/pdf,image/*"
                       className="hidden"
                       id={`file-input-${doc.id}`}
-                      onChange={(e) => handleFileChange(e, doc.id, doc.docType)}
+                      onChange={(e) => handleFileChange(e, doc.id, doc.docType, docDetail?._id)}
                     />
                     <Button
                       size="xl"
@@ -337,17 +344,17 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                 </>
               )}
 
-              {docDetail && docDetail.url && (
+              {selectedDoc && (
                 <Dialog open={open} onOpenChange={setOpen}>
                   <DialogTitle></DialogTitle> 
                   <DialogContent className="max-w-5xl py-2 px-6 h-[90vh] overflow-y-auto">
                     <div className="flex flex-col gap-4 justify-center">
-                      <p>Preview for {doc.name}</p>
+                      <p>Preview for {selectedDocName}</p>
                       <div className="max-w-5xl h-[70vh] justify-center flex items-center rounded-2xl bg-[#09090b] border ">
-                        <iframe src={docDetail?.url} className="mx-auto w-[70%] h-full" style={{ border: 'none' }}></iframe>
+                        <iframe src={selectedDoc} className="mx-auto w-[70%] h-full" style={{ border: 'none' }}></iframe>
                       </div>
                       <Button size="xl" variant="ghost" className="mx-auto border bg-[#1B1B1C]"
-                        onClick={() => handleFileDownload(docDetail.url || "", doc.docType)}>
+                        onClick={() => handleFileDownload(selectedDoc || "", selectedDocName)}>
                           <Download className="h-4 w-4 mr-2" />Download
                       </Button>
                     </div>
@@ -359,13 +366,18 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
         );
       })}
 
-      {latestCohort?.personalDocs?.length > 0 && latestCohort?.personalDocs.map((doc: any) => (
+      {docs?.filter((doc: any) =>![ "graduationMarkSheet", "higherSecondaryMarkSheet", "secondarySchoolMarksheet", "aadharDocument", ].includes(doc.name)).length > 0 &&
+      docs?.filter((doc: any) =>![ "graduationMarkSheet", "higherSecondaryMarkSheet", "secondarySchoolMarksheet", "aadharDocument", ].includes(doc.name)).map((doc: any) => (
       <>
         <div className="text-3xl pt-4 px-6">Additional Documents</div>
         <div key={doc?._id} className="flex items-center justify-between p-6 bg-[#64748B1F] border rounded-xl">
           <div className="flex items-center gap-4">
-            <div className="cursor-pointer h-16 w-16 justify-center flex items-center rounded-full bg-[#00CC921F]">
-              DOC
+            <div className="relative group h-16 w-16 justify-center flex items-center rounded-full bg-[#00CC921F] overflow-hidden">
+              <iframe src={doc?.url} className="w-full h-full" style={{ border: 'none' }}></iframe>
+              <div className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                onClick={() => handleOpenDoc(doc?.url, doc.name)}>
+                <Eye className="text-white w-6 h-6" />
+              </div>
             </div>
             <div>
               <h3 className="font-medium text-2xl text-white capitalize">{doc?.documentName}</h3>

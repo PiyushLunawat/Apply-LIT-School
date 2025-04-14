@@ -232,7 +232,7 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
       <Dialog open={interviewOpen} onOpenChange={setInterviewOpen}>
       <DialogTitle></DialogTitle>
         <DialogContent className="max-w-[90vw] sm:max-w-2xl">
-          <SchedulePresentation student={student} interviewer={interviewer} eventCategory='Application Test Review'/>
+          <SchedulePresentation student={student} interviewer={interviewer} eventCategory='Litmus Test Review'/>
         </DialogContent>
       </Dialog>
       </div >

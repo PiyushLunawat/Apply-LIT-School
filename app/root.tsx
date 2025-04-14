@@ -79,7 +79,8 @@ export default function App() {
     if (response.ok) {
       localStorage.removeItem('studentData');
       setStudentData(null);
-      navigate('../auth/login');
+      window.location.reload();
+      setIsUnauthorized(false)
     }
   };
 

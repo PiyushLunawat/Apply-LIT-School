@@ -146,25 +146,46 @@ export async function verifyMobileOTP(data: {
   return response.json();
 }
 
-export async function getRefreshToken(data: any) {
-  console.log("ref", data);
+// export async function getRefreshToken(data: any) {
+//   console.log("ref", data);
+
+//   const response = await fetch(`${baseUrl}/auth/refresh-token`, {
+//     method: "POST",
+//     headers: { "Content-Type": "application/json" },
+//     body: JSON.stringify(data),
+//   });
+
+//   if (!response.ok) {
+//     const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
+//     throw new Error(
+//       `${
+//         errorDetails
+//           ? `${errorDetails.message || JSON.stringify(errorDetails)}`
+//           : ""
+//       }`
+//     );
+//   }
+
+//   return response.json();
+// }
+
+export async function getRefreshToken(refreshPayload: any) {
+  console.log("api Payload", refreshPayload);
 
   const response = await fetch(`${baseUrl}/auth/refresh-token`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
+    body: JSON.stringify(refreshPayload),
   });
 
+  const json = await response.json(); // ✅ Only read once
+  console.log("api res json", json);
+
   if (!response.ok) {
-    const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
     throw new Error(
-      `${
-        errorDetails
-          ? `${errorDetails.message || JSON.stringify(errorDetails)}`
-          : ""
-      }`
+      json.message || `Request failed with status ${response.status}`
     );
   }
 
-  return response.json();
+  return json;
 }

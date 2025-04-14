@@ -1,5 +1,4 @@
 import fetchIntercept from "fetch-intercept";
-import Cookies from "js-cookie";
 import { getRefreshToken } from "~/api/authAPI";
 
 // Modify RegisterInterceptor to refresh the token if only accessToken is available
@@ -43,6 +42,7 @@ export const RegisterInterceptor = (
         "admin/center",
         "/set-cookies",
         "/logout",
+        "/refresh-token",
         "/application",
         "/dashboard",
       ];
@@ -75,52 +75,41 @@ export const RegisterInterceptor = (
 
         const refPayload = {
           refreshToken: x,
+          // "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2Y4OTg2YTg0M2RmZjJmMTcxZjIxNWEiLCJyb2xlIjoic3R1ZGVudCIsImVtYWlsIjoibW9ydHl5QHlvcG1haWwuY29tIiwiZmlyc3ROYW1lIjoiTW9ydHkiLCJsYXN0TmFtZSI6IlNhbmNoeiIsImdlbmRlciI6Im1hbGUiLCJpYXQiOjE3NDQzNzAzMDcsImV4cCI6MTc0NDk3NTEwN30.TYL7BwMggFzJnc3MJ6C2GRyZdAjAb58pvAUpLj8e3o8",
         };
 
-        console.log("ref I", refPayload);
-        const response = await getRefreshToken(refPayload);
+        console.log("int I", refPayload);
+        const result = await getRefreshToken(refPayload); // Already parsed
+        console.log("int json", result);
 
-        console.log("fvev", response);
-        // Prevent multiple refreshes for the same request
-        refreshingToken = true;
+        if (result?.success) {
+          // Update cookies with new tokens
+          const response = await fetch("/set-cookies", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              accessToken: result.accessToken,
+              refreshToken: result.refreshToken,
+              userId: result.user.id,
+            }),
+          });
 
-        try {
-          console.log("fvefefev", refPayload);
+          RegisterInterceptor(result.accessToken, result.refreshToken);
 
-          const response = await getRefreshToken({ refreshToken });
-
-          console.log("deeeeeedeeedee", response);
-
-          const responseData = await response.json();
-
-          if (response.ok && responseData?.success) {
-            // Update cookies with new tokens
-            Cookies.set("studentAccessToken", response?.accessToken, {
-              secure: true,
-              sameSite: "Strict",
-            });
-            Cookies.set("studentRefreshToken", response?.refreshToken, {
-              secure: true,
-              sameSite: "Strict",
-            });
-
-            // Attach the new accessToken to the request headers
-            config.headers = {
-              ...config.headers,
-              authorization: `Bearer ${responseData?.accessToken}`,
-            };
-          } else {
-            console.error("Failed to refresh tokens.");
-            if (setIsUnauthorized) setIsUnauthorized(true); // Trigger unauthorized state
-          }
-        } catch (error) {
-          console.error("Error during refresh token request:", error);
-          if (setIsUnauthorized) setIsUnauthorized(true); // Trigger unauthorized state
-        } finally {
-          // Reset the flag after the refresh process is done
-          refreshingToken = false;
+          // Attach the new accessToken to the request headers
+          config.headers = {
+            ...config.headers,
+            authorization: `Bearer ${result?.accessToken}`,
+          };
+        } else {
+          console.error("Failed to refresh tokens.");
+          if (setIsUnauthorized) setIsUnauthorized(true);
         }
 
+        // Prevent multiple refreshes for the same request
+        refreshingToken = true;
         return [url, config];
       }
 
