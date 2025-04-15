@@ -313,6 +313,15 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
   // Get the tasks from the cohort data
   const tasks = cohort?.applicationFormDetail?.[0]?.task || [];
 
+  const getFileType = (fileName: string) => {
+    const extension = fileName.split('.').pop()?.toLowerCase();
+    if (!extension) return null;
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) return 'image';
+    if (['mp4', "mkv", 'webm', 'ogg'].includes(extension)) return 'video';
+    if (extension === 'pdf') return 'pdf';
+    return 'other';
+  };
+
   // Render
   return (
     <Form {...form}>
@@ -390,26 +399,77 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
                   <div className="text-lg font-normal text-muted-foreground pl-3">
                     Resources
                   </div>
-                  {task?.resources?.resourceFiles.map((file: any, index: number) => (
-                    <div key={index} className="flex gap-2 items-center justify-between w-full p-1.5 bg-[#2C2C2C] rounded-xl">
-                      <div className="flex flex-1 items-center space-x-2 truncate">
-                        <Badge
-                          variant="outline"
-                          size="icon"
-                          className="text-white rounded-xl bg-[#09090b]"
-                          >
-                          <FileTextIcon className="w-5 h-5" />
-                        </Badge>
-                        <span className="text-white truncate">{file.split('/').pop()}</span>
-                      </div>
-                      <Button variant="outline" size="icon" type='button'
-                        className="text-white rounded-xl hover:bg-[#1a1a1d]"
-                        onClick={() => window.open(file, "_blank")}
-                        >
-                        <ArrowUpRight className="w-5 h-5" />
-                      </Button>
-                    </div>
-                  ))}
+                  {task?.resources?.resourceFiles.map((file: any, index: number) => {
+                    const fileType = getFileType(file);
+
+                    switch (fileType) {
+                      case 'pdf':
+                        return (
+                          <div className="w-full min-h-[500px] max-h-[600px] justify-center flex items-center rounded-xl">
+                            <iframe src={file} className="mx-auto w-full min-h-[500px] max-h-[600px] rounded-xl" style={{ border: 'none' }} />
+                          </div>
+                        );
+                      case 'image':
+                        return (
+                          <div className="w-full bg-[#2C2C2C] flex flex-col items-center text-sm border rounded-xl relative">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              type="button"
+                              className="text-white rounded-xl hover:bg-[#1a1a1d] absolute top-[6px] right-[6px] z-10"
+                              onClick={() => window.open(file, "_blank")}
+                            >
+                              <ArrowUpRight className="w-5 h-5" />
+                            </Button>
+                            <img
+                              src={file}
+                              alt={file.split('/').pop()}
+                              className="object-contain rounded-xl"
+                            />
+                          </div>
+                        );
+                      case 'video':
+                        return (
+                          <div className="w-full bg-[#2C2C2C] flex flex-col items-center text-sm border rounded-xl relative">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              type="button"
+                              className="text-white rounded-xl hover:bg-[#1a1a1d] absolute top-[6px] right-[6px] z-10"
+                              onClick={() => window.open(file, "_blank")}
+                            >
+                              <ArrowUpRight className="w-5 h-5" />
+                            </Button>
+
+                            <video controls preload="none" className="h-[420px] w-full rounded-xl ">
+                              <source src={file} type="video/mp4" />
+                              Your browser does not support the video tag.
+                            </video>
+                          </div>
+                        );
+                      default:
+                        return (
+                          <div key={index} className="flex gap-2 items-center justify-between w-full p-1.5 bg-[#2C2C2C] rounded-xl">
+                            <div className="flex flex-1 items-center space-x-2 truncate">
+                              <Badge
+                                variant="outline"
+                                size="icon"
+                                className="text-white rounded-xl bg-[#09090b]"
+                                >
+                                <FileTextIcon className="w-5 h-5" />
+                              </Badge>
+                              <span className="text-white truncate">{file.split('/').pop()}</span>
+                            </div>
+                            <Button variant="outline" size="icon" type='button'
+                              className="text-white rounded-xl hover:bg-[#1a1a1d]"
+                              onClick={() => window.open(file, "_blank")}
+                              >
+                              <ArrowUpRight className="w-5 h-5" />
+                            </Button>
+                          </div>
+                        )
+                      }}
+                  )}
 
                   {task?.resources?.resourceLinks.map((link: any, index: number) => (
                     <div key={index} className="flex gap-2 items-center justify-between w-full p-1.5 bg-[#2C2C2C] rounded-xl">
