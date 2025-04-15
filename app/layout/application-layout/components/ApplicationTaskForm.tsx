@@ -411,7 +411,7 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
                         );
                       case 'image':
                         return (
-                          <div className="w-full bg-[#2C2C2C] flex flex-col items-center text-sm border rounded-xl relative">
+                          <div className="w-full min-h-[400px] max-h-[500px] bg-[#2C2C2C] flex flex-col items-center text-sm border rounded-xl relative">
                             <Button
                               variant="outline"
                               size="icon"
@@ -424,13 +424,13 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
                             <img
                               src={file}
                               alt={file.split('/').pop()}
-                              className="object-contain rounded-xl"
+                              className="min-h-[400px] max-h-[500px] object-contain rounded-xl"
                             />
                           </div>
                         );
                       case 'video':
                         return (
-                          <div className="w-full bg-[#2C2C2C] flex flex-col items-center text-sm border rounded-xl relative">
+                          <div className="w-full min-h-[400px] max-h-[500px] bg-[#2C2C2C] flex flex-col items-center text-sm border rounded-xl relative">
                             <Button
                               variant="outline"
                               size="icon"
@@ -441,7 +441,7 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
                               <ArrowUpRight className="w-5 h-5" />
                             </Button>
 
-                            <video controls preload="none" className="h-[420px] w-full rounded-xl ">
+                            <video controls preload="none" className="min-h-[400px] max-h-[500px] w-full rounded-xl ">
                               <source src={file} type="video/mp4" />
                               Your browser does not support the video tag.
                             </video>

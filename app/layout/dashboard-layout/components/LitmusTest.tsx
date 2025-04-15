@@ -304,21 +304,40 @@ export default function LitmusTest({ student }: LitmusTestProps) {
                           );
                         case 'image':
                           return (
-                            <div className=''>
-                            <img
-                              src={file}
-                              alt={file.split('/').pop()}
-                              className="w-full h-[620px] object-contain rounded-xl"
-                            />
+                            <div className="w-full min-h-[400px] max-h-[500px] bg-[#2C2C2C] flex flex-col items-center text-sm border rounded-xl relative">
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                type="button"
+                                className="text-white rounded-xl hover:bg-[#1a1a1d] absolute top-[6px] right-[6px] z-10"
+                                onClick={() => window.open(file, "_blank")}
+                              >
+                                <ArrowUpRight className="w-5 h-5" />
+                              </Button>
+                              <img
+                                src={file}
+                                alt={file.split('/').pop()}
+                                className="min-h-[400px] max-h-[500px] object-contain rounded-xl"
+                              />
                             </div>
                           );
                         case 'video':
                           return (
-                            <div className=''>
-                            <video controls preload="none" className="h-[420px] rounded-t-xl">
-                              <source src={file} type="video/mp4" />
-                              Your browser does not support the video tag.
-                            </video>
+                            <div className="w-full min-h-[400px] max-h-[500px] bg-[#2C2C2C] flex flex-col items-center text-sm border rounded-xl relative">
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                type="button"
+                                className="text-white rounded-xl hover:bg-[#1a1a1d] absolute top-[6px] right-[6px] z-10"
+                                onClick={() => window.open(file, "_blank")}
+                              >
+                                <ArrowUpRight className="w-5 h-5" />
+                              </Button>
+  
+                              <video controls preload="none" className="min-h-[400px] max-h-[500px] w-full rounded-xl ">
+                                <source src={file} type="video/mp4" />
+                                Your browser does not support the video tag.
+                              </video>
                             </div>
                           );
                         default:
