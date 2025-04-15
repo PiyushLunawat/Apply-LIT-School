@@ -202,7 +202,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
               {studentData?.profileUrl || selectedImage ? (
                 <div className="w-full h-full relative">
                   <img
-                    src={selectedImage || studentData?.profileUrl}
+                    src={selectedImage || studentData?.profileUrl || student?.profileUrl}
                     alt="Profile Image"
                     className="w-full h-full object-cover rounded-lg"
                   />
@@ -307,10 +307,11 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                   />
                 </div>
               )}
-                  {!studentData?.bloodGroup &&
-                  <Button size={'lg'} className="rounded-lg" onClick={handleBloodGroup}>
-                    Save
-                  </Button>}
+              {!studentData?.bloodGroup &&
+                <Button size={'lg'} className="rounded-lg" onClick={handleBloodGroup}>
+                  Save
+                </Button>
+              }
             </div>
           </div>
 

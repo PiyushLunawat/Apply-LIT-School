@@ -59,38 +59,39 @@ export default function AdmissionFee({ student }: AdmissionFeeProps) {
       document.getElementById('image-upload')?.click();
     };
  
-   const handleSubmitImage = async () => {
-     if (!receiptUrl) {
-       return;
-     }
+  //  const handleSubmitImage = async () => {
+  //    if (!receiptUrl) {
+  //      return;
+  //    }
  
-     setUploadError(null)
+  //    setUploadError(null)
 
-     const formData = new FormData();
-     formData.append('cohortId', tokenFeeDetails?.cohortId); 
-     formData.append('paymentType', tokenFeeDetails?.paymentType); 
-     formData.append('fileUrl', receiptUrl); 
+  //    const feePayload = {
+  //     cohortId: tokenFeeDetails?.cohortId,
+  //     paymentType: tokenFeeDetails?.paymentType,
+  //     fileUrl: receiptUrl,
+  //    }
  
-     try {
-       setLoading(true);
+  //    try {
+  //      setLoading(true);
 
-       const response = await submitTokenReceipt(formData);
-       setTokenFeeDetails(response.data)
-     } catch (error) {
-       setUploadError('Error uploading receipt. Please try again.');
-       console.error('Error uploading receipt:', error);
-     } finally {
-       setLoading(false);
-     }
-   };
+  //      const response = await submitTokenReceipt(feePayload);
+  //      setTokenFeeDetails(response.data)
+  //    } catch (error) {
+  //      setUploadError('Error uploading receipt. Please try again.');
+  //      console.error('Error uploading receipt:', error);
+  //    } finally {
+  //      setLoading(false);
+  //    }
+  //  };
  
-   if (error) {
-     return (
-       <div className="w-full flex items-center justify-center min-h-screen">
-         <div>{error}</div>
-       </div>
-     );
-   }
+  //  if (error) {
+  //    return (
+  //      <div className="w-full flex items-center justify-center min-h-screen">
+  //        <div>{error}</div>
+  //      </div>
+  //    );
+  //  }
 
    const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (receiptUrl) {
@@ -126,6 +127,17 @@ export default function AdmissionFee({ student }: AdmissionFeeProps) {
         fileUrl = await uploadMultipart(file, fileKey, CHUNK_SIZE);
       }
       setReceiptUrl(fileUrl);
+
+      setUploadError(null)
+
+     const feePayload = {
+      cohortId: tokenFeeDetails?.cohortId,
+      paymentType: tokenFeeDetails?.paymentType,
+      fileUrl: fileUrl,
+     }
+      const response = await submitTokenReceipt(feePayload);
+      setTokenFeeDetails(response.data)
+      
     } catch (err: any) {
       console.error('Upload error:', err);
       setUploadError(err.message || 'Error uploading file');
@@ -236,118 +248,86 @@ export default function AdmissionFee({ student }: AdmissionFeeProps) {
     return `${timestamp}-${sanitizedName}`;
   };  
 
+  const formatAmount = (value: number | undefined) =>
+    value !== undefined
+      ? new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(Math.round(value))
+      : "--";
+
   return (
     <div className='space-y-6'>
+      {tokenFeeDetails?.verificationStatus === 'flagged' ?
       <Card className="max-w-4xl mx-auto px-1 sm:px-6 py-6 sm:py-8">
-        <div className="mx-4 space-y-4">
-          <div className="grid sm:flex justify-between items-center">
-            {tokenFeeDetails?.verificationStatus === "verification pending" && <div className="text-lg sm:text-2xl font-normal">Payment Receipt is being verified</div>}
-            {tokenFeeDetails?.verificationStatus === "paid" && <div className="text-lg sm:text-2xl font-normal">Payment Receipt is verified</div>}
-            {tokenFeeDetails?.verificationStatus === "flagged" && 
-              <div className="text-[#FF503D] flex gap-2 items-center text-lg sm:text-2xl font-normal">
-                <AlertCircle className='w-5 h-5'/>Looks like your payment receipt was rejected
-              </div>
-            }
-            <div className="font-normal">{new Date().toLocaleDateString()}</div>
+        <div className="flex justify-between items-center">
+          <div>
+            <input type="file" accept="image/*"
+              className="hidden"
+              id={`file-input`}
+              onChange={(e) => handleImageChange(e)}
+            />
+            <Button size="xl" className="w-fit bg-[#00AB7B] hover:bg-[#00AB7B]/90 mx-auto" onClick={() => document.getElementById(`file-input`)?.click()} disabled={uploading || loading}>
+              Pay INR ₹{formatAmount(latestCohort?.cohortId?.cohortFeesDetail?.tokenFee)}.00 and Reserve
+            </Button>
           </div>
-          {tokenFeeDetails?.verificationStatus === "flagged" &&
-            <div className='p-3 bg-[#1B1B1C] rounded-xl'>
-              <h2 className=''>Reason:</h2>
-              {tokenFeeDetails?.feedback?.[tokenFeeDetails?.feedback.length - 1]?.text?.map((item: string, index: number) => (
-                <div className="" key={index}>{item}</div>
-              ))}
-            </div>
-          }
-            <div className='text-sm sm:text-base space-y-1'>
-              <div className="flex gap-2 font-normal">
-                Paid via {tokenFeeDetails?.paymentType } to 
-                <span className='flex gap-2'>
-                    {tokenFeeDetails?.paymentType === 'bank transfer' ? 
-                      <img src="/assets/images/bank-transfer-type.svg" alt="M" className="w-4"/> :
-                      <img src="/assets/images/cash-type.svg" alt="C" className="w-4"/>
-                    }
-                    LIT School
-                </span>
-              </div>
-              {tokenFeeDetails?.verificationStatus === 'paid' && (
-                <div className="text-muted-foreground text-sm -mt-2">Redirecting to Dashboard in {countdown} seconds...</div>
-              )}
-            </div>
-          
-          {tokenFeeDetails?.verificationStatus !== "flagged" ? 
-          <div className="relative bg-[#64748B33] rounded-xl border border-[#2C2C2C] w-full h-[220px]">
-            <img
-              src={tokenFeeDetails?.receipts?.[tokenFeeDetails?.receipts.length - 1]?.url}
-              alt="Uploaded receipt"
-              className="mx-auto h-full object-contain"
-              />
-          </div> : 
-          <div className='flex flex-col justify-center'>
-            <div className="flex flex-col items-center">
-              {receiptUrl ? (
-                <div className="relative bg-[#64748B33] rounded-xl border border-[#2C2C2C] w-full h-[220px]">
-                  <img src={receiptUrl} alt="Uploaded receipt" className="mx-auto h-full"/>
-
-                  <div className="absolute top-3 right-3 flex space-x-2">
-                    <Button variant="outline" size="icon"
-                      className="w-8 h-8 bg-white/[0.2] border border-white rounded-full shadow hover:bg-white/[0.4]"
-                      onClick={handleEditImage}
-                      >
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                    <Button variant="outline" size="icon"
-                      className="w-8 h-8 bg-white/[0.2] border border-white rounded-full shadow hover:bg-white/[0.4]"
-                      onClick={() => handleDeleteImage(fileName)}
-                      >
-                      <X className="w-5 h-5" />
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <label
-                htmlFor="image-upload"
-                className="cursor-pointer flex flex-col items-center justify-center bg-[#64748B33] p-4 rounded-xl border-[#2C2C2C] w-full h-[220px]"
-                >
-                  <div className="flex flex-col items-center space-y-3">
-                    <img
-                      src="/assets/images/receipt-icon.svg"
-                      alt="Upload icon"
-                      className="w-14 h-14"
-                      />
-                    {uploading ? 
-                      <div className="">
-                        <div className="flex items-center gap-2">
-                          {uploadProgress === 100 ? (
-                            <LoaderCircle className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <>
-                              <Progress className="h-2 w-24" value={uploadProgress} />
-                              <span>{uploadProgress}%</span>
-                            </>
-                          )}
-                          {/* <XIcon className="w-5" onClick={() => handleDeleteImage(fileName)}/> */}
-                        </div>
-                      </div> :
-                      <p className="text-sm">Upload your Acknowledgement Receipt</p>
-                    }
-                  </div>
-                  <input
-                    id="image-upload"
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleImageChange}
-                    />
-                </label>
-              )}
-            </div>
-
-            <Button size="xl" variant="outline"
-              className="mt-8 w-fit border-[#00CC92] text-[#00CC92] mx-auto" 
-              onClick={handleSubmitImage} disabled={!receiptUrl || loading}>{loading ? 'Re-Uploading...' : 'Re-Upload Receipt and Reserve'}</Button>
-          </div>}
         </div>
-      </Card>
+      </Card> :
+       <Card className="max-w-4xl mx-auto px-1 sm:px-6 py-6 sm:py-8">
+          <div className="mx-4 space-y-4">
+            <div className="grid sm:flex justify-between items-center">
+              {tokenFeeDetails?.verificationStatus === "verification pending" && <div className="text-lg sm:text-2xl font-normal">Payment Receipt is being verified</div>}
+              {tokenFeeDetails?.verificationStatus === "paid" && <div className="text-lg sm:text-2xl font-normal">Payment Receipt is verified</div>}
+              <div className="font-normal">{new Date().toLocaleDateString()}</div>
+            </div>
+              <div className='text-sm sm:text-base space-y-1'>
+                <div className="flex gap-2 font-normal">
+                  Paid via {tokenFeeDetails?.paymentType } to 
+                  <span className='flex gap-2'>
+                      {tokenFeeDetails?.paymentType === 'bank transfer' ? 
+                        <img src="/assets/images/bank-transfer-type.svg" alt="M" className="w-4"/> :
+                        <img src="/assets/images/cash-type.svg" alt="C" className="w-4"/>
+                      }
+                      LIT School
+                  </span>
+                </div>
+                {tokenFeeDetails?.verificationStatus === 'paid' && (
+                  <div className="text-muted-foreground text-sm -mt-2">Redirecting to Dashboard in {countdown} seconds...</div>
+                )}
+              </div>
+            
+            {tokenFeeDetails?.verificationStatus !== "flagged" ? 
+            <div className="relative bg-[#64748B33] rounded-xl border border-[#2C2C2C] w-full h-[220px]">
+              <img
+                src={tokenFeeDetails?.receipts?.[tokenFeeDetails?.receipts.length - 1]?.url}
+                alt="Uploaded receipt"
+                className="mx-auto h-full object-contain"
+                />
+            </div> : 
+            <div className='flex flex-col justify-center'>
+              <div className="flex flex-col items-center">
+                {receiptUrl && (
+                  <div className="relative bg-[#64748B33] rounded-xl border border-[#2C2C2C] w-full h-[220px]">
+                    <img src={receiptUrl} alt="Uploaded receipt" className="mx-auto h-full"/>
+
+                    <div className="absolute top-3 right-3 flex space-x-2">
+                      <Button variant="outline" size="icon"
+                        className="w-8 h-8 bg-white/[0.2] border border-white rounded-full shadow hover:bg-white/[0.4]"
+                        onClick={handleEditImage}
+                        >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button variant="outline" size="icon"
+                        className="w-8 h-8 bg-white/[0.2] border border-white rounded-full shadow hover:bg-white/[0.4]"
+                        onClick={() => handleDeleteImage(fileName)}
+                        >
+                        <X className="w-5 h-5" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>}
+          </div>
+        </Card>
+      }
       {tokenFeeDetails?.feedback && tokenFeeDetails?.feedback.slice().reverse().map((feedback: any, index: any) => (
         <Card key={index} className="max-w-4xl mx-auto px-1 sm:px-6 py-6 sm:py-8">
           <div className="mx-4 space-y-4">

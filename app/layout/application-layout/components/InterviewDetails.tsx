@@ -21,6 +21,7 @@ import Feedback from "~/components/molecules/Feedback/Feedback";
   
 export default function InterviewDetailsCard({ student }: InterviewDetailsCardProps) {
   const [interviewOpen, setInterviewOpen] = useState(false);
+  const [interviewLoading, setInterviewLoading] = useState(false);
   const [interviewer, setInterviewer] = useState<any>([]);
   
     const latestCohort = student?.appliedCohorts?.[student?.appliedCohorts.length - 1];
@@ -70,7 +71,7 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
     }
 
     const handleScheduleInterview = async () => {
-  
+      setInterviewLoading(true);
       const data = {
         cohortId: latestCohort?.cohortId?._id,
         role: 'interviewer',
@@ -106,13 +107,16 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
       catch (error) {
         console.error("Error scheduling interview:", error);
         // alert("Failed to schedule interview. Please try again later.");
+      } finally {
+        setInterviewLoading(false);
       }
     };
 
+    const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://apply-lit-school.vercel.app";
+
     const handleCancel = (bookingId: string) => {
-    const url = `https://dev.cal.litschool.in/meetings/cancel/${bookingId}`;
-    console.log(url); // Logs the URL to the console
-    window.open(url, "_blank");
+    const url = `https://dev.cal.litschool.in/meetings/cancel/${bookingId}?redirectUrl=${baseUrl}/application/status`;
+    window.location.href = url;
     };
 
     return (
@@ -124,7 +128,7 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
               <ScreenShare className="w-4 h-4" />
               Proceed to reschedule your interview call with our counsellor.
             </div>
-            <Button size={'xl'} variant="default" onClick={() => handleScheduleInterview()}
+            <Button size={'xl'} variant="default" disabled={interviewLoading} onClick={() => handleScheduleInterview()}
             >
               Schedule an Interview
             </Button>
@@ -132,9 +136,9 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
         }
 
         {applicationDetails?.applicationTestInterviews.slice().reverse().map((interview: any, index: any) => (
-          <Card key={index} className={`max-w-6xl mx-auto md:flex md:flex-row rounded-2xl sm:rounded-3xl ${interview?.meetingStatus === 'Cancelled' ? 'border-[#FF503D66] opacity-50 min-h-[680px]' : index === 0 ? 'min-h-[680px]' : 'opacity-50 min-h-[500px]'} `}>
+          <Card key={index} className={`max-w-6xl mx-auto md:flex md:flex-row rounded-2xl sm:rounded-3xl ${interview?.meetingStatus === 'cancelled' ? 'border-[#FF503D66] opacity-50 min-h-[550px]' : index === 0 ? 'min-h-[680px]' : 'opacity-50 min-h-[500px]'} `}>
             {/* Left Section */}
-            <div className={`md:w-1/2 px-8 py-12 flex flex-col justify-between ${interview?.meetingStatus === 'Cancelled' ? 'bg-[#FF503D66] ' : 'bg-[#1B1B1C]'} !rounded-tl-2xl sm:!rounded-tl-3xl rounded-t-2xl sm:rounded-l-3xl sm:rounded-t-none rounded-l-none`}>
+            <div className={`md:w-1/2 px-8 py-12 flex flex-col justify-between ${interview?.meetingStatus === 'cancelled' ? 'bg-[#FF503D66] ' : 'bg-[#1B1B1C]'} !rounded-tl-2xl sm:!rounded-tl-3xl rounded-t-2xl sm:rounded-l-3xl sm:rounded-t-none rounded-l-none`}>
               <div className="space-y-4 sm:space-y-6">
                 <div className="text-2xl sm:text-3xl font-semibold">
                   LIT Admissions Interview - {cohortDetails?.programDetail?.name} Program
@@ -162,23 +166,22 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
       
             {/* Right Section */}
             <div className="md:w-1/2 px-8 py-12 space-y-6 flex flex-col justify-between">
-              {(interview?.meetingStatus !== 'Cancelled' && index !== 0) &&
-                <div className="flex gap-2 items-center text-2xl">
-                  <TimerOff className="w-6 h-6 "/>
-                  This meeting is over
-                </div>
-              }
               <div className="space-y-10 sm:space-y-12">
-                {interview?.meetingStatus === 'Cancelled' &&
-                  <div className="flex gap-2 items-center text-2xl text-[#FF503D]">
-                    <XOctagon className="w-6 h-6 "/>
-                    This meeting was cancelled by you
-                  </div>
-                }
                 <div className="space-y-2 sm:space-y-4">
-                    <p className="text-sm sm:text-base font-normal text-[#64748B]">
-                        Your Counselling Session has been booked for
-                    </p>
+                    {interview?.meetingStatus === 'cancelled' ?
+                      <div className="flex gap-2 items-center text-2xl text-[#FF503D]">
+                        <XOctagon className="w-6 h-6 "/>
+                        This meeting was cancelled by you
+                      </div> :
+                      (interview?.meetingStatus !== 'cancelled' && index !== 0) ?
+                        <div className="flex gap-2 items-center text-2xl">
+                          <TimerOff className="w-6 h-6 "/>
+                          This meeting is over
+                        </div> :
+                        <p className="text-sm sm:text-base font-normal text-[#64748B]">
+                          Your Counselling Session has been booked for
+                        </p>
+                    }
                     <h3 className="text-2xl sm:text-3xl font-semibold">
                         {formattedDate} 
                     </h3>
@@ -199,13 +202,13 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
                 </div>
               </div>
       
-              {interview?.meetingStatus == 'Cancelled' ?
-              <div className="space-y-6">
+              {interview?.meetingStatus == 'cancelled' ?
+              <div className="space-y-2">
                 <div className="">
                   <div className="text-base text-muted-foreground">{new Date(interview?.updatedAt).toLocaleDateString()}</div>
                   <div className="text-xl text-muted-foreground">Reason for Cancelling:</div>
                 </div>
-                <div className="text-xl">{interview?.feedback}</div>
+                <div className="text-xl">{interview?.cancelReason}</div>
               </div> : 
               index === 0 &&
                 <div>
@@ -232,7 +235,7 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
       <Dialog open={interviewOpen} onOpenChange={setInterviewOpen}>
       <DialogTitle></DialogTitle>
         <DialogContent className="max-w-[90vw] sm:max-w-2xl">
-          <SchedulePresentation student={student} interviewer={interviewer} eventCategory='Application Test Review'/>
+          <SchedulePresentation student={student} interviewer={interviewer} eventCategory='Application Test Review' redirectUrl={`${baseUrl}/application/status`}/>
         </DialogContent>
       </Dialog>
       </div >

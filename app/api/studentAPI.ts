@@ -229,11 +229,13 @@ export async function setupFeePayment(feeData: any) {
   }
 }
 
-export async function submitTokenReceipt(formData: FormData) {
+export async function submitTokenReceipt(formData: any) {
   const response = await fetch(`${baseUrl}/student/token-receipt`, {
     method: "POST",
-    body: formData,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(formData),
   });
+
   if (!response.ok) {
     const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
     throw new Error(

@@ -207,8 +207,8 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
         </div>
 
         {/* Payment mode & installment type */}
-        <div className="flex gap-2">
-          <div className="flex-1">
+        <div className="flex flex-col md:flex-row gap-4 md:gap-2">
+          <div className="space-y-2 flex-1">
             <Label className="pl-3" htmlFor="paymentMethod">
               Select Your Mode of Payment
             </Label>
@@ -228,7 +228,7 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
             </Select>
           </div>
 
-          <div className="flex-1">
+          <div className="space-y-2 flex-1">
             <Label className="pl-3" htmlFor="paymentPlan">
               Select Installment Type
             </Label>
@@ -252,8 +252,8 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
         {/* Bank details if 'bank transfer' */}
         {formData.paymentMethod === "bank transfer" && (
           <>
-            <div className="flex gap-2">
-              <div className="flex-1">
+            <div className="flex flex-col md:flex-row gap-4 md:gap-2">
+              <div className="space-y-2 flex-1">
                 <Label className="pl-3" htmlFor="bankDetails.accountHolderName">
                   Account Holder Name
                 </Label>
@@ -265,7 +265,7 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                   onChange={handleInputChange}
                 />
               </div>
-              <div className="flex-1">
+              <div className="space-y-2 flex-1">
                 <Label className="pl-3" htmlFor="accountNumber">
                   Account Number
                 </Label>
@@ -278,8 +278,8 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                 />
               </div>
             </div>
-            <div className="flex gap-2">
-              <div className="flex-1">
+            <div className="flex flex-col md:flex-row gap-4 md:gap-2">
+              <div className="space-y-2 flex-1">
                 <Label className="pl-3" htmlFor="IFSCCode">
                   IFSC Code
                 </Label>
@@ -291,7 +291,7 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                   onChange={handleInputChange}
                 />
               </div>
-              <div className="flex-1">
+              <div className="space-y-2 flex-1">
                 <Label className="pl-3" htmlFor="branchName">
                   Branch Name
                 </Label>

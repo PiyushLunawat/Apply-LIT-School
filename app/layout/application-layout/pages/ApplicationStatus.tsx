@@ -12,6 +12,7 @@ export const ApplicationStatus: React.FC = () => {
   const [studentData, setStudentData] = useState<any>(null);
   const [student, setStudent] = useState<any>(null);
   const [isPaymentVerified, setIsPaymentVerified] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState<any>("");
   const [isInterviewScheduled, setIsInterviewScheduled] = useState<string | null>(null);
   const [latestCohort, setLatestCohort] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -66,7 +67,7 @@ export const ApplicationStatus: React.FC = () => {
     };
 
     fetchDataOnMount();
-  }, [studentData]);
+  }, [studentData, refreshKey]);
 
   useEffect(() => {
     // Only run the interval if 'latest' is defined
@@ -114,10 +115,10 @@ export const ApplicationStatus: React.FC = () => {
 
   return (
     <>
-      { (isPaymentVerified === null || isPaymentVerified === undefined) ?
+      {(latestCohort?.tokenFeeDetails === undefined) ?
         (((isInterviewScheduled !== 'interview scheduled' || showReviewBlock) && isInterviewScheduled !== 'interview cancelled')  ? 
           <div className="max-w-[1216px] sm:mx-16 xl:mx-auto justify-center items-center space-y-20">
-            <Review setIsPaymentVerified={setIsPaymentVerified} application={student}/>
+            <Review setIsPaymentVerified={setRefreshKey} application={student}/>
             <div className="space-y-4 sm:space-y-6">
               <ProgressBar currentStage={2} />
               <img src="/assets/images/application-process-02.svg" alt="Application Process Step 2" className="w-screen object-cover h-[188px] sm:h-full sm:rounded-3xl"/>

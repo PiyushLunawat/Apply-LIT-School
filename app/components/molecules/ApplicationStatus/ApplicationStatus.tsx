@@ -21,6 +21,7 @@ const StatusMessage: React.FC<StatusMessageProps> = ({ student }) => {
   const [subMessage, setSubMessage] = useState<string | JSX.Element>('');
   const [countdown, setCountdown] = useState<string>('');
   const [intervalId, setIntervalId] = useState<ReturnType<typeof setInterval> | null>(null); // Use ReturnType<typeof setInterval>
+  const [interviewLoading, setInterviewLoading] = useState(false);
   const [interviewOpen, setInterviewOpen] = useState(false);
   const [interviewer, setInterviewer] = useState<any>([]);
   // Update headMessage and subMessage based on messageType
@@ -89,13 +90,13 @@ const StatusMessage: React.FC<StatusMessageProps> = ({ student }) => {
       case 'waitlist':
         setHeadMessage(`Hey ${student?.firstName}, you have been put on the waitlist.`);
         setSubMessage(
-          'Thank you for taking the counselling interview. You have been waitlisted. You will be updated with regards to your seat approval before 24 October, 2024.'
+          `Thank you for taking the counselling interview. You have been waitlisted. You will be updated with regards to your seat approval before ${new Date(cohortDetails?.startDate).toDateString()}.`
         );
         break;
       case 'not qualified':
         setHeadMessage(
           <>
-            Hey {student?.firstName}, you have <span className="text-[#FF503D]">not qualified</span> for the upcoming (cohortDetails?.programDetail?.name) Cohort.
+            Hey {student?.firstName}, you have <span className="text-[#FF503D]">not qualified</span> for the upcoming {cohortDetails?.programDetail?.name} Cohort.
           </>
         );
         setSubMessage(
@@ -153,7 +154,7 @@ const StatusMessage: React.FC<StatusMessageProps> = ({ student }) => {
   }, [student]);
 
   const handleScheduleInterview = async () => {
-  
+  setInterviewLoading(true)
       const data = {
         cohortId: latestCohort?.cohortId?._id,
         role: 'interviewer',
@@ -198,8 +199,12 @@ const StatusMessage: React.FC<StatusMessageProps> = ({ student }) => {
       catch (error) {
         console.error("Error scheduling interview:", error);
         // alert("Failed to schedule interview. Please try again later.");
+      } finally {
+        setInterviewLoading(false)
       }
     };
+
+    const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://apply-lit-school.vercel.app";
 
   return (
     <>
@@ -234,7 +239,7 @@ const StatusMessage: React.FC<StatusMessageProps> = ({ student }) => {
               <div className=''>
                 If you were unable to attend this interview you may choose to
               </div>
-              <Button className='bg-[#FFFFFF2B] hover:bg-[#FFFFFF]/30 rounded' onClick={() => handleScheduleInterview()}>
+              <Button className='bg-[#FFFFFF2B] hover:bg-[#FFFFFF]/30 rounded' disabled={interviewLoading} onClick={() => handleScheduleInterview()}>
                 Reschedule Your Interview
               </Button>
             </div>
@@ -244,7 +249,7 @@ const StatusMessage: React.FC<StatusMessageProps> = ({ student }) => {
       <Dialog open={interviewOpen} onOpenChange={setInterviewOpen}>
       <DialogTitle></DialogTitle>
         <DialogContent className="max-w-[90vw] sm:max-w-2xl">
-          <SchedulePresentation student={student} interviewer={interviewer} eventCategory='Application Test Review'/>
+          <SchedulePresentation student={student} interviewer={interviewer} eventCategory='Application Test Review' redirectUrl={`${baseUrl}/application/status`}/>
         </DialogContent>
       </Dialog>
     </>

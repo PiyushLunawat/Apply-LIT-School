@@ -23,6 +23,8 @@ import {
   S3Client,
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
+import { Card } from '~/components/ui/card';
+import { Skeleton } from '~/components/ui/skeleton';
 
 const s3Client = new S3Client({
   
@@ -44,7 +46,14 @@ const litmusTestSchema = z.object({
       configItems: z.array(
         z.object({
           type: z.string(),
-          answer: z.any(),
+          answer: z.union([
+            // for link (URL)
+            z.string().nonempty('This field is required').url('Please enter a valid Link URL'),
+            // for short/long text
+            z.string().nonempty('This field is required'),
+            // for files/array
+            z.array(z.any()).nonempty('This field is required'),
+          ]),
         })
       ),
     })
@@ -70,7 +79,8 @@ export default function LitmusTest({ student }: LitmusTestProps) {
   
   const [litmusTestDetails, setLitmusTestDetails] = useState<any>(latestCohort?.litmusTestDetails);
   const [status, setStatus] = useState<string>(litmusTestDetails?.status);
-  
+
+  const { studentData } = useContext(UserContext);
   const [interviewOpen, setInterviewOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [interviewer, setInterviewer] = useState<any>([]);
@@ -80,10 +90,11 @@ export default function LitmusTest({ student }: LitmusTestProps) {
     setLitmusTestDetails(latestCohort?.litmusTestDetails);
     setStatus(latestCohort?.litmusTestDetails?.status);
   }, [latestCohort]);  
+
+  const storageKey = studentData?.email 
+  ? `litmusTestForm-${studentData.email}` 
+  : 'litmusTestForm-unknownUser';
   
-  const { register, watch, formState: { errors }, } = useForm<LitmusTestFormValues>({
-    resolver: zodResolver(litmusTestSchema),
-  });
   const form = useForm<LitmusTestFormValues>({
     resolver: zodResolver(litmusTestSchema),
     mode: 'onChange',
@@ -92,9 +103,10 @@ export default function LitmusTest({ student }: LitmusTestProps) {
     },
   });
 
-  const { control, handleSubmit, setValue, formState: { isValid },  } = form; 
+  const { control, handleSubmit,reset, setValue, watch, formState: { isValid },  } = form; 
 
   const tasks = cohortDetails?.litmusTestDetail?.[0]?.litmusTasks || [];
+
   useEffect(() => {
     if (cohortDetails?.litmusTestDetail?.[0]?.litmusTasks.length > 0) {
       
@@ -113,8 +125,22 @@ export default function LitmusTest({ student }: LitmusTestProps) {
         }))
       );
     }
-  }, [cohortDetails, setValue]);
+  }, [cohortDetails, reset, storageKey, setValue]);
 
+  useEffect(() => {
+    // Skip initial mount if needed
+    if (Object.keys(form).length === 0) return;
+
+    localStorage.setItem(storageKey, JSON.stringify(form));
+  }, [form]);
+
+  useEffect(() => {
+    const storedData = localStorage.getItem(storageKey);
+    if (storedData) {
+      const parsedData = JSON.parse(storedData);
+      reset(parsedData); // from useForm()
+    }
+  }, []);
 
   const onSubmit = async (data: LitmusTestFormValues) => {
     try {
@@ -163,7 +189,7 @@ export default function LitmusTest({ student }: LitmusTestProps) {
 
       // Submit the form data using the provided API function
       const response = await submitLITMUSTest(payload);
-      console.log('Submission successful:', response.data);
+      console.log('Submission successful:', response);
       setLitmusTestDetails(response.data);
       setStatus(response.data?.status);
       handleScheduleInterview();
@@ -222,10 +248,29 @@ export default function LitmusTest({ student }: LitmusTestProps) {
     }
   };
 
+  const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://apply-lit-school.vercel.app";
+
+  const getFileType = (fileName: string) => {
+    const extension = fileName.split('.').pop()?.toLowerCase();
+    if (!extension) return null;
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) return 'image';
+    if (['mp4', "mkv", 'webm', 'ogg'].includes(extension)) return 'video';
+    if (extension === 'pdf') return 'pdf';
+    return 'other';
+  };
+
   return (
     <>
     {status === undefined ? 
-    <div className=''></div> : 
+      <div className='flex flex-col items-start p-[52px] bg-[#09090B] text-white shadow-md w-full mx-auto space-y-8'>
+      <div className=''>
+        <div className='text-3xl font-medium'>LITMUS Challenge submission</div>
+      </div>
+      <div className='w-full space-y-6'>
+        <Skeleton className="h-[60px] w-full rounded-xl" />
+        <Skeleton className="h-[400px] w-full rounded-xl" />
+      </div>
+    </div> : 
     ['', 'pending'].includes(status) ? 
     <Form {...form}>  
         <form onSubmit={handleSubmit(onSubmit)}>
@@ -243,48 +288,78 @@ export default function LitmusTest({ student }: LitmusTestProps) {
                     {task.description}
                   </p>
 
-                  <div className='w-full space-y-4'>
-                    {task?.resources?.resourceFiles.map((file: any, index: number) => (
-                      <div key={index} className="flex items-center justify-between w-full p-1.5 bg-[#2C2C2C] rounded-xl">
-                        <div className="flex items-center space-x-2">
-                          <Badge
-                            variant="outline"
-                            size="icon"
-                            className="text-white rounded-xl bg-[#09090b]"
-                          >
-                            <FileTextIcon className="w-5 h-5" />
-                          </Badge>
-                          <span className="text-white">{file.split('/').pop()}</span>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="icon" type='button'
-                          className="text-white rounded-xl hover:bg-[#1a1a1d]"
-                          onClick={() => window.open(file, "_blank")}
-                        >
-                          <Download className="w-5 h-5" />
-                        </Button>
-                      </div>
-                    ))}
+                  <div className='w-full space-y-2'>
+                    <div className="text-lg font-normal text-muted-foreground pl-3">
+                      Resources
+                    </div>
+                    {task?.resources?.resourceFiles.map((file: any, index: number) => {
+                      const fileType = getFileType(file);
 
+                      switch (fileType) {
+                        case 'pdf':
+                          return (
+                            <div className="w-full min-h-[500px] max-h-[600px] justify-center flex items-center rounded-xl">
+                              <iframe src={file} className="mx-auto w-full min-h-[500px] max-h-[600px] rounded-xl" style={{ border: 'none' }} />
+                            </div>
+                          );
+                        case 'image':
+                          return (
+                            <div className=''>
+                            <img
+                              src={file}
+                              alt={file.split('/').pop()}
+                              className="w-full h-[620px] object-contain rounded-xl"
+                            />
+                            </div>
+                          );
+                        case 'video':
+                          return (
+                            <div className=''>
+                            <video controls preload="none" className="h-[420px] rounded-t-xl">
+                              <source src={file} type="video/mp4" />
+                              Your browser does not support the video tag.
+                            </video>
+                            </div>
+                          );
+                        default:
+                          return (
+                            <div key={index} className="flex gap-2 items-center justify-between w-full p-1.5 bg-[#2C2C2C] rounded-xl">
+                              <div className="flex flex-1 items-center space-x-2 truncate">
+                                <Badge
+                                  variant="outline"
+                                  size="icon"
+                                  className="text-white rounded-xl bg-[#09090b]"
+                                  >
+                                  <FileTextIcon className="w-5 h-5" />
+                                </Badge>
+                                <span className="text-white truncate">{file.split('/').pop()}</span>
+                              </div>
+                              <Button variant="outline" size="icon" type='button'
+                                className="text-white rounded-xl hover:bg-[#1a1a1d]"
+                                onClick={() => window.open(file, "_blank")}
+                                >
+                                <ArrowUpRight className="w-5 h-5" />
+                              </Button>
+                            </div>
+                          )}}
+                        )}
+  
                     {task?.resources?.resourceLinks.map((link: any, index: number) => (
-                      <div key={index} className="flex items-center justify-between w-full p-1.5 bg-[#2C2C2C] rounded-xl">
-                      <div className="flex items-center space-x-2  w-[50vw] truncate pr-12">
+                      <div key={index} className="flex gap-2 items-center justify-between w-full p-1.5 bg-[#2C2C2C] rounded-xl">
+                      <div className="flex items-center space-x-2 flex-1 w-[50vw] truncate">
                         <Badge
                           variant="outline"
                           size="icon"
                           className="text-white rounded-xl bg-[#09090b]"
-                        >
+                          >
                           <Link2 className="w-5 h-5" />
                         </Badge>
-                        <span className="text-white">{link}</span>
+                        <span className="text-white truncate">{link}</span>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="icon" type='button'
+                      <Button variant="outline" size="icon" type='button'
                         className="text-white rounded-xl hover:bg-[#1a1a1d]"
                         onClick={() => window.open(link, "_blank")}
-                      >
+                        >
                         <ArrowUpRight className="w-5 h-5" />
                       </Button>
                     </div>
@@ -292,30 +367,37 @@ export default function LitmusTest({ student }: LitmusTestProps) {
                   </div>
                 </div>
                 
-                <div className='w-full space-y-4'>
+                <Card className='w-full space-y-4 px-6 py-6 shadow-[0px_4px_32px_rgba(121,121,121,0.2)]'>
                   <div className="flex justify-between items-center">
-                    <div className="text-xl sm:text-3xl font-semibold">Judgement Criteria</div>
+                    <div className="text-xl sm:text-2xl font-normal pl-3">Judgement Criteria</div>
                   </div>
                   <div className="w-full grid grid-cols sm:grid-cols-2 gap-3">
                     {cohortDetails?.litmusTestDetail?.[0]?.litmusTasks[0]?.judgmentCriteria.map((criteria: any, index: number) => ( 
                       <JudgementCriteriaCard index={index} criteria={criteria?.name} maxPoint={criteria?.points} desc={criteria?.description} />
                     ))}
                   </div>
-                </div>
+                </Card>
 
                 {cohortDetails ? 
-                  task.submissionTypes.map((configItem: any, configIndex: number) => (
-                    <TaskConfigItem
-                      key={configIndex}
-                      control={control}
-                      taskIndex={taskIndex}
-                      configIndex={configIndex}
-                      configItem={configItem}
-                    />
-                  )) :
-                  <div className="text-center text-white">
-                    No tasks available. Please ensure the cohort data is loaded correctly.
-                  </div> 
+                  <div className="">
+                    <div className="text-xl font-medium pl-3">
+                      Your Submission
+                    </div>
+                    <div className='space-y-3'>
+                      {task.submissionTypes.map((configItem: any, configIndex: number) => (
+                        <TaskConfigItem
+                          key={configIndex}
+                          control={control}
+                          taskIndex={taskIndex}
+                          configIndex={configIndex}
+                          configItem={configItem}
+                        />
+                      ))}
+                      </div>
+                    </div> :
+                    <div className="text-center text-white">
+                      No tasks available. Please ensure the cohort data is loaded correctly.
+                    </div> 
                 }
             </div>
           ))}
@@ -365,7 +447,7 @@ export default function LitmusTest({ student }: LitmusTestProps) {
                 {linkItem}
               </span>
               </div>
-              <Button size="icon" type="button" className="bg-[#1B1B1C] rounded-xl">
+              <Button size="icon" type="button" className="bg-[#1B1B1C] hover:bg-[#1a1a1d] rounded-xl" onClick={() => window.open(linkItem, "_blank")}>
                 <ArrowUpRight className="w-5" />
               </Button>
             </div>
@@ -380,8 +462,8 @@ export default function LitmusTest({ student }: LitmusTestProps) {
                   {imageItem.split('/').pop()}
                 </span>
               </div>
-              <Button size="icon" type="button" className="bg-[#1B1B1C] rounded-xl">
-                <Download className="w-5" />
+              <Button size="icon" type="button" className="bg-[#1B1B1C] hover:bg-[#1a1a1d] rounded-xl" onClick={() => window.open(imageItem, "_blank")}>
+                <ArrowUpRight className="w-5" />
               </Button>
             </div>
           ))}
@@ -395,8 +477,8 @@ export default function LitmusTest({ student }: LitmusTestProps) {
                 {videoItem.split('/').pop()}
               </span>
               </div>
-              <Button size="icon" type="button" className="bg-[#1B1B1C] rounded-xl">
-                <Download className="w-5" />
+              <Button size="icon" type="button" className="bg-[#1B1B1C] hover:bg-[#1a1a1d] rounded-xl" onClick={() => window.open(videoItem, "_blank")}>
+                <ArrowUpRight className="w-5" />
               </Button>
             </div>
           ))}
@@ -410,8 +492,8 @@ export default function LitmusTest({ student }: LitmusTestProps) {
                   {fileItem.split('/').pop()}
                 </span>
               </div>
-              <Button size="icon" type="button" className="bg-[#1B1B1C] rounded-xl">
-                <Download className="w-5" />
+              <Button size="icon" type="button" className="bg-[#1B1B1C] hover:bg-[#1a1a1d] rounded-xl" onClick={() => window.open(fileItem, "_blank")}>
+                <ArrowUpRight className="w-5" />
               </Button>
             </div>
           ))}
@@ -424,11 +506,12 @@ export default function LitmusTest({ student }: LitmusTestProps) {
     {['submitted'].includes(status) &&
       <div className='w-full flex justify-between items-center '>
         <Button size="xl" className='' type="button" disabled={loading} onClick={() => handleScheduleInterview()}>
-          {loading ? 'Scheduling...' : 'Schedule a Presentation'}
+          Book a Presentation Session
         </Button>
       </div>
     }
-    <InterviewDetailsCard student={student}/> 
+    {['interview scheduled', 'interview cancelled'].includes(status) &&
+      <InterviewDetailsCard student={student}/> }
   </div>
 
   }
@@ -462,7 +545,7 @@ export default function LitmusTest({ student }: LitmusTestProps) {
   <Dialog open={interviewOpen} onOpenChange={setInterviewOpen}>
   <DialogTitle></DialogTitle>
     <DialogContent className="max-w-2xl">
-      <SchedulePresentation student={student} interviewer={interviewer} eventCategory='Litmus Test Review'/>
+      <SchedulePresentation student={student} interviewer={interviewer} eventCategory='Litmus Test Review' redirectUrl={`${baseUrl}/dashboard/litmus-task`}/>
     </DialogContent>
   </Dialog>
   </>
@@ -603,6 +686,11 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
 
     const file = selectedFiles[0];
     const fileKey = generateUniqueFileName(file.name);
+
+    if (file.size > configItem.maxFileSize * 1024 * 1024 ) {
+      setError(`${configItem.type} size exeeds ${configItem.maxFileSize} MB`);
+      return;
+    }
     
     setFileName(fileKey);
 

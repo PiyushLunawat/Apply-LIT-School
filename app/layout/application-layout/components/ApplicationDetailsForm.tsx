@@ -753,9 +753,9 @@ useEffect(() => {
   };
   
   const validateBeforeSubmit = () => {    
-    // if (!studentData?.isMobileVerified) {
-    //   return "Mobile number verification is required.";
-    // }
+    if (!fetchedStudentData?.isMobileVerified) {
+      return "Mobile number needs to be verified";
+    }
     return null;
   };
 
@@ -763,6 +763,10 @@ useEffect(() => {
   const saveData = async (data: FormData) => {
     const validationError = validateBeforeSubmit();
     if (validationError) {
+      form.setError("studentData.contact", {
+        type: "manual",
+        message: validationError,
+      });
       return;
     }
  
@@ -949,15 +953,7 @@ useEffect(() => {
                         {otpLoading ? 'Sending OTP...' : 'Verify'}
                       </Button>
                     }
-                      {errors?.studentData?.contact ? (
-                        <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                      ) : (
-                        !fetchedStudentData?.isMobileVerified && (
-                          <div className="text-[#FF503D] text-xs sm:text-sm font-normal pl-3">
-                            Please verify your mobile number.
-                          </div>
-                        )
-                      )}
+                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
                   </FormItem>
                 )}
               />

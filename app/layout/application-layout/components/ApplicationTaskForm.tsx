@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -7,36 +7,14 @@ import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { UserContext } from '~/context/UserContext';
 import { Button } from '~/components/ui/button';
-import {
-  ArrowUpRight,
-  Download,
-  FileTextIcon,
-  Link2,
-  Link2Icon,
-  LoaderCircle,
-  UploadIcon,
-  XIcon,
-} from 'lucide-react';
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from '~/components/ui/form';
-import {
-  getCurrentStudent,
-  submitApplicationTask
-} from '~/api/studentAPI';
+import { ArrowUpRight, Download, FileTextIcon, Link2, Link2Icon, LoaderCircle, UploadIcon, XIcon,} from 'lucide-react';
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage,} from '~/components/ui/form';
+import { submitApplicationTask} from '~/api/studentAPI';
 import { useNavigate } from '@remix-run/react';
 import axios from 'axios';
 import { Progress } from '~/components/ui/progress';
 import { Badge } from '~/components/ui/badge';
-import {
-  S3Client,
-  DeleteObjectCommand,
-} from "@aws-sdk/client-s3";
+import { S3Client, DeleteObjectCommand,} from "@aws-sdk/client-s3";
 
 const s3Client = new S3Client({
   
@@ -55,10 +33,7 @@ const formSchema = z.object({
           type: z.string(),
           answer: z.union([
             // for link (URL)
-            z
-              .string()
-              .nonempty('This field is required')
-              .url('Please enter a valid Link URL'),
+            z.string().nonempty('This field is required').url('Please enter a valid Link URL'),
             // for short/long text
             z.string().nonempty('This field is required'),
             // for files/array
@@ -115,12 +90,12 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
       try {
         if (!studentData?._id) return;
  
-            setId(applicationTasks[0]?._id)
-            // The last submission’s first item (if it exists)
-            const lastTaskSubmission =
-            applicationTasks[applicationTasks.length - 1]?.applicationTasks?.[0];
-            
-            setTaskId(lastTaskSubmission?._id)
+          setId(applicationTasks[0]?._id)
+          // The last submission’s first item (if it exists)
+          const lastTaskSubmission =
+          applicationTasks[applicationTasks.length - 1]?.applicationTasks?.[0];
+          
+          setTaskId(lastTaskSubmission?._id)
           
           // Build final tasks structure for React Hook Form
           const sDataTasks = lastTaskSubmission?.tasks || [];
@@ -632,11 +607,13 @@ interface FileUploadFieldProps {
 }
 
 const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) => {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [files, setFiles] = useState<string[]>(field.value || []);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [fileName, setFileName] = useState('');
+  const [currentFileName, setCurrentFileName] = useState('');
 
   useEffect(() => {
     setFiles(field.value || []);
@@ -655,6 +632,14 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
     field.onChange(newFiles);
   };
 
+  const acceptTypes = configItem.type === 'image'
+    ? 'image/*'
+    : configItem.type === 'video'
+    ? 'video/*'
+    : configItem.allowedTypes && !configItem.allowedTypes.includes('All')
+    ? configItem.allowedTypes.map((t: string) => `.${t.toLowerCase()}`).join(',')
+    : '*/*';
+
   const showUploadButton =
     !configItem.maxFiles || files.length < configItem.maxFiles;
 
@@ -666,6 +651,11 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
 
     const file = selectedFiles[0];
     const fileKey = generateUniqueFileName(file.name);
+
+    if (file.size > configItem.maxFileSize * 1024 * 1024 ) {
+      setError(`${configItem.type} size exeeds ${configItem.maxFileSize} MB`);
+      return;
+    }
     
     setFileName(fileKey);
 
@@ -867,21 +857,10 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
               <label className="w-full pl-3 text-muted-foreground">
                 <input
                   type="file"
+                  ref={fileInputRef}
                   className="hidden"
                   multiple={configItem.maxFiles > 1}
-                  accept={
-                    configItem.type === 'image'
-                      ? 'image/*'
-                      : configItem.type === 'video'
-                      ? 'video/*'
-                      : configItem.type === 'file' &&
-                        configItem.allowedTypes &&
-                        !configItem.allowedTypes.includes('All')
-                      ? configItem.allowedTypes
-                          .map((type: string) => `.${type.toLowerCase()}`)
-                          .join(',')
-                      : '*/*'
-                  }
+                  accept={acceptTypes}
                   onChange={handleFileUpload}
                 />
                 <span className="cursor-pointer text-xs sm:text-base">
@@ -894,11 +873,7 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
                 type="button"
                 disabled={uploading}
                 className="flex gap-2 text-white px-6 py-6 rounded-xl"
-                onClick={() =>
-                  document
-                    .querySelector<HTMLInputElement>('input[type="file"]')
-                    ?.click()
-                }
+                onClick={() => fileInputRef.current?.click()}
               >
                 <UploadIcon className="w-4 h-4" /> Upload {configItem.type}
               </Button>

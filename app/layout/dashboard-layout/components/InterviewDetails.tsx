@@ -109,10 +109,11 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
       }
     };
 
+    const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://apply-lit-school.vercel.app";
+
     const handleCancel = (bookingId: string) => {
-      const url = `https://dev.cal.litschool.in/meetings/cancel/${bookingId}`;
-      console.log(url); 
-      window.open(url, "_blank");
+      const url = `https://dev.cal.litschool.in/meetings/cancel/${bookingId}?redirectUrl=${baseUrl}/dashboard/litmus-task`;
+      window.location.href = url;
     };
 
     return (
@@ -232,7 +233,7 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
       <Dialog open={interviewOpen} onOpenChange={setInterviewOpen}>
       <DialogTitle></DialogTitle>
         <DialogContent className="max-w-[90vw] sm:max-w-2xl">
-          <SchedulePresentation student={student} interviewer={interviewer} eventCategory='Litmus Test Review'/>
+          <SchedulePresentation student={student} interviewer={interviewer} eventCategory='Litmus Test Review' redirectUrl={`${baseUrl}/dashboard/litmus-task`}/>
         </DialogContent>
       </Dialog>
       </div >
