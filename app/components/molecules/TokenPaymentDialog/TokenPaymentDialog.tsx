@@ -197,15 +197,16 @@ const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({ open, setOpen, 
   const handleSubmitImage = async () => {
     setUploadError(null);
 
-    const formData = new FormData();
-    formData.append('cohortId', cohortId); // Add paymentType to formData
-    formData.append('paymentType', selectedPayment); // Add paymentType to formData
-    formData.append('fileUrl', receiptUrl); // Add receipt image file to formData
+    const feePayload = {
+      cohortId: cohortId,
+      paymentType: selectedPayment,
+      fileUrl: receiptUrl,
+     }
 
     try {
       setLoading(true);    
 
-      const response = await submitTokenReceipt(formData);
+      const response = await submitTokenReceipt(feePayload);
       console.log('Receipt uploaded successfully:', response);
 
       setIsPaymentVerified('pending');
