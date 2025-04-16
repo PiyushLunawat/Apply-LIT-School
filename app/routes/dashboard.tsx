@@ -8,14 +8,12 @@ import { RegisterInterceptor } from "~/utils/interceptor";
 export const loader: LoaderFunction = async ({ request }) => {
   // Parse the cookie from the incoming request
   const cookieHeader = request.headers.get("Cookie");
-    const accessToken = await accessTokenCookie.parse(cookieHeader);
-    const refreshToken = await refreshTokenCookie.parse(cookieHeader);
+  const accessToken = await accessTokenCookie.parse(cookieHeader);
+  const refreshToken = await refreshTokenCookie.parse(cookieHeader);
   const userId = await userIdCookie.parse(cookieHeader);
-  console.log("dashhhboard");
-  
-      RegisterInterceptor(accessToken, refreshToken);
-    
 
+  RegisterInterceptor(accessToken, refreshToken);
+    
   // Now you can use `userId` in your logic
   if (!accessToken && !refreshToken) {
     return redirect("/auth/login");
@@ -24,7 +22,6 @@ export const loader: LoaderFunction = async ({ request }) => {
   // ... fetch user data, etc. ...
   return { userId };
 };
-
 
 export default function DashboardIndex() {
   return(

@@ -1,9 +1,10 @@
-import { Link, NavLink } from "@remix-run/react";
-import { FileText, FolderClosed, House, ReceiptIndianRupee, UploadIcon, UserRound } from "lucide-react";
+import { Link, NavLink, useNavigate } from "@remix-run/react";
+import { ChevronLeft, FileText, FolderClosed, House, ReceiptIndianRupee, UploadIcon, UserRound } from "lucide-react";
 import { useContext, useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { UserContext } from "~/context/UserContext";
 import { getCurrentStudent } from "~/api/studentAPI";
+import { Button } from "~/components/ui/button";
 
 // interface SidebarProps {
 //   student: any;
@@ -47,6 +48,7 @@ const navItems = [
 export default function Sidebar() {
   const { studentData } = useContext(UserContext);
   const [student, setStudent] = useState<any>([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if(studentData?._id)  {
@@ -67,7 +69,7 @@ export default function Sidebar() {
     <div className="hidden sm:block max-w-[300px] lg:max-w-[360px] w-full text-white flex flex-col border-r" style={{ height: `calc(100vh - 52px)`}}>
       {/* User Profile Section */}
       <Link to="/dashboard">
-        <div className="h-[200px] border-b border-[#2C2C2C]" >
+        <div className="h-[200px] border-b border-[#2C2C2C] relative" >
           <div className="flex flex-col gap-5 p-8 ">
             <Avatar className="w-[60px] h-[60px]">
               <AvatarImage src={student?.profileUrl} className="object-cover" />
@@ -78,6 +80,11 @@ export default function Sidebar() {
               <p className="text-sm text-normal">{student?.email}</p>
               <p className="text-sm text-normal">{student?.mobileNumber}</p>
             </div>
+          </div>
+          <div className="w-[52px] h-[52px] absolute -right-6 top-20 rounded-full flex items-center justify-center border bg-background"
+            onClick={() => navigate(-1)}
+          >
+            <ChevronLeft className="h-6 w-6" />
           </div>
         </div>
       </Link>

@@ -1,12 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import StatusMessage from '~/components/molecules/ApplicationStatus/ApplicationStatus';
-import InterviewFeedback from '../InterviewFeedback/InterviewFeedback';
-import BookYourSeat from '../../molecules/BookYourSeat/BookYourSeat';
-import { getCurrentStudent } from '~/api/studentAPI';
 import Feedback from '~/components/molecules/Feedback/Feedback';
-import { log } from 'node:console';
-import TaskSubmission from '~/components/molecules/TaskSubmission/TaskSubmission';
-
 interface ReviewProps {
   setIsPaymentVerified: React.Dispatch<React.SetStateAction<string | null>>;
   application: any;
@@ -46,9 +40,9 @@ const Review: React.FC<ReviewProps> = ({ setIsPaymentVerified, application }) =>
         <StatusMessage student={application}/> 
 
         <div className='z-10 relative mx-4 space-y-12'>
-            {['on hold', 'accepted', 'rejected', 'waitlist', 'selected', 'not qualified'].includes(applicationStatus) && 
-              <Feedback setIsPaymentVerified={setIsPaymentVerified} student={application}/>
-            }
+          {['on hold', 'accepted', 'rejected', 'waitlist', 'selected', 'not qualified'].includes(applicationStatus) && 
+            <Feedback setIsPaymentVerified={setIsPaymentVerified} student={application}/>
+          }
         </div>
     </div>
   );

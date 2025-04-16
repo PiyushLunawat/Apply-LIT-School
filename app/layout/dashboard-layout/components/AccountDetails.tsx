@@ -50,48 +50,14 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
     }
   }, [student]);
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   const handleDownloadPDF = async () => {
-    if (!pdfRef.current) return;
-    setIsGeneratingPDF(true);
-  
-    try {
-      const frontElement = pdfRef.current.querySelector('#front') as HTMLElement;
-      const backElement = pdfRef.current.querySelector('#back') as HTMLElement;
-  
-      if (!frontElement || !backElement) {
-        throw new Error('One or both elements not found');
-      }
-  
-      const options = {
-        scale: 2, // Ensures high quality rendering
-        useCORS: true,
-        logging: false,
-      };
-  
-      const frontCanvas = await html2canvas(frontElement, options);
-      const backCanvas = await html2canvas(backElement, options);
-  
-      const frontImgData = frontCanvas.toDataURL('image/png');
-      const backImgData = backCanvas.toDataURL('image/png');
-  
-      const pdf = new jsPDF('portrait', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-  
-      // Add Front Page
-      pdf.addImage(frontImgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-  
-      // Add Back Page
-      pdf.addPage();
-      pdf.addImage(backImgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-  
-      pdf.save('LitID.pdf');
-    } catch (err) {
-      console.error('Failed to generate PDF:', err);
-      // alert('An error occurred while generating the PDF.');
-    } finally {
-      setIsGeneratingPDF(false);
-    }
+    await setOpen(true);
+    await window.print();
+    setOpen(false)
   };  
 
   const handleEditImage = () => {
@@ -440,7 +406,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
               <LitIdFront data={details} />
             </div>
             <div id="back">
-              <LitIdBack data={details} ScanUrl="" />
+              <LitIdBack data={details}/>
             </div>
           </div>
         </div>
@@ -455,12 +421,12 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                   <LitIdFront data={student} />
                 </div>
                 <div className="w-1/2 sm:w-full">
-                  <LitIdBack data={student} ScanUrl="" />
+                  <LitIdBack data={student} />
                 </div>
               </div>
               
               <Button size="xl" variant="outline" className="w-fit flex items-center gap-2 mx-auto mt-4"
-                onClick={handleDownloadPDF} >
+                onClick={handlePrint} >
                 <Download className="h-4 w-4" />
                 {isGeneratingPDF? 'Downloading...' : 'Download'}
               </Button>
