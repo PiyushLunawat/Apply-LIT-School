@@ -430,7 +430,7 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
                         );
                       case 'video':
                         return (
-                          <div className="w-full min-h-[400px] max-h-[500px] bg-[#2C2C2C] flex flex-col items-center text-sm border rounded-xl relative">
+                          <div className="w-full min-h-[400px] max-h-[500px] min-h-[400px] max-h-[500px] bg-[#2C2C2C] flex flex-col items-center text-sm border rounded-xl relative">
                             <Button
                               variant="outline"
                               size="icon"

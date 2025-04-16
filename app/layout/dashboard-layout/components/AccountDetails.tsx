@@ -33,7 +33,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
   const [linkedInInput, setLinkedInInput] = useState<string>("");
   const [editLinkedInInput, setEditLinkedInInput] = useState<boolean>(student?.linkedInUrl);
   const [instagramInput, setInstagramInput] = useState<string>("");
-  const [editInstagramInput, setEditInstagramInput] = useState<boolean>(studentData?.instagramUrl);
+  const [editInstagramInput, setEditInstagramInput] = useState<boolean>(student?.instagramUrl);
   const [addSocials, setAddSocials] = useState<boolean>(false);
 
   const pdfRef = useRef<HTMLDivElement>(null);
@@ -199,10 +199,10 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
         <CardContent className="p-6 ">
           <div className="flex md:flex-row flex-col items-center gap-4 sm:gap-6">
             <div className="w-full sm:w-[250px] h-[285px] bg-[#1F1F1F] flex flex-col items-center justify-center rounded-xl text-sm space-y-4">
-              {studentData?.profileUrl || selectedImage ? (
+              {student?.profileUrl || selectedImage ? (
                 <div className="w-full h-full relative">
                   <img
-                    src={selectedImage || studentData?.profileUrl || student?.profileUrl}
+                    src={selectedImage || student?.profileUrl}
                     alt="Profile Image"
                     className="w-full h-full object-cover rounded-lg"
                   />
@@ -238,7 +238,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
               <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
                 <div className="text-xs sm:text-sm font-light">Full Name</div>
                 <div className="text-base sm:text-xl">
-                  {studentData?.firstName + " " + studentData?.lastName || "--"}
+                  {student ? `${student?.firstName} ${student?.lastName}` : "--"}
                 </div>
               </div>
 
@@ -246,7 +246,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
               <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
                 <div className="text-xs sm:text-sm font-light">Email</div>
                 <div className="flex justify-between items-center">
-                  <div className="text-base sm:text-xl">{studentData?.email || "--"}</div>
+                  <div className="text-base sm:text-xl">{student?.email || "--"}</div>
                   <CheckCircle className="h-4 w-4 text-[#00CC92]" />
                 </div>
               </div>
@@ -255,7 +255,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
               <div className="flex flex-col gap-2 border-b md:border-none border-gray-700 py-4">
                 <div className="text-xs sm:text-sm font-light">Contact No.</div>
                 <div className="flex justify-between items-center">
-                  <div className="text-base sm:text-xl">{studentData?.mobileNumber || "--"}</div>
+                  <div className="text-base sm:text-xl">{student?.mobileNumber || "--"}</div>
                   <CheckCircle className="h-4 w-4 text-[#00CC92]" />
                 </div>
               </div>
@@ -267,7 +267,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
             <div className="text-xs sm:text-sm font-light">Institute Name</div>
             <div className="flex justify-between items-center">
               <div className="text-base sm:text-xl">
-                {details?.appliedCohorts?.[details?.appliedCohorts.length - 1]?.applicationDetails?.studentDetails?.previousEducation?.nameOfInstitution || "c--"}
+                {details?.appliedCohorts?.[details?.appliedCohorts.length - 1]?.applicationDetails?.studentDetails?.previousEducation?.nameOfInstitution || "--"}
               </div>
               <CheckCircle className="h-4 w-4 text-[#00CC92]" />
             </div>
@@ -277,8 +277,8 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
           <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
             <div className="text-xs sm:text-sm font-light">Date of Birth</div>
             <div className="text-base sm:text-xl">
-              {studentData?.dateOfBirth
-                ? new Date(studentData?.dateOfBirth).toLocaleDateString()
+              {student?.dateOfBirth
+                ? new Date(student?.dateOfBirth).toLocaleDateString()
                 : "--"}
             </div>
           </div>
@@ -287,13 +287,13 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
           <div className="flex lg:flex-row flex-col lg:items-center">
             <div className="flex-1 flex flex-col gap-2 border-b border-gray-700 py-4">
               <div className="text-xs sm:text-sm font-light">Gender</div>
-              <div className="text-base sm:text-xl text-white">{studentData?.gender || "--"}</div>
+              <div className="text-base sm:text-xl text-white">{student?.gender || "--"}</div>
             </div>
             <div className="flex-1 flex items-center border-b border-gray-700 py-4">
-              {studentData?.bloodGroup ? (
+              {student?.bloodGroup ? (
                 <div className="flex-1 flex flex-col gap-2">
                   <div className="text-xs sm:text-sm font-light">Blood Group</div>
-                  <div className="text-base sm:text-xl text-white">{studentData?.bloodGroup}</div>
+                  <div className="text-base sm:text-xl text-white">{student?.bloodGroup}</div>
                 </div>
               ) : (
                 <div className="flex-1 flex flex-col gap-2">
@@ -307,7 +307,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                   />
                 </div>
               )}
-              {!studentData?.bloodGroup &&
+              {!student?.bloodGroup &&
                 <Button size={'lg'} className="rounded-lg" onClick={handleBloodGroup}>
                   Save
                 </Button>
@@ -397,7 +397,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
           <div className="relative flex items-center gap-4">
             <div className="relative group w-16 h-16">
               <img
-                src={studentData?.profileUrl || `/assets/images/lit-id-front.svg`}
+                src={student?.profileUrl || `/assets/images/lit-id-front.svg`}
                 alt="LIT ID Card"
                 className="w-16 h-16 rounded-xl bg-white py-1"
               />
@@ -452,10 +452,10 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
             <div className="flex flex-col justify-center">
               <div className="flex flex-col sm:flex-row mx-auto gap-4 items-center justify-center">
                 <div className="w-1/2 sm:w-full">
-                  <LitIdFront data={studentData} />
+                  <LitIdFront data={student} />
                 </div>
                 <div className="w-1/2 sm:w-full">
-                  <LitIdBack data={studentData} ScanUrl="" />
+                  <LitIdBack data={student} ScanUrl="" />
                 </div>
               </div>
               

@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { getCurrentStudent, submitTokenReceipt } from '~/api/studentAPI';
 import { Card } from '~/components/ui/card';
 import { Button } from '~/components/ui/button';
-import { AlertCircle, LoaderCircle, Pencil, X } from 'lucide-react';
+import { AlertCircle, Badge, CirclePause, Clock, LoaderCircle, Pencil, X } from 'lucide-react';
 import { useNavigate } from '@remix-run/react';
 import {
   S3Client,
@@ -253,6 +253,18 @@ export default function AdmissionFee({ student }: AdmissionFeeProps) {
       ? new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(Math.round(value))
       : "--";
 
+  function formatTestDuration(durationDays: number): string {
+    if (durationDays > 2) {
+      return `${durationDays} days`;
+    } else {
+      // For durationDays <= 2, convert to hours.
+      const totalHours = durationDays * 24;
+      // Format as HH:MM:SS; here minutes and seconds are zero.
+      const hoursStr = totalHours.toString().padStart(2, '0');
+      return `${hoursStr}:00:00`;
+    }
+  }
+
   return (
     <div className='space-y-6'>
       {tokenFeeDetails?.verificationStatus === 'flagged' ?
@@ -267,6 +279,18 @@ export default function AdmissionFee({ student }: AdmissionFeeProps) {
             <Button size="xl" className="w-fit bg-[#00AB7B] hover:bg-[#00AB7B]/90 mx-auto" onClick={() => document.getElementById(`file-input`)?.click()} disabled={uploading || loading}>
               Pay INR ₹{formatAmount(latestCohort?.cohortId?.cohortFeesDetail?.tokenFee)}.00 and Reserve
             </Button>
+          </div>
+          <div
+            className={`w-fit flex justify-center items-center gap-2 px-6 py-2 sm:py-4 border ${
+              formatTestDuration(latestCohort?.cohortId?.litmusTestDetail[0]?.litmusTestDuration) === '00:00:00' ? 'border-[#FF503D]' : 'border-[#00A3FF]'
+            } bg-[#FFFFFF33] rounded-full text-sm sm:text-2xl text-medium`}
+          >
+            {formatTestDuration(latestCohort?.cohortId?.litmusTestDetail[0]?.litmusTestDuration) === '00:00:00' ? (
+              <CirclePause className='w-4 h-4 sm:w-6 sm:h-6 text-[#FF503D]' />
+            ) : (
+              <Clock className='w-4 h-4 sm:w-6 sm:h-6 text-[#00A3FF]' />
+            )}
+            {formatTestDuration(latestCohort?.cohortId?.litmusTestDetail[0]?.litmusTestDuration)}
           </div>
         </div>
       </Card> :

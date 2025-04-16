@@ -351,9 +351,6 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
               starting on {new Date(cohortDetails?.startDate).toDateString()}. This
               is inclusive of your scholarship waiver.
             </p>
-            <Button variant={"link"} className="w-fit underline !py-0">
-              Fee Breakdown
-            </Button>
           </div>
         </div>
       </div>

@@ -8,6 +8,7 @@ import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "~/components/ui/dialog";
 import { SchedulePresentation } from "~/components/organisms/schedule-presentation-dialog/schedule-presentation";
+import { Skeleton } from "~/components/ui/skeleton";
 
 interface DashboardCardProps {
   title: string;
@@ -71,6 +72,7 @@ export default function ApplicationDashboard({ student }: ApplicationDashboardPr
   const cohortDetails = latestCohort?.cohortId;
   const applicationDetails = latestCohort?.applicationDetails;
   const litmusTestDetails = latestCohort?.litmusTestDetails;
+  const scholarshipDetails = litmusTestDetails?.scholarshipDetail;
 
   const formattedDate = new Date(litmusTestDetails?.litmusTestInterviews?.[litmusTestDetails?.litmusTestInterviews.length - 1]?.meetingDate).toLocaleDateString('en-US', {
     weekday: 'long',  // Full day name (e.g., "Monday")
@@ -161,7 +163,7 @@ export default function ApplicationDashboard({ student }: ApplicationDashboardPr
             <div className="">welcome to your LIT portal</div>
           </h1>
         </div>
-        <p className="max-w-[360px] w-full text-xs sm:text-[13.67px] ">
+        <p className="max-w-[400px] w-full text-sm sm:text-base ">
           Here, you can access all your important details in one place, including your application status, account info,
           payment portal, and wallet transactions. Stay organized and easily manage your journey with LIT School.
         </p>
@@ -170,73 +172,92 @@ export default function ApplicationDashboard({ student }: ApplicationDashboardPr
       {/* LITMUS Test Submission Card */}
       <div className="p-6 sm:p-[52px] space-y-8">
         <div className="space-y-3">
-          <div className="bg-[#64748B1A] p-4 sm:p-6 rounded-xl border">
-            <div className="flex flex-col md:flex-row gap-2 justify-between items-center">
-              <div className="spcae-y-2">
-                <div className="flex items-center gap-2 sm:gap-4">
-                  {litmusTestDetails?.status === 'pending' ? 
-                    <>
-                      <h2 className="text-base sm:text-xl font-semibold">LITMUS Test Submission</h2>
-                      <Badge className="flex px-2 gap-1 sm:gap-2 items-center bg-black h-7">
-                        <Clock className="text-[#00A3FF] w-3 h-3"/>
-                        <div className="text-xs sm:text-base font-normal">{formatTestDuration(cohortDetails?.litmusTestDetail[0]?.litmusTestDuration)}</div>
-                      </Badge>
-                    </> :
-                    <h2 className="text-base sm:text-xl font-semibold">LITMUS Test</h2>
-                  }
-                </div>
-                <p className="sm:w-3/4 text-xs sm:text-base">
-                  {litmusTestDetails?.status === 'pending' ? 
-                    'Compete for a scholarship opportunity through your performance in this challenge. Demonstrate your skills and creativity!' :
-                    litmusTestDetails?.status === 'submitted' ? 
-                    'Your submission has been made successfully. Kindly setup a presentation meeting to showcase your work.' :
-                    litmusTestDetails?.status === 'interview scheduled' ? 
-                    `Your presentation meeting has been scheduled for ${formattedDate} at ${litmusTestDetails?.litmusTestInterviews?.[litmusTestDetails?.litmusTestInterviews.length - 1]?.startTime}` : 
-                    'You have shown exceptional effort, in-depth market analysis, innovative solutions to potential challenges, and clear, persuasive communication of the business ideas unique value proposition.'
-                  }
-                </p>
-              </div>
-              <div className="flex flex-1 gap-3">
-                {litmusTestDetails?.status === 'pending' ?
-                  <Button size={'xl'} className="w-full md:w-fit" onClick={handleExploreClick}>
-                    Explore
-                  </Button> :
-                  litmusTestDetails?.status === 'submitted' ? 
-                  <Button size={'xl'} variant={'outline'} className="w-full md:w-fit" onClick={handleExploreClick}>
-                    View Submission
-                  </Button> :
-                  litmusTestDetails?.status === 'interview scheduled' ? 
-                  <Button size={'xl'} className="w-full md:w-fit" onClick={handleExploreClick}>
-                    Access Dashboard
-                  </Button> :
-                  <Button size={'xl'} className="w-full md:w-fit" onClick={handleExploreClick}>
-                    View feedback
-                  </Button> 
-                }
-                {litmusTestDetails?.status === 'submitted' && 
-                  <Button size={'xl'} className="w-full md:w-fit" onClick={handleScheduleInterview} disabled={loading}>
-                    Book a Presentation Session
-                  </Button>
-                }
-              </div>
-            </div>
-          </div>
-          {!latestCohort?.paymentDetails &&
-            <div className="bg-[#64748B1A] p-4 sm:p-6 rounded-xl border">
+          {student ? 
+            <>
+              <div className="bg-[#64748B1A] p-4 sm:p-6 rounded-xl border">
               <div className="flex flex-col md:flex-row gap-2 justify-between items-center">
                 <div className="spcae-y-2">
-                  <div className="flex sm:flex-row flex-col items-start sm:items-center gap-2 sm:gap-4">
-                    <h2 className="text-base sm:text-xl font-semibold">Fee Payment Setup</h2>
+                  <div className="flex items-center gap-2 sm:gap-4">
+                    {litmusTestDetails?.status === 'pending' ? 
+                      <>
+                        <h2 className="text-base sm:text-xl font-semibold">LITMUS Test Submission</h2>
+                        <Badge className="flex px-2 gap-1 sm:gap-2 items-center bg-black h-7">
+                          <Clock className="text-[#00A3FF] w-3 h-3"/>
+                          <div className="text-xs sm:text-base font-normal">{formatTestDuration(cohortDetails?.litmusTestDetail[0]?.litmusTestDuration)}</div>
+                        </Badge>
+                      </> :
+                      <>
+                        <h2 className="text-base sm:text-xl font-semibold">LITMUS Test</h2>
+                        {litmusTestDetails?.status === 'completed' && 
+                        <Badge className="flex px-2 gap-1 sm:gap-2 items-center bg-[#FF791F]/10 text-[#FF791F] border-[#FF791F] h-7">
+                          {scholarshipDetails?.scholarshipName}
+                        </Badge>
+                        }
+                      </>
+                    }
                   </div>
-                  <p className="sm:w-3/4 text-xs sm:text-base">
-                    Kindly setup your fee payment process to access your dashboard.
-                  </p>
+                  {litmusTestDetails?.status === 'pending' ? 
+                    <p className="sm:w-3/4 text-xs sm:text-base">Compete for a scholarship opportunity through your performance in this challenge. Demonstrate your skills and creativity!</p> :
+                    litmusTestDetails?.status === 'submitted' ? 
+                    <p className="sm:w-3/4 text-xs sm:text-base">Your submission has been made successfully. Kindly setup a presentation meeting to showcase your work.</p> :
+                    litmusTestDetails?.status === 'interview scheduled' ? 
+                    <div className="flex-1  flex-wrap">
+                      Your presentation meeting has been scheduled for{' '}
+                      <span className="flex-1 font-bold">
+                        {formattedDate} at{' '}
+                        {litmusTestDetails?.litmusTestInterviews?.[litmusTestDetails?.litmusTestInterviews.length - 1]?.startTime}
+                      </span>
+                    </div> : 
+                    <div className="">
+                      <h2 className="text-2xl font-medium">You have received a wavier of <span className="text-[#FF791F]">{scholarshipDetails?.scholarshipPercentage}% with a clearance of {scholarshipDetails?.scholarshipClearance}%</span></h2>
+                      <p>You have shown exceptional effort, in-depth market analysis, innovative solutions to potential challenges, and clear, persuasive communication of the business ideas unique value proposition.</p>
+                    </div>
+                  }
                 </div>
-                  <Button size={'xl'} className="w-full md:w-fit" onClick={handleFeePaymentClick}>
-                    Setup Fee Payment
-                  </Button>
+                <div className="flex gap-3">
+                  {litmusTestDetails?.status === 'pending' ?
+                    <Button size={'xl'} className="w-full md:w-fit" onClick={handleExploreClick}>
+                      Explore
+                    </Button> :
+                    litmusTestDetails?.status === 'submitted' ? 
+                    <Button size={'xl'} variant={'outline'} className="w-full md:w-fit" onClick={handleExploreClick}>
+                      View Submission
+                    </Button> :
+                    litmusTestDetails?.status === 'interview scheduled' ? 
+                    <Button size={'xl'} className="w-full md:w-fit" onClick={handleExploreClick}>
+                      Access Dashboard
+                    </Button> :
+                    <Button size={'xl'} className="w-full md:w-fit" onClick={handleExploreClick}>
+                      View feedback
+                    </Button> 
+                  }
+                  {litmusTestDetails?.status === 'submitted' && 
+                    <Button size={'xl'} className="w-full md:w-fit" onClick={handleScheduleInterview} disabled={loading}>
+                      Book a Presentation Session
+                    </Button>
+                  }
+                </div>
               </div>
             </div>
+            {!latestCohort?.paymentDetails &&
+              <div className="bg-[#64748B1A] p-4 sm:p-6 rounded-xl border">
+                <div className="flex flex-col md:flex-row gap-2 justify-between items-center">
+                  <div className="spcae-y-2">
+                    <div className="flex sm:flex-row flex-col items-start sm:items-center gap-2 sm:gap-4">
+                      <h2 className="text-base sm:text-xl font-semibold">Fee Payment Setup</h2>
+                    </div>
+                    <p className="sm:w-3/4 text-xs sm:text-base">
+                      Kindly setup your fee payment process to access your dashboard.
+                    </p>
+                  </div>
+                    <Button size={'xl'} className="w-full md:w-fit" onClick={handleFeePaymentClick}>
+                      Setup Fee Payment
+                    </Button>
+                </div>
+              </div>
+            }
+            </> :
+            <Skeleton className="h-[125px] w-full rounded-xl" />
           }
           {/* <div className="bg-[#64748B1A] p-4 sm:p-6 rounded-xl border" onClick={handleDocumentClick}>
             <div className="flex justify-between items-center">

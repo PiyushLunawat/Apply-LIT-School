@@ -70,6 +70,7 @@ export default function App() {
   const { studentData, setStudentData } = useContext(UserContext);
   
   useEffect(() => {
+      console.log("root");    
       RegisterInterceptor(accessToken, refreshToken, setIsUnauthorized );
   }, [accessToken]);
 

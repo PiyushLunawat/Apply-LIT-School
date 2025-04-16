@@ -11,6 +11,7 @@ export const loader: LoaderFunction = async ({ request }) => {
   const accessToken = await accessTokenCookie.parse(cookieHeader);
   const refreshToken = await refreshTokenCookie.parse(cookieHeader);
   const userId = await userIdCookie.parse(cookieHeader);
+  console.log("applicatonssss");
 
     RegisterInterceptor(accessToken, refreshToken);
 
