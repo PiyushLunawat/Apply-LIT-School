@@ -7,11 +7,11 @@ interface LitIdFrontProps {
 const LitIdFront: React.FC<LitIdFrontProps> = ({ data }) => {
   
   return (
-    <div className="w-[400px] h-[590.11px] bg-white flex-col justify-center items-center inline-flex">
-      <div className="self-stretch ">
+    <div className="w-[400px] h-[590.11px] bg-white !border flex-col justify-center items-center inline-flex">
+      <div className="self-stretch w-[398px] ">
         <img
           src={data?.profileUrl || "https://github.com/shadcn.png"}
-          className="object-cover w-[400px] h-[355px]"
+          className="object-cover w-[398px] h-[355px]"
           alt="Profile"
         />
       </div>

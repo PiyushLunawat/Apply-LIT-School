@@ -1,4 +1,4 @@
-import { ArrowLeft, CheckCircle, CircleCheckBig, CircleMinus, Clock } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, CheckCircle, CircleCheckBig, CircleMinus, Clock, FileTextIcon, ImageIcon, Link2Icon, VideoIcon } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
 import { getCurrentStudent } from "~/api/studentAPI";
 import { UserContext } from "~/context/UserContext";
@@ -6,6 +6,8 @@ import { useContext, useEffect, useState } from "react";
 import LitmusTest from "./LitmusTest";
 import { Skeleton } from "~/components/ui/skeleton";
 import { Card, CardContent, CardTitle } from "~/components/ui/card";
+import { Label } from "~/components/ui/label";
+import { Button } from "~/components/ui/button";
 
 interface CourseDiveProps {
   student: any;
@@ -14,15 +16,14 @@ interface CourseDiveProps {
 
 export default function CourseDiveTab({ student, onSelectTab }: CourseDiveProps) {
   const latestCohort = student?.appliedCohorts?.[student?.appliedCohorts.length - 1];
-  const studentDetails = latestCohort?.applicationDetails?.studentDetails;
-  const previousEducation = studentDetails?.previousEducation;
-  const workExperience = studentDetails?.workExperience;
-  const emergencyContact = studentDetails?.emergencyContact;
-  const parentInformation = studentDetails?.parentInformation;
-  const financialInformation = studentDetails?.financialInformation;
+  const cohortDetails = latestCohort?.cohortId;
+  const applicationTask = latestCohort?.cohortId?.applicationFormDetail?.[0]?.task;
+  const applicationDetails = latestCohort?.applicationDetails?.applicationTasks?.[latestCohort?.applicationDetails?.applicationTasks.length - 1]?.applicationTasks?.[0];
+  
+  console.log(applicationDetails);
   
   return (
-    <div className="p-4 sm:p-6 space-y-8 text-white">
+    <div className="p-8 sm:p-[52px] space-y-8 text-white">
       <div className="flex flex-row sm:flex-col gap-4 items-center sm:items-start">
         <ArrowLeft className="w-6 h-6 cursor-pointer" onClick={() => onSelectTab("")}/>
         <Badge className="text-sm w-fit border-[#FF791F] text-[#FF791F] bg-[#FF791F]/10">
@@ -30,246 +31,140 @@ export default function CourseDiveTab({ student, onSelectTab }: CourseDiveProps)
         </Badge>
       </div>
       {/* Personal Details */}
-      <div className="grid md:grid-cols-2 gap-6">
-        <Card className="bg-[#64748B1F] rounded-xl text-white">
-          <CardTitle className="bg-[#64748B33] p-6 text-2xl font-medium">
-            Personal Details
-          </CardTitle>
-          <CardContent className="px-6 ">
-            <div className="flex md:flex-row flex-col items-center border-b border-gray-700 gap-4 sm:gap-6">
-              {student?.profileUrl &&
-                <div className="w-12 h-12 relative">
-                  <img
-                    src={student?.profileUrl}
-                    alt="Profile Image"
-                    className="w-full h-full object-cover rounded-lg"
-                  />
-                </div>
-              }
-              {/* Full Name */}
-              <div className="flex flex-col gap-2 py-4">
-                <div className="text-xs sm:text-sm font-light">Full Name</div>
-                <div className="text-base sm:text-xl">
-                  {student ? `${student?.firstName} ${student?.lastName}` : "--"}
-                </div>
-              </div>
+      <div className="flex flex-col gap-8">
+        <div className="text-base font-normal space-y-8">
+          {/* interest */}
+          <div className="space-y-2">
+            <div className="text-[#00A0E9]">
+              Why are you interested in joining The LIT School?
+            </div >
+            {applicationDetails?.courseDive ? 
+              <div className="text-sm sm:text-base">{applicationDetails?.courseDive?.[0]}</div> :
+              <Skeleton className="h-[100px] w-full rounded-xl" />
+            }
+          </div>
+      
+          {/* goals */}
+          <div className="space-y-2">
+            <div className="text-[#00A0E9]">
+              What are your career goals or aspirations?
             </div>
-
-            {/* Email */}
-            <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-              <div className="text-xs sm:text-sm font-light">Email</div>
-              <div className="flex justify-between items-center">
-                <div className="text-base sm:text-xl">{student?.email || "--"}</div>
-                <CheckCircle className="h-4 w-4 text-[#00CC92]" />
-              </div>
-            </div>
-
-            {/* Contact No. */}
-            <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-              <div className="text-xs sm:text-sm font-light">Contact No.</div>
-              <div className="flex justify-between items-center">
-                <div className="text-base sm:text-xl">{student?.mobileNumber || "--"}</div>
-                <CheckCircle className="h-4 w-4 text-[#00CC92]" />
-              </div>
-            </div>
-  
-            {/* Date of Birth */}
-            <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-              <div className="text-xs sm:text-sm font-light">Date of Birth</div>
-              <div className="text-base sm:text-xl">
-                {student?.dateOfBirth ? new Date(student?.dateOfBirth).toLocaleDateString() : "--"}
-              </div>
-            </div>
-  
-            {/* LinkedIn ID */}
-            <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-              <div className="text-xs sm:text-sm font-light">LinkedIn ID</div>
-              <div className="text-base sm:text-xl">
-                {student?.linkedInUrl || "--"}
-              </div>
-            </div>
-
-            {/* Instagram ID */}
-            <div className="flex flex-col gap-2 py-4">
-              <div className="text-xs sm:text-sm font-light">Instagram ID</div>
-              <div className="text-base sm:text-xl">
-                {student?.instagramUrl || "--"}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        
-
-        {/* Previous Education */}
-        <Card className="bg-[#64748B1F] rounded-xl text-white">
-          <CardTitle className="bg-[#64748B33] p-6 text-2xl font-medium">
-            Previous Education
-          </CardTitle>
-          <CardContent className="px-6 py-6">
-            <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-              <div className="text-xs sm:text-sm font-light">Institute Name</div>
-              <div className="flex justify-between items-center">
-                <div className="text-base sm:text-xl">{previousEducation?.nameOfInstitution || "--"}</div>
-                <CheckCircle className="h-4 w-4 text-[#00CC92]" />
-              </div>
-            </div>
-
-            {/* Email */}
-            <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-              <div className="text-xs sm:text-sm font-light">Highest Level of Education</div>
-              <div className="text-base sm:text-xl">
-                {previousEducation?.highestLevelOfEducation || "--"}
-              </div>
-            </div>
-
-            {/* Contact No. */}
-            <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-            <div className="text-xs sm:text-sm font-light">Field of Study (Your Major)</div>
-              <div className="text-base sm:text-xl">
-                {previousEducation?.fieldOfStudy || "--"}
-              </div>
-            </div>
-  
-            {/* Date of Birth */}
-            <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-              <div className="text-xs sm:text-sm font-light">Year of Graduation</div>
-              <div className="text-base sm:text-xl">
-                {previousEducation?.yearOfGraduation || "--"}
-              </div>
-            </div>
-  
-            {/* LinkedIn ID */}
-            <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-              <div className="text-xs sm:text-sm font-light">Work Experience</div>
-              <div className="text-base sm:text-xl">
-                {workExperience?.isExperienced || "--"}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Parental Information */}
-        <Card className="bg-[#64748B1F] rounded-xl text-white">
-          <CardTitle className="bg-[#64748B33] p-6 text-2xl font-medium">
-            Parental Information
-          </CardTitle>
-          <CardContent className="px-6 ">
-            {/* Mother’s Occupation */}
-            <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-              <div className="text-xs sm:text-sm font-light">Father’s Full Name</div>
-              <div className="text-base sm:text-xl">
-                {parentInformation?.father ? `${parentInformation?.father?.firstName} ${parentInformation?.father?.lastName}` : "--"}
-              </div>
-            </div>
-
-            {/* Mother’s Occupation */}
-            <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-              <div className="text-xs sm:text-sm font-light">Father's Contact No.</div>
-              <div className="text-base sm:text-xl">
-                {parentInformation?.father?.contactNumber || "--"}
-              </div>
-            </div>
-
-            {/* Mother’s Occupation */}
-            <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-              <div className="text-xs sm:text-sm font-light">Father's Occupation</div>
-              <div className="text-base sm:text-xl">
-                {parentInformation?.father?.occupation || "--"}
-              </div>
-            </div>
-  
-            {/* Mother’s Occupation */}
-            <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-              <div className="text-xs sm:text-sm font-light">Mother’s Full Name</div>
-              <div className="text-base sm:text-xl">
-                {parentInformation?.mother ? `${parentInformation?.mother?.firstName} ${parentInformation?.mother?.lastName}` : "--"}
-              </div>
-            </div>
-  
-            {/* Mother’s Occupation */}
-            <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-              <div className="text-xs sm:text-sm font-light">Mother’s Contact No.</div>
-              <div className="text-base sm:text-xl">
-                {parentInformation?.mother?.contactNumber || "--"}
-              </div>
-            </div>
-
-            {/* Mother’s Occupation */}
-            <div className="flex flex-col gap-2 py-4">
-              <div className="text-xs sm:text-sm font-light">Mother’s Occupation</div>
-              <div className="text-base sm:text-xl">
-                {parentInformation?.mother?.occupation || "--"}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="space-y-6">
-          {/* Emergency Contact Details */}
-        <Card className="bg-[#64748B1F] rounded-xl text-white">
-          <CardTitle className="bg-[#64748B33] p-6 text-2xl font-medium">
-            Emergency Contact Details
-          </CardTitle>
-          <CardContent className="px-6 "> 
-            {/* Date of Birth */}
-            <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-              <div className="text-xs sm:text-sm font-light">First Name</div>
-              <div className="text-base sm:text-xl">
-                {emergencyContact ? `${emergencyContact?.firstName} ${emergencyContact?.lastName}` : "--"}
-              </div>
-            </div>
-  
-            {/* LinkedIn ID */}
-            <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-              <div className="text-xs sm:text-sm font-light">Relationship with Contact</div>
-              <div className="text-base sm:text-xl">
-                {emergencyContact?.relationshipWithStudent || "--"}
-              </div>
-            </div>
-
-            {/* Instagram ID */}
-            <div className="flex flex-col gap-2 py-4">
-              <div className="text-xs sm:text-sm font-light">Contact No.</div>
-              <div className="text-base sm:text-xl">
-                {emergencyContact?.contactNumber || "--"}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        {/* Emergency Contact Details */}
-        <Card className="bg-[#64748B1F] rounded-xl text-white">
-          <CardContent className="px-6 "> 
-            {/* Date of Birth */}
-            <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-              {financialInformation.isFinanciallyIndependent ? (
-                <div className="pl-3 flex gap-2 items-center">
-                  <CircleCheckBig className="w-3 h-3" />
-                  Financially independent
-                </div>
-              ) : (
-                <div className="pl-3 flex gap-2 items-center">
-                  <CircleMinus className="w-3 h-3" />
-                  Financially dependent on Parents
-                </div>
-              )}
-            </div>
-            <div className="flex flex-col gap-2  py-4">
-              {financialInformation.hasAppliedForFinancialAid ? (
-                <div className="pl-3 flex gap-2 items-center">
-                  <CircleCheckBig className="w-3 h-3" />
-                  Has tried applying for financial aid earlier
-                </div>
-              ) : (
-                <div className="pl-3 flex gap-2 items-center">
-                  <CircleMinus className="w-3 h-3" />
-                  Has not tried applying for any financial aid earlier
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+            {applicationDetails?.courseDive ?
+              <div className="text-sm sm:text-base">{applicationDetails?.courseDive?.[1]}</div> :
+              <Skeleton className="h-[100px] w-full rounded-xl" />
+            }
+          </div>
         </div>
+
+        {applicationTask?.map((task: any, index: any) => (
+          <div className="space-y-8">
+            <Card key={index} className="bg-[#64748B1F] rounded-xl text-white">
+              <CardTitle className="bg-[#64748B33] p-6 text-2xl font-medium">
+                Task 0{index + 1}
+              </CardTitle>
+              <CardContent className="text-base p-6 space-y-6">
+                <div className='space-y-4'>
+                  <h4 className="text-[#FA69E5]">{task?.title}</h4>
+                  <p className="text-lg sm:text-text-2xl font-medium">{task?.description}</p>
+                </div>
+
+                <div className='bg-[#2C2C2C99] p-2 space-y-2 w-full rounded-xl'>
+                  <div className='pl-3'>Your Submissions</div>
+                  <div className=''>
+                    {cohortDetails?.litmusTestDetail?.[0]?.litmusTasks.map((Task: any, tindex: any) => (
+                      <div key={index} className="space-y-3">
+                        {applicationDetails?.tasks && 
+                          <div className="flex flex-wrap gap-1.5">
+                            {applicationDetails?.tasks?.[index]?.texts?.map((textItem: string, id: number) => (
+                              <div key={`text-${id}`} className="w-full text-sm sm:text-base flex items-center gap-2 px-4 py-2 border rounded-xl bg-[#09090b]">
+                                {textItem}
+                              </div>
+                            ))}
+                            {applicationDetails?.tasks?.[index]?.links?.map((linkItem: string, id: number) => (
+                              <div key={`link-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 p-2 border rounded-xl bg-[#09090b]">
+                                <div className='flex gap-2 items-center'>
+                                <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
+                                  <Link2Icon className="w-5 h-5" />
+                                </Badge>
+                                <span className=''>
+                                  {linkItem}
+                                </span>
+                                </div>
+                                <Button size="icon" type="button" className="bg-[#1B1B1C] hover:bg-[#1a1a1d] rounded-xl" onClick={() => window.open(linkItem, "_blank")}>
+                                  <ArrowUpRight className="w-5" />
+                                </Button>
+                              </div>
+                            ))}
+                            {applicationDetails?.tasks?.[index]?.images?.map((imageItem: string, id: number) => (
+                              <div key={`image-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 p-2 border rounded-xl bg-[#09090b]">
+                                <div className='flex gap-2 items-center'>
+                                  <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
+                                    <ImageIcon className="w-5 h-5" />
+                                  </Badge>
+                                  <span className=''>
+                                    {imageItem.split('/').pop()}
+                                  </span>
+                                </div>
+                                <Button size="icon" type="button" className="bg-[#1B1B1C] hover:bg-[#1a1a1d] rounded-xl" onClick={() => window.open(imageItem, "_blank")}>
+                                  <ArrowUpRight className="w-5" />
+                                </Button>
+                              </div>
+                            ))}
+                            {applicationDetails?.tasks?.[index]?.videos?.map((videoItem: string, id: number) => (
+                              <div key={`video-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 p-2 border rounded-xl bg-[#09090b]">
+                                <div className='flex gap-2 items-center flex-1 w-[50vw] truncate'>
+                                <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
+                                  <VideoIcon className="w-5 h-5" />
+                                </Badge>
+                                <span className='text-sm sm:text-base truncate'>
+                                  {videoItem.split('/').pop()}
+                                </span>
+                                </div>
+                                <Button size="icon" type="button" className="bg-[#1B1B1C] hover:bg-[#1a1a1d] rounded-xl" onClick={() => window.open(videoItem, "_blank")}>
+                                  <ArrowUpRight className="w-5" />
+                                </Button>
+                              </div>
+                            ))}
+                            {applicationDetails?.tasks?.[index]?.files?.map((fileItem: string, id: number) => (
+                              <div key={`file-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 p-2 border rounded-xl bg-[#09090b]">
+                                <div className='flex gap-2 items-center flex-1 w-[50vw] truncate'>
+                                  <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
+                                    <FileTextIcon className="w-5 h-5" />
+                                  </Badge>
+                                  <span className='text-sm sm:text-base truncate'>
+                                    {fileItem.split('/').pop()}
+                                  </span>
+                                </div>
+                                <Button size="icon" type="button" className="bg-[#1B1B1C] hover:bg-[#1a1a1d] rounded-xl" onClick={() => window.open(fileItem, "_blank")}>
+                                  <ArrowUpRight className="w-5" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        }
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>          
+            {applicationDetails?.tasks?.[index]?.feedback.length > 0 &&
+              <div className="space-y-4">
+                <div className="text-base text-[#F8E000] pl-3">Feedback</div>
+                <div className='w-full z-10 bg-[#09090B] border border-[#2C2C2C] text-white p-4 sm:p-6 mx-auto rounded-xl justify-between items-start'>
+                  <ul className="ml-4 sm:ml-6 space-y-2 list-disc">
+                    {applicationDetails?.tasks?.[index]?.feedback?.map((feedback: any, index: any) => (
+                      feedback?.length > 0 && 
+                      <li className="text-sm sm:text-base" key={index}>
+                        {feedback}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            }
+          </div>
+        ))}
       </div>
     </div>
   );

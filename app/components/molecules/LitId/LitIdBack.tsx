@@ -25,7 +25,7 @@ const LitIdBack: React.FC<LitIdBackProps> = ({ data }) => {
   const vCardURL = `${baseUrl}/id/${data?._id}?${vCardParams.toString()}`;
 
   return (
-    <div className="w-[400px] h-[590.11px] pb-[0.11px] bg-white flex-col justify-center items-center inline-flex">
+    <div className="w-[400px] h-[590.11px] border pb-[0.11px] bg-white flex-col justify-center items-center inline-flex">
       <div className="self-stretch h-[590px] flex-col justify-start items-start inline-flex">
         <div className="self-stretch py-[60px] justify-center items-center gap-2.5 inline-flex">
           <div className="w-[168px] h-[168px] bg-[#ededed] rounded-xl">

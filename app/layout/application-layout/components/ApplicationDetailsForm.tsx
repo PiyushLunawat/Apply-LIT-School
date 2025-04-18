@@ -1213,7 +1213,7 @@ useEffect(() => {
                   <Input maxLength={6} id="zipcode" placeholder="Postal/Zip Code" {...field} 
                   onInput={(e) => {
                     const target = e.target as HTMLInputElement;
-                    target.value = target.value.replace(/[^0-9+ ]/g, '');
+                    target.value = target.value.replace(/[^0-9]/g, '');
                     field.onChange(target.value);
                   }} disabled={isSaved}/>
                 </FormControl>
@@ -1695,7 +1695,7 @@ useEffect(() => {
                       value={field.value}
                       onInput={(e) => {
                       const target = e.target as HTMLInputElement;
-                      target.value = target.value.replace(/[^0-9+ ]/g, '');
+                      target.value = target.value.replace(/[^0-9]/g, '');
                       field.onChange(target.value);
                     }} disabled={isSaved}/>
                   </FormControl>
@@ -1770,7 +1770,7 @@ useEffect(() => {
                     value={field.value}
                     onInput={(e) => {
                       const target = e.target as HTMLInputElement;
-                      target.value = target.value.replace(/[^0-9+ ]/g, '');
+                      target.value = target.value.replace(/[^0-9]/g, '');
                       field.onChange(target.value);
                     }} disabled={isSaved}/>
                   </FormControl>
@@ -1852,7 +1852,7 @@ useEffect(() => {
                     value={field.value}
                     onInput={(e) => {
                       const target = e.target as HTMLInputElement;
-                      target.value = target.value.replace(/[^0-9+ ]/g, '');
+                      target.value = target.value.replace(/[^0-9]/g, '');
                       field.onChange(target.value);
                     }} disabled={isSaved}/>
                   </FormControl>

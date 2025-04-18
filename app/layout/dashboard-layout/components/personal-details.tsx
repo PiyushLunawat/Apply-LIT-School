@@ -6,6 +6,7 @@ import { useContext, useEffect, useState } from "react";
 import LitmusTest from "./LitmusTest";
 import { Skeleton } from "~/components/ui/skeleton";
 import { Card, CardContent, CardTitle } from "~/components/ui/card";
+import { Separator } from "~/components/ui/separator";
 
 interface PersonalDetailsProps {
   student: any;
@@ -22,7 +23,7 @@ export default function PersonalDetailsTab({ student, onSelectTab }: PersonalDet
   const financialInformation = studentDetails?.financialInformation;
   
   return (
-    <div className="p-4 sm:p-6 space-y-8 text-white">
+    <div className="p-8 sm:p-[52px] space-y-8 text-white">
       <div className="flex flex-row sm:flex-col gap-4 items-center sm:items-start">
         <ArrowLeft className="w-6 h-6 cursor-pointer" onClick={() => onSelectTab("")}/>
         <Badge className="text-sm w-fit border-[#FF791F] text-[#FF791F] bg-[#FF791F]/10">
@@ -35,8 +36,9 @@ export default function PersonalDetailsTab({ student, onSelectTab }: PersonalDet
           <CardTitle className="bg-[#64748B33] p-6 text-2xl font-medium">
             Personal Details
           </CardTitle>
-          <CardContent className="px-6 ">
-            <div className="flex md:flex-row flex-col items-center border-b border-gray-700 gap-4 sm:gap-6">
+          <CardContent className="px-6 py-1">
+            <div className="flex items-center border-b border-gray-700 gap-4">
+              {/* Profile Image */}
               {student?.profileUrl &&
                 <div className="w-12 h-12 relative">
                   <img
@@ -57,7 +59,7 @@ export default function PersonalDetailsTab({ student, onSelectTab }: PersonalDet
 
             {/* Email */}
             <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-              <div className="text-xs sm:text-sm font-light">Email</div>
+              <div className="text-xs sm:text-sm font-light text-muted-foreground">Email</div>
               <div className="flex justify-between items-center">
                 <div className="text-base sm:text-xl">{student?.email || "--"}</div>
                 <CheckCircle className="h-4 w-4 text-[#00CC92]" />
@@ -66,7 +68,7 @@ export default function PersonalDetailsTab({ student, onSelectTab }: PersonalDet
 
             {/* Contact No. */}
             <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-              <div className="text-xs sm:text-sm font-light">Contact No.</div>
+              <div className="text-xs sm:text-sm font-light text-muted-foreground">Contact No.</div>
               <div className="flex justify-between items-center">
                 <div className="text-base sm:text-xl">{student?.mobileNumber || "--"}</div>
                 <CheckCircle className="h-4 w-4 text-[#00CC92]" />
@@ -75,77 +77,92 @@ export default function PersonalDetailsTab({ student, onSelectTab }: PersonalDet
   
             {/* Date of Birth */}
             <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-              <div className="text-xs sm:text-sm font-light">Date of Birth</div>
+              <div className="text-xs sm:text-sm font-light text-muted-foreground">Date of Birth</div>
               <div className="text-base sm:text-xl">
                 {student?.dateOfBirth ? new Date(student?.dateOfBirth).toLocaleDateString() : "--"}
               </div>
             </div>
   
             {/* LinkedIn ID */}
-            <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-              <div className="text-xs sm:text-sm font-light">LinkedIn ID</div>
-              <div className="text-base sm:text-xl">
-                {student?.linkedInUrl || "--"}
+            {student?.linkedInUrl &&
+              <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
+                <div className="text-xs sm:text-sm font-light text-muted-foreground">LinkedIn ID</div>
+                <div className="text-base sm:text-xl">
+                  {student?.linkedInUrl || "--"}
+                </div>
               </div>
-            </div>
+            }
 
             {/* Instagram ID */}
-            <div className="flex flex-col gap-2 py-4">
-              <div className="text-xs sm:text-sm font-light">Instagram ID</div>
-              <div className="text-base sm:text-xl">
-                {student?.instagramUrl || "--"}
+            {student?.instagramUrl &&
+              <div className="flex flex-col gap-2 py-4">
+                <div className="text-xs sm:text-sm font-light text-muted-foreground">Instagram ID</div>
+                <div className="text-base sm:text-xl">
+                  {student?.instagramUrl || "--"}
+                </div>
               </div>
-            </div>
+            }
           </CardContent>
         </Card>
         
-        
-
         {/* Previous Education */}
         <Card className="bg-[#64748B1F] rounded-xl text-white">
           <CardTitle className="bg-[#64748B33] p-6 text-2xl font-medium">
             Previous Education
           </CardTitle>
-          <CardContent className="px-6 py-6">
+          <CardContent className="px-6 py-1">
+            {/* Name Of Institution */}
             <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-              <div className="text-xs sm:text-sm font-light">Institute Name</div>
+              <div className="text-xs sm:text-sm font-light text-muted-foreground">Institute Name</div>
               <div className="flex justify-between items-center">
                 <div className="text-base sm:text-xl">{previousEducation?.nameOfInstitution || "--"}</div>
                 <CheckCircle className="h-4 w-4 text-[#00CC92]" />
               </div>
             </div>
 
-            {/* Email */}
+            {/* Highest Level Of Education */}
             <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-              <div className="text-xs sm:text-sm font-light">Highest Level of Education</div>
+              <div className="text-xs sm:text-sm font-light text-muted-foreground">Highest Level of Education</div>
               <div className="text-base sm:text-xl">
                 {previousEducation?.highestLevelOfEducation || "--"}
               </div>
             </div>
 
-            {/* Contact No. */}
+            {/* Field Of Study */}
             <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-            <div className="text-xs sm:text-sm font-light">Field of Study (Your Major)</div>
+            <div className="text-xs sm:text-sm font-light text-muted-foreground">Field of Study (Your Major)</div>
               <div className="text-base sm:text-xl">
                 {previousEducation?.fieldOfStudy || "--"}
               </div>
             </div>
   
-            {/* Date of Birth */}
+            {/* Year Of Graduation */}
             <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-              <div className="text-xs sm:text-sm font-light">Year of Graduation</div>
+              <div className="text-xs sm:text-sm font-light text-muted-foreground">Year of Graduation</div>
               <div className="text-base sm:text-xl">
                 {previousEducation?.yearOfGraduation || "--"}
               </div>
             </div>
   
-            {/* LinkedIn ID */}
-            <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-              <div className="text-xs sm:text-sm font-light">Work Experience</div>
-              <div className="text-base sm:text-xl">
-                {workExperience?.isExperienced || "--"}
+            {/* Work Experience */}
+            {workExperience?.isExperienced ?
+              <div className="flex flex-col gap-2 py-4">
+                <div className="bg-[#64748B33] px-4 py-1 w-fit rounded-full text-xs sm:text-sm font-light">Work Experience</div>
+                  <div className="text-base sm:text-xl font-medium">{workExperience?.nameOfCompany}</div>
+                  <div className=" flex gap-2 items-center text-sm sm:text-base">
+                    <span>{workExperience?.jobDescription}</span>
+                    <Separator orientation="vertical" className="h-4"/>
+                    <span>{workExperience?.experienceType}</span>
+                  </div>
+                  <div className="text-xs sm:text-sm">{workExperience?.duration}</div>
+              </div> : 
+              <div className="flex flex-col gap-2 py-4">
+                <div className="text-xs sm:text-sm font-light text-muted-foreground">Work Experience</div>
+                <div className="text-base sm:text-xl">
+                  --
+                </div>
               </div>
-            </div>
+            }
           </CardContent>
         </Card>
 
@@ -154,42 +171,42 @@ export default function PersonalDetailsTab({ student, onSelectTab }: PersonalDet
           <CardTitle className="bg-[#64748B33] p-6 text-2xl font-medium">
             Parental Information
           </CardTitle>
-          <CardContent className="px-6 ">
-            {/* Mother’s Occupation */}
+          <CardContent className="px-6 py-1">
+            {/* Father’s Name */}
             <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-              <div className="text-xs sm:text-sm font-light">Father’s Full Name</div>
+              <div className="text-xs sm:text-sm font-light text-muted-foreground">Father’s Full Name</div>
               <div className="text-base sm:text-xl">
-                {parentInformation?.father ? `${parentInformation?.father?.firstName} ${parentInformation?.father?.lastName}` : "--"}
+                {parentInformation?.father?.firstName ? `${parentInformation?.father?.firstName} ${parentInformation?.father?.lastName}` : "--"}
               </div>
             </div>
 
-            {/* Mother’s Occupation */}
+            {/* Father’s Contact */}
             <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-              <div className="text-xs sm:text-sm font-light">Father's Contact No.</div>
+              <div className="text-xs sm:text-sm font-light text-muted-foreground">Father's Contact No.</div>
               <div className="text-base sm:text-xl">
                 {parentInformation?.father?.contactNumber || "--"}
               </div>
             </div>
 
-            {/* Mother’s Occupation */}
+            {/* Father’s Occupation */}
             <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-              <div className="text-xs sm:text-sm font-light">Father's Occupation</div>
+              <div className="text-xs sm:text-sm font-light text-muted-foreground">Father's Occupation</div>
               <div className="text-base sm:text-xl">
                 {parentInformation?.father?.occupation || "--"}
               </div>
             </div>
   
-            {/* Mother’s Occupation */}
+            {/* Mother’s Name */}
             <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-              <div className="text-xs sm:text-sm font-light">Mother’s Full Name</div>
+              <div className="text-xs sm:text-sm font-light text-muted-foreground">Mother’s Full Name</div>
               <div className="text-base sm:text-xl">
-                {parentInformation?.mother ? `${parentInformation?.mother?.firstName} ${parentInformation?.mother?.lastName}` : "--"}
+                {parentInformation?.mother?.firstName ? `${parentInformation?.mother?.firstName} ${parentInformation?.mother?.lastName}` : "--"}
               </div>
             </div>
   
-            {/* Mother’s Occupation */}
+            {/* Mother’s Contact */}
             <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-              <div className="text-xs sm:text-sm font-light">Mother’s Contact No.</div>
+              <div className="text-xs sm:text-sm font-light text-muted-foreground">Mother’s Contact No.</div>
               <div className="text-base sm:text-xl">
                 {parentInformation?.mother?.contactNumber || "--"}
               </div>
@@ -197,7 +214,7 @@ export default function PersonalDetailsTab({ student, onSelectTab }: PersonalDet
 
             {/* Mother’s Occupation */}
             <div className="flex flex-col gap-2 py-4">
-              <div className="text-xs sm:text-sm font-light">Mother’s Occupation</div>
+              <div className="text-xs sm:text-sm font-light text-muted-foreground">Mother’s Occupation</div>
               <div className="text-base sm:text-xl">
                 {parentInformation?.mother?.occupation || "--"}
               </div>
@@ -211,57 +228,58 @@ export default function PersonalDetailsTab({ student, onSelectTab }: PersonalDet
           <CardTitle className="bg-[#64748B33] p-6 text-2xl font-medium">
             Emergency Contact Details
           </CardTitle>
-          <CardContent className="px-6 "> 
-            {/* Date of Birth */}
+          <CardContent className="px-6 py-1"> 
+            {/* Emergency Contact Name */}
             <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-              <div className="text-xs sm:text-sm font-light">First Name</div>
+              <div className="text-xs sm:text-sm font-light text-muted-foreground">First Name</div>
               <div className="text-base sm:text-xl">
                 {emergencyContact ? `${emergencyContact?.firstName} ${emergencyContact?.lastName}` : "--"}
               </div>
             </div>
   
-            {/* LinkedIn ID */}
+            {/* Emergency Contact relationship */}
             <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
-              <div className="text-xs sm:text-sm font-light">Relationship with Contact</div>
+              <div className="text-xs sm:text-sm font-light text-muted-foreground">Relationship with Contact</div>
               <div className="text-base sm:text-xl">
                 {emergencyContact?.relationshipWithStudent || "--"}
               </div>
             </div>
 
-            {/* Instagram ID */}
+            {/* Emergency Contact */}
             <div className="flex flex-col gap-2 py-4">
-              <div className="text-xs sm:text-sm font-light">Contact No.</div>
+              <div className="text-xs sm:text-sm font-light text-muted-foreground">Contact No.</div>
               <div className="text-base sm:text-xl">
                 {emergencyContact?.contactNumber || "--"}
               </div>
             </div>
           </CardContent>
         </Card>
-        {/* Emergency Contact Details */}
+
+        {/* financial Information */}
         <Card className="bg-[#64748B1F] rounded-xl text-white">
-          <CardContent className="px-6 "> 
-            {/* Date of Birth */}
-            <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
+          <CardContent className="px-6 py-1"> 
+            {/* Financially Independent */}
+            <div className="flex flex-col gap-2 font-medium border-b border-gray-700 py-4">
               {financialInformation?.isFinanciallyIndependent ? (
-                <div className="pl-3 flex gap-2 items-center">
+                <div className="flex gap-2 items-center">
                   <CircleCheckBig className="w-3 h-3" />
                   Financially independent
                 </div>
               ) : (
-                <div className="pl-3 flex gap-2 items-center">
+                <div className="flex gap-2 items-center">
                   <CircleMinus className="w-3 h-3" />
                   Financially dependent on Parents
                 </div>
               )}
-            </div>
-            <div className="flex flex-col gap-2  py-4">
+            </div> {/* Financial Aid */}
+            <div className="flex flex-col gap-2 font-medium py-4">
               {financialInformation?.hasAppliedForFinancialAid ? (
-                <div className="pl-3 flex gap-2 items-center">
+                <div className="flex gap-2 items-center">
                   <CircleCheckBig className="w-3 h-3" />
                   Has tried applying for financial aid earlier
                 </div>
               ) : (
-                <div className="pl-3 flex gap-2 items-center">
+                <div className="flex gap-2 items-center">
                   <CircleMinus className="w-3 h-3" />
                   Has not tried applying for any financial aid earlier
                 </div>

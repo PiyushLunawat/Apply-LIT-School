@@ -11,7 +11,7 @@ export default function DashboardLayout() {
             <div className="max-w-[300px] lg:max-w-[360px] w-full order-2 sm:order-1">
               <Sidebar />
             </div>
-            <div className="overflow-y-auto w-full order-1 sm:order-2" >
+            <div className="overflow-y-auto w-full order-1 sm:order-2 h-[calc(100vh-117px)] sm:h-full" >
                 <Outlet/>
             </div>
         </div>

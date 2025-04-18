@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Button } from '~/components/ui/button';
-import { Upload, Clock, FileTextIcon, RefreshCw, X, Link2Icon, XIcon, UploadIcon, Download, ArrowUpRight, LoaderCircle, Link2, FileIcon, VideoIcon, ImageIcon } from 'lucide-react';
+import { Upload, Clock, FileTextIcon, RefreshCw, X, Link2Icon, XIcon, UploadIcon, Download, ArrowUpRight, LoaderCircle, Link2, FileIcon, VideoIcon, ImageIcon, HandMetal } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -25,6 +25,8 @@ import {
 } from "@aws-sdk/client-s3";
 import { Card } from '~/components/ui/card';
 import { Skeleton } from '~/components/ui/skeleton';
+import InterviewFeedback from '~/components/organisms/InterviewFeedback/InterviewFeedback';
+import { Separator } from '~/components/ui/separator';
 
 const s3Client = new S3Client({
   
@@ -433,11 +435,22 @@ export default function LitmusTest({ student }: LitmusTestProps) {
     :
   // {['submitted', 'interview scheduled', 'interview cancelled', 'completed'].includes(status) &&
   <div className='flex flex-col items-start p-[52px] bg-[#09090B] text-white shadow-md w-full mx-auto space-y-8'>
-    <div className=''>
-      <div className='text-2xl font-medium'>Congratulations on making your LITMUS Challenge submission!</div>
-      {status === 'submitted' && <div className='text-xl font-normal'>You are now required to schedule a call with us to present your work.</div>}
-      {status === 'interview scheduled' && <div className='text-xl font-normal'>You are now required to present your work at the selected date and time .</div>}
-      {status === 'interview cancelled' && <div className='text-xl font-normal'>You are now required to select a presentation date and time to present your work.</div>}
+    <div className={`${status === 'completed' ? 'bg-[#64748B1F] border p-6 flex gap-6 rounded-xl' : ''}`}>
+      {status === 'completed' &&
+       <div className='w-[82px] h-[82px] bg-[#1388FF1F] flex items-center justify-center rounded-full'>
+          <img src='/assets/icons/congratulation-icon.svg' className='w-8' />
+        </div>
+      }
+      <div className='flex-1'>
+        {status === 'completed' ? 
+          <div className='text-2xl font-medium'>Congratulations on Completing Your Presentation</div> :
+          <div className='text-2xl font-medium'>Congratulations on making your LITMUS Challenge submission!</div>
+        }
+        {status === 'submitted' && <div className='text-xl font-normal'>You are now required to schedule a call with us to present your work.</div>}
+        {status === 'interview scheduled' && <div className='text-xl font-normal'>You are now required to present your work at the selected date and time .</div>}
+        {status === 'interview cancelled' && <div className='text-xl font-normal'>You are now required to select a presentation date and time to present your work.</div>}
+        {status === 'completed' && <div className='text-base font-normal'>You are eligible for a scholarship based on your performance. Review your feedback below. Once you set up your fee payment portal this waiver will be directly applied.</div>}
+      </div>
     </div>
     <div className='bg-[#2C2C2C99] p-4 w-full rounded-xl'>
       <div className='pl-3'>Your LITMUS Challenge Submissions:</div>
@@ -452,7 +465,7 @@ export default function LitmusTest({ student }: LitmusTestProps) {
       {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks && 
         <div className="flex flex-wrap gap-2">
           {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks?.[index]?.texts?.map((textItem: string, id: number) => (
-            <div key={`text-${id}`} className="w-full flex items-center gap-2 mt-2 px-4 py-2 border rounded-xl bg-[#09090b]">
+            <div key={`text-${id}`} className="w-full text-sm sm:text-base flex items-center gap-2 mt-2 px-4 py-2 border rounded-xl bg-[#09090b]">
               {textItem}
             </div>
           ))}
@@ -488,13 +501,13 @@ export default function LitmusTest({ student }: LitmusTestProps) {
           ))}
           {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks?.[index]?.videos?.map((videoItem: string, id: number) => (
             <div key={`video-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 mt-2 p-2 border rounded-xl bg-[#09090b]">
-              <div className='flex gap-2 items-center'>
-              <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
-                <VideoIcon className="w-5 h-5" />
-              </Badge>
-              <span className=''>
-                {videoItem.split('/').pop()}
-              </span>
+              <div className='flex gap-2 items-center truncate'>
+                <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
+                  <VideoIcon className="w-5 h-5" />
+                </Badge>
+                <span className='truncate'>
+                  {videoItem.split('/').pop()}
+                </span>
               </div>
               <Button size="icon" type="button" className="bg-[#1B1B1C] hover:bg-[#1a1a1d] rounded-xl" onClick={() => window.open(videoItem, "_blank")}>
                 <ArrowUpRight className="w-5" />
@@ -547,19 +560,112 @@ export default function LitmusTest({ student }: LitmusTestProps) {
           />
         </> */}
         
-  <div className="flex flex-col items-start p-[52px] pt-2 space-y-8">
-    <div className='flex justify-between px-3 w-full'>
-      <div className="flex gap-4 items-center text-3xl font-semibold text-white">
-        <img src="/assets/images/scholarship-slabs.svg" alt="scholarship-slabs" className="h-9 "/>
-        Scholarship Slabs
+  {status === 'completed' ? 
+    <div className='space-y-6'>
+      <div className="mx-[52px] flex flex-col md:flex-row">
+      <div className="flex flex-col items-center w-full md:w-[264px] h-[300px] p-4 rounded-2xl border border-[#00AB7B] relative">
+        <img src="/assets/images/bg-lit-icon.svg" className="w-[130px] h-[143px] absolute top-[53px]" />
+
+        <div className="text-center italic text-[#00AB7B] text-3xl font-black absolute top-1/2 -translate-y-1/2">
+          {litmusTestDetails?.scholarshipDetail?.scholarshipName}
+        </div>
+
+        <div className="space-y-1 text-center absolute bottom-[34px]">
+          <div className="text-sm font-normal">
+            {student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.cohortId?.programDetail?.name}
+          </div>
+          <div className="text-xs font-normal text-[#F8E000]">
+            {new Date(student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.cohortId?.startDate).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+          </div>
+        </div>
+      </div>
+
+        <div className="w-full h-[300px] flex flex-col gap-2 px-4 sm:px-10 rounded-2xl border border-[#00AB7B]">
+          <div className='flex flex-col my-auto gap-y-4 sm:gap-y-12'>
+            <div className='space-y-3 sm:space-y-6'>
+              <p className="text-lg sm:text-2xl font-medium">You are eligible for a {litmusTestDetails?.scholarshipDetail?.scholarshipPercentage}% waiver on your fee</p>
+              <p className="text-sm sm:text-base">
+                With a challenge clearance of 76%, you may avail a <span className=''>discount of INR 15,400/-</span> on your fee.
+                Access your payment portal to find out and keep track of your fee payments.
+              </p>
+            </div>
+            <Button size={'xl'} className="mt-4 bg-[#00AB7B] hover:bg-[#00AB7B]/80">Access Payment Portal</Button>
+          </div>
+        </div>
+      </div>
+      <Card className='px-6 py-8 mx-[52px] space-y-8'>
+        <div className='flex justify-between items-center'>
+          <div className="text-base sm:text-2xl font-medium">LITMUS Challenge Review</div>
+          {/* <div className="text-base sm:text-2xl font-medium ">{new Date().toLocaleDateString(litmusTestDetails?.updatedAt)}</div> */}
+        </div>
+        <div className='h-0 border-t-2 border-dashed w-full'/>
+        {litmusTestDetails?.results &&
+          <div className="space-y-4">
+            <div className="text-base sm:text-2xl font-medium pl-3">Scores</div>
+            {litmusTestDetails?.scholarshipDetail && 
+              <div className="bg-gradient-to-r from-[#DBA61D] to-[#98710A] flex justify-between items-center gap-2 border rounded-xl p-6">
+                <div className="flex items-center">
+                  <img src="/assets/icons/score-icon.svg" className="w-12 h-8" />
+                  <div className="text-xl font-semibold">Weighted Total Score</div>
+                </div>
+                <div className="flex gap-2 text-2xl font-semibold">
+                  62/100
+                </div>
+              </div>
+            }
+
+            {litmusTestDetails?.performanceRating && 
+              <div className="flex justify-between items-center gap-2 border rounded-xl p-6">
+                <div className="flex items-center">
+                  <img src="/assets/icons/rating-icon.svg" className="w-8 h-8" />
+                  <div className="text-xl font-semibold">Performance Rating</div>
+                </div>
+                <div className="flex gap-2.5 items-center">
+                  {[...Array(5)].map((_, index) => (
+                    <img src={`/assets/icons/${(5 - index) > litmusTestDetails?.performanceRating ? 'no-star-icon.svg' : 'star-icon.svg'}`} key={index} className={`w-6 h-6 `} />
+                  ))}
+                </div>
+              </div>
+            }
+            <div className="w-full grid grid-cols sm:grid-cols-2 gap-3">
+              {cohortDetails?.litmusTestDetail?.[0]?.litmusTasks[0]?.judgmentCriteria.map((criteria: any, index: number) => ( 
+                <div key={index} className="px-4 py-6 space-y-4 rounded-xl border ">
+                  <div className="flex gap-2 items-center text-lg font-semibold ml-1 "><HandMetal className='rotate-90 w-4'/>{criteria?.name}</div>
+                  {criteria?.description ?
+                    <div className="text-base font-normal">{criteria?.description}</div> :
+                    <div className="text-base text-muted-foreground font-normal">No Description Shared</div>
+                  }
+                  <div className="text-2xl font-semibold">{litmusTestDetails?.results?.[0]?.score?.[index]?.score}/{litmusTestDetails?.results?.[0]?.score?.[index]?.totalScore}</div>
+              </div>
+              ))}
+            </div>
+          </div>
+        }
+        <div className='h-0 border-t-2 border-dashed w-full'/>
+        {litmusTestDetails?.overallFeedback?.[litmusTestDetails?.overallFeedback.length - 1]?.feedback &&
+          <div className="space-y-4">
+            <div className="text-base sm:text-2xl font-medium pl-3">Feedback</div>
+            <InterviewFeedback 
+              feedback={litmusTestDetails?.overallFeedback?.[litmusTestDetails?.overallFeedback.length - 1]?.feedback} 
+              />
+          </div>
+        }
+      </Card>
+    </div> :
+    <div className="flex flex-col items-start p-[52px] pt-2 space-y-8">
+      <div className='flex justify-between px-3 w-full'>
+        <div className="flex gap-4 items-center text-3xl font-semibold text-white">
+          <img src="/assets/images/scholarship-slabs.svg" alt="scholarship-slabs" className="h-9 "/>
+          Scholarship Slabs
+        </div>
+      </div>
+      <div className="w-full grid grid-cols sm:grid-cols-2 gap-3">
+        {cohortDetails?.litmusTestDetail?.[0]?.scholarshipSlabs.map((slab: any, index: number) => ( 
+          <ScholarshipSlabCard ind={index} title={slab?.name} waiverAmount={slab?.percentage+"%"} clearanceRange={slab?.clearance+"%"} desc={slab?.description} color={getColor(index)} bg={getBgColor(index)} />
+        ))}
       </div>
     </div>
-    <div className="w-full grid grid-cols sm:grid-cols-2 gap-3">
-      {cohortDetails?.litmusTestDetail?.[0]?.scholarshipSlabs.map((slab: any, index: number) => ( 
-        <ScholarshipSlabCard ind={index} title={slab?.name} waiverAmount={slab?.percentage+"%"} clearanceRange={slab?.clearance+"%"} desc={slab?.description} color={getColor(index)} bg={getBgColor(index)} />
-      ))}
-    </div>
-  </div>
+  }
 
   <Dialog open={interviewOpen} onOpenChange={setInterviewOpen}>
   <DialogTitle></DialogTitle>

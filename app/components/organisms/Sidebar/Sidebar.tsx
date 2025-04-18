@@ -82,7 +82,7 @@ export default function Sidebar() {
             </div>
           </div>
           <div className="w-[52px] h-[52px] absolute -right-6 top-20 rounded-full flex items-center justify-center border bg-background"
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/dashboard")}
           >
             <ChevronLeft className="h-6 w-6" />
           </div>
@@ -116,7 +116,7 @@ export default function Sidebar() {
     </div>
 
     <div className="sm:hidden w-[100vw] h-[65px] text-white bg-[#64748B1A]">
-      <div className="flex flex-1 items-center justify-between px-8">
+      <div className="flex flex-1 items-center justify-between px-8 py-1 my-auto">
         {navItems.slice(0, 2).map((item) => (
           <NavLink key={item.title} to={item.to}
             className={({ isActive }) => `flex flex-1 items-center justify-center py-4 transition-colors ${isActive ? item.textColor : ""}`}>
