@@ -414,7 +414,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
 
         <Dialog open={open} onOpenChange={setOpen}>
         <DialogTitle></DialogTitle>
-          <DialogContent className="flex justify-center items-start max-w-[90vw] sm:max-w-4xl py-2 px-6 h-[90vh] overflow-y-auto">
+          <DialogContent className="flex justify-center items-start max-w-[90vw] sm:max-w-4xl py-2 px-6 max-h-[70vh] sm:max-h-[90vh] overflow-y-auto">
             <div className="flex flex-col justify-center">
               <div className="flex flex-col sm:flex-row mx-auto gap-4 items-center justify-center">
                 <div className="w-1/2 sm:w-full">

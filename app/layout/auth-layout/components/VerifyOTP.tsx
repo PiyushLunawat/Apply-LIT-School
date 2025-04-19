@@ -22,6 +22,7 @@ import { UserContext } from '~/context/UserContext';
 import { getCurrentStudent, updateStudentData } from '~/api/studentAPI';
 import { PhoneAuthProvider, signInWithCredential } from 'firebase/auth';
 import { auth } from 'firebase.config';
+import { RegisterInterceptor } from '~/utils/interceptor';
 
 const formSchema = z.object({
   otp: z.string().length(6, { message: "OTP must be 6 digits" })
@@ -107,7 +108,9 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
         console.log("resp",res)
         revalidate();
         // Store studentData in localStorage
-
+        await RegisterInterceptor(res.accessToken, res.refreshToken)
+        console.log("ddddd");
+        
         const student = await getCurrentStudent(res.user.id);
         if (student) {
           localStorage.setItem('studentData', JSON.stringify(student));

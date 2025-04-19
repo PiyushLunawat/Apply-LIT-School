@@ -6,6 +6,7 @@ import {
   userIdCookie,
 } from "~/cookies/cookies"; // Import cookies
 import { commitSession } from "~/cookies/sessions/sessionStore"; // Session commit utility
+import { RegisterInterceptor } from "~/utils/interceptor";
 
 export const action = async ({ request }: { request: Request }) => {
   const { accessToken, refreshToken, userId } = await request.json();
@@ -25,6 +26,7 @@ export const action = async ({ request }: { request: Request }) => {
       );
       headers.append("Set-Cookie", await userIdCookie.serialize(userId));
 
+      RegisterInterceptor(accessToken, refreshToken);
       // Optionally, set a session or any other logic here
 
       return json(

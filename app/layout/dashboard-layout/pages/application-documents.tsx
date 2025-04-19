@@ -7,7 +7,7 @@ import { Skeleton } from "~/components/ui/skeleton";
 import PersonalDetailsTab from "../components/personal-details";
 import CourseDiveTab from "../components/course-dive";
 import InterviewFeedbackTab from "../components/interview-feedback";
-import LitmusTestTab from "../components/litmus-test-d";
+import LitmusTestTab from "../components/litmus-test-tab";
 
 import { useSearchParams } from "@remix-run/react"; // 👈 import this
 
@@ -92,9 +92,7 @@ export default function ApplicationDocumentsDashboard() {
                 </p>
               </div>
             </div>
-            <div className="p-4 sm:p-6">
-              <ApplicationDocuments student={student} onSelectTab={handleTabChange} />
-            </div>
+            <ApplicationDocuments student={student} onSelectTab={handleTabChange} />
           </>
         );
     }

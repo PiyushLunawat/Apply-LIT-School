@@ -6,7 +6,7 @@ export default function DashboardLayout() {
 
   return (
     <div className="">
-        <Header classn="drop-shadow-lg" />
+        <Header classn="shadow-[0px_4px_24px_0px_rgba(100,116,139,0.2)]" />
         <div className="flex flex-col sm:flex-row border-b h-[calc(100vh-52px)] " >
             <div className="max-w-[300px] lg:max-w-[360px] w-full order-2 sm:order-1">
               <Sidebar />

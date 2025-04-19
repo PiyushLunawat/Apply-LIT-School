@@ -1,5 +1,10 @@
 import fetchIntercept from "fetch-intercept";
 import { getRefreshToken } from "~/api/authAPI";
+import {
+  accessTokenCookie,
+  refreshTokenCookie,
+  userIdCookie,
+} from "~/cookies/cookies";
 
 // Modify RegisterInterceptor to refresh the token if only accessToken is available
 let refreshingToken = false; // Flag to prevent infinite refresh loop
@@ -75,7 +80,6 @@ export const RegisterInterceptor = (
 
         const refPayload = {
           refreshToken: x,
-          // "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2Y4OTg2YTg0M2RmZjJmMTcxZjIxNWEiLCJyb2xlIjoic3R1ZGVudCIsImVtYWlsIjoibW9ydHl5QHlvcG1haWwuY29tIiwiZmlyc3ROYW1lIjoiTW9ydHkiLCJsYXN0TmFtZSI6IlNhbmNoeiIsImdlbmRlciI6Im1hbGUiLCJpYXQiOjE3NDQzNzAzMDcsImV4cCI6MTc0NDk3NTEwN30.TYL7BwMggFzJnc3MJ6C2GRyZdAjAb58pvAUpLj8e3o8",
         };
 
         console.log("int I", refPayload);

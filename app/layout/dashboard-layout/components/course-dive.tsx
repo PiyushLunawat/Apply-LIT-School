@@ -23,7 +23,7 @@ export default function CourseDiveTab({ student, onSelectTab }: CourseDiveProps)
   console.log(applicationDetails);
   
   return (
-    <div className="p-8 sm:p-[52px] space-y-8 text-white">
+    <div className="px-4 py-8 sm:p-[52px] space-y-8 text-white">
       <div className="flex flex-row sm:flex-col gap-4 items-center sm:items-start">
         <ArrowLeft className="w-6 h-6 cursor-pointer" onClick={() => onSelectTab("")}/>
         <Badge className="text-sm w-fit border-[#FF791F] text-[#FF791F] bg-[#FF791F]/10">
@@ -57,8 +57,8 @@ export default function CourseDiveTab({ student, onSelectTab }: CourseDiveProps)
         </div>
 
         {applicationTask?.map((task: any, index: any) => (
-          <div className="space-y-8">
-            <Card key={index} className="bg-[#64748B1F] rounded-xl text-white">
+          <div key={index} className="space-y-8">
+            <Card className="bg-[#64748B1F] rounded-xl text-white">
               <CardTitle className="bg-[#64748B33] p-6 text-2xl font-medium">
                 Task 0{index + 1}
               </CardTitle>
@@ -70,81 +70,77 @@ export default function CourseDiveTab({ student, onSelectTab }: CourseDiveProps)
 
                 <div className='bg-[#2C2C2C99] p-2 space-y-2 w-full rounded-xl'>
                   <div className='pl-3'>Your Submissions</div>
-                  <div className=''>
-                    {cohortDetails?.litmusTestDetail?.[0]?.litmusTasks.map((Task: any, tindex: any) => (
-                      <div key={index} className="space-y-3">
-                        {applicationDetails?.tasks && 
-                          <div className="flex flex-wrap gap-1.5">
-                            {applicationDetails?.tasks?.[index]?.texts?.map((textItem: string, id: number) => (
-                              <div key={`text-${id}`} className="w-full text-sm sm:text-base flex items-center gap-2 px-4 py-2 border rounded-xl bg-[#09090b]">
-                                {textItem}
+                    <div className="space-y-3">
+                      {applicationDetails?.tasks && 
+                        <div className="flex flex-wrap gap-1.5">
+                          {applicationDetails?.tasks?.[index]?.text?.map((textItem: string, id: number) => (
+                            <div key={`text-${id}`} className="w-full text-sm sm:text-base flex items-center gap-2 px-4 py-2 border rounded-xl bg-[#09090b]">
+                              {textItem}
+                            </div>
+                          ))}
+                          {applicationDetails?.tasks?.[index]?.links?.map((linkItem: string, id: number) => (
+                            <div key={`link-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 p-2 border rounded-xl bg-[#09090b]">
+                              <div className='flex gap-2 items-center flex-1 w-[50vw] truncate'>
+                              <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
+                                <Link2Icon className="w-5 h-5" />
+                              </Badge>
+                              <span className='text-sm sm:text-base truncate'>
+                                {linkItem}
+                              </span>
                               </div>
-                            ))}
-                            {applicationDetails?.tasks?.[index]?.links?.map((linkItem: string, id: number) => (
-                              <div key={`link-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 p-2 border rounded-xl bg-[#09090b]">
-                                <div className='flex gap-2 items-center'>
+                              <Button size="icon" type="button" className="bg-[#1B1B1C] hover:bg-[#1a1a1d] rounded-xl" onClick={() => window.open(linkItem, "_blank")}>
+                                <ArrowUpRight className="w-5" />
+                              </Button>
+                            </div>
+                          ))}
+                          {applicationDetails?.tasks?.[index]?.images?.map((imageItem: string, id: number) => (
+                            <div key={`image-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 p-2 border rounded-xl bg-[#09090b]">
+                              <div className='flex gap-2 items-center flex-1 w-[50vw] truncate'>
                                 <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
-                                  <Link2Icon className="w-5 h-5" />
-                                </Badge>
-                                <span className=''>
-                                  {linkItem}
-                                </span>
-                                </div>
-                                <Button size="icon" type="button" className="bg-[#1B1B1C] hover:bg-[#1a1a1d] rounded-xl" onClick={() => window.open(linkItem, "_blank")}>
-                                  <ArrowUpRight className="w-5" />
-                                </Button>
-                              </div>
-                            ))}
-                            {applicationDetails?.tasks?.[index]?.images?.map((imageItem: string, id: number) => (
-                              <div key={`image-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 p-2 border rounded-xl bg-[#09090b]">
-                                <div className='flex gap-2 items-center'>
-                                  <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
-                                    <ImageIcon className="w-5 h-5" />
-                                  </Badge>
-                                  <span className=''>
-                                    {imageItem.split('/').pop()}
-                                  </span>
-                                </div>
-                                <Button size="icon" type="button" className="bg-[#1B1B1C] hover:bg-[#1a1a1d] rounded-xl" onClick={() => window.open(imageItem, "_blank")}>
-                                  <ArrowUpRight className="w-5" />
-                                </Button>
-                              </div>
-                            ))}
-                            {applicationDetails?.tasks?.[index]?.videos?.map((videoItem: string, id: number) => (
-                              <div key={`video-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 p-2 border rounded-xl bg-[#09090b]">
-                                <div className='flex gap-2 items-center flex-1 w-[50vw] truncate'>
-                                <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
-                                  <VideoIcon className="w-5 h-5" />
+                                  <ImageIcon className="w-5 h-5" />
                                 </Badge>
                                 <span className='text-sm sm:text-base truncate'>
-                                  {videoItem.split('/').pop()}
+                                  {imageItem.split('/').pop()}
                                 </span>
-                                </div>
-                                <Button size="icon" type="button" className="bg-[#1B1B1C] hover:bg-[#1a1a1d] rounded-xl" onClick={() => window.open(videoItem, "_blank")}>
-                                  <ArrowUpRight className="w-5" />
-                                </Button>
                               </div>
-                            ))}
-                            {applicationDetails?.tasks?.[index]?.files?.map((fileItem: string, id: number) => (
-                              <div key={`file-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 p-2 border rounded-xl bg-[#09090b]">
-                                <div className='flex gap-2 items-center flex-1 w-[50vw] truncate'>
-                                  <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
-                                    <FileTextIcon className="w-5 h-5" />
-                                  </Badge>
-                                  <span className='text-sm sm:text-base truncate'>
-                                    {fileItem.split('/').pop()}
-                                  </span>
-                                </div>
-                                <Button size="icon" type="button" className="bg-[#1B1B1C] hover:bg-[#1a1a1d] rounded-xl" onClick={() => window.open(fileItem, "_blank")}>
-                                  <ArrowUpRight className="w-5" />
-                                </Button>
+                              <Button size="icon" type="button" className="bg-[#1B1B1C] hover:bg-[#1a1a1d] rounded-xl" onClick={() => window.open(imageItem, "_blank")}>
+                                <ArrowUpRight className="w-5" />
+                              </Button>
+                            </div>
+                          ))}
+                          {applicationDetails?.tasks?.[index]?.videos?.map((videoItem: string, id: number) => (
+                            <div key={`video-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 p-2 border rounded-xl bg-[#09090b]">
+                              <div className='flex gap-2 items-center flex-1 w-[50vw] truncate'>
+                              <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
+                                <VideoIcon className="w-5 h-5" />
+                              </Badge>
+                              <span className='text-sm sm:text-base truncate'>
+                                {videoItem.split('/').pop()}
+                              </span>
                               </div>
-                            ))}
-                          </div>
-                        }
-                      </div>
-                    ))}
-                  </div>
+                              <Button size="icon" type="button" className="bg-[#1B1B1C] hover:bg-[#1a1a1d] rounded-xl" onClick={() => window.open(videoItem, "_blank")}>
+                                <ArrowUpRight className="w-5" />
+                              </Button>
+                            </div>
+                          ))}
+                          {applicationDetails?.tasks?.[index]?.files?.map((fileItem: string, id: number) => (
+                            <div key={`file-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 p-2 border rounded-xl bg-[#09090b]">
+                              <div className='flex gap-2 items-center flex-1 w-[50vw] truncate'>
+                                <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
+                                  <FileTextIcon className="w-5 h-5" />
+                                </Badge>
+                                <span className='text-sm sm:text-base truncate'>
+                                  {fileItem.split('/').pop()}
+                                </span>
+                              </div>
+                              <Button size="icon" type="button" className="bg-[#1B1B1C] hover:bg-[#1a1a1d] rounded-xl" onClick={() => window.open(fileItem, "_blank")}>
+                                <ArrowUpRight className="w-5" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      }
+                    </div>
                 </div>
               </CardContent>
             </Card>          

@@ -13,8 +13,6 @@ export const loader: LoaderFunction = async ({ request }) => {
   const userId = await userIdCookie.parse(cookieHeader);
   console.log("applicatonssss");
 
-    RegisterInterceptor(accessToken, refreshToken);
-
   console.log("userId", userId);
   
   // Now you can use `userId` in your logic

@@ -13,7 +13,7 @@ const InterviewFeedback: React.FC<InterviewFeedbackProps> = ({
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
       {feedback?.filter((feedback: any) => feedback?.data && feedback.data.length > 0)
         .map((feedback: any, feedbackIndex: any) => (
-          <div key={feedbackIndex} className="p-6 rounded-xl border border-[#2C2C2C]">
+          <div key={feedbackIndex} className="p-4 sm:p-6 rounded-xl border border-[#2C2C2C]">
             <div className="flex gap-2 items-center text-lg font-semibold ml-1 mb-2"><HandMetal className='rotate-90 w-4'/>{feedback?.feedbackTitle}</div>
             <ul className="space-y-2 pl-6 list-disc">
               {feedback?.data.map((criterion: any, criterionIndex: any) => (

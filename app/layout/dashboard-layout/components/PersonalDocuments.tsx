@@ -287,11 +287,11 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent side='top' align='start'>
-                                <p className="text-sm">{docDetail.feedback?.[docDetail.feedback.length - 1]?.feedbackData}</p>
+                                <p className="max-w-[50vw] text-sm">{docDetail.feedback?.[docDetail.feedback.length - 1]?.feedbackData}</p>
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider> :
-                          <span className={`capitalize  ${docDetail.status === "pending" ? "text-white" : docDetail.status === "verified" ? "text-[#00CC92]" : ""}`} >
+                          <span className={`capitalize ${docDetail.status === "pending" ? "text-white" : docDetail.status === "verified" ? "text-[#00CC92]" : ""}`} >
                             {docDetail.status}
                           </span>
                           }
@@ -306,7 +306,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                     )}
                   </p>
                   {uploadStates[doc.id]?.error &&
-                  <p className="text-xs sm:text-base text-[#FF503D] mt-2 sm:mt-0">{uploadStates[doc.id]?.error}</p>
+                    <p className="text-xs sm:text-base text-[#FF503D] mt-2 sm:mt-0">{uploadStates[doc.id]?.error}</p>
                   }
                 </div>
               </div>
@@ -340,7 +340,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                     {docDetail?.status === "pending" &&
                     <>  <input
                         type="file"
-                        accept="application/pdf,image/*"
+                        accept="application/pdf"
                         className="hidden"
                         id={`file-input-${doc.id}`}
                         onChange={(e) => handleFileChange(e, doc.id, doc.docType, docDetail?._id)}
@@ -360,7 +360,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                     <>
                       <input
                         type="file"
-                        accept="application/pdf,image/*"
+                        accept="application/pdf"
                         className="hidden"
                         id={`file-input-${doc.id}`}
                         onChange={(e) => handleFileChange(e, doc.id, doc.docType, docDetail?._id)}
@@ -380,7 +380,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                   <>
                     <input
                       type="file"
-                      accept="application/pdf,image/*"
+                      accept="application/pdf"
                       className="hidden"
                       id={`file-input-${doc.id}`}
                       onChange={(e) => handleFileChange(e, doc.id, doc.docType)}
@@ -426,7 +426,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                 )}
                 <div className="flex-1 ">
                   <h3 className="font-medium text-lg/5 sm:text-2xl text-white">{doc.name}</h3>
-                  <p className="text-xs sm:text-base  mt-2 sm:mt-0">
+                  <p className="text-xs sm:text-base mt-2 sm:mt-0">
                     Aadhar/PAN Card/Passport • PDF •{" "}
                     {docDetail ? (
                       <>
@@ -439,7 +439,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent side='top' align='start'>
-                                <p className="text-sm">{docDetail.feedback?.[docDetail.feedback.length - 1]?.feedbackData}</p>
+                                <p className="max-w-[50vw] text-sm">{docDetail.feedback?.[docDetail.feedback.length - 1]?.feedbackData}</p>
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider> :
@@ -457,6 +457,9 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                       </span>
                     )}
                   </p>
+                  {uploadStates[doc.id]?.error &&
+                    <p className="text-xs sm:text-base text-[#FF503D] mt-2 sm:mt-0">{uploadStates[doc.id]?.error}</p>
+                  }
                 </div>
               </div>
 
@@ -489,7 +492,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                     {docDetail?.status === "pending" &&
                     <>  <input
                         type="file"
-                        accept="application/pdf,image/*"
+                        accept="application/pdf"
                         className="hidden"
                         id={`file-input-${doc.id}`}
                         onChange={(e) => handleFileChange(e, doc.id, doc.docType, docDetail?._id)}
@@ -509,7 +512,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                     <>
                       <input
                         type="file"
-                        accept="application/pdf,image/*"
+                        accept="application/pdf"
                         className="hidden"
                         id={`file-input-${doc.id}`}
                         onChange={(e) => handleFileChange(e, doc.id, doc.docType, docDetail?._id)}
@@ -529,7 +532,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                   <>
                     <input
                       type="file"
-                      accept="application/pdf,image/*"
+                      accept="application/pdf"
                       className="hidden"
                       id={`file-input-${doc.id}`}
                       onChange={(e) => handleFileChange(e, doc.id, doc.docType)}
@@ -552,54 +555,56 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
       </div>
 
       {docs?.filter((doc: any) =>![ "graduationMarkSheet", "higherSecondaryMarkSheet", "secondarySchoolMarksheet", "aadharDocument", "higherSecondaryTC", "fatherIdProof", "motherIdProof" ].includes(doc.name)).length > 0 &&
-      docs?.filter((doc: any) =>![ "graduationMarkSheet", "higherSecondaryMarkSheet", "secondarySchoolMarksheet", "aadharDocument", "higherSecondaryTC", "fatherIdProof", "motherIdProof" ].includes(doc.name)).map((doc: any) => (
-      <>
-        <div className="text-3xl pt-4 px-6">Additional Documents</div>
-        <div key={doc?._id} className="flex items-center justify-between p-6 bg-[#64748B1F] border rounded-xl">
-          <div className="flex items-center gap-4">
-            <div className="relative group h-16 w-16 justify-center flex items-center rounded-full bg-[#00CC921F] overflow-hidden">
-              <iframe src={doc?.url} className="w-full h-full" style={{ border: 'none' }}></iframe>
-              <div className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                onClick={() => handleOpenDoc(doc, doc.name)}>
-                <Eye className="text-white w-6 h-6" />
+        <div className="space-y-3 border-t-2 border-dashed pt-4 sm:pt-8">
+          <div className="text-2xl font-normal pl-3">Additional Documents</div>
+          {docs?.filter((doc: any) =>![ "graduationMarkSheet", "higherSecondaryMarkSheet", "secondarySchoolMarksheet", "aadharDocument", "higherSecondaryTC", "fatherIdProof", "motherIdProof" ].includes(doc.name)).map((doc: any) => (
+            <div key={doc?._id} className="flex lg:flex-row flex-col gap-2 lg:items-center items-start lg:justify-between p-4 sm:p-6 bg-[#64748B1F] border rounded-xl">
+              <div className="flex items-center gap-4">
+                <div className="relative group h-16 w-16 justify-center flex items-center rounded-full bg-[#00CC921F] overflow-hidden">
+                  <iframe src={doc?.url} className="w-full h-full" style={{ border: 'none' }}></iframe>
+                  <div className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                    onClick={() => handleOpenDoc(doc, doc.name)}>
+                    <Eye className="text-white w-6 h-6" />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-medium text-lg/5 sm:text-2xl text-white capitalize">{doc?.name}</h3>
+                  <p className="text-xs sm:text-base mt-2 sm:mt-0">
+                    DOC <span className="text-muted-foreground underline-0"> •{" "}{new Date(doc?.date).toLocaleDateString()}</span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="w-full sm:w-fit flex items-center gap-4">
+                <Button
+                  size="xl"
+                  variant="ghost"
+                  className="flex gap-2 items-center border bg-[#1B1B1C] flex-1"
+                  onClick={() => handleFileDownload(doc?.url || "", doc?.documentName)}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download
+                </Button>
               </div>
             </div>
-            <div>
-              <h3 className="font-medium text-2xl text-white capitalize">{doc?.documentName}</h3>
-              <p className="text-base ">
-                DOC <span className="text-muted-foreground underline-0"> •{" "}{new Date(doc?.date).toLocaleDateString()}</span>
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <Button
-              size="xl"
-              variant="ghost"
-              className="border bg-[#1B1B1C]"
-              onClick={() => handleFileDownload(doc?.url || "", doc?.documentName)}
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Download
-            </Button>
-          </div>
+          ))}
         </div>
-      </>))}
+      }
       {selectedDoc && (
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTitle></DialogTitle> 
-          <DialogContent className="max-w-5xl py-2 px-6 h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-5xl py-2 px-2 sm:px-6 max-h-[70vh] sm:max-h-[90vh] overflow-y-auto">
             <div className="flex flex-col gap-4 justify-center">
               <p className="pl-3">Preview for {selectedDocName}</p>
               <div className="max-w-5xl h-[70vh] justify-center flex items-center rounded-2xl bg-[#09090b] border ">
                 <iframe src={selectedDoc?.url} className="mx-auto w-[70%] h-full" style={{ border: 'none' }}></iframe>
               </div>
               {selectedDoc?.status === 'flagged' ?
-                <div className="flex gap-2 items-center justify-center text-base text-[#FF503D]">
+                <div className="flex gap-2 items-center justify-center text-sm sm:text-base text-[#FF503D]">
                   <AlertCircle className="w-4 h-4"/>
-                  {selectedDoc.feedback?.[selectedDoc.feedback.length - 1]?.feedbackData}
+                  <span className="flex-1">{selectedDoc.feedback?.[selectedDoc.feedback.length - 1]?.feedbackData}</span>
                 </div> :
-                <Button size="xl" variant="ghost" className="mx-auto border bg-[#1B1B1C]"
+                <Button size="xl" variant="ghost" className="w-full sm:w-fit mx-auto border bg-[#1B1B1C]"
                   onClick={() => handleFileDownload(selectedDoc?.url || "", selectedDocName)}>
                     <Download className="h-4 w-4 mr-2" />Download
                 </Button>

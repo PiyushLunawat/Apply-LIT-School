@@ -40,7 +40,7 @@ export default function ApplicationDocuments({ student, onSelectTab }: Applicati
   ]);
 
   return (
-    <div className="px-4 sm:px-8 py-8 space-y-4">
+    <div className="px-4 sm:px-8 py-8 space-y-3">
       {tabs.map((doc, index) => (
         <div
           key={index}

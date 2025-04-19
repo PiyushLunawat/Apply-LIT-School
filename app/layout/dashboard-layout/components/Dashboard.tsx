@@ -89,7 +89,7 @@ export default function ApplicationDashboard({ student }: ApplicationDashboardPr
   };
 
   const handleFeePaymentClick = () => {
-    navigate('/dashboard/fee-payment-setup');
+    navigate('/dashboard/fee-payment');
   };
 
   const handleScheduleInterview = async () => {
@@ -148,48 +148,62 @@ export default function ApplicationDashboard({ student }: ApplicationDashboardPr
     }
   }
 
+  const colorClasses = [
+    'text-emerald-600 !bg-emerald-600/20 border-emerald-600',
+    'text-[#3698FB] !bg-[#3698FB]/20 border-[#3698FB]',
+    'text-[#FA69E5] !bg-[#FA69E5]/20 border-[#FA69E5]',
+    'text-orange-600 !bg-orange-600/20 border-orange-600'
+  ];
+
+  const getBadgeColor = (slabName: string): string => {
+    const index = cohortDetails?.litmusTestDetail?.[0]?.scholarshipSlabs.findIndex(
+      (slab: any) => slab.name === slabName
+    );
+    return index !== -1 ? colorClasses[index % colorClasses.length] : 'text-default';
+  };
+
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://apply-lit-school.vercel.app";
   
   return (
   <>
-      <div className="flex sm:flex-row flex-col gap-4 justify-between sm:items-end p-6 sm:p-[52px] bg-[#64748B1A] border-b">
-        <div className="flex flex-row sm:flex-col gap-4 sm:gap-8 items-center sm:items-start">
-          <Avatar className="w-16 h-16 sm:w-32 sm:h-32">
-            <AvatarImage src={studentData?.profileUrl} className="object-cover" alt="@shadcn" />
-            <AvatarFallback className="uppercase text-2xl">{studentData?.firstName[0]}{studentData?.lastName[0]}</AvatarFallback>
-          </Avatar>
-          <h1 className="text-xl sm:text-4xl font-normal">
-            👋 Hey {studentData?.firstName+' '+studentData?.lastName},
-            <div className="">welcome to your LIT portal</div>
-          </h1>
-        </div>
-        <p className="max-w-[400px] w-full text-sm sm:text-base ">
-          Here, you can access all your important details in one place, including your application status, account info,
-          payment portal, and wallet transactions. Stay organized and easily manage your journey with LIT School.
-        </p>
+    <div className="flex md:flex-row flex-col gap-4 justify-between md:items-end py-8 sm:py-[52px] px-[52px] bg-[#64748B1A] border-b">
+      <div className="flex flex-row md:flex-col gap-4 md:gap-8 items-center md:items-start">
+        <Avatar className="w-16 h-16 sm:w-32 sm:h-32">
+          <AvatarImage src={studentData?.profileUrl} className="object-cover" alt="@shadcn" />
+          <AvatarFallback className="uppercase text-2xl">{studentData?.firstName[0]}{studentData?.lastName[0]}</AvatarFallback>
+        </Avatar>
+        <h1 className="text-xl sm:text-4xl font-normal">
+          👋 Hey {studentData?.firstName+' '+studentData?.lastName},
+          <div className="">welcome to your LIT portal</div>
+        </h1>
       </div>
+      <p className="max-w-[400px] w-full text-sm sm:text-base ">
+        Here, you can access all your important details in one place, including your application status, account info,
+        payment portal, and wallet transactions. Stay organized and easily manage your journey with LIT School.
+      </p>
+    </div>
 
       {/* LITMUS Test Submission Card */}
-      <div className="p-6 sm:p-[52px] space-y-8">
+      <div className="px-4 py-[52px] sm:p-[52px] space-y-8">
         <div className="space-y-3">
           {student ? 
             <>
               <div className="bg-[#64748B1A] p-4 sm:p-6 rounded-xl border">
-              <div className="flex flex-col md:flex-row gap-2 justify-between items-center">
-                <div className="spcae-y-2">
+              <div className="flex flex-wrap flex-col md:flex-row gap-2 justify-between items-center">
+                <div className="space-y-2">
                   <div className="flex items-center gap-2 sm:gap-4">
                     {litmusTestDetails?.status === 'pending' ? 
                       <>
-                        <h2 className="text-base sm:text-xl font-semibold">LITMUS Test Submission</h2>
+                        <h2 className="text-lg sm:text-xl font-semibold">LITMUS Test Submission</h2>
                         <Badge className="flex px-2 gap-1 sm:gap-2 items-center bg-black h-7">
                           <Clock className="text-[#00A3FF] w-3 h-3"/>
                           <div className="text-xs sm:text-base font-normal">{formatTestDuration(cohortDetails?.litmusTestDetail[0]?.litmusTestDuration)}</div>
                         </Badge>
                       </> :
                       <>
-                        <h2 className="text-base sm:text-xl font-semibold">LITMUS Test</h2>
+                        <h2 className="text-lg sm:text-xl font-semibold">LITMUS Test</h2>
                         {litmusTestDetails?.status === 'completed' && 
-                        <Badge className="flex px-2 gap-1 sm:gap-2 items-center bg-[#FF791F]/10 text-[#FF791F] border-[#FF791F] h-7">
+                        <Badge className={`flex px-2 gap-1 sm:gap-2 items-center ${getBadgeColor(scholarshipDetails?.scholarshipName)} h-7`}>
                           {scholarshipDetails?.scholarshipName}
                         </Badge>
                         }
@@ -197,9 +211,9 @@ export default function ApplicationDashboard({ student }: ApplicationDashboardPr
                     }
                   </div>
                   {litmusTestDetails?.status === 'pending' ? 
-                    <p className="sm:w-3/4 text-xs sm:text-base">Compete for a scholarship opportunity through your performance in this challenge. Demonstrate your skills and creativity!</p> :
+                    <p className="sm:max-w-[500px] text-xs sm:text-base">Compete for a scholarship opportunity through your performance in this challenge. Demonstrate your skills and creativity!</p> :
                     litmusTestDetails?.status === 'submitted' ? 
-                    <p className="sm:w-3/4 text-xs sm:text-base">Your submission has been made successfully. Kindly setup a presentation meeting to showcase your work.</p> :
+                    <p className="sm:max-w-[500px] text-xs sm:text-base">Your submission has been made successfully. Kindly setup a presentation meeting to showcase your work.</p> :
                     litmusTestDetails?.status === 'interview scheduled' ? 
                     <div className="flex-1  flex-wrap">
                       Your presentation meeting has been scheduled for{' '}
@@ -208,13 +222,13 @@ export default function ApplicationDashboard({ student }: ApplicationDashboardPr
                         {litmusTestDetails?.litmusTestInterviews?.[litmusTestDetails?.litmusTestInterviews.length - 1]?.startTime}
                       </span>
                     </div> : 
-                    <div className="">
-                      <h2 className="text-2xl font-medium">You have received a wavier of <span className="text-[#FF791F]">{scholarshipDetails?.scholarshipPercentage}% with a clearance of {scholarshipDetails?.scholarshipClearance}%</span></h2>
-                      <p>You have shown exceptional effort, in-depth market analysis, innovative solutions to potential challenges, and clear, persuasive communication of the business ideas unique value proposition.</p>
+                    <div className="space-y-1">
+                      <h2 className="text-lg sm:text-2xl leading-none font-medium">You have received a wavier of <span className={`!bg-transparent border-none ${getBadgeColor(scholarshipDetails?.scholarshipName)}`}>{scholarshipDetails?.scholarshipPercentage}% with a clearance of {scholarshipDetails?.scholarshipClearance}%</span></h2>
+                      <p className="text-xs sm:text-base">You have shown exceptional effort, in-depth market analysis, innovative solutions to potential challenges, and clear, persuasive communication of the business ideas unique value proposition.</p>
                     </div>
                   }
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap w-full md:w-fit gap-3">
                   {litmusTestDetails?.status === 'pending' ?
                     <Button size={'xl'} className="w-full md:w-fit" onClick={handleExploreClick}>
                       Explore
@@ -244,7 +258,7 @@ export default function ApplicationDashboard({ student }: ApplicationDashboardPr
                 <div className="flex flex-col md:flex-row gap-2 justify-between items-center">
                   <div className="spcae-y-2">
                     <div className="flex sm:flex-row flex-col items-start sm:items-center gap-2 sm:gap-4">
-                      <h2 className="text-base sm:text-xl font-semibold">Fee Payment Setup</h2>
+                      <h2 className="text-lg sm:text-xl font-semibold">Fee Payment Setup</h2>
                     </div>
                     <p className="sm:w-3/4 text-xs sm:text-base">
                       Kindly setup your fee payment process to access your dashboard.
@@ -263,7 +277,7 @@ export default function ApplicationDashboard({ student }: ApplicationDashboardPr
             <div className="flex justify-between items-center">
               <div className="spcae-y-2">
                 <div className="flex sm:flex-row flex-col items-start sm:items-center gap-2 sm:gap-4">
-                  <h2 className="text-base sm:text-xl font-semibold">Personal Details</h2>
+                  <h2 className="text-lg sm:text-xl font-semibold">Personal Details</h2>
                 </div>
                 <p className="sm:w-3/4 text-xs sm:text-base">
                   Kindly upload all required personal ID documents.
@@ -289,7 +303,7 @@ export default function ApplicationDashboard({ student }: ApplicationDashboardPr
             title="Fee Payment"
             description="Set up your fee payment process, clear your timely fee instalments and record all your transactions."
             icon={<img src="/assets/images/fee-payment-icon.svg" className="w-16 h-16 sm:w-[120px] sm:h-[120px] text-white rounded-tl-xl sm:rounded-tl-2xl" />}
-            to="/dashboard/fee-payment-setup"
+            to="/dashboard/fee-payment"
             bgColor="bg-blue-600/10"
             border="border-blue-600"
             disable={!isLitmusDetailsAvailable}
@@ -313,12 +327,12 @@ export default function ApplicationDashboard({ student }: ApplicationDashboardPr
         </div>
       </div>
 
-        <Dialog open={interviewOpen} onOpenChange={setInterviewOpen}>
-        <DialogTitle></DialogTitle>
-          <DialogContent className="max-w-2xl">
-            <SchedulePresentation student={student} interviewer={interviewer} eventCategory='Litmus Test Review' redirectUrl={`${baseUrl}/dashboard/litmus-task`}/>
-          </DialogContent>
-        </Dialog>
+    <Dialog open={interviewOpen} onOpenChange={setInterviewOpen}>
+    <DialogTitle></DialogTitle>
+      <DialogContent className="max-w-2xl">
+        <SchedulePresentation student={student} interviewer={interviewer} eventCategory='Litmus Test Review' redirectUrl={`${baseUrl}/dashboard/litmus-task`}/>
+      </DialogContent>
+    </Dialog>
   </>
   );
 }

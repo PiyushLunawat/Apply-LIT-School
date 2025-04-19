@@ -17,7 +17,7 @@ export default function InterviewFeedbackTab({ student, onSelectTab }: Interview
   const applicationDetails = latestCohort?.applicationDetails;
   
   return (
-    <div className="p-8 sm:p-[52px] space-y-8 text-white">
+    <div className="px-4 py-8 sm:p-[52px] space-y-8 text-white">
       <div className="flex flex-row sm:flex-col gap-4 items-center sm:items-start">
         <ArrowLeft className="w-6 h-6 cursor-pointer" onClick={() => onSelectTab("")}/>
         <Badge className="text-sm w-fit border-[#FF791F] text-[#FF791F] bg-[#FF791F]/10">

@@ -1,6 +1,6 @@
 // Import necessary modules and components
 "use client";
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -79,6 +79,13 @@ const formSchema = z.object({
     appliedForFinancialAid: z.boolean(),
   }),
 })
+.refine(
+  (data) => data.studentData.isMobileVerified,
+  {
+    message: "Mobile number needs to be verified.",
+    path: ["studentData.contact"], // Attach error to contact field
+  }
+)
 .refine(
   (data) => {
     const url = data.studentData.linkedInUrl;
@@ -359,6 +366,7 @@ useEffect(() => {
               currentStatus: studentData?.qualification || '',
               courseOfInterest: studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]?.cohortId?.programDetail?._id || '',
               cohort: studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]?.cohortId._id || '',
+              isMobileVerified: student?.isMobileVerified || false,
               linkedInUrl: studentData?.linkedInUrl || '',
               instagramUrl: studentData?.instagramUrl || '',
               gender: studentData?.gender || 'male',
@@ -412,6 +420,7 @@ useEffect(() => {
             email: studentData?.email || "",
             courseOfInterest: existingData?.studentData?.courseOfInterest || studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]?.cohortId?.programDetail?._id || "",
             cohort: existingData?.studentData?.cohort || studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]?.cohortId._id || "",
+            isMobileVerified: student?.isMobileVerified || false,
             contact: existingData?.studentData?.contact || studentData?.mobileNumber || "",
             dob: existingData?.studentData?.dob.split("T")[0] || studentData.dateOfBirth.split("T")[0],
             currentStatus: existingData?.studentData?.currentStatus ||  studentData?.qualification || "",
@@ -567,34 +576,34 @@ useEffect(() => {
     }
   }, [watch('applicationData.durationFrom'), watch('applicationData.durationTo'), setValue]);
 
-const handleVerifyClick = async (contact: string) => {
-  if (typeof window === 'undefined') {
-    // Ensure code only runs on the client
-    return;
-  }
-  setOtpLoading(true)
-  try {
-    // Lazy load the RecaptchaVerifier when the button is clicked
-    const recaptchaVerifier = new RecaptchaVerifier(
-      auth,
-      "recaptcha-container", 
-      { size: "invisible",}   
-    );
-    const confirmationResult = await signInWithPhoneNumber(auth, contact, recaptchaVerifier);
-    setVerificationId(confirmationResult.verificationId);
-    setContactInfo(contact);
-    setIsDialogOpen(true);
-    console.log('Verification initiated:', confirmationResult);
-  } catch (error: any) {
-    console.error('Error verifying number:', error);
-    form.setError('studentData.contact', {
-      type: 'manual',
-      message: error.message || 'Failed to send OTP. Please try again.',
-    });
-  } finally {
-    setOtpLoading(false)
-  }
-};
+  const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
+
+  const handleVerifyClick = async (contact: string) => {
+    if (typeof window === 'undefined') return;
+    setOtpLoading(true);
+  
+    try {
+      if (!recaptchaVerifierRef.current) {
+        recaptchaVerifierRef.current = new RecaptchaVerifier(auth, "recaptcha-container", {
+          size: "invisible",
+        });
+      }
+  
+      const confirmationResult = await signInWithPhoneNumber(auth, contact, recaptchaVerifierRef.current);
+      setVerificationId(confirmationResult.verificationId);
+      setContactInfo(contact);
+      setIsDialogOpen(true);
+    } catch (error: any) {
+      console.error('Error verifying number:', error);
+      form.setError('studentData.contact', {
+        type: 'manual',
+        message: error.message || 'Failed to send OTP. Please try again.',
+      });
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+  
 
 // useEffect to ensure RecaptchaVerifier is initialized on the client side
 useEffect(() => {
@@ -752,24 +761,8 @@ useEffect(() => {
     }
   };
   
-  const validateBeforeSubmit = () => {    
-    if (!fetchedStudentData?.isMobileVerified) {
-      return "Mobile number needs to be verified";
-    }
-    return null;
-  };
-
   // Handle form submission
-  const saveData = async (data: FormData) => {
-    const validationError = validateBeforeSubmit();
-    if (validationError) {
-      form.setError("studentData.contact", {
-        type: "manual",
-        message: validationError,
-      });
-      return;
-    }
- 
+  const saveData = async (data: FormData) => { 
     const apiPayload = {
       cohortId: data.studentData?.cohort,
       studentData: {
@@ -1689,7 +1682,7 @@ useEffect(() => {
               render={({ field }) => (
                 <FormItem className="flex-1 space-y-1 relative">
                   <Label htmlFor="emergencyContact" className="text-sm font-normal pl-3">Contact No.</Label>
-                    <div className="absolute left-3 top-[39.5px]">+91</div>
+                    <div className="absolute left-3 top-[40.5px]">+91</div>
                   <FormControl>
                     <Input id="emergencyContact" type='tel' className='px-10' placeholder="00000 00000" {...field} maxLength={10}
                       value={field.value}
@@ -1764,7 +1757,7 @@ useEffect(() => {
               render={({ field }) => (
                 <FormItem className="flex-1 space-y-1 relative">
                   <Label htmlFor="fatherContact" className="text-sm font-normal pl-3">Father's Contact No.</Label>
-                  <div className="absolute left-3 top-[39.5px]">+91</div>
+                  <div className="absolute left-3 top-[40.5px]">+91</div>
                   <FormControl>
                     <Input id="fatherContact" type='tel' className='px-10' placeholder="00000 00000" {...field} maxLength={10}
                     value={field.value}
@@ -1846,7 +1839,7 @@ useEffect(() => {
               render={({ field }) => (
                 <FormItem className="flex-1 space-y-1 relative">
                   <Label htmlFor="motherContact" className="text-sm font-normal pl-3">Mother's Contact No.</Label>
-                  <div className="absolute left-3 top-[39.5px]">+91</div>
+                  <div className="absolute left-3 top-[40.5px]">+91</div>
                   <FormControl>
                     <Input id="motherContact" type='tel' className='px-10' placeholder="00000 00000" {...field} maxLength={10}
                     value={field.value}

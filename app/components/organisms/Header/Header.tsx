@@ -26,7 +26,7 @@ export const Header: React.FC<HeaderProps> = ({ classn }) => {
     
   return (
     <header className={`flex flex-col gap-2 sm:gap-4 py-2 ${classn}`}>
-      <div className="px-4 sm:px-6 flex justify-between items-center">
+      <div className="px-6 sm:px-6 flex justify-between items-center">
           <div className="flex items-center">
               <img onClick={() => navigate('../')} src="/assets/images/lit-logo.svg" alt="LIT Logo" className="w-6" />
           </div>

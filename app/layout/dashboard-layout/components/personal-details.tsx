@@ -23,7 +23,7 @@ export default function PersonalDetailsTab({ student, onSelectTab }: PersonalDet
   const financialInformation = studentDetails?.financialInformation;
   
   return (
-    <div className="p-8 sm:p-[52px] space-y-8 text-white">
+    <div className="px-4 py-8 sm:p-[52px] space-y-8 text-white">
       <div className="flex flex-row sm:flex-col gap-4 items-center sm:items-start">
         <ArrowLeft className="w-6 h-6 cursor-pointer" onClick={() => onSelectTab("")}/>
         <Badge className="text-sm w-fit border-[#FF791F] text-[#FF791F] bg-[#FF791F]/10">
@@ -263,12 +263,12 @@ export default function PersonalDetailsTab({ student, onSelectTab }: PersonalDet
               {financialInformation?.isFinanciallyIndependent ? (
                 <div className="flex gap-2 items-center">
                   <CircleCheckBig className="w-3 h-3" />
-                  Financially independent
+                  <span className="flex-1">Financially independent</span> 
                 </div>
               ) : (
                 <div className="flex gap-2 items-center">
                   <CircleMinus className="w-3 h-3" />
-                  Financially dependent on Parents
+                  <span className="flex-1">Financially dependent on Parents</span> 
                 </div>
               )}
             </div> {/* Financial Aid */}
@@ -276,12 +276,12 @@ export default function PersonalDetailsTab({ student, onSelectTab }: PersonalDet
               {financialInformation?.hasAppliedForFinancialAid ? (
                 <div className="flex gap-2 items-center">
                   <CircleCheckBig className="w-3 h-3" />
-                  Has tried applying for financial aid earlier
+                  <span className="flex-1">Has tried applying for financial aid earlier</span> 
                 </div>
               ) : (
                 <div className="flex gap-2 items-center">
                   <CircleMinus className="w-3 h-3" />
-                  Has not tried applying for any financial aid earlier
+                  <span className="flex-1">Has not tried applying for any financial aid earlier</span>
                 </div>
               )}
             </div>

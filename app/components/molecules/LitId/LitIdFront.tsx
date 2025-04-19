@@ -16,7 +16,7 @@ const LitIdFront: React.FC<LitIdFrontProps> = ({ data }) => {
         />
       </div>
 
-      <div className="px-4 pb-3 bg-white h-[250px] w-[400px] flex-col justify-between items-start inline-flex">
+      <div className="px-4 pb-3 bg-white h-[250px] border-x w-[400px] flex-col justify-between items-start inline-flex">
         <div className="h-[108px] flex-col justify-start items-start gap-3 flex">
           <div className="p-2.5 bg-white rounded-[100px] border border-[#d9d9d9] justify-center items-center gap-2.5 inline-flex" >
             <div className="text-zinc-950 text-base font-medium font-['Geist'] leading-snug">

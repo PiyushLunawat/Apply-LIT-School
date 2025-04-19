@@ -49,7 +49,7 @@ export default function LitmusTestTab({ student, onSelectTab }: LitmusTestTabPro
     //   </div>
     //   <Skeleton className="h-[400px] w-full rounded-xl" />
     // </div> :
-    <div className="p-8 sm:p-[52px] space-y-8 text-white">
+    <div className="px-4 py-8 sm:p-[52px] space-y-8 text-white">
       <div className="flex flex-row sm:flex-col gap-4 items-center sm:items-start">
         <ArrowLeft className="w-6 h-6 cursor-pointer" onClick={() => onSelectTab("")}/>
         <div className="w-full flex justify-between items-center">
@@ -63,7 +63,7 @@ export default function LitmusTestTab({ student, onSelectTab }: LitmusTestTabPro
       </div>
       <div className="space-y-3">
         {litmusTestDetails?.scholarshipDetail && 
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border rounded-xl p-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 border rounded-xl p-6">
             <div className="flex gap-2.5 items-center">
               <img src="/assets/icons/fee-wavier-icon.svg" className="w-12 h-8" />
               <div className="text-xl font-semibold">{litmusTestDetails?.scholarshipDetail?.scholarshipPercentage}% Waiver availed on the program fee</div>
@@ -75,7 +75,7 @@ export default function LitmusTestTab({ student, onSelectTab }: LitmusTestTabPro
         }
 
         {litmusTestDetails?.scholarshipDetail && 
-          <div className="bg-gradient-to-r from-[#DBA61D] to-[#98710A] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border rounded-xl p-6">
+          <div className="bg-gradient-to-r from-[#DBA61D] to-[#98710A] flex flex-col md:flex-row justify-between items-start md:items-center gap-2 border rounded-xl p-6">
             <div className="flex items-center">
               <img src="/assets/icons/score-icon.svg" className="w-12 h-8" />
               <div className="text-xl font-semibold">Weighted Total Score</div>
@@ -87,7 +87,7 @@ export default function LitmusTestTab({ student, onSelectTab }: LitmusTestTabPro
         }
 
         {litmusTestDetails?.performanceRating && 
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border rounded-xl p-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 border rounded-xl p-6">
             <div className="flex items-center">
               <img src="/assets/icons/rating-icon.svg" className="w-8 h-8" />
               <div className="text-xl font-semibold">Performance Rating</div>
@@ -103,7 +103,7 @@ export default function LitmusTestTab({ student, onSelectTab }: LitmusTestTabPro
 
       {/* Personal Details */}
       {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks &&
-        <div className='bg-[#2C2C2C99] border p-2 w-full rounded-xl'>
+        <div className='bg-[#2C2C2C99] border p-4 w-full rounded-xl'>
           <div className='pl-3'>Your Submissions:</div>
           <div className=''>
             {cohortDetails?.litmusTestDetail[0]?.litmusTasks.map((Task: any, index: any) => (
@@ -116,17 +116,17 @@ export default function LitmusTestTab({ student, onSelectTab }: LitmusTestTabPro
               {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks && 
                 <div className="flex flex-wrap gap-1.5">
                   {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks?.[index]?.texts?.map((textItem: string, id: number) => (
-                    <div key={`text-${id}`} className="w-full flex items-center gap-2 px-4 py-2 border rounded-xl bg-[#09090b]">
+                    <div key={`text-${id}`} className="w-full text-sm sm:text-base flex items-center gap-2 px-4 py-2 border rounded-xl bg-[#09090b]">
                       {textItem}
                     </div>
                   ))}
                   {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks?.[index]?.links?.map((linkItem: string, id: number) => (
                     <div key={`link-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 p-2 border rounded-xl bg-[#09090b]">
-                      <div className='flex gap-2 items-center'>
+                      <div className='flex gap-2 items-center flex-1 w-[50vw] truncate'>
                       <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
                         <Link2Icon className="w-5 h-5" />
                       </Badge>
-                      <span className=''>
+                      <span className='text-sm sm:text-base truncate'>
                         {linkItem}
                       </span>
                       </div>
@@ -137,11 +137,11 @@ export default function LitmusTestTab({ student, onSelectTab }: LitmusTestTabPro
                   ))}
                   {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks?.[index]?.images?.map((imageItem: string, id: number) => (
                     <div key={`image-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 p-2 border rounded-xl bg-[#09090b]">
-                      <div className='flex gap-2 items-center'>
+                      <div className='flex gap-2 items-center flex-1 w-[50vw] truncate'>
                         <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
                           <ImageIcon className="w-5 h-5" />
                         </Badge>
-                        <span className=''>
+                        <span className='text-sm sm:text-base truncate'>
                           {imageItem.split('/').pop()}
                         </span>
                       </div>
@@ -152,11 +152,11 @@ export default function LitmusTestTab({ student, onSelectTab }: LitmusTestTabPro
                   ))}
                   {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks?.[index]?.videos?.map((videoItem: string, id: number) => (
                     <div key={`video-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 p-2 border rounded-xl bg-[#09090b]">
-                      <div className='flex gap-2 items-center'>
+                      <div className='flex gap-2 items-center flex-1 w-[50vw] truncate'>
                       <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
                         <VideoIcon className="w-5 h-5" />
                       </Badge>
-                      <span className=''>
+                      <span className='text-sm sm:text-base truncate'>
                         {videoItem.split('/').pop()}
                       </span>
                       </div>
@@ -167,11 +167,11 @@ export default function LitmusTestTab({ student, onSelectTab }: LitmusTestTabPro
                   ))}
                   {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks?.[index]?.files?.map((fileItem: string, id: number) => (
                     <div key={`file-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 p-2 border rounded-xl bg-[#09090b]">
-                      <div className='flex gap-2 items-center'>
+                      <div className='flex gap-2 items-center flex-1 w-[50vw] truncate'>
                         <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
                           <FileTextIcon className="w-5 h-5" />
                         </Badge>
-                        <span className=''>
+                        <span className='text-sm sm:text-base truncate'>
                           {fileItem.split('/').pop()}
                         </span>
                       </div>
@@ -190,16 +190,18 @@ export default function LitmusTestTab({ student, onSelectTab }: LitmusTestTabPro
       {litmusTestDetails?.results &&
         <div className="space-y-4">
           <div className="text-base text-[#F8E000] pl-3">Scores</div>
-          <div className="w-full grid grid-cols sm:grid-cols-2 gap-3">
+          <div className="w-full grid grid-cols md:grid-cols-2 gap-3">
             {cohortDetails?.litmusTestDetail?.[0]?.litmusTasks[0]?.judgmentCriteria.map((criteria: any, index: number) => ( 
-              <div key={index} className="px-4 py-6 space-y-4 rounded-xl border ">
-                <div className="flex gap-2 items-center text-lg font-semibold ml-1 "><HandMetal className='rotate-90 w-4'/>{criteria?.name}</div>
-                {criteria?.description ?
-                  <div className="text-base font-normal">{criteria?.description}</div> :
-                  <div className="text-base text-muted-foreground font-normal">No Description Shared</div>
-                }
+              <div key={index} className="p-4 sm:p-6 flex flex-col gap-4 justify-between rounded-xl border ">
+                <div className="space-y-2">
+                  <div className="flex gap-2 items-center text-lg font-semibold ml-1 "><HandMetal className='rotate-90 w-4'/><span className="flex-1">{criteria?.name}</span></div>
+                  {criteria?.description ?
+                    <div className="text-sm font-normal">{criteria?.description}</div> :
+                    <div className="text-sm text-muted-foreground font-normal">No Description Shared</div>
+                  }
+                </div>
                 <div className="text-2xl font-semibold">{litmusTestDetails?.results?.[0]?.score?.[index]?.score}/{litmusTestDetails?.results?.[0]?.score?.[index]?.totalScore}</div>
-            </div>
+              </div>
             ))}
           </div>
         </div>
@@ -214,7 +216,7 @@ export default function LitmusTestTab({ student, onSelectTab }: LitmusTestTabPro
       }
       <Dialog open={taskOpen} onOpenChange={setTaskOpen} >
         <DialogTitle></DialogTitle>
-        <DialogContent className="border mx-auto max-h-[90vh] p-6 sm:p-8 overflow-y-auto max-w-[90vw] sm:max-w-5xl rounded-3xl">
+        <DialogContent className="border mx-auto max-h-[70vh] sm:max-h-[90vh] p-6 sm:p-8 overflow-y-auto max-w-[90vw] sm:max-w-5xl rounded-3xl">
         <div className="flex flex-col items-start text-white shadow-md w-full mx-auto space-y-6">
           <div className='text-xl sm:text-3xl font-medium'>LITMUS Challenge submission</div>
             {cohortDetails?.litmusTestDetail?.[0]?.litmusTasks.map((task: any, taskIndex: number) => (

@@ -232,7 +232,7 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
 
       <Dialog open={interviewOpen} onOpenChange={setInterviewOpen}>
       <DialogTitle></DialogTitle>
-        <DialogContent className="max-w-[90vw] sm:max-w-2xl">
+        <DialogContent className="max-h-[70vh] sm:max-h-[90vh] sm:max-w-2xl">
           <SchedulePresentation student={student} interviewer={interviewer} eventCategory='Litmus Test Review' redirectUrl={`${baseUrl}/dashboard/litmus-task`}/>
         </DialogContent>
       </Dialog>

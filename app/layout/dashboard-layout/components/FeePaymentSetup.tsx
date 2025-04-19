@@ -24,6 +24,7 @@ import {
   S3Client,
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
+import { Dialog, DialogContent, DialogTitle } from "~/components/ui/dialog";
 
 const s3Client = new S3Client({
   
@@ -52,6 +53,7 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
   const [paymentDetails, setPaymentDetails] = useState<any>(latestCohort?.paymentDetails);
 
   const [open, setOpen] = useState(false);
+  const [receipt, setReceipt] = useState("");
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -185,6 +187,11 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
       formData.bankDetails.accountNumber &&
       formData.bankDetails.IFSCCode &&
       formData.bankDetails.branchName);
+
+  const handleViewReciept = (url: string) => {
+    setReceipt(url);
+    setOpen(true);
+  }
 
   // STEP 1: Payment Setup
   const renderStep1 = () => {
@@ -418,22 +425,22 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                           </p>
                         )}
 
-                        {paymentDetails?.oneShotPayment.receiptUrls && paymentDetails?.oneShotPayment.receiptUrls.length > 0 && (
-                          <p>
-                            <strong>Receipt:</strong>{" "}
-                            {paymentDetails?.oneShotPayment.receiptUrls.map((url: string, urlIndex: number) => (
-                              <a
-                                key={urlIndex}
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-400 underline ml-2"
-                              >
-                                View Receipt {urlIndex + 1}
-                              </a>
-                            ))}
-                          </p>
-                        )}
+                        {['verifying', 'paid'].includes(paymentDetails?.oneShotPayment?.verificationStatus) &&
+                          <div className="relative group w-10 h-10">
+                            <img
+                              src={paymentDetails?.oneShotPayment?.receiptUrls?.[paymentDetails?.oneShotPayment?.receiptUrls.length - 1]?.url}
+                              alt="Fee_Receipt"
+                              className="w-10 h-10 rounded-lg object-contain bg-white py-1"
+                            />
+                            {/* Eye icon overlay to open modal */}
+                            <div
+                              className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                              onClick={() => handleViewReciept(paymentDetails?.oneShotPayment?.receiptUrls?.[paymentDetails?.oneShotPayment?.receiptUrls.length - 1]?.url)}
+                            >
+                              <Eye className="text-white w-4 h-4" />
+                            </div>
+                          </div>
+                        }
 
                         {/* Show File Upload + Fee Breakdown */}
                         <FileUploadField
@@ -545,7 +552,7 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                             {/* Eye icon overlay to open modal */}
                             <div
                               className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                              onClick={() => setOpen(true)}
+                              onClick={() => handleViewReciept(instalment?.receiptUrls?.[instalment?.receiptUrls.length - 1]?.url)}
                             >
                               <Eye className="text-white w-4 h-4" />
                             </div>
@@ -593,7 +600,7 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                               />
                               <div
                                 className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                                onClick={() => setOpen(true)}
+                                onClick={() => handleViewReciept(instalment?.receiptUrls?.[instalment.history.length-1 - index]?.url)}
                               >
                                 <Eye className="text-white w-7 h-7" />
                               </div>
@@ -643,6 +650,12 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
           )
         )}
       </div>}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTitle></DialogTitle>
+        <DialogContent className="max-w-2xl max-h-[70vh] sm:max-h-[90vh]">
+          <img src={receipt} className="w-full h-[400px]"/>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 
@@ -797,15 +810,12 @@ function FileUploadField({
     if(oneShot) {
       payload = {
         receiptUrl: reciptUrl.toString(),
-        studentPaymentId: studentPaymentId.toString(),
-        oneShotPayment:true
+        oneshotPaymentId: studentPaymentId.toString(),
       };
     } else if (semester && installment)  {
       payload = {
         receiptUrl: reciptUrl.toString(),
-        semesterNumber: semester.toString(),
-        installmentNumber: installment.toString(),
-        studentPaymentId: studentPaymentId.toString(),
+        installmnentDocId: studentPaymentId.toString(),
       };
     }
 

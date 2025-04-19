@@ -22,7 +22,7 @@ const navItems = [
   {
     title: "Fee Payment",
     icon: ReceiptIndianRupee,
-    to: "/dashboard/fee-payment-setup",
+    to: "/dashboard/fee-payment",
     badge: null,
     bgColor: "bg-blue-600/20",
     textColor: "text-[#1388FF]"

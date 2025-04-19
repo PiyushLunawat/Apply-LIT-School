@@ -69,10 +69,18 @@ export async function getPrograms() {
   return response.json();
 }
 
-export async function getCurrentStudent(id: string) {
+export async function getCurrentStudent(id: string, token?: string) {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
   const response = await fetch(`${baseUrl}/student/profile/${id}`, {
     method: "GET",
-    // headers: { "Content-Type": "application/json" },
+    headers,
   });
 
   if (!response.ok) {
@@ -81,10 +89,11 @@ export async function getCurrentStudent(id: string) {
       `${
         errorDetails
           ? `${errorDetails.message || JSON.stringify(errorDetails)}`
-          : ""
+          : "Failed to fetch student profile."
       }`
     );
   }
+
   return response.json();
 }
 
@@ -161,6 +170,28 @@ export async function GetInterviewers(data: {
 
 export async function submitLITMUSTest(formData: any) {
   const response = await fetch(`${baseUrl}/student/litmus-test`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(formData),
+  });
+
+  if (!response.ok) {
+    const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
+    throw new Error(
+      `${
+        errorDetails
+          ? `${errorDetails.message || JSON.stringify(errorDetails)}`
+          : ""
+      }`
+    );
+  }
+  return response.json();
+}
+
+export async function submitLitmusFeedback(formData: any) {
+  const response = await fetch(`${baseUrl}/student/feedack-data`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
