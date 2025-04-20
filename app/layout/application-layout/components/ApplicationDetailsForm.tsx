@@ -2007,7 +2007,7 @@ useEffect(() => {
     </Form>
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
     <DialogTitle></DialogTitle>
-      <DialogContent className='flex flex-col bg-[#1C1C1C] gap-6 sm:gap rounded-3xl max-w-[90vw] sm:max-w-2xl lg:max-w-4xl mx-auto !p-0'>
+      <DialogContent className='flex flex-col bg-[#1C1C1C] gap-6 sm:gap rounded-3xl max-w-2xl max-h-[70vh] sm:max-h-[90vh] overflow-y-auto max-w-[90vw] sm:max-w-2xl lg:max-w-4xl mx-auto !p-0'>
         <VerifyOTP
           verificationType="contact" 
           contactInfo={contactInfo}
@@ -2019,7 +2019,7 @@ useEffect(() => {
     </Dialog>
     <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
     <DialogTitle></DialogTitle>
-    <DialogContent className="max-w-[90vw] sm:max-w-[500px] mx-auto bg-[#1C1C1C] text-white rounded-lg px-8 py-16 text-center shadow-[0px_4px_32px_0px_rgba(0,0,0,0.75)]">
+    <DialogContent className="max-w-2xl max-h-[70vh] sm:max-h-[90vh] overflow-y-auto max-w-[90vw] sm:max-w-[500px] mx-auto bg-[#1C1C1C] text-white rounded-lg px-8 py-16 text-center shadow-[0px_4px_32px_0px_rgba(0,0,0,0.75)]">
       <img src='/assets/images/make-payment.svg' className="mx-auto mb-8" />
       <div>
         <div className="text-2xl font-semibold ">Admission Fee Payment</div>

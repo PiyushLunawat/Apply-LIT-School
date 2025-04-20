@@ -163,6 +163,22 @@ export default function ApplicationDashboard({ student }: ApplicationDashboardPr
   };
 
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://apply-lit-school.vercel.app";
+
+  const taskScores = litmusTestDetails?.results || [];
+  let totalScore = 0;
+  let totalPercentage = 0;
+  let maxScore = 0;
+
+  taskScores.forEach((task: any) => {
+    const taskScore = task?.score?.reduce((acc: any, criterion: any) => acc + criterion.score, 0);
+    const taskMaxScore = task?.score?.reduce((acc: any, criterion: any) => acc + Number(criterion.totalScore), 0);
+    const taskPercentage = taskMaxScore ? (taskScore / taskMaxScore) * 100 : 0;
+    totalScore += taskScore;
+    totalPercentage += taskPercentage;
+    maxScore += taskMaxScore;
+  });
+
+  const avgTaskScore = totalPercentage / taskScores.length;
   
   return (
   <>
@@ -212,7 +228,7 @@ export default function ApplicationDashboard({ student }: ApplicationDashboardPr
                   </div>
                   {litmusTestDetails?.status === 'pending' ? 
                     <p className="sm:max-w-[500px] text-xs sm:text-base">Compete for a scholarship opportunity through your performance in this challenge. Demonstrate your skills and creativity!</p> :
-                    litmusTestDetails?.status === 'submitted' ? 
+                    (litmusTestDetails?.status === 'submitted' || litmusTestDetails?.status === 'interview cancelled') ? 
                     <p className="sm:max-w-[500px] text-xs sm:text-base">Your submission has been made successfully. Kindly setup a presentation meeting to showcase your work.</p> :
                     litmusTestDetails?.status === 'interview scheduled' ? 
                     <div className="flex-1  flex-wrap">
@@ -222,8 +238,8 @@ export default function ApplicationDashboard({ student }: ApplicationDashboardPr
                         {litmusTestDetails?.litmusTestInterviews?.[litmusTestDetails?.litmusTestInterviews.length - 1]?.startTime}
                       </span>
                     </div> : 
-                    <div className="space-y-1">
-                      <h2 className="text-lg sm:text-2xl leading-none font-medium">You have received a wavier of <span className={`!bg-transparent border-none ${getBadgeColor(scholarshipDetails?.scholarshipName)}`}>{scholarshipDetails?.scholarshipPercentage}% with a clearance of {scholarshipDetails?.scholarshipClearance}%</span></h2>
+                    <div className="flex flex-col sm:max-w-[700px] flex-1 gap-y-1">
+                      <h2 className="text-lg sm:text-2xl leading-none font-medium">You have received a wavier of <span className={`!bg-transparent border-none ${getBadgeColor(scholarshipDetails?.scholarshipName)}`}>{scholarshipDetails?.scholarshipPercentage}% with a clearance of {(avgTaskScore).toFixed(2) || '--'}%</span></h2>
                       <p className="text-xs sm:text-base">You have shown exceptional effort, in-depth market analysis, innovative solutions to potential challenges, and clear, persuasive communication of the business ideas unique value proposition.</p>
                     </div>
                   }
@@ -233,7 +249,7 @@ export default function ApplicationDashboard({ student }: ApplicationDashboardPr
                     <Button size={'xl'} className="w-full md:w-fit" onClick={handleExploreClick}>
                       Explore
                     </Button> :
-                    litmusTestDetails?.status === 'submitted' ? 
+                    (litmusTestDetails?.status === 'submitted' || litmusTestDetails?.status === 'interview cancelled') ? 
                     <Button size={'xl'} variant={'outline'} className="w-full md:w-fit" onClick={handleExploreClick}>
                       View Submission
                     </Button> :
@@ -245,7 +261,7 @@ export default function ApplicationDashboard({ student }: ApplicationDashboardPr
                       View feedback
                     </Button> 
                   }
-                  {litmusTestDetails?.status === 'submitted' && 
+                  {(litmusTestDetails?.status === 'submitted' || litmusTestDetails?.status === 'interview cancelled') && 
                     <Button size={'xl'} className="w-full md:w-fit" onClick={handleScheduleInterview} disabled={loading}>
                       Book a Presentation Session
                     </Button>
@@ -329,7 +345,7 @@ export default function ApplicationDashboard({ student }: ApplicationDashboardPr
 
     <Dialog open={interviewOpen} onOpenChange={setInterviewOpen}>
     <DialogTitle></DialogTitle>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[70vh] sm:max-h-[90vh] overflow-y-auto">
         <SchedulePresentation student={student} interviewer={interviewer} eventCategory='Litmus Test Review' redirectUrl={`${baseUrl}/dashboard/litmus-task`}/>
       </DialogContent>
     </Dialog>

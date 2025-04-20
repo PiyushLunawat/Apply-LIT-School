@@ -127,22 +127,36 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
   // Simple controlled inputs
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    let newValue = value;
   
-    // If the name includes a dot, split it. E.g. "bankDetails.accountHolderName"
+    // Apply specific restrictions based on input name
+    if (name === "bankDetails.accountHolderName") {
+      newValue = newValue.replace(/[^a-zA-Z\s]/g, ''); // only letters and spaces
+      newValue = newValue.charAt(0).toUpperCase() + newValue.slice(1);
+    }
+  
+    if (name === "bankDetails.accountNumber") {
+      newValue = newValue.toUpperCase().replace(/[^A-Z0-9]/g, ''); // uppercase alphanumeric only
+    }
+  
+    if (name === "bankDetails.IFSCCode") {
+      newValue = newValue.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 11); // uppercase, no spaces, max 11 chars
+    }
+  
+    // Now set state properly
     if (name.includes(".")) {
       const [parent, child] = name.split(".");
       setFormData((prev: any) => ({
         ...prev,
         [parent]: {
           ...prev[parent],
-          [child]: value,
+          [child]: newValue,
         },
       }));
     } else {
-      // Otherwise set the top-level property
-      setFormData((prev) => ({ ...prev, [name]: value }));
+      setFormData((prev: any) => ({ ...prev, [name]: newValue }));
     }
-  };
+  };  
   
   const handleSelectChange = (name: string, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -192,6 +206,8 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
     setReceipt(url);
     setOpen(true);
   }
+
+  
 
   // STEP 1: Payment Setup
   const renderStep1 = () => {
@@ -652,7 +668,7 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
       </div>}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTitle></DialogTitle>
-        <DialogContent className="max-w-2xl max-h-[70vh] sm:max-h-[90vh]">
+        <DialogContent className="max-w-2xl max-h-[70vh] sm:max-h-[90vh] overflow-y-auto">
           <img src={receipt} className="w-full h-[400px]"/>
         </DialogContent>
       </Dialog>

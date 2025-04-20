@@ -281,7 +281,7 @@ export default function AdmissionFee({ student }: AdmissionFeeProps) {
             </Button>
           </div>
           <div
-            className={`w-fit flex justify-center items-center gap-2 px-6 py-2 sm:py-4 border ${
+            className={`w-fit flex justify-center items-center gap-2 px-4 py-3 border ${
               formatTestDuration(latestCohort?.cohortId?.litmusTestDetail[0]?.litmusTestDuration) === '00:00:00' ? 'border-[#FF503D]' : 'border-[#00A3FF]'
             } bg-[#FFFFFF33] rounded-full text-sm sm:text-2xl text-medium`}
           >

@@ -123,12 +123,12 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
       <div className="space-y-6">
 
         {applicationDetails?.applicationStatus === 'interview cancelled' && 
-          <Card className="max-w-6xl mx-auto px-8 py-6 flex justify-between items-center">
+          <Card className="max-w-6xl mx-auto px-8 py-6 flex flex-col sm:flex-row gap-3 justify-between items-center">
             <div className="flex gap-2 items-center">
               <ScreenShare className="w-4 h-4" />
-              Proceed to reschedule your interview call with our counsellor.
+              <span className="flex-1">Proceed to reschedule your interview call with our counsellor.</span>
             </div>
-            <Button size={'xl'} variant="default" disabled={interviewLoading} onClick={() => handleScheduleInterview()}
+            <Button size={'xl'} variant="default" className="w-full sm:w-fit" disabled={interviewLoading} onClick={() => handleScheduleInterview()}
             >
               Schedule an Interview
             </Button>
@@ -138,9 +138,9 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
         {applicationDetails?.applicationTestInterviews.slice().reverse().map((interview: any, index: any) => (
           <Card key={index} className={`max-w-6xl mx-auto md:flex md:flex-row rounded-2xl sm:rounded-3xl ${interview?.meetingStatus === 'cancelled' ? 'border-[#FF503D66] opacity-50 min-h-[550px]' : index === 0 ? 'min-h-[680px]' : 'opacity-50 min-h-[500px]'} `}>
             {/* Left Section */}
-            <div className={`md:w-1/2 px-8 py-12 flex flex-col justify-between ${interview?.meetingStatus === 'cancelled' ? 'bg-[#FF503D66] ' : 'bg-[#1B1B1C]'} !rounded-tl-2xl sm:!rounded-tl-3xl rounded-t-2xl sm:rounded-l-3xl sm:rounded-t-none rounded-l-none`}>
+            <div className={`md:w-1/2 px-8 py-12 flex flex-col gap-8 justify-between ${interview?.meetingStatus === 'cancelled' ? 'bg-[#FF503D66] ' : 'bg-[#1B1B1C]'} !rounded-tl-2xl sm:!rounded-tl-3xl rounded-t-2xl sm:rounded-l-3xl sm:rounded-t-none rounded-l-none`}>
               <div className="space-y-4 sm:space-y-6">
-                <div className="text-2xl sm:text-3xl font-semibold">
+                <div className="text-xl sm:text-2xl sm:text-3xl font-semibold">
                   LIT Admissions Interview - {cohortDetails?.programDetail?.name} Program
                 </div>
                 <div className="w-fit px-3 py-2 flex items-center gap-2 text-sm font-medium rounded-full border border-[#00A3FF]">
@@ -171,13 +171,13 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
                     {interview?.meetingStatus === 'cancelled' ?
                       <div className="flex gap-2 items-center text-2xl text-[#FF503D]">
                         <XOctagon className="w-6 h-6 "/>
-                        This meeting was cancelled by you
-                      </div> :
+                        <span className="flex-1">This meeting was cancelled by you</span>
+                        </div> :
                       (interview?.meetingStatus !== 'cancelled' && index !== 0) ?
                         <div className="flex gap-2 items-center text-2xl">
                           <TimerOff className="w-6 h-6 "/>
-                          This meeting is over
-                        </div> :
+                          <span className="flex-1">This meeting is over</span>
+                          </div> :
                         <p className="text-sm sm:text-base font-normal text-[#64748B]">
                           Your Counselling Session has been booked for
                         </p>
@@ -208,7 +208,7 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
                   <div className="text-base text-muted-foreground">{new Date(interview?.updatedAt).toLocaleDateString()}</div>
                   <div className="text-xl text-muted-foreground">Reason for Cancelling:</div>
                 </div>
-                <div className="text-xl">{interview?.cancelReason}</div>
+                <div className="text-base sm:text-xl">{interview?.cancelReason}</div>
               </div> : 
               index === 0 &&
                 <div>
@@ -222,7 +222,7 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
                     <p className="text-[#64748B] text-sm sm:text-base font-normal">
                       Time zone: <span className="text-[#00A3FF] uppercase">IST ({formattedTime})</span>
                     </p>
-                    <Button variant="link" className="underline " onClick={() => handleCancel(interview?.bookingId)}>
+                    <Button variant="link" className="underline " disabled={joinMeetingEnabled} onClick={() => handleCancel(interview?.bookingId)}>
                       Cancel Meeting
                     </Button>
                   </div>
@@ -234,7 +234,7 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
 
       <Dialog open={interviewOpen} onOpenChange={setInterviewOpen}>
       <DialogTitle></DialogTitle>
-        <DialogContent className="max-w-[90vw] sm:max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[70vh] sm:max-h-[90vh] overflow-y-auto">
           <SchedulePresentation student={student} interviewer={interviewer} eventCategory='Application Test Review' redirectUrl={`${baseUrl}/application/status`}/>
         </DialogContent>
       </Dialog>

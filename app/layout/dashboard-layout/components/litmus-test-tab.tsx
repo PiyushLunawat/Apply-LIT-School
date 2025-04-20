@@ -39,6 +39,22 @@ export default function LitmusTestTab({ student, onSelectTab }: LitmusTestTabPro
     return 'other';
   };
 
+  const taskScores = litmusTestDetails?.results || [];
+  let totalScore = 0;
+  let totalPercentage = 0;
+  let maxScore = 0;
+
+  taskScores.forEach((task: any) => {
+    const taskScore = task?.score?.reduce((acc: any, criterion: any) => acc + criterion.score, 0);
+    const taskMaxScore = task?.score?.reduce((acc: any, criterion: any) => acc + Number(criterion.totalScore), 0);
+    const taskPercentage = taskMaxScore ? (taskScore / taskMaxScore) * 100 : 0;
+    totalScore += taskScore;
+    totalPercentage += taskPercentage;
+    maxScore += taskMaxScore;
+  });
+
+  const avgTaskScore = totalPercentage / taskScores.length;
+
   return (
     // student ? 
     // <div className='w-full p-8 sm:p-[52px] space-y-8'>
@@ -81,7 +97,7 @@ export default function LitmusTestTab({ student, onSelectTab }: LitmusTestTabPro
               <div className="text-xl font-semibold">Weighted Total Score</div>
             </div>
             <div className="flex gap-2 text-2xl font-semibold">
-              62/100
+              {totalScore ? totalScore : '--'}/{maxScore}
             </div>
           </div>
         }
@@ -108,80 +124,80 @@ export default function LitmusTestTab({ student, onSelectTab }: LitmusTestTabPro
           <div className=''>
             {cohortDetails?.litmusTestDetail[0]?.litmusTasks.map((Task: any, index: any) => (
               <div key={index} className="space-y-3">
-              <div>
-                <Badge className="px-3 mt-4 text-sm border-[#3698FB] text-[#3698FB] bg-[#3698FB]/10 font-semibold -mb-2">
-                  Task 0{index+1}
-                </Badge>
-              </div>
-              {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks && 
-                <div className="flex flex-wrap gap-1.5">
-                  {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks?.[index]?.texts?.map((textItem: string, id: number) => (
-                    <div key={`text-${id}`} className="w-full text-sm sm:text-base flex items-center gap-2 px-4 py-2 border rounded-xl bg-[#09090b]">
-                      {textItem}
-                    </div>
-                  ))}
-                  {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks?.[index]?.links?.map((linkItem: string, id: number) => (
-                    <div key={`link-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 p-2 border rounded-xl bg-[#09090b]">
-                      <div className='flex gap-2 items-center flex-1 w-[50vw] truncate'>
-                      <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
-                        <Link2Icon className="w-5 h-5" />
-                      </Badge>
-                      <span className='text-sm sm:text-base truncate'>
-                        {linkItem}
-                      </span>
-                      </div>
-                      <Button size="icon" type="button" className="bg-[#1B1B1C] hover:bg-[#1a1a1d] rounded-xl" onClick={() => window.open(linkItem, "_blank")}>
-                        <ArrowUpRight className="w-5" />
-                      </Button>
-                    </div>
-                  ))}
-                  {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks?.[index]?.images?.map((imageItem: string, id: number) => (
-                    <div key={`image-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 p-2 border rounded-xl bg-[#09090b]">
-                      <div className='flex gap-2 items-center flex-1 w-[50vw] truncate'>
-                        <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
-                          <ImageIcon className="w-5 h-5" />
-                        </Badge>
-                        <span className='text-sm sm:text-base truncate'>
-                          {imageItem.split('/').pop()}
-                        </span>
-                      </div>
-                      <Button size="icon" type="button" className="bg-[#1B1B1C] hover:bg-[#1a1a1d] rounded-xl" onClick={() => window.open(imageItem, "_blank")}>
-                        <ArrowUpRight className="w-5" />
-                      </Button>
-                    </div>
-                  ))}
-                  {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks?.[index]?.videos?.map((videoItem: string, id: number) => (
-                    <div key={`video-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 p-2 border rounded-xl bg-[#09090b]">
-                      <div className='flex gap-2 items-center flex-1 w-[50vw] truncate'>
-                      <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
-                        <VideoIcon className="w-5 h-5" />
-                      </Badge>
-                      <span className='text-sm sm:text-base truncate'>
-                        {videoItem.split('/').pop()}
-                      </span>
-                      </div>
-                      <Button size="icon" type="button" className="bg-[#1B1B1C] hover:bg-[#1a1a1d] rounded-xl" onClick={() => window.open(videoItem, "_blank")}>
-                        <ArrowUpRight className="w-5" />
-                      </Button>
-                    </div>
-                  ))}
-                  {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks?.[index]?.files?.map((fileItem: string, id: number) => (
-                    <div key={`file-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 p-2 border rounded-xl bg-[#09090b]">
-                      <div className='flex gap-2 items-center flex-1 w-[50vw] truncate'>
-                        <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
-                          <FileTextIcon className="w-5 h-5" />
-                        </Badge>
-                        <span className='text-sm sm:text-base truncate'>
-                          {fileItem.split('/').pop()}
-                        </span>
-                      </div>
-                      <Button size="icon" type="button" className="bg-[#1B1B1C] hover:bg-[#1a1a1d] rounded-xl" onClick={() => window.open(fileItem, "_blank")}>
-                        <ArrowUpRight className="w-5" />
-                      </Button>
-                    </div>
-                  ))}
+                <div>
+                  <Badge className="px-3 mt-4 text-sm border-[#3698FB] text-[#3698FB] bg-[#3698FB]/10 font-semibold -mb-2">
+                    Task 0{index+1}
+                  </Badge>
                 </div>
-              }
+                {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks && 
+                  <div className="flex flex-wrap gap-1.5">
+                    {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks?.[index]?.texts?.map((textItem: string, id: number) => (
+                      <div key={`text-${id}`} className="w-full text-sm sm:text-base flex items-center gap-2 px-4 py-2 border rounded-xl bg-[#09090b]">
+                        {textItem}
+                      </div>
+                    ))}
+                    {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks?.[index]?.links?.map((linkItem: string, id: number) => (
+                      <div key={`link-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 p-2 border rounded-xl bg-[#09090b]">
+                        <div className='flex gap-2 items-center flex-1 w-[50vw] truncate'>
+                        <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
+                          <Link2Icon className="w-5 h-5" />
+                        </Badge>
+                        <span className='text-sm sm:text-base truncate'>
+                          {linkItem}
+                        </span>
+                        </div>
+                        <Button size="icon" type="button" className="bg-[#1B1B1C] hover:bg-[#1a1a1d] rounded-xl" onClick={() => window.open(linkItem, "_blank")}>
+                          <ArrowUpRight className="w-5" />
+                        </Button>
+                      </div>
+                    ))}
+                    {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks?.[index]?.images?.map((imageItem: string, id: number) => (
+                      <div key={`image-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 p-2 border rounded-xl bg-[#09090b]">
+                        <div className='flex gap-2 items-center flex-1 w-[50vw] truncate'>
+                          <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
+                            <ImageIcon className="w-5 h-5" />
+                          </Badge>
+                          <span className='text-sm sm:text-base truncate'>
+                            {imageItem.split('/').pop()}
+                          </span>
+                        </div>
+                        <Button size="icon" type="button" className="bg-[#1B1B1C] hover:bg-[#1a1a1d] rounded-xl" onClick={() => window.open(imageItem, "_blank")}>
+                          <ArrowUpRight className="w-5" />
+                        </Button>
+                      </div>
+                    ))}
+                    {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks?.[index]?.videos?.map((videoItem: string, id: number) => (
+                      <div key={`video-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 p-2 border rounded-xl bg-[#09090b]">
+                        <div className='flex gap-2 items-center flex-1 w-[50vw] truncate'>
+                        <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
+                          <VideoIcon className="w-5 h-5" />
+                        </Badge>
+                        <span className='text-sm sm:text-base truncate'>
+                          {videoItem.split('/').pop()}
+                        </span>
+                        </div>
+                        <Button size="icon" type="button" className="bg-[#1B1B1C] hover:bg-[#1a1a1d] rounded-xl" onClick={() => window.open(videoItem, "_blank")}>
+                          <ArrowUpRight className="w-5" />
+                        </Button>
+                      </div>
+                    ))}
+                    {litmusTestDetails?.litmusTasks?.[litmusTestDetails?.litmusTasks.length - 1]?.tasks?.[index]?.files?.map((fileItem: string, id: number) => (
+                      <div key={`file-${id}`} className="min-w-1/2 flex flex-1 justify-between items-center gap-2 p-2 border rounded-xl bg-[#09090b]">
+                        <div className='flex gap-2 items-center flex-1 w-[50vw] truncate'>
+                          <Badge size="icon" className="text-white rounded-lg bg-[#1B1B1C]">
+                            <FileTextIcon className="w-5 h-5" />
+                          </Badge>
+                          <span className='text-sm sm:text-base truncate'>
+                            {fileItem.split('/').pop()}
+                          </span>
+                        </div>
+                        <Button size="icon" type="button" className="bg-[#1B1B1C] hover:bg-[#1a1a1d] rounded-xl" onClick={() => window.open(fileItem, "_blank")}>
+                          <ArrowUpRight className="w-5" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                }
               </div>
             ))}
           </div>

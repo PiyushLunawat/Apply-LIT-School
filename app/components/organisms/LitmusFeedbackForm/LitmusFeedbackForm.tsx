@@ -73,7 +73,7 @@ export function LitmusFeedbackForm({ student, setClose }: LitmusFeedbackFormProp
 
   return (
     <div className="flex flex-col items-start text-white shadow-md w-full mx-auto space-y-8">
-      <div className="text-4xl font-normal space-y-2">
+      <div className="text-2xl sm:text-4xl font-normal space-y-2">
         <h2 className="flex items-center gap-2">👋 Hey {student?.firstName},</h2>
         <p>Let us know about your onboarding experience</p>
       </div>

@@ -120,14 +120,14 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
       <div className="space-y-6">
 
         {litmusTestDetails?.status === 'interview cancelled' && 
-          <Card className="max-w-6xl mx-auto px-8 py-6 flex justify-between items-center">
+          <Card className="max-w-6xl mx-auto px-8 py-6 flex flex-col sm:flex-row gap-3 justify-between items-center">
             <div className="flex gap-2 items-center">
               <ScreenShare className="w-4 h-4" />
-              Proceed to reschedule your interview call with our counsellor.
+              <span className="flex-1">Proceed to reschedule your presentation session with our counsellor.</span>
             </div>
-            <Button size={'xl'} variant="default" onClick={() => handleScheduleInterview()}
+            <Button size={'xl'} variant="default" className="w-full sm:w-fit" onClick={() => handleScheduleInterview()}
             >
-              Schedule an Presentation
+              Book a Presentation session
             </Button>
           </Card>
         }
@@ -135,9 +135,9 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
         {litmusTestDetails?.litmusTestInterviews.slice().reverse().map((interview: any, index: any) => (
           <Card key={index} className={`max-w-6xl mx-auto md:flex md:flex-row rounded-2xl sm:rounded-3xl ${interview?.meetingStatus === 'cancelled' ? 'border-[#FF503D66] opacity-50 min-h-[680px]' : index === 0 ? 'min-h-[680px]' : 'opacity-50 min-h-[500px]'} `}>
             {/* Left Section */}
-            <div className={`md:w-1/2 px-8 py-12 flex flex-col justify-between ${interview?.meetingStatus === 'cancelled' ? 'bg-[#FF503D66] ' : 'bg-[#1B1B1C]'} !rounded-tl-2xl sm:!rounded-tl-3xl rounded-t-2xl sm:rounded-l-3xl sm:rounded-t-none rounded-l-none`}>
+            <div className={`md:w-1/2 px-8 py-12 flex flex-col gap-8 justify-between ${interview?.meetingStatus === 'cancelled' ? 'bg-[#FF503D66] ' : 'bg-[#1B1B1C]'} !rounded-tl-2xl sm:!rounded-tl-3xl rounded-t-2xl sm:rounded-l-3xl sm:rounded-t-none rounded-l-none`}>
               <div className="space-y-4 sm:space-y-6">
-                <div className="text-2xl sm:text-3xl font-semibold">
+                <div className="text-xl sm:text-2xl sm:text-3xl font-semibold">
                   LIT Challenge Presentaion - {cohortDetails?.programDetail?.name} Program
                 </div>
                 <div className="w-fit px-3 py-2 flex items-center gap-2 text-sm font-medium rounded-full border border-[#00A3FF]">
@@ -166,14 +166,14 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
               {(interview?.meetingStatus !== 'cancelled' && index !== 0) &&
                 <div className="flex gap-2 items-center text-2xl">
                   <TimerOff className="w-6 h-6 "/>
-                  This meeting is over
+                  <span className="flex-1">This meeting is over</span>
                 </div>
               }
               <div className="space-y-10 sm:space-y-12">
                 {interview?.meetingStatus === 'cancelled' &&
                   <div className="flex gap-2 items-center text-2xl text-[#FF503D]">
                     <XOctagon className="w-6 h-6 "/>
-                    This meeting was cancelled by you
+                    <span className="flex-1">This meeting was cancelled by you</span>
                   </div>
                 }
                 <div className="space-y-2 sm:space-y-4">
@@ -206,7 +206,7 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
                   <div className="text-base text-muted-foreground">{new Date(interview?.updatedAt).toLocaleDateString()}</div>
                   <div className="text-xl text-muted-foreground">Reason for Cancelling:</div>
                 </div>
-                <div className="text-xl">{interview?.feedback}</div>
+                <div className="text-base sm:text-xl">{interview?.cancelReason}</div>
               </div> : 
               index === 0 &&
                 <div>
@@ -232,7 +232,7 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
 
       <Dialog open={interviewOpen} onOpenChange={setInterviewOpen}>
       <DialogTitle></DialogTitle>
-        <DialogContent className="max-h-[70vh] sm:max-h-[90vh] sm:max-w-2xl">
+        <DialogContent className="max-h-[70vh] sm:max-h-[90vh] sm:max-w-2xl overflow-y-auto">
           <SchedulePresentation student={student} interviewer={interviewer} eventCategory='Litmus Test Review' redirectUrl={`${baseUrl}/dashboard/litmus-task`}/>
         </DialogContent>
       </Dialog>

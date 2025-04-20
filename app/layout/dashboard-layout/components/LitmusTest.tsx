@@ -254,6 +254,22 @@ export default function LitmusTest({ student }: LitmusTestProps) {
     }
   };
 
+  const taskScores = litmusTestDetails?.results || [];
+  let totalScore = 0;
+  let totalPercentage = 0;
+  let maxScore = 0;
+
+  taskScores.forEach((task: any) => {
+    const taskScore = task?.score?.reduce((acc: any, criterion: any) => acc + criterion.score, 0);
+    const taskMaxScore = task?.score?.reduce((acc: any, criterion: any) => acc + Number(criterion.totalScore), 0);
+    const taskPercentage = taskMaxScore ? (taskScore / taskMaxScore) * 100 : 0;
+    totalScore += taskScore;
+    totalPercentage += taskPercentage;
+    maxScore += taskMaxScore;
+  });
+
+  const avgTaskScore = totalPercentage / taskScores.length;
+
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://apply-lit-school.vercel.app";
 
   const getFileType = (fileName: string) => {
@@ -299,15 +315,15 @@ export default function LitmusTest({ student }: LitmusTestProps) {
                   <Badge className="text-sm my-4 border-[#3698FB] text-[#3698FB] bg-[#3698FB]/10">
                     Task 0{taskIndex+1}
                   </Badge>
-                  <h2 className="text-3xl font-semibold mb-2">
+                  <h2 className="text-xl sm:text-3xl font-semibold mb-2">
                     {task.title}
                   </h2>
-                  <p className="text-xl mb-4">
+                  <p className="text-lg sm:text-xl mb-4">
                     {task.description}
                   </p>
 
                   <div className='w-full space-y-2'>
-                    <div className="text-lg font-normal text-muted-foreground pl-3">
+                    <div className="text-base font-normal text-muted-foreground pl-3">
                       Resources
                     </div>
                     {task?.resources?.resourceFiles.map((file: any, index: number) => {
@@ -417,7 +433,7 @@ export default function LitmusTest({ student }: LitmusTestProps) {
 
                 {cohortDetails ? 
                   <div className="">
-                    <div className="text-xl font-medium pl-3">
+                    <div className="text-base sm:text-xl font-medium pl-3">
                       Your Submission
                     </div>
                     <div className='space-y-3'>
@@ -573,7 +589,7 @@ export default function LitmusTest({ student }: LitmusTestProps) {
     {status === 'completed' ? 
       <div className='space-y-6'>
         <div className="flex flex-col lg:flex-row">
-          <div className={`!bg-transparent flex flex-col items-center w-full lg:w-[264px] min-h-[300px] p-4 rounded-2xl border ${getBadgeColor(litmusTestDetails?.scholarshipDetail?.scholarshipName)} relative`}>
+          <div className={`!bg-transparent flex flex-col items-center w-full lg:w-[264px] min-h-[300px] p-8 rounded-2xl border ${getBadgeColor(litmusTestDetails?.scholarshipDetail?.scholarshipName)} relative`}>
             <img src="/assets/images/bg-lit-icon.svg" className="w-[130px] h-[143px] absolute top-[53px]" />
 
             <div className={`!bg-transparent text-center italic ${getBadgeColor(litmusTestDetails?.scholarshipDetail?.scholarshipName)} text-3xl font-black absolute top-1/2 -translate-y-1/2`}>
@@ -595,7 +611,7 @@ export default function LitmusTest({ student }: LitmusTestProps) {
               <div className='space-y-3 sm:space-y-6'>
                 <p className="text-lg sm:text-2xl text-white font-medium">You are eligible for a {litmusTestDetails?.scholarshipDetail?.scholarshipPercentage}% waiver on your fee</p>
                 <p className="text-sm sm:text-base text-white">
-                  With a challenge clearance of 76%, you may avail a <span className={`!bg-transparent ${getBadgeColor(litmusTestDetails?.scholarshipDetail?.scholarshipName)}`}>discount of INR 15,400/-</span> on your fee.
+                  With a challenge clearance of <span className='font-semibold'>{(avgTaskScore).toFixed(2) || '--'}%</span>, you may avail a <span className={`!bg-transparent ${getBadgeColor(litmusTestDetails?.scholarshipDetail?.scholarshipName)}`}>discount of INR 15,400/-</span> on your fee.
                   Access your payment portal to find out and keep track of your fee payments.
                 </p>
               </div>
@@ -622,7 +638,7 @@ export default function LitmusTest({ student }: LitmusTestProps) {
                     <div className="text-xl font-semibold">Weighted Total Score</div>
                   </div>
                   <div className="flex gap-2 text-2xl font-semibold">
-                    62/100
+                    {totalScore ? totalScore : '--'}/{maxScore}
                   </div>
                 </div>
               }
@@ -669,14 +685,14 @@ export default function LitmusTest({ student }: LitmusTestProps) {
       </div> :
       <div className="flex flex-col items-start pt-2 space-y-8">
         <div className='flex justify-between px-3 w-full'>
-          <div className="flex gap-4 items-center text-3xl font-semibold text-white">
-            <img src="/assets/images/scholarship-slabs.svg" alt="scholarship-slabs" className="h-9 "/>
+          <div className="flex gap-4 items-center text-xl sm:text-3xl font-semibold text-white">
+            <img src="/assets/images/scholarship-slabs.svg" alt="scholarship-slabs" className="h-8 sm:h-9"/>
             Scholarship Slabs
           </div>
         </div>
         <div className="w-full grid grid-cols sm:grid-cols-2 gap-3">
           {cohortDetails?.litmusTestDetail?.[0]?.scholarshipSlabs.map((slab: any, index: number) => ( 
-            <ScholarshipSlabCard ind={index} title={slab?.name} waiverAmount={slab?.percentage+"%"} clearanceRange={slab?.clearance+"%"} desc={slab?.description} color={getColor(index)} bg={getBgColor(index)} />
+            <ScholarshipSlabCard index={index} title={slab?.name} waiverAmount={slab?.percentage+"%"} clearanceRange={slab?.clearance+"%"} desc={slab?.description} color={getColor(index)} bg={getBgColor(index)} />
           ))}
         </div>
       </div>
@@ -684,7 +700,7 @@ export default function LitmusTest({ student }: LitmusTestProps) {
 
     <Dialog open={interviewOpen} onOpenChange={setInterviewOpen}>
       <DialogTitle></DialogTitle>
-      <DialogContent className="max-w-2xl max-h-[70vh] sm:max-h-[90vh]">
+      <DialogContent className="max-w-2xl max-h-[70vh] sm:max-h-[90vh] overflow-y-auto">
         <SchedulePresentation student={student} interviewer={interviewer} eventCategory='Litmus Test Review' redirectUrl={`${baseUrl}/dashboard/litmus-task`}/>
       </DialogContent>
     </Dialog>
@@ -936,12 +952,14 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
             const isLink = typeof file === "string";
             return (
               <div key={index} className="flex items-center bg-[#007AFF] h-[52px] text-white p-1.5 rounded-xl w-full">
-                <Badge size="icon" className="bg-[#3698FB] rounded-xl mr-2">
-                  <FileTextIcon className="w-5" />
-                </Badge>
-                <span className="flex-1 text-xs sm:text-base truncate mr-4">
-                  {isLink ? (file as string).split('/').pop() : (file as File).name}
-                </span>
+                <div className="flex items-center gap-2 flex-1 w-[50vw] truncate">
+                  <Badge size="icon" className="bg-[#3698FB] rounded-xl mr-2">
+                    <FileTextIcon className="w-5" />
+                  </Badge>
+                  <span className="flex-1 text-xs sm:text-base truncate mr-4">
+                    {isLink ? (file as string).split('/').pop() : (file as File).name}
+                  </span>
+                </div>
                 <div className="flex items-center space-x-2">
                   {isLink && (
                     <Button size="icon" type="button" variant="ghost" className="bg-[#3698FB] rounded-xl">
@@ -960,7 +978,7 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
 
           {uploading && (
             <div className="flex justify-between items-center bg-[#007AFF] h-[52px] text-white p-1.5 rounded-xl w-full">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-1 w-[50vw] truncate">
                 <Badge size="icon" className="bg-[#3698FB] rounded-xl mr-2">
                   <FileTextIcon className="w-5" />
                 </Badge>
@@ -971,7 +989,7 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
                   <LoaderCircle className="h-4 w-4 animate-spin" />
                 ) : (
                   <>
-                    <Progress className="h-2 w-24" value={uploadProgress} />
+                    <Progress className="h-2 w-20 sm:w-24" value={uploadProgress} />
                     <span>{uploadProgress}%</span>
                   </>
                 )}

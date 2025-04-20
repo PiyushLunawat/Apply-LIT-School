@@ -100,7 +100,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ }) => {
 
     <Dialog open={showOtp} onOpenChange={setShowOtp}>
     <DialogTitle></DialogTitle>
-      <DialogContent className='flex flex-col gap-6 sm:gap-8 bg-[#1C1C1C] rounded-3xl max-w-[90vw] sm:max-w-2xl lg:max-w-4xl mx-auto !p-0'>
+      <DialogContent className='flex flex-col gap-6 sm:gap-8 bg-[#1C1C1C] rounded-3xl max-w-[90vw] sm:max-w-2xl lg:max-w-4xl overflow-y-auto mx-auto !p-0'>
       <VerifyOTP
           verificationType="email"
           contactInfo={email}

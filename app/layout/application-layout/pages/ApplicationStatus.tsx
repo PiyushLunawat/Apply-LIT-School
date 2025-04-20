@@ -42,6 +42,22 @@ export const ApplicationStatus: React.FC = () => {
             const latest = res?.appliedCohorts[res.appliedCohorts.length - 1];
             setLatestCohort(latest);
 
+            let meetingEnd: Date | null = null;
+            const lastInterview =
+              latest?.applicationDetails?.applicationTestInterviews?.[
+                latest?.applicationDetails?.applicationTestInterviews.length - 1
+              ];
+            if (lastInterview?.meetingDate && lastInterview?.endTime) {
+              // Construct meetingEnd using the meetingDate's string and the endTime.
+              meetingEnd = new Date(
+                new Date(lastInterview.meetingDate).toDateString() + ' ' + lastInterview.endTime
+              );
+              // console.log("meetingEnd", new Date() > meetingEnd);
+              if (new Date() > meetingEnd) {
+                setShowReviewBlock(true);
+              }
+            }
+
             const isVerified =
               latest?.tokenFeeDetails?.verificationStatus;
               if(isVerified === 'pending') {
