@@ -47,10 +47,12 @@ export default function LitmusTask() {
             <Badge className="text-sm border-[#3698FB] text-[#3698FB] bg-[#3698FB]/10">
               LITMUS Task
             </Badge>
-            <Badge className="flex gap-2 items-center bg-black">
-              <Clock className="text-[#00A3FF] w-3 h-3"/>
-              <div className="text-base font-normal">{formatTestDuration(cohortDetails?.litmusTestDetail[0]?.litmusTestDuration)}</div>
-            </Badge>
+            {latestCohort?.litmusTestDetails?.status !== 'completed' &&
+             <Badge className="flex gap-2 items-center bg-black">
+                <Clock className="text-[#00A3FF] w-3 h-3"/>
+                <div className="text-base font-normal">{formatTestDuration(cohortDetails?.litmusTestDetail[0]?.litmusTestDuration)}</div>
+              </Badge>
+            }
           </div>
           <div className="flex lg:flex-row flex-col gap-2 justify-between items-start lg:items-end">
           <div>

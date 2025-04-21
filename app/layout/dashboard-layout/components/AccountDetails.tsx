@@ -30,9 +30,12 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const [bloodGroupInput, setBloodGroupInput] = useState<string>("");
+  const [bloodGroupError, setBloodGroupError] = useState<string>("");
   const [linkedInInput, setLinkedInInput] = useState<string>("");
+  const [linkedInError, setLinkedInError] = useState<string>("");
   const [editLinkedInInput, setEditLinkedInInput] = useState<boolean>(student?.linkedInUrl);
   const [instagramInput, setInstagramInput] = useState<string>("");
+  const [instagramError, setInstagramError] = useState<string>("");
   const [editInstagramInput, setEditInstagramInput] = useState<boolean>(student?.instagramUrl);
   const [addSocials, setAddSocials] = useState<boolean>(false);
 
@@ -93,7 +96,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
     console.log("bloodGroupInput",bloodGroupInput)
     
     if (!validBloodGroups.includes(bloodGroupInput)) {
-      alert(`${bloodGroupInput} Please enter a valid blood group (e.g., A+, O-, AB+).`);
+      setBloodGroupError("Please enter a valid blood group.")
       return;
     }
   
@@ -110,17 +113,28 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
         // Update student data with the new blood group and retain the value in the input field
         setDetails(response.data);
         setStudentData({ ...studentData, bloodGroup: response.data.bloodGroup });
-        setBloodGroupInput(response.data.bloodGroup); // Update the input field with the new blood group value
+        setBloodGroupInput(response.data.bloodGroup);
+        setBloodGroupError("")
       }
     } catch (error) {
       console.error("Error updating blood group:", error);
-      // alert("An error occurred while updating the blood group.");
+      setBloodGroupError("An error occurred while updating the blood group.");
     } finally {
       setLoading(false);
     }
   };  
 
   const handleLinkedInSave = async () => {
+    const isValidLinkedIn = (url: string) => {
+      if (!url) return true; 
+      return typeof url === "string" && /^https:\/\/(www\.)?linkedin\.com\/.+$/.test(url);
+    };
+  
+    if (!isValidLinkedIn(linkedInInput)) {
+      setLinkedInError("Invalid LinkedIn URL");
+      return;
+    }
+  
     setLoading(true);
     try {
       const formData = new FormData();
@@ -130,12 +144,14 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
       if (response.status) {
         setStudentData({ ...studentData, linkedInUrl: linkedInInput });
         setEditLinkedInInput(false)
+        setLinkedInError("")
       }
     } catch (error) {
       console.error("Error updating LinkedIn URL:", error);
-      // alert("Failed to update LinkedIn URL.");
+      setLinkedInError("Failed to update LinkedIn URL.");
     } finally {
       setLoading(false);
+
     }
   };
   
@@ -149,10 +165,11 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
       if (response.status) {
         setStudentData({ ...studentData, instagramUrl: instagramInput });
         setEditInstagramInput(false)
+        setInstagramError("")
       }
     } catch (error) {
       console.error("Error updating Instagram URL:", error);
-      // alert("Failed to update Instagram URL.");
+      setInstagramError("Failed to update Instagram URL.");
     } finally {
       setLoading(false);
     }
@@ -250,12 +267,12 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
           </div>
 
           {/* Gender & Blood Group */}
-          <div className="flex lg:flex-row flex-col lg:items-center">
-            <div className="flex-1 flex flex-col gap-2 border-b border-gray-700 py-4">
+          <div className="flex lg:flex-row flex-col lg:border-b border-gray-700 lg:items-center">
+            <div className="flex-1 flex flex-col gap-2 lg:border-none border-b border-gray-700 py-4">
               <div className="text-xs sm:text-sm font-light">Gender</div>
               <div className="text-base sm:text-xl text-white">{student?.gender || "--"}</div>
             </div>
-            <div className="flex-1 flex items-center border-b border-gray-700 py-4">
+            <div className="flex-1 flex items-center lg:border-none border-b border-gray-700 py-4">
               {student?.bloodGroup ? (
                 <div className="flex-1 flex flex-col gap-2">
                   <div className="text-xs sm:text-sm font-light">Blood Group</div>
@@ -267,10 +284,20 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                   <input
                     type="text"
                     value={bloodGroupInput}
-                    onChange={(e) => setBloodGroupInput(e.target.value)}
+                    onChange={(e) => {
+                      let value = e.target.value.toUpperCase();
+                      value = value.replace(/[^A-Z+-]/g, "");
+                      if (value.length > 3) {
+                        value = value.slice(0, 3);
+                      }
+                      setBloodGroupInput(value);
+                    }}                  
                     placeholder="O+"
                     className="bg-transparent text-base sm:text-xl focus-visible:none border-none focus-visible:outline-none focus-border-none w-full"
                   />
+                  {bloodGroupError && 
+                   <div className="text-sm text-[#FF503D]">{bloodGroupError}</div>
+                  }
                 </div>
               )}
               {!student?.bloodGroup &&
@@ -282,10 +309,10 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
           </div>
 
           {/* LinkedIn ID + Instagram ID */}
-          <div className="flex lg:flex-row flex-col justify-between lg:items-center">
+          <div className="flex lg:flex-row flex-col justify-between lg:border-b border-gray-700 lg:items-center">
             {/* LinkedIn URL */}
             {(addSocials || student?.linkedInUrl) &&
-              <div className="flex flex-1 justify-between items-center border-b border-gray-700 py-4">
+              <div className="flex flex-1 justify-between items-center lg:border-none border-b border-gray-700 py-4">
                 <div className="flex flex-1 flex-col space-y-2">
                   <div className="text-xs sm:text-sm font-light">LinkedIn ID</div>
                     <input
@@ -295,6 +322,9 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                       placeholder="Enter LinkedIn URL"
                       className="bg-transparent text-white text-base sm:text-xl focus-visible:none border-none focus-visible:outline-none focus-border-none w-full"
                     />
+                    {linkedInError && 
+                      <div className="text-sm text-[#FF503D]">{linkedInError}</div>
+                    }
                 </div>
                 <Button
                   className={`${(editLinkedInInput) ? "" : "bg-transparent hover:bg-[#09090b]"} rounded-lg lg:mr-4`}
@@ -318,7 +348,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
 
             {/* Instagram URL */}
             {(addSocials || student?.instagramUrl) &&
-              <div className="flex flex-1 justify-between items-center border-b border-gray-700 py-4">
+              <div className="flex flex-1 justify-between items-center lg:border-none border-b border-gray-700 py-4">
                 <div className="flex flex-1 flex-col space-y-2">
                   <div className="text-xs sm:text-sm font-light">Instagram ID</div>
                     <input
@@ -328,6 +358,9 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                       placeholder="Enter Instagram URL"
                       className="bg-transparent text-base sm:text-xl focus-visible:none border-none focus-visible:outline-none focus-border-none w-full"
                     />
+                    {instagramError && 
+                      <div className="text-sm text-[#FF503D]">{instagramError}</div>
+                    }
                 </div>
                 <Button
                   className={`${(editInstagramInput) ? "" : "bg-transparent hover:bg-[#09090b]"} rounded-lg`}

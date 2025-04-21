@@ -55,6 +55,11 @@ export default function LitmusTestTab({ student, onSelectTab }: LitmusTestTabPro
 
   const avgTaskScore = totalPercentage / taskScores.length;
 
+  const formatAmount = (value: number | undefined) =>
+    value !== undefined
+      ? new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(Math.round(value))
+      : "--";
+
   return (
     // student ? 
     // <div className='w-full p-8 sm:p-[52px] space-y-8'>
@@ -70,7 +75,7 @@ export default function LitmusTestTab({ student, onSelectTab }: LitmusTestTabPro
         <ArrowLeft className="w-6 h-6 cursor-pointer" onClick={() => onSelectTab("")}/>
         <div className="w-full flex justify-between items-center">
           <Badge className="text-sm w-fit border-[#FF791F] text-[#FF791F] bg-[#FF791F]/10">
-            Litmus Test
+            LITMUS Test
           </Badge>
           <Button variant={'link'} className="underline" onClick={handleViewtask}>
             View Task
@@ -85,7 +90,7 @@ export default function LitmusTestTab({ student, onSelectTab }: LitmusTestTabPro
               <div className="text-xl font-semibold">{litmusTestDetails?.scholarshipDetail?.scholarshipPercentage}% Waiver availed on the program fee</div>
             </div>
             <div className="flex text-[#1388FF] text-xl font-normal">
-              discount of INR {litmusTestDetails?.scholarshipDetail?.scholarshipPercentage * cohortDetails?.baseFee * 0.01}/-
+              Scholarship of INR {formatAmount(litmusTestDetails?.scholarshipDetail?.scholarshipPercentage * cohortDetails?.baseFee * 0.01)}/-
             </div>
           </div>
         }

@@ -120,7 +120,7 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
       <div className="space-y-6">
 
         {litmusTestDetails?.status === 'interview cancelled' && 
-          <Card className="max-w-6xl mx-auto px-8 py-6 flex flex-col sm:flex-row gap-3 justify-between items-center">
+          <Card className="mx-auto px-8 py-6 flex flex-col sm:flex-row gap-3 justify-between items-center">
             <div className="flex gap-2 items-center">
               <ScreenShare className="w-4 h-4" />
               <span className="flex-1">Proceed to reschedule your presentation session with our counsellor.</span>
@@ -133,7 +133,7 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
         }
 
         {litmusTestDetails?.litmusTestInterviews.slice().reverse().map((interview: any, index: any) => (
-          <Card key={index} className={`max-w-6xl mx-auto md:flex md:flex-row rounded-2xl sm:rounded-3xl ${interview?.meetingStatus === 'cancelled' ? 'border-[#FF503D66] opacity-50 min-h-[680px]' : index === 0 ? 'min-h-[680px]' : 'opacity-50 min-h-[500px]'} `}>
+          <Card key={index} className={`mx-auto md:flex md:flex-row rounded-2xl sm:rounded-3xl ${interview?.meetingStatus === 'cancelled' ? 'border-[#FF503D66] opacity-50 min-h-[680px]' : index === 0 ? 'min-h-[680px]' : 'opacity-50 min-h-[500px]'} `}>
             {/* Left Section */}
             <div className={`md:w-1/2 px-8 py-12 flex flex-col gap-8 justify-between ${interview?.meetingStatus === 'cancelled' ? 'bg-[#FF503D66] ' : 'bg-[#1B1B1C]'} !rounded-tl-2xl sm:!rounded-tl-3xl rounded-t-2xl sm:rounded-l-3xl sm:rounded-t-none rounded-l-none`}>
               <div className="space-y-4 sm:space-y-6">

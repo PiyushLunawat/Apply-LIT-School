@@ -53,7 +53,7 @@ export function SchedulePresentation({ student, interviewer, eventCategory, redi
                 <p className="text-sm text-muted-foreground">
                   {eventCategory === 'Application Test Review' ?
                     `Submitted application on ${new Date(latestCohort?.applicationDetails?.createdAt).toLocaleDateString()}` :
-                    `Submitted on ${new Date(latestCohort?.litmusDetails?.createdAt).toLocaleDateString()}`
+                    `Submitted on ${new Date(latestCohort?.litmusTestDetails?.createdAt).toLocaleDateString()}`
                   }
                 </p>
             </div>

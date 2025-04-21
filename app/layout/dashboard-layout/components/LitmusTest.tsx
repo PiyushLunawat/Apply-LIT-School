@@ -298,8 +298,8 @@ export default function LitmusTest({ student }: LitmusTestProps) {
   return (
   <div className='flex flex-col items-start bg-[#09090B] text-white w-full mx-auto px-4 py-8 sm:p-[52px] space-y-4 sm:space-y-8'>
     {status === undefined ? 
-    <div className='w-full'>
-      <div className='text-xl sm:text-3xl font-medium'>LITMUS Challenge submission</div>
+    <div className='w-full space-y-4'>
+      <div className='text-xl sm:text-3xl font-medium pl-4'>LITMUS Challenge submission</div>
       <div className='w-full space-y-6'>
         <Skeleton className="h-[60px] w-full rounded-xl" />
         <Skeleton className="h-[400px] w-full rounded-xl" />
@@ -483,11 +483,11 @@ export default function LitmusTest({ student }: LitmusTestProps) {
                 }
                 <span className='flex-1'>Congratulations on Completing Your Presentation</span>
               </div> :
-              <div className='text-2xl font-medium'>Congratulations on making your LITMUS Challenge submission!</div>
+              <div className='text-2xl font-medium pl-4'>Congratulations on making your LITMUS Challenge submission!</div>
             }
-            {status === 'submitted' && <div className='text-xl font-normal'>You are now required to schedule a call with us to present your work.</div>}
-            {status === 'interview scheduled' && <div className='text-xl font-normal'>You are now required to present your work at the selected date and time .</div>}
-            {status === 'interview cancelled' && <div className='text-xl font-normal'>You are now required to select a presentation date and time to present your work.</div>}
+            {status === 'submitted' && <div className='text-xl font-normal pl-4'>You are now required to schedule a call with us to present your work.</div>}
+            {status === 'interview scheduled' && <div className='text-xl font-normal pl-4'>You are now required to present your work at the selected date and time .</div>}
+            {status === 'interview cancelled' && <div className='text-xl font-normal pl-4'>You are now required to select a presentation date and time to present your work.</div>}
             {status === 'completed' && <div className='text-base font-normal'>You are eligible for a scholarship based on your performance. Review your feedback below. Once you set up your fee payment portal this waiver will be directly applied.</div>}
           </div>
         </div>
