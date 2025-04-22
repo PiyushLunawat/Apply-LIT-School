@@ -325,7 +325,7 @@ const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({ open, setOpen, 
                     alt="Uploaded receipt"
                     className="mx-auto h-full"
                   />
-                  <div className="absolute top-3 right-3 flex space-x-2">
+                  {/* <div className="absolute top-3 right-3 flex space-x-2">
                     <Button variant="outline" size="icon"
                       className="w-8 h-8 bg-white/[0.2] border border-white rounded-full shadow hover:bg-white/[0.4]"
                       onClick={() => handleEditImage()}
@@ -338,7 +338,7 @@ const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({ open, setOpen, 
                     >
                       <X className="w-5 h-5" />
                     </Button>
-                  </div>
+                  </div> */}
                 </div>
               ) : (
                 <label

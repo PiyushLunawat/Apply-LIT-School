@@ -325,7 +325,7 @@ export async function uploadFeeReceipt(formData: any) {
   const response = await fetch(
     `${baseUrl}/student/upload-semester-fee-installments`,
     {
-      method: "POST",
+      method: "PATCH",
       headers: {
         "Content-Type": "application/json",
       },

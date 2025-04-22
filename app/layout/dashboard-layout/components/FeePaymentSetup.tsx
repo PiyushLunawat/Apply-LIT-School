@@ -30,6 +30,11 @@ const s3Client = new S3Client({
   
 });
 
+const formatAmount = (value: number | undefined) =>
+  value !== undefined
+    ? new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(Math.round(value))
+    : "--";
+
 type FeePaymentData = {
   paymentMethod: string;
   paymentPlan: string;
@@ -207,7 +212,21 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
     setOpen(true);
   }
 
+  function groupInstallmentsBySemester(installments: any[] = []): any[][] {
+    const grouped = installments.reduce((acc, installment) => {
+      const semester = installment.semester;
+      if (!acc[semester]) {
+        acc[semester] = [];
+      }
+      acc[semester].push(installment);
+      return acc;
+    }, {} as Record<number, any[]>);
   
+    return Object.values(grouped);
+  } 
+
+  const groupedInstallments = groupInstallmentsBySemester(paymentDetails?.installments);
+  console.log(groupedInstallments);
 
   // STEP 1: Payment Setup
   const renderStep1 = () => {
@@ -367,7 +386,7 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
           <img src="/assets/images/fee-payment-setup-icon.svg" alt="" />
           <div className="flex flex-col gap-1">
             <h2 className="text-xl font-semibold">
-              You are required to make a total payment of INR 9,95,000.00
+              You are required to make a total payment of INR {formatAmount(paymentDetails?.installments.reduce((total: number, inst: any) => total + inst.amountPayable, 0))}.00
             </h2>
             <p>
               Over a course of {Number(cohortDetails?.cohortFeesDetail?.semesters) * Number(cohortDetails?.cohortFeesDetail?.installmentsPerSemester)} instalments
@@ -471,30 +490,30 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                             <span>Base Fee</span>
                             <span>
                               ₹
-                              {(paymentDetails?.oneShotPayment?.amountPayable).toLocaleString()}
+                              {formatAmount(paymentDetails?.oneShotPayment?.amountPayable)}
                             </span>
                           </div>
                           <div className="flex justify-between">
                             <span>GST</span>
                             <span>
-                              ₹{(paymentDetails?.oneShotPayment?.amountPayable * 0.18).toLocaleString()}
+                              ₹{formatAmount(paymentDetails?.oneShotPayment?.amountPayable * 0.18)}
                             </span>
                           </div>
                           <div className="flex justify-between text-[#F53F3F]">
                             <span>One Shot Payment Discount</span>
                             <span>
-                              - ₹{(paymentDetails?.oneShotPayment?.OneShotPaymentAmount).toLocaleString()}
+                              - ₹{formatAmount(paymentDetails?.oneShotPayment?.OneShotPaymentAmount)}
                             </span>
                           </div>
                           <div className="flex justify-between text-[#F53F3F]">
                             <span>Scholarship Amount</span>
-                            <span>- ₹{(paymentDetails?.oneShotPayment?.amountPayable * 
-                              paymentDetails?.semesterFeeDetails?.scholarshipPercentage * 0.01).toLocaleString()}</span>
+                            <span>- ₹{formatAmount(paymentDetails?.oneShotPayment?.amountPayable * 
+                              paymentDetails?.semesterFeeDetails?.scholarshipPercentage * 0.01)}</span>
                           </div>
                           <div className="flex justify-between pt-1 border-t border-white/10">
                             <span className="font-medium text-white">Total</span>
                             <span className="font-medium text-white">
-                              ₹{paymentDetails?.oneShotPayment?.amountPayable.toLocaleString()}
+                              ₹{formatAmount(paymentDetails?.oneShotPayment?.amountPayable)}
                             </span>
                           </div>
                         </div> */}
@@ -503,31 +522,26 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
             </div>
       </div> : 
       <div className="space-y-4">
-        {paymentDetails?.installments.map(
-          (sem: any, semIndex: number) => (
-            <div key={semIndex} className="border rounded-xl mb-6">
-              {/* Semester Header */}
-              <div className="flex items-center justify-between text-2xl rounded-t-xl p-4 sm:p-6 bg-[#64748B33] font-medium">
-                <h3 className="text-lg font-semibold">Semester 0{sem.semester}</h3>
-                <h3 className="text-lg font-semibold">
-                  ₹
-                  {sem.installments
-                    .reduce((total: number, inst: any) => total + inst.baseFee, 0)
-                    .toLocaleString()}
-                  <span className="text-muted-foreground">.00</span>
-                </h3>
-              </div>
+        {Object.entries(groupedInstallments)?.map(([semester, installments], semIndex) => (
+          <div key={semIndex} className="border rounded-xl mb-6">
+            {/* Semester Header */}
+            <div className="flex items-center justify-between text-2xl rounded-t-xl p-4 sm:p-6 bg-[#64748B33] font-medium">
+              <h3 className="text-lg font-semibold">Semester 0{semIndex+1}</h3>
+              <h3 className="text-lg font-semibold">
+                ₹{formatAmount(installments.reduce((total: number, inst: any) => total + inst.baseFee, 0))}
+                <span className="text-muted-foreground">.00</span>
+              </h3>
+            </div>
 
-              {/* Installments */}
-              {sem.installments.map((instalment: any, iIndex: number) => {
-                const installmentKey = `${semIndex}-${iIndex}`;
-                const isExpanded = expandedInstallment === installmentKey;
-                const toggleExpand = () => {
-                  setExpandedInstallment((prev: any) =>
-                    prev === installmentKey ? null : installmentKey
-                  );
-                };
-
+            {/* Installments */}
+            {installments.map((instalment: any, iIndex: number) => {
+              const installmentKey = `${semIndex}-${iIndex}`;
+              const isExpanded = expandedInstallment === installmentKey;
+              const toggleExpand = () => {
+                setExpandedInstallment((prev: any) =>
+                  prev === installmentKey ? null : installmentKey
+                );
+              };
                 return (
                   <div key={iIndex} className="bg-[#64748B1F] p-4 sm:p-6 border-b border-gray-700">
                     <div
@@ -540,7 +554,7 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                       </Badge>
                       <div className="flex gap-2 sm:gap-4 text-right sm:items-center">
                         <Badge className={`${instalment?.verificationStatus === 'paid' ? 'border-[#00CC92] bg-[#00CC92]/10' : 'bg-[#64748B1F]/20 border-[#2C2C2C]'} text-sm sm:text-base text-white px-4 py-2`}>
-                          ₹{instalment.amountPayable.toLocaleString()}
+                          ₹{formatAmount(instalment?.amountPayable)}
                         </Badge>
                         {instalment?.verificationStatus === 'paid' ?
                           <Badge className="flex gap-1 bg-[#64748B1F]/20 border-[#2C2C2C] text-sm sm:text-base text-white px-4 py-2">
@@ -579,29 +593,12 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
 
                     {isExpanded && (
                       <div className="mt-4 space-y-4">
-                        {/* {instalment.receiptUrls && instalment.receiptUrls.length > 0 && (
-                          <p>
-                            <strong>Receipt:</strong>{" "}
-                            {instalment.receiptUrls.map((url: string, urlIndex: number) => (
-                              <a
-                                key={urlIndex}
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-400 underline ml-2"
-                              >
-                                View Receipt {urlIndex + 1}
-                              </a>
-                            ))}
-                          </p>
-                        )} */}
-
                         {['pending', 'flagged'].includes(instalment.verificationStatus) &&
                         <FileUploadField
-                            semester={sem.semester}
-                            installment={iIndex + 1}
+                            semester={instalment?.semester}
+                            installment={instalment?.installmentNumber}
                             oneShot={false}
-                            studentPaymentId={paymentDetails?._id}
+                            studentPaymentId={instalment?.studentPaymentId}
                             onUploadSuccess={(data) => setPaymentDetails(data)}
                           />
                         }
@@ -635,25 +632,25 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                             <span>Base Fee</span>
                             <span>
                               ₹
-                              {(instalment.baseFee + instalment.scholarshipAmount).toLocaleString()}
+                              {formatAmount(instalment?.baseFee + instalment?.scholarshipAmount)}
                             </span>
                           </div>
                           <div className="flex justify-between text-sm">
                             <span>GST</span>
                             <span>
-                              ₹{(instalment.baseFee * 0.18).toLocaleString()}
+                              ₹{formatAmount(instalment?.baseFee * 0.18)}
                             </span>
                           </div>
                           {instalment.scholarshipAmount > 0 && (
                             <div className="flex justify-between text-[#F53F3F] text-sm">
                               <span>Scholarship Amount</span>
-                              <span>- ₹{instalment.scholarshipAmount.toLocaleString()}</span>
+                              <span>- ₹{formatAmount(instalment?.scholarshipAmount)}</span>
                             </div>
                           )}
                           <div className="flex justify-between text-lg sm:text-xl pt-1 border-t border-white/10">
                             <span className="font-medium text-white">Total</span>
                             <span className="font-medium text-[#1388FF]">
-                              ₹{instalment.amountPayable.toLocaleString()}
+                              ₹{formatAmount(instalment?.amountPayable)}
                             </span>
                           </div>
                         </div>
@@ -826,7 +823,7 @@ function FileUploadField({
     if(oneShot) {
       payload = {
         receiptUrl: reciptUrl.toString(),
-        oneshotPaymentId: studentPaymentId.toString(),
+        oneshotPaymentId: studentPaymentId,
       };
     } else if (semester && installment)  {
       payload = {

@@ -152,7 +152,7 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
               <div className="flex gap-2 items-center">
                 <Avatar className="w-[54px] h-[54px]">
                   <AvatarImage src={interview?.profileImage} alt="@Interviewer" />
-                  <AvatarFallback className="font-semibold">{interview?.ownerFirstName[0]}{interview?.ownerLastName[0]}</AvatarFallback>
+                  <AvatarFallback className="font-semibold">{interview?.ownerFirstName?.[0]}{interview?.ownerLastName?.[0]}</AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col">
                   <div className="text-xl font-medium">{interview?.ownerFirstName} {interview?.ownerLastName}</div>
