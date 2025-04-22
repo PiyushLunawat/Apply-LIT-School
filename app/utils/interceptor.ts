@@ -56,7 +56,7 @@ export const RegisterInterceptor = (
         url.includes(endpoint)
       );
 
-      console.log("isPublic", !!isPublic, accessToken, refreshToken);
+      // console.log("isPublic", !!isPublic, accessToken, refreshToken);
 
       // If both accessToken and refreshToken are not available, trigger the unauthorized state
       // if (!isPublic && !accessToken && !refreshToken) {

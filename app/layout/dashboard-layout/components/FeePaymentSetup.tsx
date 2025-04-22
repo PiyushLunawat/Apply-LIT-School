@@ -77,7 +77,7 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
 
   useEffect(() => {
     setPaymentDetails(latestCohort?.paymentDetails);
-    console.log("latestCohort?.paymentDetails", latestCohort?.paymentDetails);
+    // console.log("latestCohort?.paymentDetails", latestCohort?.paymentDetails);
     
     if (latestCohort?.paymentDetails?.paymentPlan)
       setStep(2);
@@ -226,7 +226,7 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
   } 
 
   const groupedInstallments = groupInstallmentsBySemester(paymentDetails?.installments);
-  console.log(groupedInstallments);
+  // console.log(groupedInstallments);
 
   // STEP 1: Payment Setup
   const renderStep1 = () => {
@@ -598,7 +598,7 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                             semester={instalment?.semester}
                             installment={instalment?.installmentNumber}
                             oneShot={false}
-                            studentPaymentId={instalment?.studentPaymentId}
+                            studentPaymentId={instalment?._id}
                             onUploadSuccess={(data) => setPaymentDetails(data)}
                           />
                         }
@@ -828,7 +828,7 @@ function FileUploadField({
     } else if (semester && installment)  {
       payload = {
         receiptUrl: reciptUrl.toString(),
-        installmnentDocId: studentPaymentId.toString(),
+        installmentId: studentPaymentId.toString(),
       };
     }
 
@@ -837,7 +837,7 @@ function FileUploadField({
     try {
       const response = await uploadFeeReceipt(payload);
       console.log("Receipt uploaded successfully:", response);
-      onUploadSuccess(response.updatedPayment);
+      onUploadSuccess(response.data);
 
       setReceiptFile("");
       setReciptUrl("");
