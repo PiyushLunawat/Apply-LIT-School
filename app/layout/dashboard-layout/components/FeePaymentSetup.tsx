@@ -430,8 +430,8 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
               <div className="flex items-center justify-between text-2xl rounded-t-xl p-6 bg-[#64748B33] font-medium">
                 <h3 className="text-lg font-semibold">One Shot Payment</h3>
                 <h3 className="text-lg font-semibold">
-                  {paymentDetails?.oneShotPayment?.amountPayable !== undefined 
-                  ? paymentDetails.oneShotPayment.amountPayable.toLocaleString() 
+                  ₹{paymentDetails?.oneShotPayment?.amountPayable !== undefined 
+                  ? formatAmount(paymentDetails.oneShotPayment.amountPayable) 
                   : "N/A"}
                 </h3>
               </div>
@@ -441,7 +441,7 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                       <Badge className="flex agp-2 bg-[#3698FB]/20 border-[#3698FB] text-base text-white px-4 py-2 ">
                         Installment 01
                       </Badge>
-                      <div className="flex flex-col sm:flex-row sm:gap-4 text-right">
+                        <div className="flex flex-col sm:flex-row sm:gap-4 text-right">
                           <Badge className="bg-[#64748B1F]/20 border-[#2C2C2C] text-base text-white px-4 py-2">
                           Due:{" "}
                           {new Date(paymentDetails?.oneShotPayment?.installmentDate).toLocaleDateString("en-GB", {
