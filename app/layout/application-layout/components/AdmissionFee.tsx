@@ -253,18 +253,30 @@ export default function AdmissionFee({ student }: AdmissionFeeProps) {
       ? new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(Math.round(value))
       : "--";
 
-  function formatTestDuration(durationDays: number): string {
-    if (durationDays > 2) {
-      return `${durationDays} days`;
-    } else {
-      // For durationDays <= 2, convert to hours.
-      const totalHours = durationDays * 24;
-      // Format as HH:MM:SS; here minutes and seconds are zero.
-      const hoursStr = totalHours.toString().padStart(2, '0');
-      return `${hoursStr}:00:00`;
-    }
-  }
+      const [remainingTime, setRemainingTime] = useState<number>(() => {
+        const days = latestCohort?.cohortId?.litmusTestDetail[0]?.litmusTestDuration ?? 0;
+        return Math.floor(days * 24 * 60 * 60); // convert days to seconds
+      });
 
+      useEffect(() => {
+        const interval = setInterval(() => {
+          setRemainingTime((prev) => Math.max(prev - 1, 0));
+        }, 1000);
+      
+        return () => clearInterval(interval); // clean up on unmount
+      }, []);
+
+      const formatHHMMSS = (totalSeconds: number): string => {
+        if (totalSeconds / (24 * 60 * 60) > 2 ) {
+          return `${totalSeconds} days`;
+        } else {
+        const hrs = Math.floor(totalSeconds / 3600);
+        const mins = Math.floor((totalSeconds % 3600) / 60);
+        const secs = totalSeconds % 60;
+        return [hrs, mins, secs].map((v) => String(v).padStart(2, '0')).join(':');
+        }
+      };
+      
   return (
     <div className='space-y-6'>
       {tokenFeeDetails?.verificationStatus === 'flagged' ?
@@ -281,16 +293,16 @@ export default function AdmissionFee({ student }: AdmissionFeeProps) {
             </Button>
           </div>
           <div
-            className={`w-fit flex justify-center items-center gap-2 px-4 py-3 border ${
-              formatTestDuration(latestCohort?.cohortId?.litmusTestDetail[0]?.litmusTestDuration) === '00:00:00' ? 'border-[#FF503D]' : 'border-[#00A3FF]'
+            className={`w-fit flex justify-center items-center gap-2 px-4 py-2.5 border ${
+              remainingTime === 0 ? 'border-[#FF503D]' : 'border-[#00A3FF]'
             } bg-[#FFFFFF33] rounded-full text-sm sm:text-2xl text-medium`}
           >
-            {formatTestDuration(latestCohort?.cohortId?.litmusTestDetail[0]?.litmusTestDuration) === '00:00:00' ? (
+            {remainingTime === 0 ? (
               <CirclePause className='w-4 h-4 sm:w-6 sm:h-6 text-[#FF503D]' />
             ) : (
               <Clock className='w-4 h-4 sm:w-6 sm:h-6 text-[#00A3FF]' />
             )}
-            {formatTestDuration(latestCohort?.cohortId?.litmusTestDetail[0]?.litmusTestDuration)}
+            {formatHHMMSS(remainingTime)}
           </div>
         </div>
       </Card> :

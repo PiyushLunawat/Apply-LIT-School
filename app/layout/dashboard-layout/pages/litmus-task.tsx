@@ -27,18 +27,34 @@ export default function LitmusTask() {
   const latestCohort = student?.appliedCohorts?.[student?.appliedCohorts.length - 1];
   const cohortDetails = latestCohort?.cohortId;
 
-  function formatTestDuration(durationDays?: number): string {
-    if (durationDays === undefined || durationDays === null) return "00:00:00";
-    if (durationDays > 2) {
-      return `${durationDays} days`;
+  const [remainingTime, setRemainingTime] = useState<number>(0);
+
+  useEffect(() => {
+    const days = latestCohort?.cohortId?.litmusTestDetail[0]?.litmusTestDuration ?? 0;
+    const now = new Date();
+    const targetDate = new Date(latestCohort?.tokenFeeDetails?.updatedAt);
+    const diffInSeconds = Math.floor((targetDate.getTime() - now.getTime()) / 1000);
+    setRemainingTime(Math.floor((days * 24 * 60 * 60) + diffInSeconds))
+  }, [student]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setRemainingTime((prev) => Math.max(prev - 1, 0));
+    }, 1000);
+
+    return () => clearInterval(interval); // clean up on unmount
+  }, []);
+
+  const formatHHMMSS = (totalSeconds: number): string => {
+    if (totalSeconds / (24 * 60 * 60 * 60) > 2 ) {
+      return `${totalSeconds} days`;
     } else {
-      // For durationDays <= 2, convert to hours.
-      const totalHours = durationDays * 24;
-      // Format as HH:MM:SS; here minutes and seconds are zero.
-      const hoursStr = totalHours.toString().padStart(2, '0');
-      return `${hoursStr}:00:00`;
+    const hrs = Math.floor(totalSeconds / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
+    return [hrs, mins, secs].map((v) => String(v).padStart(2, '0')).join(':');
     }
-  }
+  };
   
   return (
   <>
@@ -50,13 +66,13 @@ export default function LitmusTask() {
             {latestCohort?.litmusTestDetails?.status !== 'completed' &&
              <Badge className="flex gap-2 items-center bg-black">
                 <Clock className="text-[#00A3FF] w-3 h-3"/>
-                <div className="text-base font-normal">{formatTestDuration(cohortDetails?.litmusTestDetail[0]?.litmusTestDuration)}</div>
+                <div className="text-base font-normal">{formatHHMMSS(remainingTime)}</div>
               </Badge>
             }
           </div>
           <div className="flex lg:flex-row flex-col gap-2 justify-between items-start lg:items-end">
           <div>
-            {student ?
+            {(student && latestCohort?.litmusTestDetails?.status !== 'completed') ?
               <h1 className="text-3xl sm:text-4xl font-normal">
                 {student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.cohortId?.programDetail?.name}
                 <div className="text-xl sm:text-2xl">{new Date(student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.cohortId?.startDate).toLocaleDateString("en-US", { month: "long", year: "numeric",})}</div>

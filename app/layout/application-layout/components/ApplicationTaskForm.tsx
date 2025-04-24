@@ -562,13 +562,10 @@ const TaskConfigItem: React.FC<TaskConfigItemProps> = ({
 }) => {
   const fieldName = `tasks.${taskIndex}.configItems.${configIndex}.answer`;
 
-  const wordLimitHandler = (
-    event: React.ChangeEvent<HTMLTextAreaElement>,
-    field: any,
-    maxWordLimit: number
-  ) => {
+  const wordLimitHandler = ( event: React.ChangeEvent<HTMLTextAreaElement>, field: any, maxWordLimit: number ) => {
     const text = event.target.value;
     const wordCount = text.split(/\s+/).filter(Boolean).length;
+    
     if (wordCount <= maxWordLimit) {
       field.onChange(text);
     }

@@ -77,7 +77,7 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
 
   useEffect(() => {
     setPaymentDetails(latestCohort?.paymentDetails);
-    // console.log("latestCohort?.paymentDetails", latestCohort?.paymentDetails);
+    console.log("latestCohort?.paymentDetails", latestCohort?.paymentDetails);
     
     if (latestCohort?.paymentDetails?.paymentPlan)
       setStep(2);
@@ -141,7 +141,7 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
     }
   
     if (name === "bankDetails.accountNumber") {
-      newValue = newValue.toUpperCase().replace(/[^A-Z0-9]/g, ''); // uppercase alphanumeric only
+      newValue = newValue.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 17); // uppercase alphanumeric only
     }
   
     if (name === "bankDetails.IFSCCode") {
@@ -211,6 +211,8 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
     setReceipt(url);
     setOpen(true);
   }
+
+  let lastStatus = '';
 
   function groupInstallmentsBySemester(installments: any[] = []): any[][] {
     const grouped = installments.reduce((acc, installment) => {
@@ -386,10 +388,10 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
           <img src="/assets/images/fee-payment-setup-icon.svg" alt="" />
           <div className="flex flex-col gap-1">
             <h2 className="text-xl font-semibold">
-              You are required to make a total payment of INR {formatAmount(paymentDetails?.installments.reduce((total: number, inst: any) => total + inst.amountPayable, 0))}.00
+              You are required to make a total payment of INR {paymentDetails?.paymentPlan === 'one-shot' ? `${paymentDetails.oneShotPayment.amountPayable}` : `${formatAmount(paymentDetails?.installments.reduce((total: number, inst: any) => total + inst.amountPayable, 0))}`}.00
             </h2>
             <p>
-              Over a course of {Number(cohortDetails?.cohortFeesDetail?.semesters) * Number(cohortDetails?.cohortFeesDetail?.installmentsPerSemester)} instalments
+              Over a course of {paymentDetails?.paymentPlan === 'one-shot' ? `1` : `${Number(cohortDetails?.cohortFeesDetail?.semesters) * Number(cohortDetails?.cohortFeesDetail?.installmentsPerSemester)}`} instalments
               starting on {new Date(cohortDetails?.startDate).toDateString()}. This
               is inclusive of your scholarship waiver.
             </p>
@@ -426,100 +428,127 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
       {paymentDetails?.paymentPlan === 'one-shot' ? 
       <div className="">
         <div className="border rounded-xl mb-6">
-              {/* Semester Header */}
-              <div className="flex items-center justify-between text-2xl rounded-t-xl p-6 bg-[#64748B33] font-medium">
-                <h3 className="text-lg font-semibold">One Shot Payment</h3>
-                <h3 className="text-lg font-semibold">
-                  ₹{paymentDetails?.oneShotPayment?.amountPayable !== undefined 
-                  ? formatAmount(paymentDetails.oneShotPayment.amountPayable) 
-                  : "N/A"}
-                </h3>
-              </div>
-              
-                  <div className="bg-[#64748B1F] p-4 sm:p-6 ">
-                    <div className="flex justify-between items-center cursor-pointer">
-                      <Badge className="flex agp-2 bg-[#3698FB]/20 border-[#3698FB] text-base text-white px-4 py-2 ">
-                        Installment 01
-                      </Badge>
-                        <div className="flex flex-col sm:flex-row sm:gap-4 text-right">
-                          <Badge className="bg-[#64748B1F]/20 border-[#2C2C2C] text-base text-white px-4 py-2">
-                          Due:{" "}
-                          {new Date(paymentDetails?.oneShotPayment?.installmentDate).toLocaleDateString("en-GB", {
-                            day: "2-digit",
-                            month: "long",
-                            year: "numeric",
-                          })}
-                        </Badge>
-                      </div>
+          {/* Semester Header */}
+          <div className="flex items-center justify-between text-2xl rounded-t-xl p-6 bg-[#64748B33] font-medium">
+            <h3 className="text-lg font-semibold">One Shot Payment</h3>
+            <h3 className="text-lg font-semibold">
+              ₹{paymentDetails?.oneShotPayment?.amountPayable !== undefined 
+              ? formatAmount(paymentDetails.oneShotPayment.amountPayable) 
+              : "N/A"}
+            </h3>
+          </div>
+          <div className="bg-[#64748B1F] p-4 sm:p-6 ">
+            <div className="flex justify-between items-center cursor-pointer">
+              <Badge className="flex w-fit gap-2 bg-[#3698FB]/20 border-[#3698FB] text-base text-white px-4 py-2 ">
+                {getInstallmentIcon(paymentDetails?.oneShotPayment?.verificationStatus)}
+                Installment 01
+              </Badge>
+              <div className="flex flex-col sm:flex-row sm:gap-4 text-right">
+              <Badge className={`${paymentDetails?.oneShotPayment?.verificationStatus === 'paid' ? 'border-[#00CC92] bg-[#00CC92]/10' : 'bg-[#64748B1F]/20 border-[#2C2C2C]'} text-sm sm:text-base text-white px-4 py-2`}>
+                ₹{formatAmount(paymentDetails?.oneShotPayment?.amountPayable)}
+              </Badge>
+              {paymentDetails?.oneShotPayment?.verificationStatus === 'paid' ?
+                <Badge className="flex gap-1 bg-[#64748B1F]/20 border-[#2C2C2C] text-sm sm:text-base text-white px-4 py-2">
+                  <span className="font-light text-[#00CC92]">Paid on</span> {new Date(paymentDetails?.oneShotPayment?.receiptUrls?.[paymentDetails?.oneShotPayment?.receiptUrls.length - 1]?.uploadedAt).toLocaleDateString("en-GB", {day: "2-digit", month: "long", year: "numeric",})}
+                </Badge> :
+              paymentDetails?.oneShotPayment?.verificationStatus === 'verifying' ?
+                <Badge className="flex gap-1 bg-[#64748B1F]/20 border-[#2C2C2C] text-sm sm:text-base text-white px-4 py-2">
+                  <span className="font-light">Uploaded on</span> {new Date(paymentDetails?.oneShotPayment?.receiptUrls?.[paymentDetails?.oneShotPayment?.receiptUrls.length - 1]?.uploadedAt).toLocaleDateString("en-GB", {day: "2-digit", month: "long", year: "numeric",})}
+                </Badge> :
+              paymentDetails?.oneShotPayment?.verificationStatus === 'flagged' ?
+                <Badge className="flex gap-1 bg-[#F53F3F]/20 border-[#F53F3F] text-sm sm:text-base text-white px-4 py-2">
+                  <span className="font-light">Pay before</span>  {new Date(paymentDetails?.oneShotPayment?.installmentDate).toLocaleDateString("en-GB", {day: "2-digit", month: "long", year: "numeric",})}
+                </Badge> :
+                <Badge className="flex gap-1 bg-[#64748B1F]/20 border-[#2C2C2C] text-sm sm:text-base text-white px-4 py-2">
+                  <span className="font-light">Due:</span> {new Date(paymentDetails?.oneShotPayment?.installmentDate).toLocaleDateString("en-GB", {day: "2-digit", month: "long", year: "numeric",})}
+                </Badge>
+                }
+                {['verifying', 'paid'].includes(paymentDetails?.oneShotPayment?.verificationStatus) &&
+                  <div className="relative group w-10 h-10">
+                    <img
+                      src={paymentDetails?.oneShotPayment?.receiptUrls?.[paymentDetails?.oneShotPayment?.receiptUrls.length - 1]?.url}
+                      alt="Fee_Receipt"
+                      className="w-10 h-10 rounded-lg object-contain bg-white py-1"
+                    />
+                    {/* Eye icon overlay to open modal */}
+                    <div
+                      className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                      onClick={() => handleViewReciept(paymentDetails?.oneShotPayment?.receiptUrls?.[paymentDetails?.oneShotPayment?.receiptUrls.length - 1]?.url)}
+                    >
+                      <Eye className="text-white w-4 h-4" />
                     </div>
-
-                      <div className="mt-4 space-y-4">
-                        {paymentDetails?.oneShotPayment.feedback && paymentDetails?.oneShotPayment.feedback.length > 0 && (
-                          <p>
-                            <strong>Feedback:</strong> {paymentDetails?.oneShotPayment.feedback.join(", ")}
-                          </p>
-                        )}
-
-                        {['verifying', 'paid'].includes(paymentDetails?.oneShotPayment?.verificationStatus) &&
-                          <div className="relative group w-10 h-10">
-                            <img
-                              src={paymentDetails?.oneShotPayment?.receiptUrls?.[paymentDetails?.oneShotPayment?.receiptUrls.length - 1]?.url}
-                              alt="Fee_Receipt"
-                              className="w-10 h-10 rounded-lg object-contain bg-white py-1"
-                            />
-                            {/* Eye icon overlay to open modal */}
-                            <div
-                              className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                              onClick={() => handleViewReciept(paymentDetails?.oneShotPayment?.receiptUrls?.[paymentDetails?.oneShotPayment?.receiptUrls.length - 1]?.url)}
-                            >
-                              <Eye className="text-white w-4 h-4" />
-                            </div>
-                          </div>
-                        }
-
-                        {/* Show File Upload + Fee Breakdown */}
-                        <FileUploadField
-                          oneShot={true}
-                          studentPaymentId={paymentDetails?._id}
-                          onUploadSuccess={(data) => setPaymentDetails(data)}
-                        />
-
-                        {/* <div className="p-3 rounded-lg text-sm text-white/70 space-y-1">
-                          <p className="font-medium text-base text-white">Fee Breakdown</p>
-                          <div className="flex justify-between">
-                            <span>Base Fee</span>
-                            <span>
-                              ₹
-                              {formatAmount(paymentDetails?.oneShotPayment?.amountPayable)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>GST</span>
-                            <span>
-                              ₹{formatAmount(paymentDetails?.oneShotPayment?.amountPayable * 0.18)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between text-[#F53F3F]">
-                            <span>One Shot Payment Discount</span>
-                            <span>
-                              - ₹{formatAmount(paymentDetails?.oneShotPayment?.OneShotPaymentAmount)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between text-[#F53F3F]">
-                            <span>Scholarship Amount</span>
-                            <span>- ₹{formatAmount(paymentDetails?.oneShotPayment?.amountPayable * 
-                              paymentDetails?.semesterFeeDetails?.scholarshipPercentage * 0.01)}</span>
-                          </div>
-                          <div className="flex justify-between pt-1 border-t border-white/10">
-                            <span className="font-medium text-white">Total</span>
-                            <span className="font-medium text-white">
-                              ₹{formatAmount(paymentDetails?.oneShotPayment?.amountPayable)}
-                            </span>
-                          </div>
-                        </div> */}
-                      </div>
                   </div>
+                }
+              </div>
             </div>
+
+            <div className="mt-4 space-y-4">
+              {/* Show File Upload + Fee Breakdown */}
+              {(lastStatus !== 'pending' && ['pending', 'flagged'].includes(paymentDetails?.oneShotPayment?.verificationStatus)) &&
+                <FileUploadField
+                  oneShot={true}
+                  studentPaymentId={paymentDetails?.oneShotPayment?._id}
+                  onUploadSuccess={(data) => setPaymentDetails(data)}
+                  />
+              }
+              {paymentDetails?.oneShotPayment.feedback && paymentDetails?.oneShotPayment.feedback.slice().reverse().map((flag: any, index: any) => (
+                <div key={index} className="bg-[#09090b] p-3 flex gap-2 items-center">
+                  <div className="relative group w-[90px] h-[90px]">
+                    <img
+                      src={paymentDetails?.oneShotPayment?.receiptUrls?.[paymentDetails?.oneShotPayment.feedback.length-1 - index]?.url}
+                      alt="Fee_Receipt"
+                      className="w-[90px] h-[90px] rounded-lg object-contain bg-white py-1"
+                    />
+                    <div
+                      className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                      onClick={() => handleViewReciept(paymentDetails?.oneShotPayment?.receiptUrls?.[paymentDetails?.oneShotPayment.feedback.length-1 - index]?.url)}
+                    >
+                      <Eye className="text-white w-7 h-7" />
+                    </div>
+                  </div>
+                  <div className="text-xs">
+                    <div className="text-[#F53F3F]">Your previously attached Acknowledgement Receipt has been marked invalid.</div>
+                    <div className="mt-1.5">Kindly upload a scanned copy of the receipt issued to you by our fee manager for this specific instalment.</div>
+                    <div className="mt-2 text-muted-foreground">Reason: {flag?.feedbackData?.[0]}</div>
+                  </div>
+                </div>
+              ))}
+
+              <div className="p-3 rounded-lg text-sm text-white/70 space-y-1">
+                <p className="font-medium text-base text-white">Fee Breakdown</p>
+                <div className="flex justify-between">
+                  <span>Base Fee</span>
+                  <span>
+                    ₹{formatAmount(paymentDetails?.oneShotPayment?.amountPayable)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>GST</span>
+                  <span>
+                    ₹{formatAmount(paymentDetails?.oneShotPayment?.amountPayable * 0.18)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-[#F53F3F]">
+                  <span>One Shot Payment Discount</span>
+                  <span>
+                    - ₹{formatAmount(paymentDetails?.oneShotPayment?.OneShotPaymentAmount)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-[#F53F3F]">
+                  <span>Scholarship Amount</span>
+                  <span>- ₹{formatAmount(paymentDetails?.oneShotPayment?.amountPayable * 
+                    paymentDetails?.semesterFeeDetails?.scholarshipPercentage * 0.01)}</span>
+                </div>
+                <div className="flex justify-between pt-1 border-t border-white/10">
+                  <span className="font-medium text-white">Total</span>
+                  <span className="font-medium text-white">
+                    ₹{formatAmount(paymentDetails?.oneShotPayment?.amountPayable)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div> : 
       <div className="space-y-4">
         {Object.entries(groupedInstallments)?.map(([semester, installments], semIndex) => (
@@ -543,7 +572,7 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                 );
               };
                 return (
-                  <div key={iIndex} className="bg-[#64748B1F] p-4 sm:p-6 border-b border-gray-700">
+                  <div key={iIndex} className={`bg-[#64748B1F] p-4 sm:p-6 ${iIndex === (installments.length - 1) ? 'rounded-b-xl' : 'border-b border-gray-700'}`}>
                     <div
                       className="flex flex-col sm:flex-row gap-2 sm:justify-between sm:items-center cursor-pointer font-medium"
                       onClick={toggleExpand}
@@ -593,7 +622,7 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
 
                     {isExpanded && (
                       <div className="mt-4 space-y-4">
-                        {['pending', 'flagged'].includes(instalment.verificationStatus) &&
+                        {(lastStatus !== 'pending' && ['pending', 'flagged'].includes(instalment.verificationStatus)) &&
                         <FileUploadField
                             semester={instalment?.semester}
                             installment={instalment?.installmentNumber}
@@ -603,17 +632,17 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                           />
                         }
 
-                        {instalment.history && instalment.history.slice().reverse().map((fleg: any, index: any) => (
+                        {instalment.feedback && instalment.feedback.slice().reverse().map((flag: any, index: any) => (
                           <div key={index} className="bg-[#09090b] p-3 flex gap-2 items-center">
                             <div className="relative group w-[90px] h-[90px]">
                               <img
-                                src={instalment?.receiptUrls?.[instalment.history.length-1 - index]?.url}
+                                src={instalment?.receiptUrls?.[instalment.feedback.length-1 - index]?.url}
                                 alt="Fee_Receipt"
                                 className="w-[90px] h-[90px] rounded-lg object-contain bg-white py-1"
                               />
                               <div
                                 className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                                onClick={() => handleViewReciept(instalment?.receiptUrls?.[instalment.history.length-1 - index]?.url)}
+                                onClick={() => handleViewReciept(instalment?.receiptUrls?.[instalment.feedback.length-1 - index]?.url)}
                               >
                                 <Eye className="text-white w-7 h-7" />
                               </div>
@@ -621,10 +650,10 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                             <div className="text-xs">
                               <div className="text-[#F53F3F]">Your previously attached Acknowledgement Receipt has been marked invalid.</div>
                               <div className="mt-1.5">Kindly upload a scanned copy of the receipt issued to you by our fee manager for this specific instalment.</div>
-                              <div className="mt-2 text-muted-foreground">Reason: {fleg?.feedback?.[0]}</div>
+                              <div className="mt-2 text-muted-foreground">Reason: {flag?.feedbackData?.[0]}</div>
                             </div>
                           </div>
-                    ))}
+                        ))}
 
                         <div className="p-3 rounded-lg text-sm text-white/70 space-y-1">
                           <p className="font-medium text-base text-white">Fee Breakdown</p>
@@ -656,6 +685,9 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                         </div>
                       </div>
                     )}
+                    <div className="hidden">
+                      {lastStatus = instalment.verificationStatus}
+                    </div>
                   </div>
                 );
               })}
@@ -699,6 +731,7 @@ function FileUploadField({
   const [reciptUrl, setReciptUrl] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [receiptFile, setReceiptFile] = useState("");
+  const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -813,11 +846,7 @@ function FileUploadField({
 
   // Actually send the first file to the server
   const handleSubmit = async () => {
-    if (!receiptFile) {
-      alert('Please upload a receipt image.');
-      return;
-    }
-
+    setLoading(true)
     let payload;
 
     if(oneShot) {
@@ -845,6 +874,8 @@ function FileUploadField({
     } catch (err: any) {
       console.error("Error uploading receipt:", err);
       setError(err.message || "An unexpected error occurred.");
+    } finally {
+      setLoading(false)
     }
   };
 
@@ -928,7 +959,7 @@ function FileUploadField({
         </Button>
       </div>)}
 
-      <Button size={'xl'} disabled={uploading}
+      <Button size={'xl'} disabled={loading || uploading || !receiptFile}
         className="text-white w-fit"
         onClick={handleSubmit}
       >

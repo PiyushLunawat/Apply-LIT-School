@@ -136,17 +136,34 @@ export default function ApplicationDashboard({ student }: ApplicationDashboardPr
 
   const isLitmusDetailsAvailable = (litmusTestDetails?.status === 'completed');
 
-  function formatTestDuration(durationDays: number): string {
-    if (durationDays > 2) {
-      return `${durationDays} days`;
+  const [remainingTime, setRemainingTime] = useState<number>(0);
+
+  useEffect(() => {
+    const days = latestCohort?.cohortId?.litmusTestDetail[0]?.litmusTestDuration ?? 0;
+    const now = new Date();
+    const targetDate = new Date(latestCohort?.tokenFeeDetails?.updatedAt);
+    const diffInSeconds = Math.floor((targetDate.getTime() - now.getTime()) / 1000);
+    setRemainingTime(Math.floor((days * 24 * 60 * 60) + diffInSeconds))
+  }, [student]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setRemainingTime((prev) => Math.max(prev - 1, 0));
+    }, 1000);
+
+    return () => clearInterval(interval); // clean up on unmount
+  }, []);
+
+  const formatHHMMSS = (totalSeconds: number): string => {
+    if (totalSeconds / (24 * 60 * 60 * 60) > 2 ) {
+      return `${totalSeconds} days`;
     } else {
-      // For durationDays <= 2, convert to hours.
-      const totalHours = durationDays * 24;
-      // Format as HH:MM:SS; here minutes and seconds are zero.
-      const hoursStr = totalHours.toString().padStart(2, '0');
-      return `${hoursStr}:00:00`;
+    const hrs = Math.floor(totalSeconds / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
+    return [hrs, mins, secs].map((v) => String(v).padStart(2, '0')).join(':');
     }
-  }
+  };
 
   const colorClasses = [
     'text-emerald-600 !bg-emerald-600/20 border-emerald-600',
@@ -213,7 +230,7 @@ export default function ApplicationDashboard({ student }: ApplicationDashboardPr
                         <h2 className="text-lg sm:text-xl font-semibold">LITMUS Test Submission</h2>
                         <Badge className="flex px-2 gap-1 sm:gap-2 items-center bg-black h-7">
                           <Clock className="text-[#00A3FF] w-3 h-3"/>
-                          <div className="text-xs sm:text-base font-normal">{formatTestDuration(cohortDetails?.litmusTestDetail[0]?.litmusTestDuration)}</div>
+                          <div className="text-xs sm:text-base font-normal">{formatHHMMSS(remainingTime)}</div>
                         </Badge>
                       </> :
                       <>

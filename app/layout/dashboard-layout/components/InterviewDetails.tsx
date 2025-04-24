@@ -220,9 +220,12 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
                     <p className="text-[#64748B] text-sm sm:text-base font-normal">
                       Time zone: <span className="text-[#00A3FF] uppercase">IST ({formattedTime})</span>
                     </p>
-                    <Button variant="link" className="underline " onClick={() => handleCancel(interview?.bookingId)}>
+                    {!joinMeetingEnabled &&
+                    <Button variant="link" className="underline " onClick={() => handleCancel(interview?.bookingId)}
+                      disabled={joinMeetingEnabled}
+                    >
                       Cancel Meeting
-                    </Button>
+                    </Button>}
                   </div>
                 </div>
               }

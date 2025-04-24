@@ -21,7 +21,7 @@ export function LitmusFeedbackForm({ student, setClose }: LitmusFeedbackFormProp
   const [decisionFactors, setDecisionFactors] = useState<string[]>([]);
   const [customTagDesc, setCustomTagDesc] = useState("");
   const [feedback1, setFeedback1] = useState("");
-  const [feelings, setFeelings] = useState<string[]>([]);
+  const [feelings, setFeelings] = useState<string>("");
 
   const handleSourceToggle = (option: string) => {
     if (sources.includes(option)) {
@@ -38,9 +38,11 @@ export function LitmusFeedbackForm({ student, setClose }: LitmusFeedbackFormProp
   };
 
   const handleFeelingToggle = (value: string) => {
-    setFeelings((prev) =>
-      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
-    );
+    if (sources.includes(value)) {
+      setFeelings("");
+    } else {
+      setFeelings(value);
+    }
   };
 
   const handleSubmit = async () => {

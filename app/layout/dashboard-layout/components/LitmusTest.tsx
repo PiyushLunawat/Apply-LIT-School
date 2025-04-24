@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Button } from '~/components/ui/button';
 import { Upload, Clock, FileTextIcon, RefreshCw, X, Link2Icon, XIcon, UploadIcon, Download, ArrowUpRight, LoaderCircle, Link2, FileIcon, VideoIcon, ImageIcon, HandMetal } from 'lucide-react';
 import { useForm } from 'react-hook-form';
@@ -819,11 +819,17 @@ interface FileUploadFieldProps {
 }
 
 const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) => {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [files, setFiles] = useState<string[]>(field.value || []);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [fileName, setFileName] = useState("");
+  const [fileName, setFileName] = useState('');
+  const [currentFileName, setCurrentFileName] = useState('');
+
+  useEffect(() => {
+    setFiles(field.value || []);
+  }, [field.value]);
 
   const appendFile = (fileUrl: string) => {
     const newFiles = [...files, fileUrl];
@@ -838,7 +844,16 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
     field.onChange(newFiles);
   };
 
-  const showUploadButton = !configItem.maxFiles || files.length < configItem.maxFiles;
+  const acceptTypes = configItem.type === 'image'
+    ? 'image/*'
+    : configItem.type === 'video'
+    ? 'video/*'
+    : configItem.allowedTypes && !configItem.allowedTypes.includes('All')
+    ? configItem.allowedTypes.map((t: string) => `.${t.toLowerCase()}`).join(',')
+    : '*/*';
+
+  const showUploadButton =
+    !configItem.maxFiles || files.length < configItem.maxFiles;
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setError(null);
@@ -856,69 +871,75 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
     
     setFileName(fileKey);
 
+    // Example chunk threshold
     const CHUNK_SIZE = 100 * 1024 * 1024;
-    e.target.value = "";
+    e.target.value = '';
 
     try {
       setUploading(true);
-      let fileUrl = "";
+      let fileUrl = '';
       if (file.size <= CHUNK_SIZE) {
         fileUrl = await uploadDirect(file, fileKey);
-        console.log("uploadDirect File URL:", fileUrl);
       } else {
         fileUrl = await uploadMultipart(file, fileKey, CHUNK_SIZE);
-        console.log("uploadMultipart File URL:", fileUrl);
       }
       appendFile(fileUrl);
     } catch (err: any) {
-      console.error("Upload error:", err);
-      setError(err.message || "Error uploading file");
+      console.error('Upload error:', err);
+      setError(err.message || 'Error uploading file');
     } finally {
       setUploading(false);
     }
   };
 
   const uploadDirect = async (file: File, fileKey: string) => {
-    const { data } = await axios.post(`https://dev.apply.litschool.in/student/generate-presigned-url`, {
-      bucketName: "dev-application-portal",
+    const { data } = await axios.post('https://dev.apply.litschool.in/student/generate-presigned-url', {
+      bucketName: 'dev-application-portal',
       key: fileKey,
     });
     const { url } = data;
+
     await axios.put(url, file, {
-      headers: { "Content-Type": file.type },
+      headers: { 'Content-Type': file.type },
       onUploadProgress: (evt: any) => {
         if (!evt.total) return;
         const percentComplete = Math.round((evt.loaded / evt.total) * 100);
         setUploadProgress(percentComplete);
       },
     });
-    return `${url.split("?")[0]}`;
+    return url.split('?')[0];
   };
 
   const uploadMultipart = async (file: File, fileKey: string, chunkSize: number) => {
     const uniqueKey = fileKey;
 
-    const initiateRes = await axios.post(`https://dev.apply.litschool.in/student/initiate-multipart-upload`, {
-      bucketName: "dev-application-portal",
+    // Initiate
+    const initiateRes = await axios.post('https://dev.apply.litschool.in/student/initiate-multipart-upload', {
+      bucketName: 'dev-application-portal',
       key: uniqueKey,
     });
     const { uploadId } = initiateRes.data;
+
+    // Upload chunks
     const totalChunks = Math.ceil(file.size / chunkSize);
     let totalBytesUploaded = 0;
     const parts: { ETag: string; PartNumber: number }[] = [];
+
     for (let i = 0; i < totalChunks; i++) {
       const start = i * chunkSize;
       const end = Math.min(start + chunkSize, file.size);
       const chunk = file.slice(start, end);
-      const partRes = await axios.post(`https://dev.apply.litschool.in/student/generate-presigned-url-part`, {
-        bucketName: "dev-application-portal",
+
+      const partRes = await axios.post('https://dev.apply.litschool.in/student/generate-presigned-url-part', {
+        bucketName: 'dev-application-portal',
         key: uniqueKey,
         uploadId,
         partNumber: i + 1,
       });
       const { url } = partRes.data;
+
       const uploadRes = await axios.put(url, chunk, {
-        headers: { "Content-Type": file.type },
+        headers: { 'Content-Type': file.type },
         onUploadProgress: (evt: any) => {
           if (!evt.total) return;
           totalBytesUploaded += evt.loaded;
@@ -926,16 +947,49 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
           setUploadProgress(Math.min(percent, 100));
         },
       });
+
       parts.push({ PartNumber: i + 1, ETag: uploadRes.headers.etag });
     }
-    await axios.post(`https://dev.apply.litschool.in/student/complete-multipart-upload`, {
-      bucketName: "dev-application-portal",
+
+    // Complete
+    await axios.post('https://dev.apply.litschool.in/student/complete-multipart-upload', {
+      bucketName: 'dev-application-portal',
       key: uniqueKey,
       uploadId,
       parts,
     });
+
     return `https://dev-application-portal.s3.amazonaws.com/${uniqueKey}`;
   };
+
+  const handleDeleteFile = async (fileKey: string, index?: number) => {
+    // try {
+    //   if (!fileKey) {
+    //     console.error("Invalid file fURL:", fileKey);
+    //     return;
+    //   }
+  
+    //   // Make sure `fileKey` is actually a string
+    //   if (typeof fileKey === "string") {
+    //     const deleteCommand = new DeleteObjectCommand({
+    //       Bucket: "dev-application-portal",
+    //       Key: fileKey,
+    //     });
+    //     await s3Client.send(deleteCommand);
+    //     console.log("File deleted successfully from S3:", fileKey);
+  
+    //     // Remove it from the UI
+        if (index !== undefined) {
+          removeFile(index);
+        }
+    //   } else {
+    //     console.error("The file URL is not valid...", fileKey);
+    //   }
+    // } catch (error) {
+    //   console.error("Error deleting file:", error);
+    //   setError("Failed to delete file. Try again.");
+    // }
+  };  
 
   const generateUniqueFileName = (originalName: string) => {
     const timestamp = Date.now();
@@ -944,45 +998,48 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
   };  
 
   return (
-    <FormItem className='w-full'>
+    <FormItem>
       <FormControl>
         <div className="flex flex-col space-y-2 mt-2">
-          {/* Display selected files */}
+          {/* Already-uploaded files */}
           {files.map((file, index) => {
-            const isLink = typeof file === "string";
+            const isLink = typeof file === 'string';
             return (
-              <div key={index} className="flex items-center bg-[#007AFF] h-[52px] text-white p-1.5 rounded-xl w-full">
+              <div key={index} className="flex items-center justify-between bg-[#007AFF] h-[52px] text-white p-1.5 rounded-xl w-full">
                 <div className="flex items-center gap-2 flex-1 w-[50vw] truncate">
-                  <Badge size="icon" className="bg-[#3698FB] rounded-xl mr-2">
+                  <Badge size="icon" className="bg-[#3698FB] rounded-xl">
                     <FileTextIcon className="w-5" />
                   </Badge>
-                  <span className="flex-1 text-xs sm:text-base truncate mr-4">
+                  <span className="flex-1 truncate mr-4">
                     {isLink ? (file as string).split('/').pop() : (file as File).name}
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
                   {isLink && (
-                    <Button size="icon" type="button" variant="ghost" className="bg-[#3698FB] rounded-xl">
-                      <a href={file as string} download target="_blank" rel="noopener noreferrer">
+                    <Button size="icon" type="button" variant="ghost" className="bg-white/20 hover:bg-white/30 rounded-xl"
+                      onClick={() => window.open(file, "_blank")} >
                         <ArrowUpRight className="w-5" />
-                      </a>
                     </Button>
                   )}
-                  <Button size="icon" type="button" className="bg-[#3698FB] rounded-xl" onClick={() => removeFile(index)}>
-                    <XIcon className="w-5" />
+                  <Button size="icon" type="button" className="bg-white/20 hover:bg-white/30 rounded-xl"
+                    onClick={() => handleDeleteFile(fileName, index)} >
+                      <XIcon className="w-5" />
                   </Button>
                 </div>
               </div>
             );
           })}
 
+          {/* Upload in-progress */}
           {uploading && (
             <div className="flex justify-between items-center bg-[#007AFF] h-[52px] text-white p-1.5 rounded-xl w-full">
-              <div className="flex items-center gap-2 flex-1 w-[50vw] truncate">
-                <Badge size="icon" className="bg-[#3698FB] rounded-xl mr-2">
+              <div className="flex flex-1 truncate items-center gap-2">
+                <Badge size="icon" className="bg-[#3698FB] rounded-xl">
                   <FileTextIcon className="w-5" />
                 </Badge>
-                <span className="flex-1 text-xs sm:text-base truncate mr-4">{fileName}</span>
+                <span className="flex-1 truncate mr-4">
+                  {fileName}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 {uploadProgress === 100 ? (
@@ -993,52 +1050,57 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
                     <span>{uploadProgress}%</span>
                   </>
                 )}
-                <Button size="icon" type="button" className="bg-[#1B1B1C] rounded-xl">
+                {/* Cancel or close if needed */}
+                <Button
+                  size="icon"
+                  type="button"
+                  className="bg-white/20 hover:bg-white/30 rounded-xl"
+                  onClick={() => handleDeleteFile(fileName)}
+                >
                   <XIcon className="w-5" />
                 </Button>
               </div>
             </div>
           )}
 
+          {/* Upload button if under maxFiles */}
           {showUploadButton && (
             <div className="flex items-center justify-between w-full h-16 border-2 border-dashed rounded-xl p-1.5">
               <label className="w-full pl-3 text-muted-foreground">
                 <input
                   type="file"
+                  ref={fileInputRef}
                   className="hidden"
                   multiple={configItem.maxFiles > 1}
-                  accept={
-                    configItem.type === 'image'
-                      ? 'image/*'
-                      : configItem.type === 'video'
-                      ? 'video/*'
-                      : configItem.type === 'file' &&
-                        configItem.allowedTypes &&
-                        !configItem.allowedTypes.includes('All')
-                      ? configItem.allowedTypes.map((type: string) => `.${type.toLowerCase()}`).join(',')
-                      : '*/*'
-                  }
+                  accept={acceptTypes}
                   onChange={handleFileUpload}
                 />
                 <span className="cursor-pointer text-xs sm:text-base">
-                  {`Upload ${configItem.type}${configItem.maxFiles > 1 ? 's' : ''} (Max size: ${configItem.maxFileSize || 15} MB)`}
+                  {`Upload ${configItem.type}${
+                    configItem.maxFiles > 1 ? 's' : ''
+                  } (Max size: ${configItem.maxFileSize || 15} MB)`}
                 </span>
               </label>
               <Button
                 type="button"
+                disabled={uploading}
                 className="flex gap-2 text-white px-6 py-6 rounded-xl"
-                onClick={() => document.querySelector<HTMLInputElement>('input[type="file"]')?.click()}
+                onClick={() => fileInputRef.current?.click()}
               >
                 <UploadIcon className="w-4 h-4" /> Upload {configItem.type}
               </Button>
             </div>
           )}
-          {/* Display the number of uploaded files out of maxFiles */}
+
+          {/* How many files so far */}
           {configItem.maxFiles && (
-            <div className="text-sm text-muted-foreground">
-              Uploaded {files.length} of {configItem.maxFiles} file{configItem.maxFiles > 1 ? 's' : ''}
+            <div className="text-sm text-muted-foreground pl-3">
+              Uploaded {files.length} of {configItem.maxFiles} file
+              {configItem.maxFiles > 1 ? 's' : ''}
             </div>
           )}
+
+          {/* Errors */}
           {error && <p className="text-red-500 text-sm">{error}</p>}
         </div>
       </FormControl>
