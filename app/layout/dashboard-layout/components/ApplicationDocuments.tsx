@@ -32,11 +32,6 @@ export default function ApplicationDocuments({ student, onSelectTab }: Applicati
       description: "Access your first interview feedback",
       path: "interview-feedback",
     },
-    {
-      name: "LITMUS Test",
-      description: "Access your LITMUS Test submission along with the accompanying feedback.",
-      path: "litmus-test",
-    },
   ]);
 
   return (

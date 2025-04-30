@@ -9,8 +9,6 @@ import { getCurrentStudent } from "~/api/studentAPI";
 export default function ApplicationLayout() {
   const { studentData, setStudentData } = useContext(UserContext); 
   const [loading, setLoading] = useState(true);
-  const [subtitle, setSubtitle] = useState("");
-  const [submessage, setSubmessage] = useState("");
 
   const navigate = useNavigate();
 
@@ -21,38 +19,20 @@ export default function ApplicationLayout() {
         return;
       }
       try {
-        const res = await getCurrentStudent(studentData._id);
-        const status = res.data?.applicationDetails?.applicationStatus;
-        const isVerified = res.data?.cousrseEnrolled?.[res.data.cousrseEnrolled.length - 1]?.tokenFeeDetails?.verificationStatus;
-        // if (status === undefined || status === "") {
-        //   setSubtitle('Welcome to LIT');
-        //   setSubmessage('Get started with your application process');
-        //   navigate("/application");
-        // } else if (["initiated"].includes(status)) {
-        //   setSubtitle('Welcome to LIT');
-        //   setSubmessage(`Dive into the ${res.data?.program?.name} Course`);
-        //   navigate("/application/task");
-        // } else if (["selected"].includes(status) && isVerified === 'paid') {
-        //   navigate("/dashboard");
-        // } else {
-        //     if(status === 'interview scheduled') {
-        //       setSubtitle('Welcome to LIT');
-        //       setSubmessage(`Book your interview call with our counsellors.`);
-        //     } else if(isVerified === 'pending') {
-        //       setSubtitle('Your Payment is being verified');
-        //       setSubmessage(`You may access your dashboard once your payment has been verified.`);
-        //     } else if(isVerified === 'flagged') {
-        //       setSubtitle('Your Payment verification failed');
-        //       setSubmessage(`You may access your dashboard once your payment has been verified.`);
-        //     } else if(isVerified === 'paid') {
-        //       setSubtitle('Your Payment is verified');
-        //       setSubmessage(`You may access your dashboard.`);
-        //     }  else {
-        //       setSubtitle('');
-        //       setSubmessage(``);
-        //     }
-        //   navigate("/application/status");
-        // }
+        const student = await getCurrentStudent(studentData._id);
+        if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'enrolled'){
+          navigate('../../dashboard');
+        } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'reviewing'){
+          navigate('../../application/status');
+        } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'applied'){
+          navigate('../../application/task');
+        } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'initiated'){
+          navigate('../../application');
+        } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'dropped'){
+          navigate('../../application/new-application');
+        } else {
+          navigate('../../application');
+        }
       } catch (error) {
         console.log("Error fetching student data:", error);
       } finally {

@@ -438,11 +438,11 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
             </h3>
           </div>
           <div className="bg-[#64748B1F] p-4 sm:p-6 ">
-            <div className="flex justify-between items-center cursor-pointer">
-              <Badge className="flex w-fit gap-2 bg-[#3698FB]/20 border-[#3698FB] text-base text-white px-4 py-2 ">
+            <div className="flex justify-end items-center cursor-pointer">
+              {/* <Badge className="flex w-fit gap-2 bg-[#3698FB]/20 border-[#3698FB] text-base text-white px-4 py-2 ">
                 {getInstallmentIcon(paymentDetails?.oneShotPayment?.verificationStatus)}
                 Installment 01
-              </Badge>
+              </Badge> */}
               <div className="flex flex-col sm:flex-row sm:gap-4 text-right">
               <Badge className={`${paymentDetails?.oneShotPayment?.verificationStatus === 'paid' ? 'border-[#00CC92] bg-[#00CC92]/10' : 'bg-[#64748B1F]/20 border-[#2C2C2C]'} text-sm sm:text-base text-white px-4 py-2`}>
                 ₹{formatAmount(paymentDetails?.oneShotPayment?.amountPayable)}

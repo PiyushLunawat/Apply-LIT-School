@@ -338,7 +338,7 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
               name="courseDive.interest"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="flex gap-1 items-center text-base font-normal text-[#00A0E9] pl-3">
+                  <FormLabel className="flex gap-1 items-center text-xl sm:text-2xl font-normal text-[#00A0E9] pl-3">
                     Why are you interested in joining The LIT School?
                   </FormLabel>
                   <FormControl>
@@ -360,7 +360,7 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
               name="courseDive.goals"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="flex gap-1 items-center text-base font-normal text-[#00A0E9] pl-3">
+                  <FormLabel className="flex gap-1 items-center text-xl sm:text-2xl font-normal text-[#00A0E9] pl-3">
                     What are your career goals or aspirations?
                   </FormLabel>
                   <FormControl>
@@ -387,10 +387,10 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
               <div className="space-y-5">
               <div className='flex flex-col gap-3'>
                 <div className="">
-                  <Label className="text-base font-normal text-[#FA69E5] pl-3">
+                  <Label className="text-xl sm:text-2xl font-normal text-[#FA69E5] pl-3">
                     {task.title}
                   </Label>
-                  <div className="text-xl sm:text-2xl text-white mt-2 pl-3">
+                  <div className="text-base text-white mt-2 pl-3">
                     {task.description}
                   </div>
                 </div>

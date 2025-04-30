@@ -282,7 +282,6 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({}) => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Student">Student</SelectItem>
-                      <SelectItem value="Highschool Graduate">Highschool Graduate</SelectItem>
                       <SelectItem value="College Graduate">College Graduate</SelectItem>
                       <SelectItem value="Working Professional">Working Professional</SelectItem>
                       <SelectItem value="Freelancer">Freelancer</SelectItem>

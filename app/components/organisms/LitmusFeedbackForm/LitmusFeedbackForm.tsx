@@ -20,8 +20,8 @@ export function LitmusFeedbackForm({ student, setClose }: LitmusFeedbackFormProp
   const [rating, setRating] = useState(0);
   const [decisionFactors, setDecisionFactors] = useState<string[]>([]);
   const [customTagDesc, setCustomTagDesc] = useState("");
-  const [feedback1, setFeedback1] = useState("");
   const [feelings, setFeelings] = useState<string>("");
+  const [feedback1, setFeedback1] = useState("");
 
   const handleSourceToggle = (option: string) => {
     if (sources.includes(option)) {
@@ -52,8 +52,8 @@ export function LitmusFeedbackForm({ student, setClose }: LitmusFeedbackFormProp
       { question: "Rate your ounsellor", answer: `${rating}/100` },
       { question: "What was the one thing that played a key role in your decision-making to join The LIT School?", answer: decisionFactors },
       { question: "decision-making description", answer: customTagDesc },
-      { question: "Do you have any feedback on the Counselling Process?", answer: feedback1 },
       { question: "How do you feel after the Counselling Process? ", answer: feelings },
+      { question: "Do you have any feedback on the Counselling Process?", answer: feedback1 },
     ];
     console.log(payload);
     try {
@@ -72,6 +72,16 @@ export function LitmusFeedbackForm({ student, setClose }: LitmusFeedbackFormProp
       setLoading(false);
     }
   };
+
+  function getIcon(rating: number, total: number): string {
+    const percentage = (rating / total) * 100;
+  
+    if (percentage <= 20) return "1-icon.png";
+    if (percentage <= 40) return "2-icon.png";
+    if (percentage <= 60) return "3-icon.png";
+    if (percentage <= 80) return "4-icon.png";
+    return "5-icon.png";
+  }  
 
   return (
     <div className="flex flex-col items-start text-white shadow-md w-full mx-auto space-y-8">
@@ -117,7 +127,7 @@ export function LitmusFeedbackForm({ student, setClose }: LitmusFeedbackFormProp
         <p className="text-base pl-3">Drag the emoji to rate your counsellor!</p>
         <div className="bg-[#1F1F1F] rounded-xl p-6 flex items-center gap-2">
           <Slider value={[rating]} min={0} max={100} step={1} onValueChange={([val]) => setRating(val)} />
-          <span className="text-2xl">😍</span>
+          <img src={`/assets/icons/${getIcon(rating, 100)}`} className="w-6"/>
           <span className="text-2xl font-semibold">{rating}/100</span>
         </div>
       </div>
@@ -145,13 +155,13 @@ export function LitmusFeedbackForm({ student, setClose }: LitmusFeedbackFormProp
         <div className="space-y-2 w-full">
             <div className="flex flex-wrap gap-2">
             {decisionFactors?.map((tag, index) => (
-                <div key={index} className="flex items-center gap-2 bg-[#1388FF] rounded-xl px-4 py-3 text-sm">
-                    {tag}
-                    <XIcon
-                        className="w-4 h-4 cursor-pointer"
-                        onClick={() => setDecisionFactors(prev => prev.filter(f => f !== tag))}
-                        />
-                </div>
+              <div key={index} className="flex items-center gap-2 bg-[#1388FF] rounded-xl px-4 py-3 text-sm">
+                {tag}
+                <XIcon
+                  className="w-4 h-4 cursor-pointer"
+                  onClick={() => setDecisionFactors(prev => prev.filter(f => f !== tag))}
+                  />
+              </div>
             ))}
             </div>
             <Textarea
@@ -161,20 +171,6 @@ export function LitmusFeedbackForm({ student, setClose }: LitmusFeedbackFormProp
             onChange={(e) => setCustomTagDesc(e.target.value)}
             />
         </div>
-      </div>
-
-
-      {/* Feedback 1 */}
-      <div className="space-y-2 w-full">
-        <p className="text-base text-[#00A3FF] pl-3">
-          Do you have any feedback on the Counselling Process? <span className="text-xs text-muted-foreground">(Not Compulsory)</span>
-        </p>
-        <Textarea
-          placeholder="Write up to 60 words"
-          className="w-full p-4 h-[120px] text-base focus:outline-none"
-          value={feedback1}
-          onChange={(e) => setFeedback1(e.target.value)}
-        />
       </div>
 
       {/* Feelings */}
@@ -196,6 +192,19 @@ export function LitmusFeedbackForm({ student, setClose }: LitmusFeedbackFormProp
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Feedback 1 */}
+      <div className="space-y-2 w-full">
+        <p className="text-base text-[#00A3FF] pl-3">
+          Do you have any feedback on the Counselling Process? <span className="text-xs text-muted-foreground">(Not Compulsory)</span>
+        </p>
+        <Textarea
+          placeholder="Write up to 60 words"
+          className="w-full p-4 h-[120px] text-base focus:outline-none"
+          value={feedback1}
+          onChange={(e) => setFeedback1(e.target.value)}
+        />
       </div>
 
       {/* Submit */}
