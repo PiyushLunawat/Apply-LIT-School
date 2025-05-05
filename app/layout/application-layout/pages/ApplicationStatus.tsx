@@ -141,7 +141,7 @@ export const ApplicationStatus: React.FC = () => {
             </div>
           </div> : 
           <>
-            <SubHeader subtitle='Welcome to LIT' submessage='Your interview call is booked with our counsellors' />
+            <SubHeader subtitle='Welcome to LIT' submessage='Your interview call is booked with our program team' />
             <img src="/assets/images/application-process-02.svg" alt="BANNER" className="w-screen object-cover overflow-x-auto h-[188px] sm:h-full my-6 sm:my-12" />
             <div className="mt-10 sm:mt-16 w-full px-4 justify-center items-center">
               <InterviewDetails student={student}/>

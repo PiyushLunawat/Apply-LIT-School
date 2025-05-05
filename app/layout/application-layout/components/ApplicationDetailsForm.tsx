@@ -314,7 +314,21 @@ useEffect(() => {
     );
     setFilteredCohorts(matching);
   }, [form.watch("studentData.courseOfInterest"), openCohorts]);
-  
+
+// Move the watched value outside the useEffect
+const currentStatus = form.watch("studentData.currentStatus");
+
+useEffect(() => {
+  if (currentStatus) {
+    const isExp = ['Working Professional', 'Freelancer', 'Business Owner', 'Consultant']
+      .includes(currentStatus);
+      const expType = (['Working Professional', 'Business Owner', 'Freelancer', 'Consultant']
+        .includes(currentStatus) ? currentStatus : '') as "" | "Working Professional" | "Business Owner" | "Freelancer" | "Consultant";
+
+    form.setValue('applicationData.isExperienced', isExp);
+    form.setValue('applicationData.experienceType', expType);
+  }
+}, [currentStatus]); // Now using the watched value as dependency
 
   useEffect(() => {
     const fetchStudentData = async () => {

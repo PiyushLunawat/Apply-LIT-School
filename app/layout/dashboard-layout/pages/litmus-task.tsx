@@ -46,8 +46,8 @@ export default function LitmusTask() {
   }, []);
 
   const formatHHMMSS = (totalSeconds: number): string => {
-    if (totalSeconds / (24 * 60 * 60 * 60) > 2 ) {
-      return `${totalSeconds} days`;
+    if (totalSeconds / (24 * 60 * 60) > 2 ) {
+      return `${Math.floor(totalSeconds / (24 * 60 * 60))+1} days`;
     } else {
     const hrs = Math.floor(totalSeconds / 3600);
     const mins = Math.floor((totalSeconds % 3600) / 60);

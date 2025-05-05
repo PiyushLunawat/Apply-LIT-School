@@ -47,7 +47,7 @@ const StatusMessage: React.FC<StatusMessageProps> = ({ student }) => {
           </>
         );
         setSubMessage(
-          'We have curated feedback based on your submission. Review your feedback and proceed to book your interview call with our counsellor.'
+          'We have curated feedback based on your submission. Review your feedback and proceed to book your interview call with our program team.'
         );
         break;
       case 'interview scheduled':
@@ -58,7 +58,7 @@ const StatusMessage: React.FC<StatusMessageProps> = ({ student }) => {
           </>
         );
         setSubMessage(
-          'A decision from your counsellor is pending. Once approved, you can proceed to secure your seat by completing the reservation fee payment.'
+          'A decision from your program team is pending. Once approved, you can proceed to secure your seat by completing the reservation fee payment.'
         );
         break;
       case 'rejected':
@@ -74,7 +74,7 @@ const StatusMessage: React.FC<StatusMessageProps> = ({ student }) => {
       case 'concluded':
         setHeadMessage(`Your Interview has Concluded.`);
         setSubMessage(
-          'A decision from your counsellor is pending. Once approved, you can proceed to secure your seat by completing the reservation fee payment.'
+          'A decision from your program team is pending. Once approved, you can proceed to secure your seat by completing the reservation fee payment.'
         );
         break;
       case 'selected':

@@ -253,11 +253,24 @@ export default function AdmissionFee({ student }: AdmissionFeeProps) {
       ? new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(Math.round(value))
       : "--";
 
-      const [remainingTime, setRemainingTime] = useState<number>(() => {
-        const days = latestCohort?.cohortId?.litmusTestDetail[0]?.litmusTestDuration ?? 0;
-        return Math.floor(days * 24 * 60 * 60); // convert days to seconds
-      });
+      const [remainingTime, setRemainingTime] = useState<number>(0);
 
+      useEffect(() => {
+        const days = latestCohort?.cohortId?.litmusTestDetail[0]?.litmusTestDuration ?? 0;
+        const now = new Date();
+        const targetDate = new Date(latestCohort?.applicationDetails?.updatedAt);
+        const diffInSeconds = Math.floor((targetDate.getTime() - now.getTime()) / 1000);
+        setRemainingTime(Math.floor((days * 24 * 60 * 60) + diffInSeconds))
+      }, [student]);
+    
+      useEffect(() => {
+        const interval = setInterval(() => {
+          setRemainingTime((prev) => Math.max(prev - 1, 0));
+        }, 1000);
+    
+        return () => clearInterval(interval); // clean up on unmount
+      }, []);
+      
       useEffect(() => {
         const interval = setInterval(() => {
           setRemainingTime((prev) => Math.max(prev - 1, 0));
@@ -268,7 +281,7 @@ export default function AdmissionFee({ student }: AdmissionFeeProps) {
 
       const formatHHMMSS = (totalSeconds: number): string => {
         if (totalSeconds / (24 * 60 * 60) > 2 ) {
-          return `${totalSeconds} days`;
+          return `${Math.floor(totalSeconds / (24 * 60 * 60))+1} days`;
         } else {
         const hrs = Math.floor(totalSeconds / 3600);
         const mins = Math.floor((totalSeconds % 3600) / 60);

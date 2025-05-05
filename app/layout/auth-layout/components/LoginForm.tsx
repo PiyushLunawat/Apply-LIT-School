@@ -50,11 +50,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({ }) => {
       setEmail(data.email);
       setShowOtp(true);
     } catch (error: any) {
-      console.log(error);
+      console.log('noooo',error.message);
       setError('email', {
         type: 'manual', 
         message: error.message || 'An unexpected error occurred', // Display the error message
       });
+      if(error.message === 'Account not found. Please sign up.')
+        navigate(`../sign-up?email=${data.email}`);
     } finally{
       setLoading(false);
     }

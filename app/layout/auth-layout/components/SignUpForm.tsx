@@ -4,7 +4,7 @@ import { Button } from '~/components/ui/button';
 import { Label } from '~/components/ui/label';
 import { Input } from '~/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select';
-import { useNavigate } from '@remix-run/react';
+import { useNavigate, useSearchParams } from '@remix-run/react';
 import { Popover, PopoverTrigger, PopoverContent } from '~/components/ui/popover';
 import { Calendar } from '~/components/ui/calendar';
 import {
@@ -79,14 +79,16 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({}) => {
   const [interest, setInterest] = useState<Cohort[]>([]);  
   const [cohorts, setCohorts] = useState<Cohort[]>([]);
   const [loading, setLoading] = useState(false);
-
+  
+  const [searchParams] = useSearchParams();
+  const emailParam = searchParams.get('email');
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       firstName: '',
       lastName: '',
-      email: '',
+      email: emailParam || '',
       mobileNumber: '',
       dateOfBirth: undefined,
       qualification: '',

@@ -17,7 +17,7 @@ export const Header: React.FC<HeaderProps> = ({ classn }) => {
       const response = await fetch("/logout", { method: "POST" });
     
       if (response.ok) {
-        localStorage.removeItem('studentData');
+        localStorage.clear();
         setStudentData(null);
         window.location.reload();
         // navigate('../auth/login');

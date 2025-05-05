@@ -295,6 +295,16 @@ export default function LitmusTest({ student }: LitmusTestProps) {
     return index !== -1 ? colorClasses[index % colorClasses.length] : 'text-default';
   };
 
+  function getIcon(rating: number, total: number): string {
+    const percentage = (rating / total) * 100;
+  
+    if (percentage <= 20) return "1-icon.png";
+    if (percentage <= 40) return "2-icon.png";
+    if (percentage <= 60) return "3-icon.png";
+    if (percentage <= 80) return "4-icon.png";
+    return "5-icon.png";
+  }  
+
   return (
   <div className='flex flex-col items-start bg-[#09090B] text-white w-full mx-auto px-4 py-8 sm:p-[52px] space-y-4 sm:space-y-8'>
     {status === undefined ? 
@@ -637,7 +647,8 @@ export default function LitmusTest({ student }: LitmusTestProps) {
                     <img src="/assets/icons/score-icon.svg" className="w-12 h-8" />
                     <div className="text-xl font-semibold">Weighted Total Score</div>
                   </div>
-                  <div className="flex gap-2 text-2xl font-semibold">
+                  <div className="flex gap-2 items-center text-2xl font-semibold">
+                    <img src={`/assets/icons/${getIcon(totalScore, maxScore)}`} className="w-6 h-6"/>
                     {totalScore ? totalScore : '--'}/{maxScore}
                   </div>
                 </div>
@@ -666,7 +677,9 @@ export default function LitmusTest({ student }: LitmusTestProps) {
                         <div className="text-sm text-muted-foreground font-normal">No Description Shared</div>
                       }
                     </div>
-                    <div className="text-2xl font-semibold">{litmusTestDetails?.results?.[0]?.score?.[index]?.score}/{litmusTestDetails?.results?.[0]?.score?.[index]?.totalScore}</div>
+                    <div className="flex gap-2 items-center text-2xl font-semibold">
+                      <img src={`/assets/icons/${getIcon(litmusTestDetails?.results?.[0]?.score?.[index]?.score, litmusTestDetails?.results?.[0]?.score?.[index]?.totalScore)}`} className="w-6 h-6"/>
+                      {litmusTestDetails?.results?.[0]?.score?.[index]?.score}/{litmusTestDetails?.results?.[0]?.score?.[index]?.totalScore}</div>
                   </div>
                 ))}
               </div>

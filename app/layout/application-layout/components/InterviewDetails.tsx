@@ -126,7 +126,7 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
           <Card className="max-w-6xl mx-auto px-8 py-6 flex flex-col sm:flex-row gap-3 justify-between items-center">
             <div className="flex gap-2 items-center">
               <ScreenShare className="w-4 h-4" />
-              <span className="flex-1">Proceed to reschedule your interview call with our counsellor.</span>
+              <span className="flex-1">Proceed to reschedule your interview call with our program team.</span>
             </div>
             <Button size={'xl'} variant="default" className="w-full sm:w-fit" disabled={interviewLoading} onClick={() => handleScheduleInterview()}
             >
