@@ -81,7 +81,7 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
     
       const payload = {
         emails: response.data,
-        eventCategory: "Application Test Review", 
+        eventCategory: "Application Test Interview", 
       };
       try {
         const response = await fetch(
@@ -235,7 +235,7 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
       <Dialog open={interviewOpen} onOpenChange={setInterviewOpen}>
       <DialogTitle></DialogTitle>
         <DialogContent className="max-w-2xl max-h-[70vh] sm:max-h-[90vh] overflow-y-auto">
-          <SchedulePresentation student={student} interviewer={interviewer} eventCategory='Application Test Review' redirectUrl={`${baseUrl}/application/status`}/>
+          <SchedulePresentation student={student} interviewer={interviewer} eventCategory='Application Test Interview' redirectUrl={`${baseUrl}/application/status`}/>
         </DialogContent>
       </Dialog>
       </div >

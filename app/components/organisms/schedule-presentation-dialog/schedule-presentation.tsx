@@ -43,15 +43,15 @@ export function SchedulePresentation({ student, interviewer, eventCategory, redi
       <div className="grid gap-3">
         {/* Profile Section */}
         <div className="space-y-1">
-            <div className="text-2xl font-medium">{eventCategory === 'Application Test Review' ? 'Application Review' : 'LITMUS Review'}</div>
+            <div className="text-2xl font-medium">{eventCategory === 'Application Test Interview' ? 'Application Review' : 'LITMUS Review'}</div>
             <h2 className="text-base font-semibold">
                 Select Your Interviewer
             </h2>
             <div className="flex gap-4 h-5 items-center">
-                <p className="text-sm text-muted-foreground">{eventCategory === 'Application Test Review' ? 'Program Application' : 'LITMUS Test'}</p>
+                <p className="text-sm text-muted-foreground">{eventCategory === 'Application Test Interview' ? 'Program Application' : 'LITMUS Test'}</p>
                 <Separator orientation="vertical" />
                 <p className="text-sm text-muted-foreground">
-                  {eventCategory === 'Application Test Review' ?
+                  {eventCategory === 'Application Test Interview' ?
                     `Submitted application on ${new Date(latestCohort?.applicationDetails?.createdAt).toLocaleDateString()}` :
                     `Submitted on ${new Date(latestCohort?.litmusTestDetails?.createdAt).toLocaleDateString()}`
                   }

@@ -41,7 +41,7 @@ const Feedback: React.FC<FeedbackProps> = ({ student, setIsPaymentVerified }) =>
   
     const payload = {
       emails: response.data,
-      eventCategory: "Application Test Review", 
+      eventCategory: "Application Test Interview", 
     };
 
     console.log("pay",payload);
@@ -152,7 +152,7 @@ const Feedback: React.FC<FeedbackProps> = ({ student, setIsPaymentVerified }) =>
       <Dialog open={interviewOpen} onOpenChange={setInterviewOpen}>
       <DialogTitle></DialogTitle>
         <DialogContent className="max-w-[90vw] sm:max-w-2xl">
-          <SchedulePresentation student={student} interviewer={interviewer} eventCategory='Application Test Review' redirectUrl={`${baseUrl}/application/status`}/>
+          <SchedulePresentation student={student} interviewer={interviewer} eventCategory='Application Test Interview' redirectUrl={`${baseUrl}/application/status`}/>
         </DialogContent>
       </Dialog>
   </div>

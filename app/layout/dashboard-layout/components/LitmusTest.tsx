@@ -221,7 +221,7 @@ export default function LitmusTest({ student }: LitmusTestProps) {
   
     const payload = {
       emails: response.data,
-      eventCategory: "Litmus Test Review", 
+      eventCategory: "Litmus Test Interview", 
     };
 
     console.log("pay",payload);
@@ -714,7 +714,7 @@ export default function LitmusTest({ student }: LitmusTestProps) {
     <Dialog open={interviewOpen} onOpenChange={setInterviewOpen}>
       <DialogTitle></DialogTitle>
       <DialogContent className="max-w-2xl max-h-[70vh] sm:max-h-[90vh] overflow-y-auto">
-        <SchedulePresentation student={student} interviewer={interviewer} eventCategory='Litmus Test Review' redirectUrl={`${baseUrl}/dashboard/litmus-task`}/>
+        <SchedulePresentation student={student} interviewer={interviewer} eventCategory='Litmus Test Interview' redirectUrl={`${baseUrl}/dashboard/litmus-task`}/>
       </DialogContent>
     </Dialog>
     <Dialog open={feedbackOpen} >

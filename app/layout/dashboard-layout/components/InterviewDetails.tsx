@@ -80,7 +80,7 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
     
       const payload = {
         emails: response.data,
-        eventCategory: "Litmus Test Review", 
+        eventCategory: "Litmus Test Interview", 
       };
       try {
         const response = await fetch(
@@ -236,7 +236,7 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
       <Dialog open={interviewOpen} onOpenChange={setInterviewOpen}>
       <DialogTitle></DialogTitle>
         <DialogContent className="max-h-[70vh] sm:max-h-[90vh] sm:max-w-2xl overflow-y-auto">
-          <SchedulePresentation student={student} interviewer={interviewer} eventCategory='Litmus Test Review' redirectUrl={`${baseUrl}/dashboard/litmus-task`}/>
+          <SchedulePresentation student={student} interviewer={interviewer} eventCategory='Litmus Test Interview' redirectUrl={`${baseUrl}/dashboard/litmus-task`}/>
         </DialogContent>
       </Dialog>
       </div >
