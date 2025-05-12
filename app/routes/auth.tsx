@@ -16,7 +16,7 @@ export const loader: LoaderFunction = async ({ request }) => {
   
   // Now you can use `userId` in your logic
   if (accessToken || refreshToken) {
-    // return redirect("/dashboard");
+    return redirect("/dashboard");
   }
 
   return { userId };

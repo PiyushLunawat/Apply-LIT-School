@@ -179,7 +179,7 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
                           <span className="flex-1">This meeting is over</span>
                           </div> :
                         <p className="text-sm sm:text-base font-normal text-[#64748B]">
-                          Your Counselling Session has been booked for
+                          Your Interview Session has been booked for
                         </p>
                     }
                     <h3 className="text-2xl sm:text-3xl font-semibold">
