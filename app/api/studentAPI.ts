@@ -5,7 +5,7 @@ const baseUrl = getEnvValue("REMIX_PUBLIC_API_BASE_URL");
 
 // Fetch all cohorts
 export async function getCohorts() {
-  const response = await fetch(`${baseUrl}/admin/cohort`);
+  const response = await fetch(`${baseUrl}/student/cohort`);
 
   if (!response.ok) {
     const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
@@ -21,7 +21,7 @@ export async function getCohorts() {
 }
 
 export async function getCohortById(id: string) {
-  const response = await fetch(`${baseUrl}/admin/cohort/${id}`);
+  const response = await fetch(`${baseUrl}/student/cohort/${id}`);
   if (!response.ok) {
     const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
     throw new Error(
@@ -37,7 +37,7 @@ export async function getCohortById(id: string) {
 
 // Fetch all centres
 export async function getCentres() {
-  const response = await fetch(`${baseUrl}/admin/center`);
+  const response = await fetch(`${baseUrl}/student/center`);
 
   if (!response.ok) {
     const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
@@ -54,7 +54,7 @@ export async function getCentres() {
 
 // Fetch all programs
 export async function getPrograms() {
-  const response = await fetch(`${baseUrl}/admin/program`);
+  const response = await fetch(`${baseUrl}/student/program`);
 
   if (!response.ok) {
     const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
