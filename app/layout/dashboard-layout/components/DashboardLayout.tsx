@@ -13,12 +13,12 @@ export default function DashboardLayout() {
 
   useEffect(() => {
     async function fetchCurrentStudentData() {
-      if (!studentData?._id) {
+      if (!studentData) {
         setLoading(false);
         return;
       }
       try {
-        const student = await getCurrentStudent(studentData._id);
+        const student = await getCurrentStudent(studentData._id || studentData?.id);
         if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'reviewing'){
           navigate('../../application/status');
         } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'applied'){

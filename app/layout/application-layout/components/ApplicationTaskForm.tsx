@@ -7,7 +7,7 @@ import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { UserContext } from '~/context/UserContext';
 import { Button } from '~/components/ui/button';
-import { ArrowUpRight, Download, FileTextIcon, Link2, Link2Icon, LoaderCircle, UploadIcon, XIcon,} from 'lucide-react';
+import { ArrowUpRight, Download, FileTextIcon, Link2, Link2Icon, LoaderCircle, SaveIcon, UploadIcon, XIcon,} from 'lucide-react';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage,} from '~/components/ui/form';
 import { submitApplicationTask} from '~/api/studentAPI';
 import { useNavigate } from '@remix-run/react';
@@ -265,6 +265,7 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
       // Final payload
       const payload = {
         taskDataId: taskId,
+        isSubmit: true,
         tasks: [
           {
             courseDive: [data.courseDive.interest, data.courseDive.goals],
@@ -280,6 +281,67 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
       // Clear local storage and navigate on success
       localStorage.removeItem(storageKey);
       navigate('/application/status');
+    } catch (err) {
+      console.error('Failed to submit application task:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onSave = async (data: FormSchema) => {
+    try {
+      setLoading(true);
+
+      // Transform tasks into final shape for the server
+      const transformedTasks = data.tasks.map((task) => {
+        const transformedTask: Record<string, any> = { feedback: [] };
+
+        task.configItems.forEach((configItem) => {
+          const type = configItem.type.toLowerCase();
+          const answer = configItem.answer;
+          let key: string | null = null;
+
+          if (type === 'link') {
+            key = 'links';
+          } else if (type === 'image') {
+            key = 'images';
+          } else if (type === 'video') {
+            key = 'videos';
+          } else if (type === 'file') {
+            key = 'files';
+          } else if (type === 'long' || type === 'short' || type === 'text') {
+            key = 'text';
+          }
+
+          if (key) {
+            if (!(key in transformedTask)) {
+              transformedTask[key] = [];
+            }
+            if (Array.isArray(answer)) {
+              transformedTask[key] = answer; // e.g. links, files
+            } else {
+              transformedTask[key].push(answer); // single text
+            }
+          }
+        });
+        return transformedTask;
+      });
+
+      // Final payload
+      const payload = {
+        taskDataId: taskId,
+        tasks: [
+          {
+            courseDive: [data.courseDive.interest, data.courseDive.goals],
+            tasks: transformedTasks,
+          },
+        ],
+      };
+
+      console.log('Submitting Payload:', payload);
+      const res = await submitApplicationTask(payload);
+      console.log('Submission success => ', res);
+
     } catch (err) {
       console.error('Failed to submit application task:', err);
     } finally {
@@ -532,14 +594,23 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
           >
             Clear Form
           </Button>
-          <Button
-            size="xl"
-            className="w-full sm:w-fit space-y-1 order-1 sm:order-2"
-            type="submit"
-            disabled={loading || uploading || !isValid}
-          >
-            {loading ? 'Submitting...' : 'Submit Application'}
-          </Button>
+          {isValid ?
+            <Button
+              size="xl"
+              className="w-full sm:w-fit space-y-1 order-1 sm:order-2"
+              type="submit"
+              disabled={loading || uploading || !isValid}
+            >
+              {loading ? 'Submitting...' : 'Submit Application'}
+            </Button> :
+            <Button size="xl" className='w-full sm:w-fit space-y-1 order-1 sm:order-2'
+              type="button" disabled={loading} onClick={() => onSave(form.getValues())}
+            >
+              <div className='flex items-center gap-2'>
+                <SaveIcon className='w-5 h-5' />Save
+              </div>
+            </Button>
+            }
         </div>
       </form>
     </Form>

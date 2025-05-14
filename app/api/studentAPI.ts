@@ -97,30 +97,46 @@ export async function getCurrentStudent(id: string, token?: string) {
   return response.json();
 }
 
+// Save application function
+export async function saveApplication(formdata: any) {
+  const response = await fetch(`${baseUrl}/student/submit`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(formdata),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(
+      errorData.message || `Failed to save application ${response.status}`
+    );
+  }
+  return response.json();
+}
+
 // Submit application function
 export async function submitApplication(formdata: any) {
-  try {
-    const response = await fetch(`${baseUrl}/student/submit-application`, {
-      method: "POST",
-      body: formdata,
-    });
+  const response = await fetch(`${baseUrl}/student/submit-application`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(formdata),
+  });
 
-    if (!response.ok) {
-      const errorDetails = await response.json().catch(() => null); // Catch cases where response is not JSON
-      throw new Error(
-        `${
-          errorDetails
-            ? `${errorDetails.message || JSON.stringify(errorDetails)}`
-            : "Failed to submit application"
-        }`
-      );
-    }
-
-    return response.json();
-  } catch (error: any) {
-    console.error("Error submitting application:", error);
-    throw new Error(`Application submission failed: ${error.message}`);
+  if (!response.ok) {
+    const errorDetails = await response.json().catch(() => null); // Handle cases where the response is not JSON
+    throw new Error(
+      `${
+        errorDetails
+          ? `${errorDetails.message || JSON.stringify(errorDetails)}`
+          : ""
+      }`
+    );
   }
+  return response.json();
 }
 
 export async function submitApplicationTask(formData: any) {

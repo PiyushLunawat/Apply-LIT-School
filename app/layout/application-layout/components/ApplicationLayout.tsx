@@ -14,12 +14,13 @@ export default function ApplicationLayout() {
 
   useEffect(() => {
     async function fetchCurrentStudentData() {
-      if (!studentData?._id) {
+      if (!studentData) {
         setLoading(false);
         return;
       }
       try {
-        const student = await getCurrentStudent(studentData._id);
+        const student = await getCurrentStudent(studentData._id || studentData?.id);
+        setStudentData(student)
         if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'enrolled'){
           navigate('../../dashboard');
         } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'reviewing'){
@@ -41,7 +42,7 @@ export default function ApplicationLayout() {
     }
 
     fetchCurrentStudentData();
-  }, [studentData, navigate]);
+  }, [studentData?.id, navigate]);
 
   return (
     <div className="flex flex-col min-h-screen">

@@ -109,7 +109,6 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
         revalidate();
         // Store studentData in localStorage
         await RegisterInterceptor(res.accessToken, res.refreshToken)
-        console.log("ddddd");
         
         const student = await getCurrentStudent(res.user.id);
         if (student) {

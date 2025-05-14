@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Button } from '~/components/ui/button';
-import { Upload, Clock, FileTextIcon, RefreshCw, X, Link2Icon, XIcon, UploadIcon, Download, ArrowUpRight, LoaderCircle, Link2, FileIcon, VideoIcon, ImageIcon, HandMetal } from 'lucide-react';
+import { Upload, Clock, FileTextIcon, RefreshCw, X, Link2Icon, XIcon, UploadIcon, Download, ArrowUpRight, LoaderCircle, Link2, FileIcon, VideoIcon, ImageIcon, HandMetal, SaveIcon } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -184,6 +184,7 @@ export default function LitmusTest({ student }: LitmusTestProps) {
 
       const payload = {
         litmusTaskId: litmusTestDetails?._id,
+        isSubmit: true,
         tasks: [
           {
             tasks: transformedTasks,
@@ -199,6 +200,65 @@ export default function LitmusTest({ student }: LitmusTestProps) {
       setLitmusTestDetails(response.data);
       setStatus(response.data?.status);
       handleScheduleInterview();
+
+    } catch (error) {
+      console.error('Failed to submit Litmus Test:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onSave = async (data: LitmusTestFormValues) => {
+    try {
+      setLoading(true);
+      const transformedTasks = data.tasks.map((task) => {
+        const transformedTask: Record<string, any> = { feedback: [] };
+        task.configItems.forEach((configItem) => {
+          const type = configItem.type.toLowerCase();
+          const answer = configItem.answer;
+          let key: string | null = null;
+          if (type === "link") {
+            key = "links";
+          } else if (type === "image") {
+            key = "images";
+          } else if (type === "video") {
+            key = "videos";
+          } else if (type === "file") {
+            key = "files";
+          } else if (type === "long" || type === "short" || type === "text") {
+            key = "texts";
+          }
+          if (key) {
+            if (!(key in transformedTask)) {
+              transformedTask[key] = [];
+            }
+            if (Array.isArray(answer)) {
+              transformedTask[key] = answer;
+            } else {
+              transformedTask[key].push(answer);
+            }
+          }
+        });
+        return transformedTask;
+      });
+
+      const payload = {
+        litmusTaskId: litmusTestDetails?._id,
+        tasks: [
+          {
+            tasks: transformedTasks,
+          },
+        ],
+      };
+
+      console.log("Payload:", payload);
+
+      // Submit the form data using the provided API function
+      const response = await submitLITMUSTest(payload);
+      console.log('Submission successful:', response);
+      // setLitmusTestDetails(response.data);
+      // setStatus(response.data?.status);
+      // handleScheduleInterview();
 
     } catch (error) {
       console.error('Failed to submit Litmus Test:', error);
@@ -466,9 +526,16 @@ export default function LitmusTest({ student }: LitmusTestProps) {
             ))}
 
             <div className='w-full flex justify-between items-center '>
-              <Button size="xl" className='' type="submit" disabled={loading || !isValid}>
-                Submit and Book Presentation Session
-              </Button>
+              {isValid ?
+                <Button size="xl" className='' type="submit" disabled={loading || !isValid}>
+                  Submit and Book Presentation Session
+                </Button> : 
+                <Button size="xl" type="button" disabled={loading} onClick={() => onSave(form.getValues())}>
+                  <div className='flex items-center gap-2'>
+                    <SaveIcon className='w-5 h-5' />Save
+                  </div>
+                </Button>
+              }
             </div>
 
           </div>

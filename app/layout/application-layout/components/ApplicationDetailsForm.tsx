@@ -298,7 +298,7 @@ useEffect(() => {
     resolver: zodResolver(formSchema),
   });
 
-  const { control, handleSubmit, formState: { errors }, reset, setValue, watch } = form;
+  const { control, handleSubmit, formState: { errors, isValid }, reset, setValue, watch } = form;
 
   useEffect(() => {
     const selectedProgram = form.watch("studentData.courseOfInterest");
@@ -342,7 +342,7 @@ useEffect(() => {
         const sData = student?.appliedCohorts[student.appliedCohorts.length - 1]?.applicationDetails?.studentDetails;
         
         // Payment or "isSaved" checks
-        if (student?.appliedCohorts[student.appliedCohorts.length - 1]?.applicationDetails?.studentDetails !== undefined) {
+        if (student?.appliedCohorts[student.appliedCohorts.length - 1]?.applicationDetails?.studentDetails !== undefined && student?.appliedCohorts[student.appliedCohorts.length - 1]?.applicationDetails?.applicationStatus !== 'incomplete') {
           setIsSaved(true);
         } else {
           setIsSaved(false);
@@ -377,7 +377,7 @@ useEffect(() => {
               email: studentData?.email || '',
               contact: student?.mobileNumber || studentData?.mobileNumber,
               dob: studentData?.dateOfBirth ? studentData.dateOfBirth.split('T')[0] : '',
-              currentStatus: studentData?.qualification || '',
+              currentStatus: studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]?.qualification || '',
               courseOfInterest: studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]?.cohortId?.programDetail?._id || '',
               cohort: studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]?.cohortId._id || '',
               isMobileVerified: student?.isMobileVerified || false,
@@ -395,12 +395,12 @@ useEffect(() => {
               graduationYear: sData?.previousEducation?.yearOfGraduation || '',
               isExperienced:
                 sData?.workExperience?.isExperienced ||
-                ['Working Professional', 'Freelancer', 'Business Owner', 'Consultant'].includes(studentData?.qualification) ||
+                ['Working Professional', 'Freelancer', 'Business Owner', 'Consultant'].includes(studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]?.qualification) ||
                 false,
               experienceType:
                 sData?.workExperience?.experienceType ||
-                (['Working Professional', 'Business Owner', 'Freelancer', 'Consultant'].includes(studentData?.qualification)
-                  ? studentData?.qualification
+                (['Working Professional', 'Business Owner', 'Freelancer', 'Consultant'].includes(studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]?.qualification)
+                  ? studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]?.qualification
                   : ''),
               nameOfCompany: sData?.workExperience?.nameOfCompany || '',
               durationFrom: '',
@@ -437,7 +437,7 @@ useEffect(() => {
             isMobileVerified: student?.isMobileVerified || false,
             contact: existingData?.studentData?.contact || studentData?.mobileNumber || "",
             dob: existingData?.studentData?.dob.split("T")[0] || studentData.dateOfBirth.split("T")[0],
-            currentStatus: existingData?.studentData?.currentStatus ||  studentData?.qualification || "",
+            currentStatus: existingData?.studentData?.currentStatus ||  studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]?.qualification || "",
             linkedInUrl: existingData?.studentData?.linkedInUrl || studentData?.linkedInUrl || "",
             instagramUrl: existingData?.studentData?.instagramUrl || studentData?.instagramUrl || "",
             gender: existingData?.studentData?.gender || studentData?.gender || "male",
@@ -458,15 +458,15 @@ useEffect(() => {
             isExperienced:
               existingData?.applicationData?.isExperienced ||
               ["Working Professional", "Freelancer", "Business Owner", "Consultant"].includes(
-                studentData?.qualification
+                studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]?.qualification
               ) ||
               false,
             experienceType:
               existingData?.applicationData?.experienceType ||
               (["Working Professional", "Business Owner", "Freelancer", "Consultant"].includes(
-                studentData?.qualification
+                studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]?.qualification
               )
-                ? studentData?.qualification
+                ? studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]?.qualification
                 : ""),
             nameOfCompany: existingData?.applicationData?.nameOfCompany || "",
             durationFrom: existingData?.applicationData?.durationFrom || "",
@@ -776,7 +776,7 @@ useEffect(() => {
   };
   
   // Handle form submission
-  const saveData = async (data: FormData) => { 
+  const submitData = async (data: FormData) => { 
     const apiPayload = {
       cohortId: data.studentData?.cohort,
       studentData: {
@@ -785,7 +785,7 @@ useEffect(() => {
         mobileNumber: studentData?.mobileNumber || '',
         isMobileVerified: studentData?.isMobileVerified || false,
         email: studentData?.email || '',
-        qualification: studentData?.qualification || '',
+        qualification: studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]?.qualification || '',
         program: data.studentData?.courseOfInterest || '',
         cohort: data.studentData?.cohort || '',
         gender: data.studentData.gender,
@@ -875,9 +875,90 @@ useEffect(() => {
     }
   };
 
+  const saveData = async (data: FormData) => { 
+    const apiPayload = {
+      cohortId: data.studentData?.cohort,
+      studentDetailId: studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]?.applicationDetails?.studentDetails?._id,
+      studentData: {
+        firstName: studentData?.firstName || '',
+        lastName: studentData?.lastName || '',
+        mobileNumber: studentData?.mobileNumber || '',
+        isMobileVerified: studentData?.isMobileVerified || false,
+        email: studentData?.email || '',
+        qualification: studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]?.qualification || '',
+        program: data.studentData?.courseOfInterest || '',
+        cohort: data.studentData?.cohort || '',
+        gender: data.studentData.gender,
+        isVerified: studentData?.isVerified || false,
+        dateOfBirth: new Date(studentData?.dateOfBirth || Date.now()), 
+        profileImage: [],
+        linkedInUrl: data.studentData.linkedInUrl || "",
+        instagramUrl: data.studentData.instagramUrl || "",
+      },
+      applicationData: {
+        currentAddress: {
+          streetAddress: data.applicationData.address,
+          city: data.applicationData.city,
+          state: "", 
+          postalCode: data.applicationData.zipcode,
+        },
+        previousEducation: {
+          highestLevelOfEducation: data.applicationData.educationLevel,
+          fieldOfStudy: data.applicationData.fieldOfStudy,
+          nameOfInstitution: data.applicationData.institutionName,
+          yearOfGraduation: data.applicationData.graduationYear,
+        },
+        workExperience: {
+          isExperienced: data.applicationData.isExperienced,
+          experienceType: data.applicationData.experienceType || '',
+          nameOfCompany: data.applicationData.nameOfCompany || '',
+          duration: data.applicationData.duration || '',
+          jobDescription: data.applicationData.jobDescription || '',
+        },
+        emergencyContact: {
+          firstName: data.applicationData.emergencyFirstName,
+          lastName: data.applicationData.emergencyLastName,
+          contactNumber: data.applicationData.emergencyContact,
+          relationshipWithStudent: data.applicationData.relationship,
+        },
+        parentInformation: {
+          father: {
+            firstName: data.applicationData.fatherFirstName,
+            lastName: data.applicationData.fatherLastName,
+            contactNumber: data.applicationData.fatherContact,
+            occupation: data.applicationData.fatherOccupation,
+            email: data.applicationData.fatherEmail,
+          },
+          mother: {
+            firstName: data.applicationData.motherFirstName,
+            lastName: data.applicationData.motherLastName,
+            contactNumber: data.applicationData.motherContact,
+            occupation: data.applicationData.motherOccupation,
+            email: data.applicationData.motherEmail,
+          },
+        },
+        financialInformation: {
+          isFinanciallyIndependent: !data.applicationData.financiallyDependent,
+          hasAppliedForFinancialAid: data.applicationData.appliedForFinancialAid,
+        },
+      },
+    };
+
+    try {
+      setLoading(true);
+    
+      const response = await submitApplication(apiPayload);   
+
+    } catch (error) {
+      console.error("Error saving application:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const onSubmit = async (data: FormData) => {
       console.log("save",fetchedStudentData?.applicationDetails, isSaved);
-      await saveData(data);
+      await submitData(data);
   };
   
   const handleRetry = () => {
@@ -1987,6 +2068,7 @@ useEffect(() => {
               </div>
             </Button>
           ) : (
+            isValid ? 
             <Button
               size="xl"
               className='w-full sm:w-fit px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90 order-1 sm:order-2'
@@ -1996,6 +2078,14 @@ useEffect(() => {
               <div className='flex items-center gap-2'>
                 <SaveIcon className='w-5 h-5' />
                 {loading ? 'Submitting...' : `Submit and Pay INR ₹${applicationFees || 0}.00`}
+              </div>
+            </Button>
+             :
+            <Button size="xl" className='w-full sm:w-fit px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90 order-1 sm:order-2'
+              type="button" disabled={loading} onClick={() => saveData(form.getValues())}
+            >
+              <div className='flex items-center gap-2'>
+                <SaveIcon className='w-5 h-5' />Save
               </div>
             </Button>
           )
