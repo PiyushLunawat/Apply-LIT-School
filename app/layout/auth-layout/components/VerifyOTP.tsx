@@ -38,6 +38,7 @@ interface VerifyOTPProps {
   setIsDialogOpen?: (isOpen: boolean) => void;
   onVerificationSuccess?: () => void;
   verificationId?: string;
+  onResendOtp?: (contact: string) => Promise<void>;
 }
 
 export const VerifyOTP: React.FC<VerifyOTPProps> = ({
@@ -47,6 +48,7 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
   setIsDialogOpen,
   onVerificationSuccess,
   verificationId,
+  onResendOtp
 }) => {
     const navigate = useNavigate();
     const { studentData, setStudentData } = useContext(UserContext);
@@ -178,10 +180,19 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
   const handleResendOtp = async () => {
     try {
       setLoading(true);
-      await resendOtp({ email: contactInfo });
-      setTimer(60);
-      form.clearErrors("otp");
-      reset({ otp: '' });
+      if (verificationType === 'contact' && onResendOtp) {
+        // Use parent's resend logic for contact verification
+        await onResendOtp(contactInfo);
+        form.clearErrors("otp");
+        reset({ otp: '' });
+        setTimer(60);
+      } else {
+        // Existing email resend logic
+        await resendOtp({ email: contactInfo });
+        setTimer(60);
+        form.clearErrors("otp");
+        reset({ otp: '' });
+      }
     } catch (error) {
       console.error('Resend OTP failed:', error);
       form.setError('otp', { type: 'manual', message:`Failed to resend OTP. ${error}` });

@@ -2118,6 +2118,7 @@ useEffect(() => {
           errorMessage="Oops! Looks like you got the OTP wrong, Please Retry."
           setIsDialogOpen={setIsDialogOpen}
           verificationId={verificationId}
+          onResendOtp={handleVerifyClick}
         />
       </DialogContent>
     </Dialog>
