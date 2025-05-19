@@ -87,7 +87,7 @@ export default function App() {
 
   return (
       <UserProvider>
-      <Dialog open={isUnauthorized} onOpenChange={setIsUnauthorized}>
+      <Dialog open={isUnauthorized}>
         <DialogTitle></DialogTitle>
         <DialogContent className='flex flex-col gap-3 px-8 sm:px-16 py-8 sm:gap-6 bg-[#1C1C1C] rounded-3xl max-w-[90vw] sm:max-w-xl mx-auto'>
           <div className="space-y-1">

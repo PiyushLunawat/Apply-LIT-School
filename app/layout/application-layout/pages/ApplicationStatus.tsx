@@ -7,6 +7,7 @@ import InterviewDetails from '../components/InterviewDetails';
 import AdmissionFee from '../components/AdmissionFee';
 import SubHeader from '~/components/organisms/SubHeader/SubHeader';
 import { UserContext } from '~/context/UserContext';
+import { useNavigate } from '@remix-run/react';
 
 export const ApplicationStatus: React.FC = () => {
   const [studentData, setStudentData] = useState<any>(null);
@@ -19,6 +20,8 @@ export const ApplicationStatus: React.FC = () => {
   const [error, setError] = useState<string | null>(null);const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [subtitle, setSubtitle] = useState("");
   const [submessage, setSubmessage] = useState("");
+
+  const navigate = useNavigate();
 
   const [showReviewBlock, setShowReviewBlock] = useState(false);
 
@@ -37,6 +40,20 @@ export const ApplicationStatus: React.FC = () => {
           if (studentData?._id) {
             const res = await getCurrentStudent(studentData._id);
             console.log("res",res);
+
+            if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'enrolled'){
+              navigate('../../dashboard');
+            } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'reviewing'){
+              navigate('../../application/status');
+            } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'applied'){
+              navigate('../../application/task');
+            } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'initiated'){
+              navigate('../../application');
+            } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'dropped'){
+              navigate('../../application/new-application');
+            } else {
+              navigate('../../application');
+            }
             
             setStudent(res);
             const latest = res?.appliedCohorts[res.appliedCohorts.length - 1];

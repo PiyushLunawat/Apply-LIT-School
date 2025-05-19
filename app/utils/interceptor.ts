@@ -34,6 +34,7 @@ export const RegisterInterceptor = (
 
       const publicEndpoints = [
         "/auth/signup",
+        "/auth/sign-up",
         "/auth/login",
         "/auth/resend-otp",
         "/auth/verify-otp",
@@ -42,9 +43,9 @@ export const RegisterInterceptor = (
         "/student/verify-otp-number",
         "/student/profile",
         "/student/interviewers-list",
-        "admin/cohort",
-        "admin/program",
-        "admin/center",
+        "student/cohort",
+        "student/program",
+        "student/center",
         "/set-cookies",
         "/logout",
         "/refresh-token",
@@ -59,15 +60,15 @@ export const RegisterInterceptor = (
       // console.log("isPublic", !!isPublic, accessToken, refreshToken);
 
       // If both accessToken and refreshToken are not available, trigger the unauthorized state
-      // if (!isPublic && !accessToken && !refreshToken) {
-      //   console.log("No Access Token or Refresh Token");
+      if (!isPublic && !accessToken && !refreshToken) {
+        console.log("No Access Token or Refresh Token");
 
-      //   if (setIsUnauthorized) {
-      //     setIsUnauthorized(true); // Set unauthorized state to show login dialog
-      //   }
+        if (setIsUnauthorized) {
+          setIsUnauthorized(true); // Set unauthorized state to show login dialog
+        }
 
-      //   return [url, config];
-      // }
+        return [url, config];
+      }
 
       // If accessToken is missing but refreshToken is available, call the refresh-token API
       if (!isPublic && !accessToken && refreshToken && !refreshingToken) {

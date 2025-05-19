@@ -38,6 +38,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({ }) => {
   const { handleSubmit, formState: { errors }, setError, control } = form;
 
   const handleRegisterClick = () => {
+    const values = form.getValues();
+
+    const result = formSchema.safeParse(values);
+    if (result.success) {
+      navigate(`../sign-up?email=${values.email}`);
+    }
+      else
     navigate('../sign-up');
   };
 

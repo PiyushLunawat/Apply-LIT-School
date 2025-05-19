@@ -155,13 +155,19 @@ export default function ApplicationDashboard({ student }: ApplicationDashboardPr
   }, []);
 
   const formatHHMMSS = (totalSeconds: number): string => {
-    if (totalSeconds / (24 * 60 * 60) > 2 ) {
-      return `${Math.floor(totalSeconds / (24 * 60 * 60))+1} days`;
+    const totalHours = Math.floor(totalSeconds / 3600);
+
+    if (totalHours >= 72) {
+      const hrs = totalHours;
+      const mins = Math.floor((totalSeconds % 3600) / 60);
+      const secs = totalSeconds % 60;
+      return `${String(hrs).padStart(2, '0')}H:${String(mins).padStart(2, '0')}M:${String(secs).padStart(2, '0')}S`;
     } else {
-    const hrs = Math.floor(totalSeconds / 3600);
-    const mins = Math.floor((totalSeconds % 3600) / 60);
-    const secs = totalSeconds % 60;
-    return [hrs, mins, secs].map((v) => String(v).padStart(2, '0')).join(':');
+      const days = Math.floor(totalSeconds / (24 * 3600));
+      const remainingSeconds = totalSeconds % (24 * 3600);
+      const hrs = Math.floor(remainingSeconds / 3600);
+      const mins = Math.floor((remainingSeconds % 3600) / 60);
+      return `${days}D:${hrs}H:${mins}M`;
     }
   };
 

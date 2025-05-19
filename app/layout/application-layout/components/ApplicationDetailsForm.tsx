@@ -16,7 +16,7 @@ import {
   FormControl,
   FormMessage,
 } from '~/components/ui/form';
-import { Calendar, Camera, CheckCircle, Instagram, Linkedin, Mail, Minus, Phone, SaveIcon, XIcon } from 'lucide-react';
+import { Calendar, Camera, CheckCircle, Clipboard, ClipboardCheck, Instagram, Linkedin, Mail, Minus, Phone, SaveIcon, XIcon } from 'lucide-react';
 import { UserContext } from '~/context/UserContext';
 import { getCentres, getCohorts, getCurrentStudent, getPrograms, payApplicationFee, submitApplication, verifyApplicationFeePayment } from '~/api/studentAPI';
 import { Badge } from '~/components/ui/badge';
@@ -27,6 +27,7 @@ import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 import { auth } from 'firebase.config';
 import VerifyOTP from '~/layout/auth-layout/components/VerifyOTP';
 import { PaymentFailedDialog, PaymentSuccessDialog } from '~/components/molecules/PaymentDialog/PaymentDialog';
+import { useNavigate } from '@remix-run/react';
 
 type ExperienceType = 'Working Professional' | 'Business Owner' | 'Freelancer' | 'Consultant';
 
@@ -221,6 +222,7 @@ const ApplicationDetailsForm: React.FC = () => {
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
   const [failedDialogOpen, setFailedDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [saveLoading, setSaveLoading] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
@@ -228,54 +230,81 @@ const ApplicationDetailsForm: React.FC = () => {
   const [cohorts, setCohorts] = useState<any[]>([]); 
   const [contactInfo, setContactInfo] = useState<string>('');
   const [isSaved, setIsSaved] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [verificationId, setVerificationId] = useState("");
   const [fetchedStudentData, setFetchedStudentData] = useState<any>(null);
   const [applicationFees, setApplicationFees] = useState(0);
 
+  const topRef = useRef<HTMLDivElement | null>(null);
+  const bottomRef = useRef<HTMLDivElement | null>(null);
+  const [isTopVisible, setIsTopVisible] = useState(true);
+  const [isBottomVisible, setIsBottomVisible] = useState(false);
+
+  const navigate = useNavigate();
+
   const [programs, setPrograms] = useState<any[]>([]);
-const [centres, setCentres] = useState<any[]>([]);
+  const [centres, setCentres] = useState<any[]>([]);
 
-// All open cohorts from the server
-const [openCohorts, setOpenCohorts] = useState<any[]>([]);
+  // All open cohorts from the server
+  const [openCohorts, setOpenCohorts] = useState<any[]>([]);
 
-// Unique Program IDs extracted from openCohorts for the "Course of Interest" dropdown
-const [availablePrograms, setAvailablePrograms] = useState<any[]>([]);
+  // Unique Program IDs extracted from openCohorts for the "Course of Interest" dropdown
+  const [availablePrograms, setAvailablePrograms] = useState<any[]>([]);
 
-// Cohorts filtered by the user's chosen program
-const [filteredCohorts, setFilteredCohorts] = useState<any[]>([]);
+  // Cohorts filtered by the user's chosen program
+  const [filteredCohorts, setFilteredCohorts] = useState<any[]>([]);
 
-useEffect(() => {
-  async function fetchData() {
-    try {
-      // 1. Load all programs, centres, and cohorts
-      const programsData = await getPrograms();
-      setPrograms(programsData.data);
+  useEffect(() => {
+  const topObserver = new IntersectionObserver(
+    ([entry]) => setIsTopVisible(entry.isIntersecting),
+    { threshold: 0.1 }
+  );
 
-      const centresData = await getCentres();
-      setCentres(centresData.data);
+  const bottomObserver = new IntersectionObserver(
+    ([entry]) => setIsBottomVisible(entry.isIntersecting),
+    { threshold: 0.1 }
+  );
 
-      const cohortsData = await getCohorts();
+  if (topRef.current) topObserver.observe(topRef.current);
+  if (bottomRef.current) bottomObserver.observe(bottomRef.current);
 
-      // 2. Filter only OPEN cohorts
-      const open = cohortsData.data.filter((cohort: any) => cohort.status === "Open");
-      setOpenCohorts(open);
-
-      // 3. Extract unique program IDs from openCohorts
-      const uniquePrograms = Array.from(
-        new Set(open.map((cohort: any) => cohort.programDetail))
-      );
-      setAvailablePrograms(uniquePrograms);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  }
-
-  fetchData();
+  return () => {
+    if (topRef.current) topObserver.unobserve(topRef.current);
+    if (bottomRef.current) bottomObserver.unobserve(bottomRef.current);
+  };
 }, []);
 
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        // 1. Load all programs, centres, and cohorts
+        const programsData = await getPrograms();
+        setPrograms(programsData.data);
 
-    useEffect(() => {
+        const centresData = await getCentres();
+        setCentres(centresData.data);
+
+        const cohortsData = await getCohorts();
+
+        // 2. Filter only OPEN cohorts
+        const open = cohortsData.data.filter((cohort: any) => cohort.status === "Open");
+        setOpenCohorts(open);
+
+        // 3. Extract unique program IDs from openCohorts
+        const uniquePrograms = Array.from(
+          new Set(open.map((cohort: any) => cohort.programDetail))
+        );
+        setAvailablePrograms(uniquePrograms);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    }
+
+    fetchData();
+  }, []);
+
+  useEffect(() => {
     async function fetchCohorts() {
       try {
         const programsData = await getPrograms();
@@ -335,7 +364,20 @@ useEffect(() => {
       if(studentData._id)
       try {
         const student = await getCurrentStudent(studentData._id);
-        console.log("dbab",student);
+        // console.log("dbab",student);
+         if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'enrolled'){
+          navigate('../../dashboard');
+        } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'reviewing'){
+          navigate('../../application/status');
+        } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'applied'){
+          navigate('../../application/task');
+        } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'initiated'){
+          navigate('../../application');
+        } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'dropped'){
+          navigate('../../application/new-application');
+        } else {
+          navigate('../../application');
+        }
         
         setFetchedStudentData(student);
         
@@ -779,6 +821,7 @@ useEffect(() => {
   const submitData = async (data: FormData) => { 
     const apiPayload = {
       cohortId: data.studentData?.cohort,
+      // studentDetailId: studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]?.applicationDetails?.studentDetails?._id,
       studentData: {
         firstName: studentData?.firstName || '',
         lastName: studentData?.lastName || '',
@@ -861,7 +904,6 @@ useEffect(() => {
       console.log('Form submitted successfully', response);
       setIsPaymentDialogOpen(true);
       setIsSaved(true);
-      localStorage.removeItem(`applicationDetailsForm-${studentData?.email}`);
     } else {
       // Handle error response
       console.error('Form submission failed');
@@ -945,14 +987,17 @@ useEffect(() => {
     };
 
     try {
-      setLoading(true);
+      setSaveLoading(true);
     
       const response = await submitApplication(apiPayload);   
+      
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
 
     } catch (error) {
       console.error("Error saving application:", error);
     } finally {
-      setLoading(false);
+      setSaveLoading(false);
     }
   };
 
@@ -970,6 +1015,7 @@ useEffect(() => {
     <>
     <Form {...form}>
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 mt-8">
+        <div ref={topRef} />
         <div className='flex-1 bg-[#00A3FF]/[0.2] text-[#00A3FF] text-center py-4 mt-10 text-2xl rounded-full'>
           Personal Details
         </div>
@@ -1037,8 +1083,8 @@ useEffect(() => {
                     </FormControl>
                     {fetchedStudentData?.isMobileVerified ?
                       <Phone className="absolute right-3 top-[42px] w-5 h-5" /> : 
-                      <Button size='sm' className='absolute right-3 top-9 rounded-full px-4 bg-[#00CC92]' disabled={otpLoading} onClick={() => handleVerifyClick(field.value || studentData?.mobileNumber)} type="button">
-                        {otpLoading ? 'Sending OTP...' : 'Verify'}
+                      <Button size='sm' className='absolute right-3 top-9 rounded-full px-4 font-normal bg-[#2C2C2C] hover:bg-[#2C2C2C]/80' disabled={otpLoading} onClick={() => handleVerifyClick(field.value || studentData?.mobileNumber)} type="button">
+                        {otpLoading ? 'Sending OTP...' : 'VERIFY'}
                       </Button>
                     }
                     <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
@@ -2041,72 +2087,53 @@ useEffect(() => {
  
         <div className={`flex flex-col sm:flex-row ${isSaved ? 'justify-end' : 'justify-between'} items-center mt-10 space-y-4 sm:space-y-0 sm:space-x-4`}>
   
-        {/* Submit/Payment Button */}
-        {isPaymentDone ? (
-          <Button
-            size="xl"
-            className='w-full sm:w-fit px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90 order-1 sm:order-2'
-            type="button"
-            onClick={() => handleContinueToDashboard()}
-            disabled={loading}
-          >
-            <div className='flex items-center gap-2'>
+          {/* Submit/Payment Button */}
+          {isPaymentDone ? (
+            <Button size="xl" className='w-full sm:w-fit px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90 order-1 sm:order-2'
+              type="button" onClick={() => handleContinueToDashboard()} disabled={loading}>
               {loading ? 'Redirecting...' : 'Continue to Dashboard'}
-            </div>
-          </Button>
-        ) : (
-          isSaved ? (
-            <Button
-              size="xl"
-              className='w-full sm:w-fit px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90 order-1 sm:order-2'
-              type="button"
-              onClick={() => handlePayment()}
-              disabled={loading}
-            >
-              <div className='flex items-center gap-2'>
-                {loading ? 'Initializing Payment...' : `Pay INR ₹${applicationFees || 0}.00`}`
-              </div>
             </Button>
           ) : (
-            isValid ? 
-            <Button
-              size="xl"
-              className='w-full sm:w-fit px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90 order-1 sm:order-2'
-              type="submit"
-              disabled={loading}
-            >
-              <div className='flex items-center gap-2'>
-                <SaveIcon className='w-5 h-5' />
-                {loading ? 'Submitting...' : `Submit and Pay INR ₹${applicationFees || 0}.00`}
-              </div>
-            </Button>
-             :
-            <Button size="xl" className='w-full sm:w-fit px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90 order-1 sm:order-2'
-              type="button" disabled={loading} onClick={() => saveData(form.getValues())}
-            >
-              <div className='flex items-center gap-2'>
-                <SaveIcon className='w-5 h-5' />Save
-              </div>
-            </Button>
-          )
-        )}
+            isSaved ? (
+              <Button size="xl" className='w-full sm:w-fit px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90 order-1 sm:order-2'
+                type="button" onClick={() => handlePayment()} disabled={loading}>
+                {loading ? 'Initializing Payment...' : `Pay INR ₹${applicationFees || 0}.00`}`
+              </Button>
+            ) : (
+              <Button size="xl" className='w-full sm:w-fit px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90 order-1 sm:order-2'
+                type="submit" disabled={loading}>
+                <div className='flex items-center gap-2'>
+                  <SaveIcon className='w-5 h-5' />
+                  {loading ? 'Submitting...' : `Submit and Pay INR ₹${applicationFees || 0}.00`}
+                </div>
+              </Button>
+            )
+          )}
 
-        {/* "Clear Form" Button */}
-        {!isSaved && (
-          <Button
-            variant="link"
-            type='button'
-            className='underline w-full sm:w-auto order-2 sm:order-1'
-            onClick={() => {
-              form.reset();
-              localStorage.removeItem(`applicationDetailsForm-${studentData?.email}`);
-            }}          
+          {/* "Clear Form" Button */}
+          {!isSaved && (
+            <Button variant="link" type='button' className='underline w-full sm:w-auto order-2 sm:order-1'
+              onClick={() => { form.reset(); localStorage.removeItem(`applicationDetailsForm-${studentData?.email}`); }}          >
+              Clear Form
+            </Button>
+          )}
+        </div>
+        {!isTopVisible && !isBottomVisible && (
+          <Button 
+            size="xl" 
+            variant="outline" 
+            className='fixed bottom-24 right-44 bg-[#09090b] hover:bg-[#09090b]/80'
+            type="button" 
+            disabled={saveLoading || saved} 
+            onClick={() => saveData(form.getValues())}
           >
-            Clear Form
+            <div className='flex items-center gap-2'>
+              {saved ? <ClipboardCheck className='w-4 h-4' /> : <Clipboard className='h-4 w-4'/>}
+              {saved ? 'Updates Saved' : 'Save Updates'}
+            </div>
           </Button>
         )}
-      </div>
-
+        <div ref={bottomRef} />
       </form>
     </Form>
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -2122,7 +2149,7 @@ useEffect(() => {
         />
       </DialogContent>
     </Dialog>
-    <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+    <Dialog open={isPaymentDialogOpen}>
     <DialogTitle></DialogTitle>
     <DialogContent className="max-w-2xl max-h-[70vh] sm:max-h-[90vh] overflow-y-auto max-w-[90vw] sm:max-w-[500px] mx-auto bg-[#1C1C1C] text-white rounded-lg px-8 py-16 text-center shadow-[0px_4px_32px_0px_rgba(0,0,0,0.75)]">
       <img src='/assets/images/make-payment.svg' className="mx-auto mb-8" />

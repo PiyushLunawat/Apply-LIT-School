@@ -7,7 +7,7 @@ import LitmusTest from "../components/LitmusTest";
 import { Skeleton } from "~/components/ui/skeleton";
 
 export default function LitmusTask() {
-  const { studentData } = useContext(UserContext);
+const { studentData } = useContext(UserContext);
   const [student, setStudent] = useState<any>();
 
   useEffect(() => {
@@ -15,14 +15,15 @@ export default function LitmusTask() {
       const fetchStudentData = async () => {
         try {
           const student = await getCurrentStudent(studentData._id); // Pass the actual student ID here
-          setStudent(student);          
+          setStudent(student);   
+          console.log("PersonalDocumentsDashboard", student)       
         } catch (error) {
           console.error("Failed to fetch student data:", error);
         }
       };
       fetchStudentData();
     }
-  }, [studentData]);
+  }, [studentData?._id]);
 
   const latestCohort = student?.appliedCohorts?.[student?.appliedCohorts.length - 1];
   const cohortDetails = latestCohort?.cohortId;
@@ -46,33 +47,39 @@ export default function LitmusTask() {
   }, []);
 
   const formatHHMMSS = (totalSeconds: number): string => {
-    if (totalSeconds / (24 * 60 * 60) > 2 ) {
-      return `${Math.floor(totalSeconds / (24 * 60 * 60))+1} days`;
+    const totalHours = Math.floor(totalSeconds / 3600);
+
+    if (totalHours >= 72) {
+      const hrs = totalHours;
+      const mins = Math.floor((totalSeconds % 3600) / 60);
+      const secs = totalSeconds % 60;
+      return `${String(hrs).padStart(2, '0')}H:${String(mins).padStart(2, '0')}M:${String(secs).padStart(2, '0')}S`;
     } else {
-    const hrs = Math.floor(totalSeconds / 3600);
-    const mins = Math.floor((totalSeconds % 3600) / 60);
-    const secs = totalSeconds % 60;
-    return [hrs, mins, secs].map((v) => String(v).padStart(2, '0')).join(':');
+      const days = Math.floor(totalSeconds / (24 * 3600));
+      const remainingSeconds = totalSeconds % (24 * 3600);
+      const hrs = Math.floor(remainingSeconds / 3600);
+      const mins = Math.floor((remainingSeconds % 3600) / 60);
+      return `${days}D:${hrs}H:${mins}M`;
     }
   };
   
   return (
   <>
-       <div className="py-8 sm:py-[52px] px-[52px] bg-[#3698FB1A] border-b space-y-4 sm:space-y-8">
-          <div className="flex items-center gap-4 mb-2">
-            <Badge className="text-sm border-[#3698FB] text-[#3698FB] bg-[#3698FB]/10">
-              LITMUS Task
+      <div className="py-8 sm:py-[52px] px-[52px] bg-[#3698FB1A] border-b space-y-4 sm:space-y-8">
+        <div className="flex items-center gap-4 mb-2">
+          <Badge className="text-sm border-[#3698FB] text-[#3698FB] bg-[#3698FB]/10">
+            LITMUS Task
+          </Badge>
+          {latestCohort?.litmusTestDetails?.status !== 'completed' &&
+            <Badge className="flex gap-2 items-center bg-black">
+              <Clock className="text-[#00A3FF] w-3 h-3"/>
+              <div className="text-base font-normal">{formatHHMMSS(remainingTime)}</div>
             </Badge>
-            {latestCohort?.litmusTestDetails?.status !== 'completed' &&
-             <Badge className="flex gap-2 items-center bg-black">
-                <Clock className="text-[#00A3FF] w-3 h-3"/>
-                <div className="text-base font-normal">{formatHHMMSS(remainingTime)}</div>
-              </Badge>
-            }
-          </div>
-          <div className="flex lg:flex-row flex-col gap-2 justify-between items-start lg:items-end">
+          }
+        </div>
+        <div className="flex lg:flex-row flex-col gap-2 justify-between items-start lg:items-end">
           <div>
-            {(student && latestCohort?.litmusTestDetails?.status !== 'completed') ?
+            {student ?
               <h1 className="text-3xl sm:text-4xl font-normal">
                 {student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.cohortId?.programDetail?.name}
                 <div className="text-xl sm:text-2xl">{new Date(student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.cohortId?.startDate).toLocaleDateString("en-US", { month: "long", year: "numeric",})}</div>
