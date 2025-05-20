@@ -189,16 +189,6 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                     alt="Profile Image"
                     className="w-full h-full object-cover rounded-lg"
                   />
-                  <div className="absolute top-3 right-2 flex space-x-2">
-                    <Button variant="outline" size="icon"
-                      className="w-8 h-8 bg-white/[0.2] border border-white rounded-full shadow hover:bg-white/[0.4]"
-                      onClick={handleEditImage}
-                    >
-                      <Pencil className="w-4 h-4" />
-                      <input id="passport-input" type="file" accept="image/*" className="hidden" onChange={handleImageChange}
-                      />
-                    </Button>
-                  </div>
                 </div>
               ) : (
                 <label

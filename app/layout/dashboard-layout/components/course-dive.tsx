@@ -149,7 +149,7 @@ export default function CourseDiveTab({ student, onSelectTab }: CourseDiveProps)
                 <div className="text-base text-[#F8E000] pl-3">Feedback</div>
                 <div className='w-full z-10 bg-[#09090B] border border-[#2C2C2C] text-white p-4 sm:p-6 mx-auto rounded-xl justify-between items-start'>
                   <ul className="ml-4 sm:ml-6 space-y-2 list-disc">
-                    {applicationDetails?.tasks?.[index]?.feedback?.map((feedback: any, index: any) => (
+                    {applicationDetails?.tasks?.[index]?.feedback?.[applicationDetails?.tasks?.[index]?.feedback.length - 1]?.feedbackData?.map((feedback: any, index: any) => (
                       feedback?.length > 0 && 
                       <li className="text-sm sm:text-base" key={index}>
                         {feedback}

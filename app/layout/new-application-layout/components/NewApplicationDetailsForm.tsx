@@ -215,7 +215,7 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-const ApplicationDetailsForm: React.FC = () => {
+const NewApplicationDetailsForm: React.FC = () => {
   const { studentData, setStudentData } = useContext(UserContext); 
   const [experienceType, setExperienceType] = useState<ExperienceType | null>(null);
   const [hasWorkExperience, setHasWorkExperience] = useState<boolean | null>(null);
@@ -2093,4 +2093,4 @@ useEffect(() => {
   );
 };
 
-export default ApplicationDetailsForm;
+export default NewApplicationDetailsForm;

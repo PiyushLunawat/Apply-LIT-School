@@ -73,7 +73,7 @@ const Feedback: React.FC<FeedbackProps> = ({ student, setIsPaymentVerified }) =>
       console.error("Error scheduling interview:", error);
       // alert("Failed to schedule interview. Please try again later.");
     } finally {
-      setInterviewLoading(true)
+      setInterviewLoading(false)
     }
   };
 
@@ -89,7 +89,7 @@ const Feedback: React.FC<FeedbackProps> = ({ student, setIsPaymentVerified }) =>
     </div>
     {applicationStatus === "on hold" && (
       <ul className="ml-4 sm:ml-6 space-y-2 list-disc">
-        {applicationDetails?.applicationTasks[0]?.applicationTasks[0]?.overallFeedback[applicationDetails?.applicationTasks[0]?.applicationTasks[0]?.overallFeedback.length-1]?.feedback.map((item: any, index: any) => (
+        {applicationDetails?.applicationTasks[0]?.applicationTasks[0]?.overallFeedback?.[applicationDetails?.applicationTasks[0]?.applicationTasks[0]?.overallFeedback.length-1]?.feedbackData.map((item: any, index: any) => (
           <li className="text-sm sm:text-base" key={index}>
             {item}
           </li>
@@ -104,7 +104,7 @@ const Feedback: React.FC<FeedbackProps> = ({ student, setIsPaymentVerified }) =>
               <div className="text-sm sm:text-base font-semibold text-[#00A3FF]">
                 Task 0{index+1}
               </div>
-                {task?.feedback?.map((item: any, i: any) => (
+                {task?.feedback?.[task?.feedback.length - 1]?.feedbackData?.map((item: any, i: any) => (
                   <ul key={i} className="ml-4 sm:ml-6 space-y-2 list-disc">
                     <li className="text-sm sm:text-base" key={i}>
                       {item}

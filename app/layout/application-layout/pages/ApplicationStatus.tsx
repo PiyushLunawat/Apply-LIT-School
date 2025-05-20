@@ -41,15 +41,15 @@ export const ApplicationStatus: React.FC = () => {
             const res = await getCurrentStudent(studentData._id);
             console.log("res",res);
 
-            if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'enrolled'){
+            if (res?.appliedCohorts[res?.appliedCohorts.length - 1]?.status === 'enrolled'){
               navigate('../../dashboard');
-            } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'reviewing'){
+            } else if (res?.appliedCohorts[res?.appliedCohorts.length - 1]?.status === 'reviewing'){
               navigate('../../application/status');
-            } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'applied'){
+            } else if (res?.appliedCohorts[res?.appliedCohorts.length - 1]?.status === 'applied'){
               navigate('../../application/task');
-            } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'initiated'){
+            } else if (res?.appliedCohorts[res?.appliedCohorts.length - 1]?.status === 'initiated'){
               navigate('../../application');
-            } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'dropped'){
+            } else if (res?.appliedCohorts[res?.appliedCohorts.length - 1]?.status === 'dropped'){
               navigate('../../application/new-application');
             } else {
               navigate('../../application');

@@ -274,7 +274,7 @@ export default function AdmissionFee({ student }: AdmissionFeeProps) {
       const formatHHMMSS = (totalSeconds: number): string => {
         const totalHours = Math.floor(totalSeconds / 3600);
 
-        if (totalHours >= 72) {
+        if (totalHours <= 72) {
           const hrs = totalHours;
           const mins = Math.floor((totalSeconds % 3600) / 60);
           const secs = totalSeconds % 60;

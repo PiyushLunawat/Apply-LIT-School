@@ -7,7 +7,7 @@ import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { UserContext } from '~/context/UserContext';
 import { Button } from '~/components/ui/button';
-import { ArrowUpRight, Download, FileTextIcon, Link2, Link2Icon, LoaderCircle, SaveIcon, UploadIcon, XIcon,} from 'lucide-react';
+import { ArrowUpRight, Clipboard, ClipboardCheck, Download, FileTextIcon, Link2, Link2Icon, LoaderCircle, SaveIcon, UploadIcon, XIcon,} from 'lucide-react';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage,} from '~/components/ui/form';
 import { submitApplicationTask} from '~/api/studentAPI';
 import { useNavigate } from '@remix-run/react';
@@ -61,8 +61,17 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
   const { studentData } = useContext(UserContext);
   const [id, setId] = useState("");
   const [taskId, setTaskId] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);  
+  const [saveLoading, setSaveLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+
+  const topRef = useRef<HTMLDivElement | null>(null);
+  const bottomRef = useRef<HTMLDivElement | null>(null);
+  const [isTopVisible, setIsTopVisible] = useState(true);
+  const [isBottomVisible, setIsBottomVisible] = useState(false);
+
   const navigate = useNavigate();
 
   // 1) A constant for the localStorage key
@@ -214,6 +223,26 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
     }
   }, [reset, storageKey]);
 
+  useEffect(() => {
+    const topObserver = new IntersectionObserver(
+      ([entry]) => setIsTopVisible(entry.isIntersecting),
+      { threshold: 0.1 }
+    );
+
+    const bottomObserver = new IntersectionObserver(
+      ([entry]) => setIsBottomVisible(entry.isIntersecting),
+      { threshold: 0.1 }
+    );
+
+    if (topRef.current) topObserver.observe(topRef.current);
+    if (bottomRef.current) bottomObserver.observe(bottomRef.current);
+
+    return () => {
+      if (topRef.current) topObserver.unobserve(topRef.current);
+      if (bottomRef.current) bottomObserver.unobserve(bottomRef.current);
+    };
+  }, []);
+
   // 4) Save on changes
   useEffect(() => {
     const subscription = watch((value) => {
@@ -226,7 +255,6 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
   const onSubmit = async (data: FormSchema) => {
     try {
       setLoading(true);
-
       // Transform tasks into final shape for the server
       const transformedTasks = data.tasks.map((task) => {
         const transformedTask: Record<string, any> = { feedback: [] };
@@ -290,7 +318,7 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
 
   const onSave = async (data: FormSchema) => {
     try {
-      setLoading(true);
+      setSaveLoading(true);
 
       // Transform tasks into final shape for the server
       const transformedTasks = data.tasks.map((task) => {
@@ -341,11 +369,13 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
       console.log('Submitting Payload:', payload);
       const res = await submitApplicationTask(payload);
       console.log('Submission success => ', res);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
 
     } catch (err) {
       console.error('Failed to submit application task:', err);
     } finally {
-      setLoading(false);
+      setSaveLoading(false);
     }
   };
 
@@ -389,6 +419,7 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
     <Form {...form}>
       <form onSubmit={handleSubmit(onSubmit)}>
         {/* Course Dive Section */}
+        <div ref={topRef} />
         <div className="flex flex-col gap-6 mt-8">
           <div className="flex-1 bg-[#00A3FF]/[0.2] text-[#00A3FF] text-center py-4 text-2xl rounded-full">
             Course Dive
@@ -594,24 +625,31 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
           >
             Clear Form
           </Button>
-          {isValid ?
-            <Button
-              size="xl"
-              className="w-full sm:w-fit space-y-1 order-1 sm:order-2"
-              type="submit"
-              disabled={loading || uploading || !isValid}
-            >
-              {loading ? 'Submitting...' : 'Submit Application'}
-            </Button> :
-            <Button size="xl" className='w-full sm:w-fit space-y-1 order-1 sm:order-2'
-              type="button" disabled={loading} onClick={() => onSave(form.getValues())}
-            >
-              <div className='flex items-center gap-2'>
-                <SaveIcon className='w-5 h-5' />Save
-              </div>
-            </Button>
-            }
+          <Button
+            size="xl"
+            className="w-full sm:w-fit space-y-1 order-1 sm:order-2"
+            type="submit"
+            disabled={loading || uploading || !isValid}
+          >
+            {loading ? 'Submitting...' : 'Submit Application'}
+          </Button>
         </div>
+        {!isTopVisible && !isBottomVisible && (
+          <Button 
+            size="xl" 
+            variant="outline" 
+            className='fixed bottom-24 right-44 bg-[#09090b] hover:bg-[#09090b]/80'
+            type="button" 
+            disabled={saveLoading || saved} 
+            onClick={() => onSave(form.getValues())}
+          >
+            <div className='flex items-center gap-2'>
+              {saved ? <ClipboardCheck className='w-4 h-4' /> : <Clipboard className='h-4 w-4'/>}
+              {saved ? 'Updates Saved' : 'Save Updates'}
+            </div>
+          </Button>
+        )}
+        <div ref={bottomRef} />
       </form>
     </Form>
   );
