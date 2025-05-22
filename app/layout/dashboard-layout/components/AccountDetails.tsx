@@ -1,42 +1,62 @@
 "use client";
 
-import { useContext, useEffect, useRef, useState } from "react";
-import { Card, CardHeader, CardFooter, CardContent } from "~/components/ui/card";
-import { Button } from "~/components/ui/button";
-import { Dialog, DialogContent, DialogTitle } from "~/components/ui/dialog";
-import { Eye, Download, CheckCircle, Pencil, Camera, FileLock, SquarePen, Plus } from "lucide-react";
-import LitIdFront from "~/components/molecules/LitId/LitIdFront";
-import LitIdBack from "~/components/molecules/LitId/LitIdBack";
-import { UserContext } from "~/context/UserContext";
-import { updateStudentData } from "~/api/studentAPI";
+import type React from "react";
 
-import jsPDF from "jspdf";
+import {
+  Camera,
+  CheckCircle,
+  Download,
+  Eye,
+  FileLock,
+  Plus,
+  SquarePen,
+} from "lucide-react";
+import { useContext, useEffect, useRef, useState } from "react";
+import { updateStudentData } from "~/api/studentAPI";
+import LitIdBack from "~/components/molecules/LitId/LitIdBack";
+import LitIdFront from "~/components/molecules/LitId/LitIdFront";
+import { Button } from "~/components/ui/button";
+import { Card, CardContent } from "~/components/ui/card";
+import { Dialog, DialogContent, DialogTitle } from "~/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
+import { UserContext } from "~/context/UserContext";
+
 import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 interface AccountDetailsProps {
-  student: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  student: any;
 }
 
 export default function AccountDetails({ student }: AccountDetailsProps) {
-  
-  const latestCohort = student?.appliedCohorts?.[student?.appliedCohorts.length - 1];
-  const cohortDetails = latestCohort?.cohortId;
-
   const [open, setOpen] = useState(false);
   const { studentData, setStudentData } = useContext(UserContext);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [details, setDetails] = useState<any>();
   const [loading, setLoading] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const [bloodGroupInput, setBloodGroupInput] = useState<string>("");
   const [bloodGroupError, setBloodGroupError] = useState<string>("");
   const [linkedInInput, setLinkedInInput] = useState<string>("");
   const [linkedInError, setLinkedInError] = useState<string>("");
-  const [editLinkedInInput, setEditLinkedInInput] = useState<boolean>(student?.linkedInUrl);
+  const [editLinkedInInput, setEditLinkedInInput] = useState<boolean>(
+    student?.linkedInUrl
+  );
   const [instagramInput, setInstagramInput] = useState<string>("");
   const [instagramError, setInstagramError] = useState<string>("");
-  const [editInstagramInput, setEditInstagramInput] = useState<boolean>(student?.instagramUrl);
+  const [editInstagramInput, setEditInstagramInput] = useState<boolean>(
+    student?.instagramUrl
+  );
   const [addSocials, setAddSocials] = useState<boolean>(false);
 
   const pdfRef = useRef<HTMLDivElement>(null);
@@ -46,28 +66,74 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
       setDetails(student);
       setBloodGroupInput(student.bloodGroup || "");
       setLinkedInInput(student?.linkedInUrl || "");
-      setEditLinkedInInput(!(student?.linkedInUrl))
+      setEditLinkedInInput(!student?.linkedInUrl);
       setInstagramInput(student?.instagramUrl || "");
-      setEditInstagramInput(!(student?.instagramUrl));
-      setAddSocials((student?.linkedInUrl && student?.instagramUrl))
+      setEditInstagramInput(!student?.instagramUrl);
+      setAddSocials(student?.linkedInUrl && student?.instagramUrl);
     }
   }, [student]);
 
-  const handlePrint = () => {
-    window.print();
-  };
-
   const handleDownloadPDF = async () => {
-    await setOpen(true);
-    await window.print();
-    setOpen(false)
-  };  
+    setIsGeneratingPDF(true);
+    try {
+      setOpen(true);
 
-  const handleEditImage = () => {
-    document.getElementById("passport-input")?.click();
+      // Wait for the dialog to open and render
+      setTimeout(async () => {
+        const frontElement = document.getElementById("front");
+        const backElement = document.getElementById("back");
+
+        if (!frontElement || !backElement) {
+          console.error("ID card elements not found");
+          setIsGeneratingPDF(false);
+          return;
+        }
+
+        // Create a new PDF document
+        const pdf = new jsPDF({
+          orientation: "landscape",
+          unit: "mm",
+          format: "a4",
+        });
+
+        // Capture front side
+        const frontCanvas = await html2canvas(frontElement, {
+          scale: 2,
+          backgroundColor: null,
+          logging: false,
+        });
+        const frontImgData = frontCanvas.toDataURL("image/png");
+
+        // Add front side to PDF
+        pdf.addImage(frontImgData, "PNG", 10, 10, 140, 85);
+
+        // Capture back side
+        const backCanvas = await html2canvas(backElement, {
+          scale: 2,
+          backgroundColor: null,
+          logging: false,
+        });
+        const backImgData = backCanvas.toDataURL("image/png");
+
+        // Add back side to PDF
+        pdf.addImage(backImgData, "PNG", 10, 100, 140, 85);
+
+        // Save the PDF
+        pdf.save(`LIT_ID_Card_${student?.firstName}_${student?.lastName}.pdf`);
+
+        setIsGeneratingPDF(false);
+        setOpen(false);
+      }, 500);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      setIsGeneratingPDF(false);
+      setOpen(false);
+    }
   };
 
-  const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
       setLoading(true);
@@ -91,30 +157,29 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
 
   // Handle blood group save
   const handleBloodGroup = async () => {
-    const validBloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
-
-    console.log("bloodGroupInput",bloodGroupInput)
-    
-    if (!validBloodGroups.includes(bloodGroupInput)) {
-      setBloodGroupError("Please enter a valid blood group.")
+    if (!bloodGroupInput) {
+      setBloodGroupError("Please select a blood group");
       return;
     }
-  
+
     setLoading(true);
-  
+
     try {
       const formData = new FormData();
-      formData.append("bloodGroup", bloodGroupInput.toUpperCase());
-      
+      formData.append("bloodGroup", bloodGroupInput);
+
       const response = await updateStudentData(formData);
       console.log(response, "response blood");
-  
+
       if (response.status) {
         // Update student data with the new blood group and retain the value in the input field
         setDetails(response.data);
-        setStudentData({ ...studentData, bloodGroup: response.data.bloodGroup });
+        setStudentData({
+          ...studentData,
+          bloodGroup: response.data.bloodGroup,
+        });
         setBloodGroupInput(response.data.bloodGroup);
-        setBloodGroupError("")
+        setBloodGroupError("");
       }
     } catch (error) {
       console.error("Error updating blood group:", error);
@@ -122,50 +187,52 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
     } finally {
       setLoading(false);
     }
-  };  
+  };
 
   const handleLinkedInSave = async () => {
     const isValidLinkedIn = (url: string) => {
-      if (!url) return true; 
-      return typeof url === "string" && /^https:\/\/(www\.)?linkedin\.com\/.+$/.test(url);
+      if (!url) return true;
+      return (
+        typeof url === "string" &&
+        /^https:\/\/(www\.)?linkedin\.com\/.+$/.test(url)
+      );
     };
-  
+
     if (!isValidLinkedIn(linkedInInput)) {
       setLinkedInError("Invalid LinkedIn URL");
       return;
     }
-  
+
     setLoading(true);
     try {
       const formData = new FormData();
       formData.append("linkedInUrl", linkedInInput);
       const response = await updateStudentData(formData);
-  
+
       if (response.status) {
         setStudentData({ ...studentData, linkedInUrl: linkedInInput });
-        setEditLinkedInInput(false)
-        setLinkedInError("")
+        setEditLinkedInInput(false);
+        setLinkedInError("");
       }
     } catch (error) {
       console.error("Error updating LinkedIn URL:", error);
       setLinkedInError("Failed to update LinkedIn URL.");
     } finally {
       setLoading(false);
-
     }
   };
-  
+
   const handleInstagramSave = async () => {
     setLoading(true);
     try {
       const formData = new FormData();
       formData.append("instagramUrl", instagramInput);
       const response = await updateStudentData(formData);
-  
+
       if (response.status) {
         setStudentData({ ...studentData, instagramUrl: instagramInput });
-        setEditInstagramInput(false)
-        setInstagramError("")
+        setEditInstagramInput(false);
+        setInstagramError("");
       }
     } catch (error) {
       console.error("Error updating Instagram URL:", error);
@@ -174,7 +241,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
       setLoading(false);
     }
   };
-  
+
   return (
     <div className="px-4 sm:px-8 py-8 space-y-6">
       {/* 1) User Details Card */}
@@ -186,7 +253,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                 <div className="w-full h-full relative">
                   <img
                     src={selectedImage || student?.profileUrl}
-                    alt="Profile Image"
+                    alt="id card"
                     className="w-full h-full object-cover rounded-lg"
                   />
                 </div>
@@ -198,10 +265,17 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                   <div className="text-center my-auto text-muted-foreground">
                     <Camera className="mx-auto mb-2 w-8 h-8" />
                     <div className="text-wrap">
-                      {loading ? 'Uploading your Profile Image...' : 'Upload a Passport size Image of Yourself. Ensure that your face covers 60% of this picture.'}
+                      {loading
+                        ? "Uploading your Profile Image..."
+                        : "Upload a Passport size Image of Yourself. Ensure that your face covers 60% of this picture."}
                     </div>
                   </div>
-                  <input id="passport-input" type="file" accept="image/*"className="hidden" onChange={handleImageChange}
+                  <input
+                    id="passport-input"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageChange}
                   />
                 </label>
               )}
@@ -211,7 +285,9 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
               <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
                 <div className="text-xs sm:text-sm font-light">Full Name</div>
                 <div className="text-base sm:text-xl">
-                  {student ? `${student?.firstName} ${student?.lastName}` : "--"}
+                  {student
+                    ? `${student?.firstName} ${student?.lastName}`
+                    : "--"}
                 </div>
               </div>
 
@@ -219,7 +295,9 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
               <div className="flex flex-col gap-2 border-b border-gray-700 py-4">
                 <div className="text-xs sm:text-sm font-light">Email</div>
                 <div className="flex justify-between items-center">
-                  <div className="text-base sm:text-xl">{student?.email || "--"}</div>
+                  <div className="text-base sm:text-xl">
+                    {student?.email || "--"}
+                  </div>
                   <CheckCircle className="h-4 w-4 text-[#00CC92]" />
                 </div>
               </div>
@@ -228,7 +306,9 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
               <div className="flex flex-col gap-2 border-b md:border-none border-gray-700 py-4">
                 <div className="text-xs sm:text-sm font-light">Contact No.</div>
                 <div className="flex justify-between items-center">
-                  <div className="text-base sm:text-xl">{student?.mobileNumber || "--"}</div>
+                  <div className="text-base sm:text-xl">
+                    {student?.mobileNumber || "--"}
+                  </div>
                   <CheckCircle className="h-4 w-4 text-[#00CC92]" />
                 </div>
               </div>
@@ -240,7 +320,9 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
             <div className="text-xs sm:text-sm font-light">Institute Name</div>
             <div className="flex justify-between items-center">
               <div className="text-base sm:text-xl">
-                {details?.appliedCohorts?.[details?.appliedCohorts.length - 1]?.applicationDetails?.studentDetails?.previousEducation?.nameOfInstitution || "--"}
+                {details?.appliedCohorts?.[details?.appliedCohorts.length - 1]
+                  ?.applicationDetails?.studentDetails?.previousEducation
+                  ?.nameOfInstitution || "--"}
               </div>
               <CheckCircle className="h-4 w-4 text-[#00CC92]" />
             </div>
@@ -260,65 +342,89 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
           <div className="flex lg:flex-row flex-col lg:border-b border-gray-700 lg:items-center">
             <div className="flex-1 flex flex-col gap-2 lg:border-none border-b border-gray-700 py-4">
               <div className="text-xs sm:text-sm font-light">Gender</div>
-              <div className="text-base sm:text-xl text-white">{student?.gender || "--"}</div>
+              <div className="text-base sm:text-xl text-white">
+                {student?.gender || "--"}
+              </div>
             </div>
             <div className="flex-1 flex items-center lg:border-none border-b border-gray-700 py-4">
               {student?.bloodGroup ? (
                 <div className="flex-1 flex flex-col gap-2">
-                  <div className="text-xs sm:text-sm font-light">Blood Group</div>
-                  <div className="text-base sm:text-xl text-white">{student?.bloodGroup}</div>
+                  <div className="text-xs sm:text-sm font-light">
+                    Blood Group
+                  </div>
+                  <div className="text-base sm:text-xl text-white">
+                    {student?.bloodGroup}
+                  </div>
                 </div>
               ) : (
                 <div className="flex-1 flex flex-col gap-2">
-                  <div className="text-xs sm:text-sm font-light">Blood Group</div>
-                  <input
-                    type="text"
+                  <div className="text-xs sm:text-sm font-light">
+                    Blood Group
+                  </div>
+                  <Select
                     value={bloodGroupInput}
-                    onChange={(e) => {
-                      let value = e.target.value.toUpperCase();
-                      value = value.replace(/[^A-Z+-]/g, "");
-                      if (value.length > 3) {
-                        value = value.slice(0, 3);
-                      }
-                      setBloodGroupInput(value);
-                    }}                  
-                    placeholder="O+"
-                    className="bg-transparent text-base sm:text-xl focus-visible:none border-none focus-visible:outline-none focus-border-none w-full"
-                  />
-                  {bloodGroupError && 
-                   <div className="text-sm text-[#FF503D]">{bloodGroupError}</div>
-                  }
+                    onValueChange={setBloodGroupInput}
+                  >
+                    <SelectTrigger className="bg-transparent border-none text-base sm:text-xl focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0">
+                      <SelectValue placeholder="Select blood group" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="A+">A+</SelectItem>
+                      <SelectItem value="A-">A-</SelectItem>
+                      <SelectItem value="B+">B+</SelectItem>
+                      <SelectItem value="B-">B-</SelectItem>
+                      <SelectItem value="AB+">AB+</SelectItem>
+                      <SelectItem value="AB-">AB-</SelectItem>
+                      <SelectItem value="O+">O+</SelectItem>
+                      <SelectItem value="O-">O-</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {bloodGroupError && (
+                    <div className="text-sm text-[#FF503D]">
+                      {bloodGroupError}
+                    </div>
+                  )}
                 </div>
               )}
-              {!student?.bloodGroup &&
-                <Button size={'lg'} className="rounded-lg" onClick={handleBloodGroup}>
+              {!student?.bloodGroup && (
+                <Button
+                  size={"lg"}
+                  className="rounded-lg"
+                  onClick={handleBloodGroup}
+                >
                   Save
                 </Button>
-              }
+              )}
             </div>
           </div>
 
           {/* LinkedIn ID + Instagram ID */}
           <div className="flex lg:flex-row flex-col justify-between lg:border-b border-gray-700 lg:items-center">
             {/* LinkedIn URL */}
-            {(addSocials || student?.linkedInUrl) &&
+            {(addSocials || student?.linkedInUrl) && (
               <div className="flex flex-1 justify-between items-center lg:border-none border-b border-gray-700 py-4">
                 <div className="flex flex-1 flex-col space-y-2">
-                  <div className="text-xs sm:text-sm font-light">LinkedIn ID</div>
-                    <input
-                      readOnly={!editLinkedInInput}
-                      value={linkedInInput}
-                      onChange={(e) => setLinkedInInput(e.target.value)}
-                      placeholder="Enter LinkedIn URL"
-                      className="bg-transparent text-white text-base sm:text-xl focus-visible:none border-none focus-visible:outline-none focus-border-none w-full"
-                    />
-                    {linkedInError && 
-                      <div className="text-sm text-[#FF503D]">{linkedInError}</div>
-                    }
+                  <div className="text-xs sm:text-sm font-light">
+                    LinkedIn ID
+                  </div>
+                  <input
+                    readOnly={!editLinkedInInput}
+                    value={linkedInInput}
+                    onChange={(e) => setLinkedInInput(e.target.value)}
+                    placeholder="Enter LinkedIn URL"
+                    className="bg-transparent text-white text-base sm:text-xl focus-visible:none border-none focus-visible:outline-none focus-border-none w-full"
+                  />
+                  {linkedInError && (
+                    <div className="text-sm text-[#FF503D]">
+                      {linkedInError}
+                    </div>
+                  )}
                 </div>
                 <Button
-                  className={`${(editLinkedInInput) ? "" : "bg-transparent hover:bg-[#09090b]"} rounded-lg lg:mr-4`}
-                  size={(editLinkedInInput) ? "lg" : "icon"}
+                  className={`${
+                    editLinkedInInput ? "" : "bg-transparent hover:bg-[#09090b]"
+                  } rounded-lg lg:mr-4`}
+                  size={editLinkedInInput ? "lg" : "icon"}
                   onClick={() => {
                     if (editLinkedInInput) {
                       handleLinkedInSave();
@@ -327,56 +433,68 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                     }
                   }}
                 >
-                  {(editLinkedInInput) ? (
-                    'Save'
+                  {editLinkedInInput ? (
+                    "Save"
                   ) : (
                     <SquarePen className="h-4 w-4" />
                   )}
                 </Button>
               </div>
-            }
+            )}
 
             {/* Instagram URL */}
-            {(addSocials || student?.instagramUrl) &&
+            {(addSocials || student?.instagramUrl) && (
               <div className="flex flex-1 justify-between items-center lg:border-none border-b border-gray-700 py-4">
                 <div className="flex flex-1 flex-col space-y-2">
-                  <div className="text-xs sm:text-sm font-light">Instagram ID</div>
-                    <input
-                      readOnly={!editInstagramInput}
-                      value={instagramInput}
-                      onChange={(e) => setInstagramInput(e.target.value)}
-                      placeholder="Enter Instagram URL"
-                      className="bg-transparent text-base sm:text-xl focus-visible:none border-none focus-visible:outline-none focus-border-none w-full"
-                    />
-                    {instagramError && 
-                      <div className="text-sm text-[#FF503D]">{instagramError}</div>
-                    }
+                  <div className="text-xs sm:text-sm font-light">
+                    Instagram ID
+                  </div>
+                  <input
+                    readOnly={!editInstagramInput}
+                    value={instagramInput}
+                    onChange={(e) => setInstagramInput(e.target.value)}
+                    placeholder="Enter Instagram URL"
+                    className="bg-transparent text-base sm:text-xl focus-visible:none border-none focus-visible:outline-none focus-border-none w-full"
+                  />
+                  {instagramError && (
+                    <div className="text-sm text-[#FF503D]">
+                      {instagramError}
+                    </div>
+                  )}
                 </div>
                 <Button
-                  className={`${(editInstagramInput) ? "" : "bg-transparent hover:bg-[#09090b]"} rounded-lg`}
-                  size={(editInstagramInput) ? "lg" : "icon"}
+                  className={`${
+                    editInstagramInput
+                      ? ""
+                      : "bg-transparent hover:bg-[#09090b]"
+                  } rounded-lg`}
+                  size={editInstagramInput ? "lg" : "icon"}
                   onClick={() => {
-                    if ((editInstagramInput)) {
+                    if (editInstagramInput) {
                       handleInstagramSave();
                     } else {
                       setEditInstagramInput(true);
                     }
                   }}
                 >
-                  {(editInstagramInput) ? (
-                    'Save'
+                  {editInstagramInput ? (
+                    "Save"
                   ) : (
                     <SquarePen className="flex-1 h-4 w-4" />
                   )}
                 </Button>
               </div>
-            }
+            )}
           </div>
-          {!addSocials &&
-            <Button size={'xl'} className="w-full sm:w-fit my-2" onClick={() => setAddSocials(true)}>
+          {!addSocials && (
+            <Button
+              size={"xl"}
+              className="w-full sm:w-fit my-2"
+              onClick={() => setAddSocials(true)}
+            >
               <Plus className="h-4 w-4" /> Add Social
             </Button>
-          }
+          )}
         </CardContent>
       </Card>
 
@@ -390,37 +508,57 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                 alt="LIT ID Card"
                 className="w-16 h-16 rounded-xl bg-white py-1"
               />
-              {student?.bloodGroup ?
-                <div className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                  onClick={() => setOpen(true)}>
-                    <Eye className="text-white w-6 h-6" />
-                </div> :
+              {student?.bloodGroup ? (
+                <div
+                  className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  onClick={() => setOpen(true)}
+                  role="button"
+                  tabIndex={0}
+                  aria-label="View LIT ID Card"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      setOpen(true);
+                    }
+                  }}
+                >
+                  <Eye className="text-white w-6 h-6" />
+                </div>
+              ) : (
                 <div className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                   <FileLock className="text-white w-6 h-6" />
                 </div>
-              }
+              )}
             </div>
             <div className="flex-1">
               <h4 className="text-xl sm:text-2xl font-medium">LIT ID Card</h4>
               <p className="text-sm sm:text-base">
-                {student?.bloodGroup ? 
-                  'Carry your identity as a creator, innovator, and learner wherever you go.' : 
-                  'Complete filling in your blood group to generate your ID Card'
-                }
+                {student?.bloodGroup
+                  ? "Carry your identity as a creator, innovator, and learner wherever you go."
+                  : "Complete filling in your blood group to generate your ID Card"}
               </p>
             </div>
           </div>
 
-          {student?.bloodGroup &&
-            <Button size="xl" variant="outline" className="flex w-full lg:w-fit items-center gap-2" onClick={handleDownloadPDF}>
+          {student?.bloodGroup && (
+            <Button
+              size="xl"
+              variant="outline"
+              className="flex w-full lg:w-fit items-center gap-2"
+              onClick={handleDownloadPDF}
+            >
               <Download className="h-4 w-4" />
-              {isGeneratingPDF? 'Downloading...' : 'Download'}
+              {isGeneratingPDF ? "Downloading..." : "Download"}
             </Button>
-          }
+          )}
         </Card>
 
         <div
-          style={{ position: 'absolute', top: '-10000px', left: '-10000px', width: '400px', }}
+          style={{
+            position: "absolute",
+            top: "-10000px",
+            left: "-10000px",
+            width: "400px",
+          }}
           ref={pdfRef}
           id="pdf-content"
         >
@@ -429,14 +567,13 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
               <LitIdFront data={details} />
             </div>
             <div id="back">
-              <LitIdBack data={details}/>
+              <LitIdBack data={details} />
             </div>
           </div>
         </div>
 
-
         <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTitle></DialogTitle>
+          <DialogTitle></DialogTitle>
           <DialogContent className="flex justify-center items-start max-w-[90vw] sm:max-w-4xl py-2 px-6 max-h-[70vh] sm:max-h-[90vh] overflow-y-auto">
             <div className="flex flex-col justify-center">
               <div className="flex flex-col sm:flex-row mx-auto gap-4 items-center justify-center">
@@ -447,11 +584,15 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                   <LitIdBack data={student} />
                 </div>
               </div>
-              
-              <Button size="xl" variant="outline" className="w-fit flex items-center gap-2 mx-auto mt-4"
-                onClick={handlePrint} >
+
+              <Button
+                size="xl"
+                variant="outline"
+                className="w-fit flex items-center gap-2 mx-auto mt-4"
+                onClick={handleDownloadPDF}
+              >
                 <Download className="h-4 w-4" />
-                {isGeneratingPDF? 'Downloading...' : 'Download'}
+                {isGeneratingPDF ? "Downloading..." : "Download"}
               </Button>
             </div>
           </DialogContent>
@@ -459,4 +600,4 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
       </div>
     </div>
   );
-};
+}
