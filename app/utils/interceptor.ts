@@ -63,9 +63,9 @@ export const RegisterInterceptor = (
       if (!isPublic && !accessToken && !refreshToken) {
         console.log("No Access Token or Refresh Token");
 
-        if (setIsUnauthorized) {
-          setIsUnauthorized(true); // Set unauthorized state to show login dialog
-        }
+        // if (setIsUnauthorized) {
+        //   setIsUnauthorized(true); // Set unauthorized state to show login dialog
+        // }
 
         return [url, config];
       }
@@ -110,7 +110,7 @@ export const RegisterInterceptor = (
           };
         } else {
           console.error("Failed to refresh tokens.");
-          if (setIsUnauthorized) setIsUnauthorized(true);
+          // if (setIsUnauthorized) setIsUnauthorized(true);
         }
 
         // Prevent multiple refreshes for the same request

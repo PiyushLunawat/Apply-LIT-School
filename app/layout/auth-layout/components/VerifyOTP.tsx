@@ -165,6 +165,7 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
             setIsDialogOpen(false); 
           }
         } catch (error) {
+          form.setError('otp', { type: 'manual', message: `${error || `OTP verification failed`}` });
           console.error("Error verifying OTP:", error);
         }
       }
@@ -233,7 +234,7 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
               control={form.control}
               name="otp"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className='flex flex-col items-center'>
                   <FormControl>
                     <InputOTP maxLength={6} {...field}
                     onChange={(e: any) => {
