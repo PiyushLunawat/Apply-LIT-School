@@ -1,5 +1,7 @@
 "use client";
 
+import type React from "react";
+
 import {
   Camera,
   CheckCircle,
@@ -9,8 +11,6 @@ import {
   Plus,
   SquarePen,
 } from "lucide-react";
-import { PDFDocument } from "pdf-lib";
-import type React from "react";
 import { useContext, useEffect, useRef, useState } from "react";
 import { updateStudentData } from "~/api/studentAPI";
 import LitIdBack from "~/components/molecules/LitId/LitIdBack";
@@ -27,20 +27,22 @@ import {
 } from "~/components/ui/select";
 import { UserContext } from "~/context/UserContext";
 
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+
 interface AccountDetailsProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   student: any;
 }
 
 export default function AccountDetails({ student }: AccountDetailsProps) {
-  const latestCohort =
-    student?.appliedCohorts?.[student?.appliedCohorts.length - 1];
-  const cohortDetails = latestCohort?.cohortId;
-
   const [open, setOpen] = useState(false);
   const { studentData, setStudentData } = useContext(UserContext);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [details, setDetails] = useState<any>();
   const [loading, setLoading] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const [bloodGroupInput, setBloodGroupInput] = useState<string>("");
@@ -57,10 +59,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
   );
   const [addSocials, setAddSocials] = useState<boolean>(false);
 
-  const frontCardRef = useRef<HTMLDivElement>(null);
-  const backCardRef = useRef<HTMLDivElement>(null);
-  const hiddenFrontCardRef = useRef<HTMLDivElement>(null);
-  const hiddenBackCardRef = useRef<HTMLDivElement>(null);
+  const pdfRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (student) {
@@ -74,286 +73,61 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
     }
   }, [student]);
 
-  // Function to capture components as images and create PDF
-  const captureComponentsAndCreatePDF = async () => {
+  const handleDownloadPDF = async () => {
     setIsGeneratingPDF(true);
-
     try {
-      // Create hidden container for rendering components
-      const hiddenContainer = document.createElement("div");
-      hiddenContainer.style.position = "absolute";
-      hiddenContainer.style.left = "-9999px";
-      hiddenContainer.style.top = "-9999px";
-      hiddenContainer.style.width = "400px"; // Match component width
-      hiddenContainer.style.height = "590.11px"; // Match component height
-      document.body.appendChild(hiddenContainer);
+      setOpen(true);
 
-      // Create front card container
-      const frontCardContainer = document.createElement("div");
-      frontCardContainer.style.width = "400px";
-      frontCardContainer.style.height = "590.11px";
-      hiddenContainer.appendChild(frontCardContainer);
+      // Wait for the dialog to open and render
+      setTimeout(async () => {
+        const frontElement = document.getElementById("front");
+        const backElement = document.getElementById("back");
 
-      // Create back card container
-      const backCardContainer = document.createElement("div");
-      backCardContainer.style.width = "400px";
-      backCardContainer.style.height = "590.11px";
-      hiddenContainer.appendChild(backCardContainer);
+        if (!frontElement || !backElement) {
+          console.error("ID card elements not found");
+          setIsGeneratingPDF(false);
+          return;
+        }
 
-      // Render components in hidden containers
-      const ReactDOM = (await import("react-dom")).default;
-      ReactDOM.render(<LitIdFront data={student} />, frontCardContainer);
-      ReactDOM.render(<LitIdBack data={student} />, backCardContainer);
+        // Create a new PDF document
+        const pdf = new jsPDF({
+          orientation: "landscape",
+          unit: "mm",
+          format: "a4",
+        });
 
-      // Wait for components to render and images to load
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+        // Capture front side
+        const frontCanvas = await html2canvas(frontElement, {
+          scale: 2,
+          backgroundColor: null,
+          logging: false,
+        });
+        const frontImgData = frontCanvas.toDataURL("image/png");
 
-      // Fix image CORS issues by adding crossOrigin attribute to all images
-      const images = hiddenContainer.querySelectorAll("img");
-      images.forEach((img) => {
-        img.crossOrigin = "anonymous";
-      });
+        // Add front side to PDF
+        pdf.addImage(frontImgData, "PNG", 10, 10, 140, 85);
 
-      // Wait for images to load
-      await Promise.all(
-        Array.from(images).map((img) => {
-          return new Promise((resolve) => {
-            if (img.complete) {
-              resolve(true);
-            } else {
-              img.onload = () => resolve(true);
-              img.onerror = () => {
-                console.error("Image failed to load:", img.src);
-                resolve(false);
-              };
-            }
-          });
-        })
-      );
+        // Capture back side
+        const backCanvas = await html2canvas(backElement, {
+          scale: 2,
+          backgroundColor: null,
+          logging: false,
+        });
+        const backImgData = backCanvas.toDataURL("image/png");
 
-      // Use html2canvas to capture the components
-      const html2canvas = (await import("html2canvas")).default;
+        // Add back side to PDF
+        pdf.addImage(backImgData, "PNG", 10, 100, 140, 85);
 
-      // Capture front card
-      console.log("Capturing front card...");
-      const frontCanvas = await html2canvas(frontCardContainer, {
-        scale: 3, // Higher scale for better quality
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: "#ffffff",
-        logging: true,
-      });
+        // Save the PDF
+        pdf.save(`LIT_ID_Card_${student?.firstName}_${student?.lastName}.pdf`);
 
-      // Capture back card
-      console.log("Capturing back card...");
-      const backCanvas = await html2canvas(backCardContainer, {
-        scale: 3, // Higher scale for better quality
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: "#ffffff",
-        logging: true,
-      });
-
-      // Clean up hidden container
-      document.body.removeChild(hiddenContainer);
-
-      // Convert canvases to image data URLs
-      const frontImageData = frontCanvas.toDataURL("image/png", 1.0);
-      const backImageData = backCanvas.toDataURL("image/png", 1.0);
-
-      // Create PDF with pdf-lib
-      const pdfDoc = await PDFDocument.create();
-
-      // Add pages with the same aspect ratio as the cards
-      // Use actual dimensions of the ID card (400px × 590.11px)
-      const aspectRatio = 590.11 / 400;
-      const width = 400 * 0.75; // Convert px to points (1px ≈ 0.75pt)
-      const height = width * aspectRatio;
-
-      const frontPage = pdfDoc.addPage([width, height]);
-      const backPage = pdfDoc.addPage([width, height]);
-
-      // Convert data URLs to PDF-compatible images
-      const frontImageBytes = await fetch(frontImageData).then((res) =>
-        res.arrayBuffer()
-      );
-      const backImageBytes = await fetch(backImageData).then((res) =>
-        res.arrayBuffer()
-      );
-
-      const frontImage = await pdfDoc.embedPng(frontImageBytes);
-      const backImage = await pdfDoc.embedPng(backImageBytes);
-
-      // Draw images on pages, fitting to page dimensions
-      frontPage.drawImage(frontImage, {
-        x: 0,
-        y: 0,
-        width: width,
-        height: height,
-      });
-
-      backPage.drawImage(backImage, {
-        x: 0,
-        y: 0,
-        width: width,
-        height: height,
-      });
-
-      // Save the PDF
-      const pdfBytes = await pdfDoc.save();
-
-      // Download the PDF
-      const blob = new Blob([pdfBytes], { type: "application/pdf" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `LIT_ID_Card_${student?.firstName || "Student"}_${
-        student?.lastName || ""
-      }.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(link.href);
-
-      console.log("PDF generated successfully!");
-      setIsGeneratingPDF(false);
+        setIsGeneratingPDF(false);
+        setOpen(false);
+      }, 500);
     } catch (error) {
       console.error("Error generating PDF:", error);
       setIsGeneratingPDF(false);
-      alert(`Failed to generate PDF: ${error.message}. Please try again.`);
-    }
-  };
-
-  // Alternative approach using visible components
-  const captureVisibleComponentsAndCreatePDF = async () => {
-    setIsGeneratingPDF(true);
-
-    try {
-      // First, ensure the dialog is open
-      if (!open) {
-        setOpen(true);
-        // Wait for the dialog to open and components to render
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
-
-      // Check if refs are available
-      if (!frontCardRef.current || !backCardRef.current) {
-        throw new Error(
-          "Card components not found. Please try opening the preview first."
-        );
-      }
-
-      // Fix image CORS issues by adding crossOrigin attribute to all images
-      const frontImages = frontCardRef.current.querySelectorAll("img");
-      const backImages = backCardRef.current.querySelectorAll("img");
-
-      const allImages = [...Array.from(frontImages), ...Array.from(backImages)];
-      allImages.forEach((img) => {
-        img.crossOrigin = "anonymous";
-      });
-
-      // Wait for images to load
-      await Promise.all(
-        allImages.map((img) => {
-          return new Promise((resolve) => {
-            if (img.complete) {
-              resolve(true);
-            } else {
-              img.onload = () => resolve(true);
-              img.onerror = () => {
-                console.error("Image failed to load:", img.src);
-                resolve(false);
-              };
-            }
-          });
-        })
-      );
-
-      // Use html2canvas to capture the components
-      const html2canvas = (await import("html2canvas")).default;
-
-      // Capture front card
-      console.log("Capturing front card...");
-      const frontCanvas = await html2canvas(frontCardRef.current, {
-        scale: 3, // Higher scale for better quality
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: "#ffffff",
-        logging: true,
-      });
-
-      // Capture back card
-      console.log("Capturing back card...");
-      const backCanvas = await html2canvas(backCardRef.current, {
-        scale: 3, // Higher scale for better quality
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: "#ffffff",
-        logging: true,
-      });
-
-      // Convert canvases to image data URLs
-      const frontImageData = frontCanvas.toDataURL("image/png", 1.0);
-      const backImageData = backCanvas.toDataURL("image/png", 1.0);
-
-      // Create PDF with pdf-lib
-      const pdfDoc = await PDFDocument.create();
-
-      // Add pages with the same aspect ratio as the cards
-      // Use actual dimensions of the ID card (400px × 590.11px)
-      const aspectRatio = 590.11 / 400;
-      const width = 400 * 0.75; // Convert px to points (1px ≈ 0.75pt)
-      const height = width * aspectRatio;
-
-      const frontPage = pdfDoc.addPage([width, height]);
-      const backPage = pdfDoc.addPage([width, height]);
-
-      // Convert data URLs to PDF-compatible images
-      const frontImageBytes = await fetch(frontImageData).then((res) =>
-        res.arrayBuffer()
-      );
-      const backImageBytes = await fetch(backImageData).then((res) =>
-        res.arrayBuffer()
-      );
-
-      const frontImage = await pdfDoc.embedPng(frontImageBytes);
-      const backImage = await pdfDoc.embedPng(backImageBytes);
-
-      // Draw images on pages, fitting to page dimensions
-      frontPage.drawImage(frontImage, {
-        x: 0,
-        y: 0,
-        width: width,
-        height: height,
-      });
-
-      backPage.drawImage(backImage, {
-        x: 0,
-        y: 0,
-        width: width,
-        height: height,
-      });
-
-      // Save the PDF
-      const pdfBytes = await pdfDoc.save();
-
-      // Download the PDF
-      const blob = new Blob([pdfBytes], { type: "application/pdf" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `LIT_ID_Card_${student?.firstName || "Student"}_${
-        student?.lastName || ""
-      }.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(link.href);
-
-      console.log("PDF generated successfully!");
-      setIsGeneratingPDF(false);
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      setIsGeneratingPDF(false);
-      alert(`Failed to generate PDF: ${error.message}. Please try again.`);
+      setOpen(false);
     }
   };
 
@@ -374,6 +148,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
         }
       } catch (error) {
         console.error("Error uploading image:", error);
+        // alert("An error occurred while uploading the image.");
       } finally {
         setLoading(false);
       }
@@ -397,6 +172,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
       console.log(response, "response blood");
 
       if (response.status) {
+        // Update student data with the new blood group and retain the value in the input field
         setDetails(response.data);
         setStudentData({
           ...studentData,
@@ -468,16 +244,6 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
 
   return (
     <div className="px-4 sm:px-8 py-8 space-y-6">
-      {/* Hidden components for rendering */}
-      <div style={{ position: "absolute", left: "-9999px", top: "-9999px" }}>
-        <div ref={hiddenFrontCardRef}>
-          <LitIdFront data={student} />
-        </div>
-        <div ref={hiddenBackCardRef}>
-          <LitIdBack data={student} />
-        </div>
-      </div>
-
       {/* 1) User Details Card */}
       <Card className="bg-[#64748B1F] rounded-xl text-white">
         <CardContent className="p-6 ">
@@ -487,9 +253,8 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                 <div className="w-full h-full relative">
                   <img
                     src={selectedImage || student?.profileUrl}
-                    alt="Profile Image"
+                    alt="id card"
                     className="w-full h-full object-cover rounded-lg"
-                    crossOrigin="anonymous"
                   />
                 </div>
               ) : (
@@ -742,12 +507,19 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                 src={student?.profileUrl || `/assets/images/lit-id-front.svg`}
                 alt="LIT ID Card"
                 className="w-16 h-16 rounded-xl bg-white py-1"
-                crossOrigin="anonymous"
               />
               {student?.bloodGroup ? (
                 <div
                   className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                   onClick={() => setOpen(true)}
+                  role="button"
+                  tabIndex={0}
+                  aria-label="View LIT ID Card"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      setOpen(true);
+                    }
+                  }}
                 >
                   <Eye className="text-white w-6 h-6" />
                 </div>
@@ -772,23 +544,43 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
               size="xl"
               variant="outline"
               className="flex w-full lg:w-fit items-center gap-2"
-              onClick={captureComponentsAndCreatePDF}
+              onClick={handleDownloadPDF}
             >
               <Download className="h-4 w-4" />
-              {isGeneratingPDF ? "Generating PDF..." : "Download"}
+              {isGeneratingPDF ? "Downloading..." : "Download"}
             </Button>
           )}
         </Card>
+
+        <div
+          style={{
+            position: "absolute",
+            top: "-10000px",
+            left: "-10000px",
+            width: "400px",
+          }}
+          ref={pdfRef}
+          id="pdf-content"
+        >
+          <div className="flex flex-col gap-6 items-center justify-center p-4">
+            <div id="front">
+              <LitIdFront data={details} />
+            </div>
+            <div id="back">
+              <LitIdBack data={details} />
+            </div>
+          </div>
+        </div>
 
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTitle></DialogTitle>
           <DialogContent className="flex justify-center items-start max-w-[90vw] sm:max-w-4xl py-2 px-6 max-h-[70vh] sm:max-h-[90vh] overflow-y-auto">
             <div className="flex flex-col justify-center">
               <div className="flex flex-col sm:flex-row mx-auto gap-4 items-center justify-center">
-                <div className="w-1/2 sm:w-full" ref={frontCardRef}>
+                <div className="w-1/2 sm:w-full">
                   <LitIdFront data={student} />
                 </div>
-                <div className="w-1/2 sm:w-full" ref={backCardRef}>
+                <div className="w-1/2 sm:w-full">
                   <LitIdBack data={student} />
                 </div>
               </div>
@@ -797,10 +589,10 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                 size="xl"
                 variant="outline"
                 className="w-fit flex items-center gap-2 mx-auto mt-4"
-                onClick={captureVisibleComponentsAndCreatePDF}
+                onClick={handleDownloadPDF}
               >
                 <Download className="h-4 w-4" />
-                {isGeneratingPDF ? "Generating PDF..." : "Download"}
+                {isGeneratingPDF ? "Downloading..." : "Download"}
               </Button>
             </div>
           </DialogContent>

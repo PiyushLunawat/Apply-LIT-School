@@ -1,45 +1,30 @@
-import { S3Client } from "@aws-sdk/client-s3";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigate } from "@remix-run/react";
-import axios from "axios";
-import {
-  ArrowUpRight,
-  Clipboard,
-  ClipboardCheck,
-  FileTextIcon,
-  Link2,
-  Link2Icon,
-  LoaderCircle,
-  UploadIcon,
-  XIcon,
-} from "lucide-react";
-import React, { useContext, useEffect, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { submitApplicationTask } from "~/api/studentAPI";
-import { Badge } from "~/components/ui/badge";
-import { Button } from "~/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "~/components/ui/form";
-import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
-import { Progress } from "~/components/ui/progress";
-import { Textarea } from "~/components/ui/textarea";
-import { UserContext } from "~/context/UserContext";
+import React, { useContext, useEffect, useRef, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Textarea } from '~/components/ui/textarea';
+import { Input } from '~/components/ui/input';
+import { Label } from '~/components/ui/label';
+import { UserContext } from '~/context/UserContext';
+import { Button } from '~/components/ui/button';
+import { ArrowUpRight, Clipboard, ClipboardCheck, Download, FileTextIcon, Link2, Link2Icon, LoaderCircle, SaveIcon, UploadIcon, XIcon,} from 'lucide-react';
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage,} from '~/components/ui/form';
+import { submitApplicationTask} from '~/api/studentAPI';
+import { useNavigate } from '@remix-run/react';
+import axios from 'axios';
+import { Progress } from '~/components/ui/progress';
+import { Badge } from '~/components/ui/badge';
+import { S3Client, DeleteObjectCommand,} from "@aws-sdk/client-s3";
 
-const s3Client = new S3Client({});
+const s3Client = new S3Client({
+  
+});
 
 // ------------------ ZOD Schema ------------------
 const formSchema = z.object({
   courseDive: z.object({
-    interest: z.string().nonempty("This field is required"),
-    goals: z.string().nonempty("This field is required"),
+    interest: z.string().nonempty('This field is required'),
+    goals: z.string().nonempty('This field is required'),
   }),
   tasks: z.array(
     z.object({
@@ -48,14 +33,11 @@ const formSchema = z.object({
           type: z.string(),
           answer: z.union([
             // for link (URL)
-            z
-              .string()
-              .nonempty("This field is required")
-              .url("Please enter a valid Link URL"),
+            z.string().nonempty('This field is required').url('Please enter a valid Link URL'),
             // for short/long text
-            z.string().nonempty("This field is required"),
+            z.string().nonempty('This field is required'),
             // for files/array
-            z.array(z.any()).nonempty("This field is required"),
+            z.array(z.any()).nonempty('This field is required'),
           ]),
         })
       ),
@@ -67,24 +49,23 @@ const formSchema = z.object({
 type FormSchema = z.infer<typeof formSchema>;
 
 interface ApplicationTaskFormProps {
-  student: any;
+  student: any
 }
 
-export default function ApplicationTaskForm({
-  student,
-}: ApplicationTaskFormProps) {
-  const latestCohort =
-    student?.appliedCohorts?.[student?.appliedCohorts.length - 1];
+export default function ApplicationTaskForm({ student }: ApplicationTaskFormProps) {
+
+  const latestCohort = student?.appliedCohorts?.[student?.appliedCohorts.length - 1];
   const cohort = latestCohort?.cohortId;
   const applicationTasks = latestCohort?.applicationDetails?.applicationTasks;
 
   const { studentData } = useContext(UserContext);
   const [id, setId] = useState("");
   const [taskId, setTaskId] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);  
   const [saveLoading, setSaveLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [saved, setSaved] = useState(false);
+
 
   const topRef = useRef<HTMLDivElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
@@ -96,74 +77,68 @@ export default function ApplicationTaskForm({
   // 1) A constant for the localStorage key
   const storageKey = studentData?.email
     ? `applicationTaskForm-${studentData.email}`
-    : "applicationTaskForm-unknownUser";
+    : 'applicationTaskForm-unknownUser';
 
   // ------------------ React Hook Form Setup ------------------
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
-    mode: "onChange",
+    mode: 'onChange',
     defaultValues: {
       courseDive: {
-        interest: "",
-        goals: "",
+        interest: '',
+        goals: '',
       },
       tasks: [],
     },
   });
-  const {
-    control,
-    handleSubmit,
-    reset,
-    watch,
-    formState: { isValid },
-  } = form;
+  const { control, handleSubmit, reset, watch, formState: { isValid }, } = form;
 
   // ------------------ Fetch Data + Initialize ------------------
   useEffect(() => {
     async function fetchData() {
       try {
         if (!studentData?._id) return;
-
-        setId(applicationTasks[0]?._id);
-        // The last submission’s first item (if it exists)
-        const lastTaskSubmission =
+ 
+          setId(applicationTasks[0]?._id)
+          // The last submission’s first item (if it exists)
+          const lastTaskSubmission =
           applicationTasks[applicationTasks.length - 1]?.applicationTasks?.[0];
-
-        setTaskId(lastTaskSubmission?._id);
-
-        // Build final tasks structure for React Hook Form
-        const sDataTasks = lastTaskSubmission?.tasks || [];
-        const cohortTasks = cohort?.applicationFormDetail?.[0]?.task || [];
-
-        const finalTasks = cohortTasks.map((ct: any, tIndex: number) => {
-          const existingTask = sDataTasks[tIndex] || {};
-          console.log("lastTaskSubmission", existingTask);
+          
+          setTaskId(lastTaskSubmission?._id)
+          
+          // Build final tasks structure for React Hook Form
+          const sDataTasks = lastTaskSubmission?.tasks || [];
+          const cohortTasks = cohort?.applicationFormDetail?.[0]?.task || [];
+          
+          const finalTasks = cohortTasks.map((ct: any, tIndex: number) => {
+            const existingTask = sDataTasks[tIndex] || {};
+            console.log('lastTaskSubmission', existingTask);
           return {
             configItems: ct.config.map((configItem: any, cIndex: number) => {
-              let answer: any = "";
+              let answer: any = '';
               switch (configItem.type) {
-                case "long":
-                case "short":
+                case 'long':
+                case 'short':
                   // fill from existingTask.text array
                   answer =
                     existingTask.text && existingTask.text[cIndex]
                       ? existingTask.text[cIndex]
-                      : "";
+                      : '';
                   break;
-                case "link":
+                case 'link':
                   answer = existingTask.links || [];
                   break;
-                case "image":
+                case 'image':
                   answer = existingTask.images || [];
                   break;
-                case "video":
+                case 'video':
                   answer = existingTask.videos || [];
                   break;
-                case "file":
+                case 'file':
                   answer = existingTask.files || [];
                   break;
                 default:
-                  answer = "";
+                  answer = '';
                   break;
               }
               return {
@@ -176,8 +151,8 @@ export default function ApplicationTaskForm({
 
         // Fill in the "courseDive" text from last submission
         const courseDiveData = {
-          interest: lastTaskSubmission?.courseDive[0] || "",
-          goals: lastTaskSubmission?.courseDive[1] || "",
+          interest: lastTaskSubmission?.courseDive[0] || '',
+          goals: lastTaskSubmission?.courseDive[1] || '',
         };
 
         // Check localStorage
@@ -188,26 +163,19 @@ export default function ApplicationTaskForm({
             parsedForm?.courseDive?.interest === "" &&
             parsedForm?.courseDive?.goals === "" &&
             Array.isArray(parsedForm?.tasks) &&
-            parsedForm.tasks.every(
-              (task: any) =>
+            parsedForm.tasks.every( (task: any) =>
                 Array.isArray(task.configItems) &&
                 task.configItems.every((configItem: any) => {
-                  if (["short", "long"].includes(configItem.type))
-                    return configItem.answer === "";
-                  if (
-                    ["file", "image", "video", "link"].includes(configItem.type)
-                  )
-                    return (
-                      Array.isArray(configItem.answer) &&
-                      configItem.answer.length === 0
-                    );
+                  if (["short", "long"].includes(configItem.type)) return configItem.answer === "";
+                  if (["file", "image", "video", "link"].includes(configItem.type))
+                    return Array.isArray(configItem.answer) && configItem.answer.length === 0;
                   return true; // If new types are added later, they should default to "empty"
                 })
             );
 
           if (isEmpty) {
             // If localStorage is empty, use server data
-            console.log("finalTasks", courseDiveData, finalTasks);
+        console.log('finalTasks',courseDiveData, finalTasks);
 
             reset({
               courseDive: courseDiveData,
@@ -225,7 +193,7 @@ export default function ApplicationTaskForm({
           });
         }
       } catch (err) {
-        console.error("Error fetching data:", err);
+        console.error('Error fetching data:', err);
       }
     }
 
@@ -250,7 +218,7 @@ export default function ApplicationTaskForm({
         const parsedForm = JSON.parse(storedFormJSON);
         reset(parsedForm);
       } catch (error) {
-        console.error("Error parsing form data from localStorage:", error);
+        console.error('Error parsing form data from localStorage:', error);
       }
     }
   }, [reset, storageKey]);
@@ -296,16 +264,16 @@ export default function ApplicationTaskForm({
           const answer = configItem.answer;
           let key: string | null = null;
 
-          if (type === "link") {
-            key = "links";
-          } else if (type === "image") {
-            key = "images";
-          } else if (type === "video") {
-            key = "videos";
-          } else if (type === "file") {
-            key = "files";
-          } else if (type === "long" || type === "short" || type === "text") {
-            key = "text";
+          if (type === 'link') {
+            key = 'links';
+          } else if (type === 'image') {
+            key = 'images';
+          } else if (type === 'video') {
+            key = 'videos';
+          } else if (type === 'file') {
+            key = 'files';
+          } else if (type === 'long' || type === 'short' || type === 'text') {
+            key = 'text';
           }
 
           if (key) {
@@ -334,15 +302,15 @@ export default function ApplicationTaskForm({
         ],
       };
 
-      console.log("Submitting Payload:", payload);
+      console.log('Submitting Payload:', payload);
       const res = await submitApplicationTask(payload);
-      console.log("Submission success => ", res);
+      console.log('Submission success => ', res);
 
       // Clear local storage and navigate on success
       localStorage.removeItem(storageKey);
-      navigate("/application/status");
+      navigate('/application/status');
     } catch (err) {
-      console.error("Failed to submit application task:", err);
+      console.error('Failed to submit application task:', err);
     } finally {
       setLoading(false);
     }
@@ -361,16 +329,16 @@ export default function ApplicationTaskForm({
           const answer = configItem.answer;
           let key: string | null = null;
 
-          if (type === "link") {
-            key = "links";
-          } else if (type === "image") {
-            key = "images";
-          } else if (type === "video") {
-            key = "videos";
-          } else if (type === "file") {
-            key = "files";
-          } else if (type === "long" || type === "short" || type === "text") {
-            key = "text";
+          if (type === 'link') {
+            key = 'links';
+          } else if (type === 'image') {
+            key = 'images';
+          } else if (type === 'video') {
+            key = 'videos';
+          } else if (type === 'file') {
+            key = 'files';
+          } else if (type === 'long' || type === 'short' || type === 'text') {
+            key = 'text';
           }
 
           if (key) {
@@ -398,13 +366,14 @@ export default function ApplicationTaskForm({
         ],
       };
 
-      console.log("Submitting Payload:", payload);
+      console.log('Submitting Payload:', payload);
       const res = await submitApplicationTask(payload);
-      console.log("Submission success => ", res);
+      console.log('Submission success => ', res);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
+
     } catch (err) {
-      console.error("Failed to submit application task:", err);
+      console.error('Failed to submit application task:', err);
     } finally {
       setSaveLoading(false);
     }
@@ -412,12 +381,13 @@ export default function ApplicationTaskForm({
 
   function handleClearForm() {
     localStorage.removeItem(storageKey);
-
+  
     form.reset({
-      courseDive: { interest: "", goals: "" },
+      courseDive: { interest: '', goals: '' },
       tasks: [],
     });
   }
+  
 
   // A helper for limiting word count
   const wordLimitHandler = (
@@ -436,13 +406,12 @@ export default function ApplicationTaskForm({
   const tasks = cohort?.applicationFormDetail?.[0]?.task || [];
 
   const getFileType = (fileName: string) => {
-    const extension = fileName.split(".").pop()?.toLowerCase();
+    const extension = fileName.split('.').pop()?.toLowerCase();
     if (!extension) return null;
-    if (["jpg", "jpeg", "png", "gif", "webp"].includes(extension))
-      return "image";
-    if (["mp4", "mkv", "webm", "ogg"].includes(extension)) return "video";
-    if (extension === "pdf") return "pdf";
-    return "other";
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) return 'image';
+    if (['mp4', "mkv", 'webm', 'ogg'].includes(extension)) return 'video';
+    if (extension === 'pdf') return 'pdf';
+    return 'other';
   };
 
   // Render
@@ -505,11 +474,11 @@ export default function ApplicationTaskForm({
         {/* Tasks Section */}
         {tasks.map((task: any, taskIndex: number) => (
           <div key={taskIndex} className="flex flex-col gap-6 mt-8">
-            <div className="flex-1 bg-[#FA69E5]/[0.2] text-[#FA69E5] text-center py-4 text-2xl rounded-full">
-              Task {String(taskIndex + 1).padStart(2, "0")}
-            </div>
-            <div className="space-y-5">
-              <div className="flex flex-col gap-3">
+              <div className="flex-1 bg-[#FA69E5]/[0.2] text-[#FA69E5] text-center py-4 text-2xl rounded-full">
+                Task {String(taskIndex + 1).padStart(2, '0')}
+              </div>
+              <div className="space-y-5">
+              <div className='flex flex-col gap-3'>
                 <div className="">
                   <Label className="text-xl sm:text-2xl font-normal text-[#FA69E5] pl-3">
                     {task.title}
@@ -519,136 +488,109 @@ export default function ApplicationTaskForm({
                   </div>
                 </div>
 
-                <div className="w-full space-y-2">
+                <div className='w-full space-y-2'>
                   <div className="text-lg font-normal text-muted-foreground pl-3">
                     Resources
                   </div>
-                  {task?.resources?.resourceFiles.map(
-                    (file: any, index: number) => {
-                      const fileType = getFileType(file);
+                  {task?.resources?.resourceFiles.map((file: any, index: number) => {
+                    const fileType = getFileType(file);
 
-                      switch (fileType) {
-                        case "pdf":
-                          return (
-                            <div className="w-full min-h-[500px] max-h-[600px] justify-center flex items-center rounded-xl">
-                              <iframe
-                                src={file}
-                                className="mx-auto w-full min-h-[500px] max-h-[600px] rounded-xl"
-                                style={{ border: "none" }}
-                              />
-                            </div>
-                          );
-                        case "image":
-                          return (
-                            <div className="w-full min-h-[400px] max-h-[500px] bg-[#2C2C2C] flex flex-col items-center text-sm border rounded-xl relative">
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                type="button"
-                                className="text-white rounded-xl hover:bg-[#1a1a1d] absolute top-[6px] right-[6px] z-10"
-                                onClick={() => window.open(file, "_blank")}
-                              >
-                                <ArrowUpRight className="w-5 h-5" />
-                              </Button>
-                              <img
-                                src={file}
-                                alt={file.split("/").pop()}
-                                className="min-h-[400px] max-h-[500px] object-contain rounded-xl"
-                              />
-                            </div>
-                          );
-                        case "video":
-                          return (
-                            <div className="w-full min-h-[400px] max-h-[500px] min-h-[400px] max-h-[500px] bg-[#2C2C2C] flex flex-col items-center text-sm border rounded-xl relative">
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                type="button"
-                                className="text-white rounded-xl hover:bg-[#1a1a1d] absolute top-[6px] right-[6px] z-10"
-                                onClick={() => window.open(file, "_blank")}
-                              >
-                                <ArrowUpRight className="w-5 h-5" />
-                              </Button>
-
-                              <video
-                                controls
-                                preload="none"
-                                className="min-h-[400px] max-h-[500px] w-full rounded-xl "
-                              >
-                                <source src={file} type="video/mp4" />
-                                Your browser does not support the video tag.
-                              </video>
-                            </div>
-                          );
-                        default:
-                          return (
-                            <div
-                              key={index}
-                              className="flex gap-2 items-center justify-between w-full p-1.5 bg-[#2C2C2C] rounded-xl"
+                    switch (fileType) {
+                      case 'pdf':
+                        return (
+                          <div className="w-full min-h-[500px] max-h-[600px] justify-center flex items-center rounded-xl">
+                            <iframe src={file} className="mx-auto w-full min-h-[500px] max-h-[600px] rounded-xl" style={{ border: 'none' }} />
+                          </div>
+                        );
+                      case 'image':
+                        return (
+                          <div className="w-full min-h-[400px] max-h-[500px] bg-[#2C2C2C] flex flex-col items-center text-sm border rounded-xl relative">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              type="button"
+                              className="text-white rounded-xl hover:bg-[#1a1a1d] absolute top-[6px] right-[6px] z-10"
+                              onClick={() => window.open(file, "_blank")}
                             >
-                              <div className="flex flex-1 items-center space-x-2 truncate">
-                                <Badge
-                                  variant="outline"
-                                  size="icon"
-                                  className="text-white rounded-xl bg-[#09090b]"
-                                >
-                                  <FileTextIcon className="w-5 h-5" />
-                                </Badge>
-                                <span className="text-white truncate">
-                                  {file.split("/").pop()}
-                                </span>
-                              </div>
-                              <Button
+                              <ArrowUpRight className="w-5 h-5" />
+                            </Button>
+                            <img
+                              src={file}
+                              alt={file.split('/').pop()}
+                              className="min-h-[400px] max-h-[500px] object-contain rounded-xl"
+                            />
+                          </div>
+                        );
+                      case 'video':
+                        return (
+                          <div className="w-full min-h-[400px] max-h-[500px] min-h-[400px] max-h-[500px] bg-[#2C2C2C] flex flex-col items-center text-sm border rounded-xl relative">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              type="button"
+                              className="text-white rounded-xl hover:bg-[#1a1a1d] absolute top-[6px] right-[6px] z-10"
+                              onClick={() => window.open(file, "_blank")}
+                            >
+                              <ArrowUpRight className="w-5 h-5" />
+                            </Button>
+
+                            <video controls preload="none" className="min-h-[400px] max-h-[500px] w-full rounded-xl ">
+                              <source src={file} type="video/mp4" />
+                              Your browser does not support the video tag.
+                            </video>
+                          </div>
+                        );
+                      default:
+                        return (
+                          <div key={index} className="flex gap-2 items-center justify-between w-full p-1.5 bg-[#2C2C2C] rounded-xl">
+                            <div className="flex flex-1 items-center space-x-2 truncate">
+                              <Badge
                                 variant="outline"
                                 size="icon"
-                                type="button"
-                                className="text-white rounded-xl hover:bg-[#1a1a1d]"
-                                onClick={() => window.open(file, "_blank")}
-                              >
-                                <ArrowUpRight className="w-5 h-5" />
-                              </Button>
+                                className="text-white rounded-xl bg-[#09090b]"
+                                >
+                                <FileTextIcon className="w-5 h-5" />
+                              </Badge>
+                              <span className="text-white truncate">{file.split('/').pop()}</span>
                             </div>
-                          );
-                      }
-                    }
+                            <Button variant="outline" size="icon" type='button'
+                              className="text-white rounded-xl hover:bg-[#1a1a1d]"
+                              onClick={() => window.open(file, "_blank")}
+                              >
+                              <ArrowUpRight className="w-5 h-5" />
+                            </Button>
+                          </div>
+                        )
+                      }}
                   )}
 
-                  {task?.resources?.resourceLinks.map(
-                    (link: any, index: number) => (
-                      <div
-                        key={index}
-                        className="flex gap-2 items-center justify-between w-full p-1.5 bg-[#2C2C2C] rounded-xl"
-                      >
-                        <div className="flex items-center space-x-2 flex-1 w-[50vw] truncate">
-                          <Badge
-                            variant="outline"
-                            size="icon"
-                            className="text-white rounded-xl bg-[#09090b]"
-                          >
-                            <Link2 className="w-5 h-5" />
-                          </Badge>
-                          <span className="text-white truncate">{link}</span>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          type="button"
-                          className="text-white rounded-xl hover:bg-[#1a1a1d]"
-                          onClick={() => window.open(link, "_blank")}
+                  {task?.resources?.resourceLinks.map((link: any, index: number) => (
+                    <div key={index} className="flex gap-2 items-center justify-between w-full p-1.5 bg-[#2C2C2C] rounded-xl">
+                    <div className="flex items-center space-x-2 flex-1 w-[50vw] truncate">
+                      <Badge
+                        variant="outline"
+                        size="icon"
+                        className="text-white rounded-xl bg-[#09090b]"
                         >
-                          <ArrowUpRight className="w-5 h-5" />
-                        </Button>
-                      </div>
-                    )
-                  )}
+                        <Link2 className="w-5 h-5" />
+                      </Badge>
+                      <span className="text-white truncate">{link}</span>
+                    </div>
+                    <Button variant="outline" size="icon" type='button'
+                      className="text-white rounded-xl hover:bg-[#1a1a1d]"
+                      onClick={() => window.open(link, "_blank")}
+                      >
+                      <ArrowUpRight className="w-5 h-5" />
+                    </Button>
+                  </div>
+                  ))}
                 </div>
               </div>
 
               {/* If no cohort found */}
               {!cohort ? (
                 <div className="text-center text-white">
-                  No tasks available. Please ensure the cohort data is loaded
-                  correctly.
+                  No tasks available. Please ensure the cohort data is loaded correctly.
                 </div>
               ) : (
                 // Else show each config item
@@ -656,7 +598,7 @@ export default function ApplicationTaskForm({
                   <div className="text-lg font-normal text-[#00A0E9] pl-3">
                     Your Submission
                   </div>
-                  <div className="space-y-3">
+                  <div className='space-y-3'>
                     {task.config.map((configItem: any, configIndex: number) => (
                       <TaskConfigItem
                         key={configIndex}
@@ -689,25 +631,21 @@ export default function ApplicationTaskForm({
             type="submit"
             disabled={loading || uploading || !isValid}
           >
-            {loading ? "Submitting..." : "Submit Application"}
+            {loading ? 'Submitting...' : 'Submit Application'}
           </Button>
         </div>
         {!isTopVisible && !isBottomVisible && (
-          <Button
-            size="xl"
-            variant="outline"
-            className="fixed bottom-24 right-44 bg-[#09090b] hover:bg-[#09090b]/80"
-            type="button"
-            disabled={saveLoading || saved}
+          <Button 
+            size="xl" 
+            variant="outline" 
+            className='fixed bottom-24 right-44 bg-[#09090b] hover:bg-[#09090b]/80'
+            type="button" 
+            disabled={saveLoading || saved} 
             onClick={() => onSave(form.getValues())}
           >
-            <div className="flex items-center gap-2">
-              {saved ? (
-                <ClipboardCheck className="w-4 h-4" />
-              ) : (
-                <Clipboard className="h-4 w-4" />
-              )}
-              {saved ? "Updates Saved" : "Save Updates"}
+            <div className='flex items-center gap-2'>
+              {saved ? <ClipboardCheck className='w-4 h-4' /> : <Clipboard className='h-4 w-4'/>}
+              {saved ? 'Updates Saved' : 'Save Updates'}
             </div>
           </Button>
         )}
@@ -715,7 +653,7 @@ export default function ApplicationTaskForm({
       </form>
     </Form>
   );
-}
+};
 
 // ------------------ Config Item ------------------
 interface TaskConfigItemProps {
@@ -733,22 +671,18 @@ const TaskConfigItem: React.FC<TaskConfigItemProps> = ({
 }) => {
   const fieldName = `tasks.${taskIndex}.configItems.${configIndex}.answer`;
 
-  const wordLimitHandler = (
-    event: React.ChangeEvent<HTMLTextAreaElement>,
-    field: any,
-    maxWordLimit: number
-  ) => {
+  const wordLimitHandler = ( event: React.ChangeEvent<HTMLTextAreaElement>, field: any, maxWordLimit: number ) => {
     const text = event.target.value;
     const wordCount = text.split(/\s+/).filter(Boolean).length;
-
+    
     if (wordCount <= maxWordLimit) {
       field.onChange(text);
     }
   };
 
   switch (configItem.type) {
-    case "long":
-    case "short":
+    case 'long':
+    case 'short':
       return (
         <FormField
           control={control}
@@ -759,9 +693,7 @@ const TaskConfigItem: React.FC<TaskConfigItemProps> = ({
                 <Textarea
                   className="w-full text-white text-base mt-2 h-[240px]"
                   placeholder={`Write up to ${configItem.characterLimit} characters`}
-                  onChange={(e) =>
-                    wordLimitHandler(e, field, configItem.characterLimit)
-                  }
+                  onChange={(e) => wordLimitHandler(e, field, configItem.characterLimit)}
                   value={field.value}
                 />
               </FormControl>
@@ -771,9 +703,9 @@ const TaskConfigItem: React.FC<TaskConfigItemProps> = ({
         />
       );
 
-    case "image":
-    case "video":
-    case "file":
+    case 'image':
+    case 'video':
+    case 'file':
       return (
         <FormField
           control={control}
@@ -784,7 +716,7 @@ const TaskConfigItem: React.FC<TaskConfigItemProps> = ({
         />
       );
 
-    case "link":
+    case 'link':
       return (
         <FormField
           control={control}
@@ -792,7 +724,7 @@ const TaskConfigItem: React.FC<TaskConfigItemProps> = ({
           render={({ field, fieldState }) => (
             <FormItem>
               <FormLabel className="text-base font-normal text-[#FA69E5] pl-3">
-                {configItem.label || "Links"}
+                {configItem.label || 'Links'}
               </FormLabel>
               <FormControl>
                 <div className="flex flex-col space-y-2 mt-2">
@@ -802,10 +734,10 @@ const TaskConfigItem: React.FC<TaskConfigItemProps> = ({
                         <Input
                           type="url"
                           className={`w-full text-white text-base mt-2 pl-10 ${
-                            fieldState.error ? "border-red-500" : ""
+                            fieldState.error ? 'border-red-500' : ''
                           }`}
                           placeholder={`Enter URL ${index + 1}`}
-                          value={field.value?.[index] || ""}
+                          value={field.value?.[index] || ''}
                           onChange={(e) => {
                             const newLinks = [...(field.value || [])];
                             newLinks[index] = e.target.value;
@@ -820,7 +752,7 @@ const TaskConfigItem: React.FC<TaskConfigItemProps> = ({
               </FormControl>
               {fieldState.error && (
                 <p className="text-red-500 text-sm">
-                  {fieldState.error.message || "Please enter a valid URL"}
+                  {fieldState.error.message || 'Please enter a valid URL'}
                 </p>
               )}
               <FormMessage />
@@ -840,17 +772,14 @@ interface FileUploadFieldProps {
   configItem: any;
 }
 
-const FileUploadField: React.FC<FileUploadFieldProps> = ({
-  field,
-  configItem,
-}) => {
+const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [files, setFiles] = useState<string[]>(field.value || []);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [fileName, setFileName] = useState("");
-  const [currentFileName, setCurrentFileName] = useState("");
+  const [fileName, setFileName] = useState('');
+  const [currentFileName, setCurrentFileName] = useState('');
 
   useEffect(() => {
     setFiles(field.value || []);
@@ -869,16 +798,13 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({
     field.onChange(newFiles);
   };
 
-  const acceptTypes =
-    configItem.type === "image"
-      ? "image/*"
-      : configItem.type === "video"
-      ? "video/*"
-      : configItem.allowedTypes && !configItem.allowedTypes.includes("All")
-      ? configItem.allowedTypes
-          .map((t: string) => `.${t.toLowerCase()}`)
-          .join(",")
-      : "*/*";
+  const acceptTypes = configItem.type === 'image'
+    ? 'image/*'
+    : configItem.type === 'video'
+    ? 'video/*'
+    : configItem.allowedTypes && !configItem.allowedTypes.includes('All')
+    ? configItem.allowedTypes.map((t: string) => `.${t.toLowerCase()}`).join(',')
+    : '*/*';
 
   const showUploadButton =
     !configItem.maxFiles || files.length < configItem.maxFiles;
@@ -892,20 +818,20 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({
     const file = selectedFiles[0];
     const fileKey = generateUniqueFileName(file.name);
 
-    if (file.size > configItem.maxFileSize * 1024 * 1024) {
+    if (file.size > configItem.maxFileSize * 1024 * 1024 ) {
       setError(`${configItem.type} size exeeds ${configItem.maxFileSize} MB`);
       return;
     }
-
+    
     setFileName(fileKey);
 
     // Example chunk threshold
     const CHUNK_SIZE = 100 * 1024 * 1024;
-    e.target.value = "";
+    e.target.value = '';
 
     try {
       setUploading(true);
-      let fileUrl = "";
+      let fileUrl = '';
       if (file.size <= CHUNK_SIZE) {
         fileUrl = await uploadDirect(file, fileKey);
       } else {
@@ -913,49 +839,39 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({
       }
       appendFile(fileUrl);
     } catch (err: any) {
-      console.error("Upload error:", err);
-      setError(err.message || "Error uploading file");
+      console.error('Upload error:', err);
+      setError(err.message || 'Error uploading file');
     } finally {
       setUploading(false);
     }
   };
 
   const uploadDirect = async (file: File, fileKey: string) => {
-    const { data } = await axios.post(
-      "https://dev.apply.litschool.in/student/generate-presigned-url",
-      {
-        bucketName: "dev-application-portal",
-        key: fileKey,
-      }
-    );
+    const { data } = await axios.post('https://dev.apply.litschool.in/student/generate-presigned-url', {
+      bucketName: 'dev-application-portal',
+      key: fileKey,
+    });
     const { url } = data;
 
     await axios.put(url, file, {
-      headers: { "Content-Type": file.type },
+      headers: { 'Content-Type': file.type },
       onUploadProgress: (evt: any) => {
         if (!evt.total) return;
         const percentComplete = Math.round((evt.loaded / evt.total) * 100);
         setUploadProgress(percentComplete);
       },
     });
-    return url.split("?")[0];
+    return url.split('?')[0];
   };
 
-  const uploadMultipart = async (
-    file: File,
-    fileKey: string,
-    chunkSize: number
-  ) => {
+  const uploadMultipart = async (file: File, fileKey: string, chunkSize: number) => {
     const uniqueKey = fileKey;
 
     // Initiate
-    const initiateRes = await axios.post(
-      "https://dev.apply.litschool.in/student/initiate-multipart-upload",
-      {
-        bucketName: "dev-application-portal",
-        key: uniqueKey,
-      }
-    );
+    const initiateRes = await axios.post('https://dev.apply.litschool.in/student/initiate-multipart-upload', {
+      bucketName: 'dev-application-portal',
+      key: uniqueKey,
+    });
     const { uploadId } = initiateRes.data;
 
     // Upload chunks
@@ -968,19 +884,16 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({
       const end = Math.min(start + chunkSize, file.size);
       const chunk = file.slice(start, end);
 
-      const partRes = await axios.post(
-        "https://dev.apply.litschool.in/student/generate-presigned-url-part",
-        {
-          bucketName: "dev-application-portal",
-          key: uniqueKey,
-          uploadId,
-          partNumber: i + 1,
-        }
-      );
+      const partRes = await axios.post('https://dev.apply.litschool.in/student/generate-presigned-url-part', {
+        bucketName: 'dev-application-portal',
+        key: uniqueKey,
+        uploadId,
+        partNumber: i + 1,
+      });
       const { url } = partRes.data;
 
       const uploadRes = await axios.put(url, chunk, {
-        headers: { "Content-Type": file.type },
+        headers: { 'Content-Type': file.type },
         onUploadProgress: (evt: any) => {
           if (!evt.total) return;
           totalBytesUploaded += evt.loaded;
@@ -993,15 +906,12 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({
     }
 
     // Complete
-    await axios.post(
-      "https://dev.apply.litschool.in/student/complete-multipart-upload",
-      {
-        bucketName: "dev-application-portal",
-        key: uniqueKey,
-        uploadId,
-        parts,
-      }
-    );
+    await axios.post('https://dev.apply.litschool.in/student/complete-multipart-upload', {
+      bucketName: 'dev-application-portal',
+      key: uniqueKey,
+      uploadId,
+      parts,
+    });
 
     return `https://dev-application-portal.s3.amazonaws.com/${uniqueKey}`;
   };
@@ -1012,7 +922,7 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({
     //     console.error("Invalid file fURL:", fileKey);
     //     return;
     //   }
-
+  
     //   // Make sure `fileKey` is actually a string
     //   if (typeof fileKey === "string") {
     //     const deleteCommand = new DeleteObjectCommand({
@@ -1021,11 +931,11 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({
     //     });
     //     await s3Client.send(deleteCommand);
     //     console.log("File deleted successfully from S3:", fileKey);
-
+  
     //     // Remove it from the UI
-    if (index !== undefined) {
-      removeFile(index);
-    }
+        if (index !== undefined) {
+          removeFile(index);
+        }
     //   } else {
     //     console.error("The file URL is not valid...", fileKey);
     //   }
@@ -1033,13 +943,13 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({
     //   console.error("Error deleting file:", error);
     //   setError("Failed to delete file. Try again.");
     // }
-  };
+  };  
 
   const generateUniqueFileName = (originalName: string) => {
     const timestamp = Date.now();
-    const sanitizedName = originalName.replace(/\s+/g, "-");
+    const sanitizedName = originalName.replace(/\s+/g, '-');
     return `${timestamp}-${sanitizedName}`;
-  };
+  };  
 
   return (
     <FormItem>
@@ -1047,41 +957,27 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({
         <div className="flex flex-col space-y-2 mt-2">
           {/* Already-uploaded files */}
           {files.map((file, index) => {
-            const isLink = typeof file === "string";
+            const isLink = typeof file === 'string';
             return (
-              <div
-                key={index}
-                className="flex items-center justify-between bg-[#007AFF] h-[52px] text-white p-1.5 rounded-xl w-full"
-              >
+              <div key={index} className="flex items-center justify-between bg-[#007AFF] h-[52px] text-white p-1.5 rounded-xl w-full">
                 <div className="flex items-center gap-2 flex-1 w-[50vw] truncate">
                   <Badge size="icon" className="bg-[#3698FB] rounded-xl">
                     <FileTextIcon className="w-5" />
                   </Badge>
                   <span className="flex-1 truncate mr-4">
-                    {isLink
-                      ? (file as string).split("/").pop()
-                      : (file as File).name}
+                    {isLink ? (file as string).split('/').pop() : (file as File).name}
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
                   {isLink && (
-                    <Button
-                      size="icon"
-                      type="button"
-                      variant="ghost"
-                      className="bg-white/20 hover:bg-white/30 rounded-xl"
-                      onClick={() => window.open(file, "_blank")}
-                    >
-                      <ArrowUpRight className="w-5" />
+                    <Button size="icon" type="button" variant="ghost" className="bg-white/20 hover:bg-white/30 rounded-xl"
+                      onClick={() => window.open(file, "_blank")} >
+                        <ArrowUpRight className="w-5" />
                     </Button>
                   )}
-                  <Button
-                    size="icon"
-                    type="button"
-                    className="bg-white/20 hover:bg-white/30 rounded-xl"
-                    onClick={() => handleDeleteFile(fileName, index)}
-                  >
-                    <XIcon className="w-5" />
+                  <Button size="icon" type="button" className="bg-white/20 hover:bg-white/30 rounded-xl"
+                    onClick={() => handleDeleteFile(fileName, index)} >
+                      <XIcon className="w-5" />
                   </Button>
                 </div>
               </div>
@@ -1095,17 +991,16 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({
                 <Badge size="icon" className="bg-[#3698FB] rounded-xl">
                   <FileTextIcon className="w-5" />
                 </Badge>
-                <span className="flex-1 truncate mr-4">{fileName}</span>
+                <span className="flex-1 truncate mr-4">
+                  {fileName}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 {uploadProgress === 100 ? (
                   <LoaderCircle className="h-4 w-4 animate-spin" />
                 ) : (
                   <>
-                    <Progress
-                      className="h-2 w-20 sm:w-24"
-                      value={uploadProgress}
-                    />
+                    <Progress className="h-2 w-20 sm:w-24" value={uploadProgress} />
                     <span>{uploadProgress}%</span>
                   </>
                 )}
@@ -1136,7 +1031,7 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({
                 />
                 <span className="cursor-pointer text-xs sm:text-base">
                   {`Upload ${configItem.type}${
-                    configItem.maxFiles > 1 ? "s" : ""
+                    configItem.maxFiles > 1 ? 's' : ''
                   } (Max size: ${configItem.maxFileSize || 15} MB)`}
                 </span>
               </label>
@@ -1155,7 +1050,7 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({
           {configItem.maxFiles && (
             <div className="text-sm text-muted-foreground pl-3">
               Uploaded {files.length} of {configItem.maxFiles} file
-              {configItem.maxFiles > 1 ? "s" : ""}
+              {configItem.maxFiles > 1 ? 's' : ''}
             </div>
           )}
 

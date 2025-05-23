@@ -1,10 +1,11 @@
 // app/routes/set-cookies.ts
-import { data } from "@remix-run/node";
+import { json } from "@remix-run/node";
 import {
   accessTokenCookie,
   refreshTokenCookie,
   userIdCookie,
 } from "~/cookies/cookies"; // Import cookies
+import { commitSession } from "~/cookies/sessions/sessionStore"; // Session commit utility
 import { RegisterInterceptor } from "~/utils/interceptor";
 
 export const action = async ({ request }: { request: Request }) => {
@@ -28,15 +29,15 @@ export const action = async ({ request }: { request: Request }) => {
       RegisterInterceptor(accessToken, refreshToken);
       // Optionally, set a session or any other logic here
 
-      return data(
+      return json(
         { success: true, message: "Cookies set successfully" },
         { headers }
       );
     } catch (error) {
       console.error("Error setting cookies:", error);
-      return data({ success: false, message: "Failed to set cookies" });
+      return json({ success: false, message: "Failed to set cookies" });
     }
   }
 
-  return data({ success: false, message: "Missing required data" });
+  return json({ success: false, message: "Missing required data" });
 };
