@@ -108,7 +108,7 @@ export default function ApplicationDashboard({ student }: ApplicationDashboardPr
       };      
       try {
         const response = await fetch(
-          "https://dev.cal.litschool.in/api/application-portal/get-all-users",
+          "https://cal.litschool.in/api/application-portal/get-all-users",
           {
             method: "POST",
             headers: {

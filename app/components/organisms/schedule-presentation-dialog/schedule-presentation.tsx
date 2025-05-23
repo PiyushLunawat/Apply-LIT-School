@@ -34,7 +34,7 @@ export function SchedulePresentation({ student, interviewer, eventCategory, redi
 
     const handleScheduleRedirect = () => {
         if (!selectedInterviewer || !student?._id || !latestCohort?.cohortId?._id) return;
-        const url = `https://dev.cal.litschool.in/${selectedInterviewer?.personalUrl}/${selectedInterviewer?.events[0]?.eventName || ''}?name=${student?.firstName || ''}${student?.lastName || ''}&email=${student?.email || ''}&litApplicationUserId=${student?._id}&cohortId=${latestCohort?.cohortId?._id}&eventCategory=${eventCategory}&eventId=${selectedInterviewer?.events[0]?._id}&redirectUrl=${redirectUrl}`;
+        const url = `https://cal.litschool.in/${selectedInterviewer?.personalUrl}/${selectedInterviewer?.events[0]?.eventName || ''}?name=${student?.firstName || ''}${student?.lastName || ''}&email=${student?.email || ''}&litApplicationUserId=${student?._id}&cohortId=${latestCohort?.cohortId?._id}&eventCategory=${eventCategory}&eventId=${selectedInterviewer?.events[0]?._id}&redirectUrl=${redirectUrl}`;
         window.location.href = url;
       };
     

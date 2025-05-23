@@ -6,7 +6,12 @@ import { Card } from '~/components/ui/card';
 import { Button } from '~/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 
-const NewApplication: React.FC = () => {
+interface ApplicationTaskFormProps {
+  student: any
+}
+
+export default function NewApplication({ student }: ApplicationTaskFormProps) {
+
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -30,7 +35,7 @@ const NewApplication: React.FC = () => {
             <Card className='flex flex-col text-center items-center space-y-9 px-9 py-8'>
               <div className='space-y-6 mt-6'>
                 <div className='space-y-4'>
-                  <div className='text-3xl font-semibold'>Hey John 👋🏻 Welcome Back to LIT</div>
+                  <div className='text-3xl font-semibold'>Hey {student?.firstName} 👋🏻 Welcome Back to LIT</div>
                   <div className='text-base text-muted-foreground'>You had previously applied to the 2nd Cohort of Creator Marketer from which you have been dropped off.</div>
                 </div>
                 <div className='text-xl font-normal'>
@@ -54,5 +59,3 @@ const NewApplication: React.FC = () => {
     </div>
   );
 };
-
-export default NewApplication;

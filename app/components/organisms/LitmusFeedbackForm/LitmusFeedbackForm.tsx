@@ -136,7 +136,7 @@ export function LitmusFeedbackForm({ student, setClose }: LitmusFeedbackFormProp
       <div className="space-y-2 w-full">
         <p className="text-base text-[#00A3FF] pl-3">What was the one thing that played a key role in your decision-making to join The LIT School?</p>
         <div className="flex flex-wrap gap-2">
-            {["Experiential Learning", "Unemployment", "Curriculum", "Environment", "Challenges"].map((option) => (
+            {["Experiential Learning", "Employment", "Curriculum", "Environment", "Challenges"].map((option) => (
                 <div key={option} className="relative cursor-pointer" onClick={() => handleDecisionToggle(option)}>
                 <input
                     type="checkbox"

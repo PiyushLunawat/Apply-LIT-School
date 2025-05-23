@@ -1,12 +1,53 @@
 // app/components/NewApplication/Page.tsx
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import NewApplication from '../components/NewApplication';
+import { useNavigate } from '@remix-run/react';
+import { getCurrentStudent } from '~/api/studentAPI';
 
 export const NewApplicationPage: React.FC = () => {
+  const [studentData, setStudentData] = useState<any>(null);
+    const [student, setStudent] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
+  
+    useEffect(() => {
+      const storedData = localStorage.getItem("studentData");
+      if (storedData) {
+        setStudentData(JSON.parse(storedData));
+      }
+    }, []);
+    
+    useEffect(() => {
+      async function fetchCurrentStudentData() {
+        if (!studentData?._id) {
+          setLoading(false);
+          return;
+        }
+        try {
+          const res = await getCurrentStudent(studentData._id);  
+          console.log("application/task", res);
+          setStudent(res)
+          const status = res?.appliedCohorts?.[res?.appliedCohorts.length - 1]?.applicationDetails?.applicationStatus;
+          // if (['under review', 'accepted' , 'rejected', 'interview scheduled', 'waitlist', 'selected', 'not qualified'].includes(status)) {
+          //   console.log("Navigating to /application/status:", status);
+          //   navigate("/application/status");
+          // } else if (['initiated', 'on hold'].includes(status)) {
+          //   console.log("Navigating to /application/task:", status);
+          //   navigate("/application/task");
+          // }
+        } catch (error) {
+          console.log("Error fetching student data:", error);
+        } finally {
+          setLoading(false);
+        }
+      }
+  
+      fetchCurrentStudentData();
+    }, [studentData]);
 
   return (
     <>
-        <NewApplication />
+        <NewApplication student={student || studentData} />
     </>
   );
 };

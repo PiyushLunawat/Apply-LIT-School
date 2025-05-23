@@ -288,7 +288,7 @@ export default function LitmusTest({ student }: LitmusTestProps) {
     
     try {
       const response = await fetch(
-        "https://dev.cal.litschool.in/api/application-portal/get-all-users",
+        "https://cal.litschool.in/api/application-portal/get-all-users",
         {
           method: "POST",
           headers: {
