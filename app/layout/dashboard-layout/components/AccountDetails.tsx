@@ -1,20 +1,19 @@
 "use client";
 
-import type React from "react";
-
 import {
   Camera,
   CheckCircle,
-  Download,
   Eye,
   FileLock,
   Plus,
   SquarePen,
 } from "lucide-react";
-import { useContext, useEffect, useRef, useState } from "react";
+import type React from "react";
+import { useContext, useEffect, useState } from "react";
 import { updateStudentData } from "~/api/studentAPI";
 import LitIdBack from "~/components/molecules/LitId/LitIdBack";
 import LitIdFront from "~/components/molecules/LitId/LitIdFront";
+import SimpleIdCardGenerator from "~/components/simple-id-card-generator";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
 import { Dialog, DialogContent, DialogTitle } from "~/components/ui/dialog";
@@ -27,22 +26,19 @@ import {
 } from "~/components/ui/select";
 import { UserContext } from "~/context/UserContext";
 
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
-
 interface AccountDetailsProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   student: any;
 }
 
 export default function AccountDetails({ student }: AccountDetailsProps) {
+  const latestCohort =
+    student?.appliedCohorts?.[student?.appliedCohorts.length - 1];
+  const cohortDetails = latestCohort?.cohortId;
+
   const [open, setOpen] = useState(false);
   const { studentData, setStudentData } = useContext(UserContext);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [details, setDetails] = useState<any>();
   const [loading, setLoading] = useState(false);
-  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const [bloodGroupInput, setBloodGroupInput] = useState<string>("");
@@ -59,8 +55,6 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
   );
   const [addSocials, setAddSocials] = useState<boolean>(false);
 
-  const pdfRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     if (student) {
       setDetails(student);
@@ -72,64 +66,6 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
       setAddSocials(student?.linkedInUrl && student?.instagramUrl);
     }
   }, [student]);
-
-  const handleDownloadPDF = async () => {
-    setIsGeneratingPDF(true);
-    try {
-      setOpen(true);
-
-      // Wait for the dialog to open and render
-      setTimeout(async () => {
-        const frontElement = document.getElementById("front");
-        const backElement = document.getElementById("back");
-
-        if (!frontElement || !backElement) {
-          console.error("ID card elements not found");
-          setIsGeneratingPDF(false);
-          return;
-        }
-
-        // Create a new PDF document
-        const pdf = new jsPDF({
-          orientation: "landscape",
-          unit: "mm",
-          format: "a4",
-        });
-
-        // Capture front side
-        const frontCanvas = await html2canvas(frontElement, {
-          scale: 2,
-          backgroundColor: null,
-          logging: false,
-        });
-        const frontImgData = frontCanvas.toDataURL("image/png");
-
-        // Add front side to PDF
-        pdf.addImage(frontImgData, "PNG", 10, 10, 140, 85);
-
-        // Capture back side
-        const backCanvas = await html2canvas(backElement, {
-          scale: 2,
-          backgroundColor: null,
-          logging: false,
-        });
-        const backImgData = backCanvas.toDataURL("image/png");
-
-        // Add back side to PDF
-        pdf.addImage(backImgData, "PNG", 10, 100, 140, 85);
-
-        // Save the PDF
-        pdf.save(`LIT_ID_Card_${student?.firstName}_${student?.lastName}.pdf`);
-
-        setIsGeneratingPDF(false);
-        setOpen(false);
-      }, 500);
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      setIsGeneratingPDF(false);
-      setOpen(false);
-    }
-  };
 
   const handleImageChange = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -148,7 +84,6 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
         }
       } catch (error) {
         console.error("Error uploading image:", error);
-        // alert("An error occurred while uploading the image.");
       } finally {
         setLoading(false);
       }
@@ -172,7 +107,6 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
       console.log(response, "response blood");
 
       if (response.status) {
-        // Update student data with the new blood group and retain the value in the input field
         setDetails(response.data);
         setStudentData({
           ...studentData,
@@ -253,8 +187,9 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                 <div className="w-full h-full relative">
                   <img
                     src={selectedImage || student?.profileUrl}
-                    alt="id card"
+                    alt="Profile Image"
                     className="w-full h-full object-cover rounded-lg"
+                    crossOrigin="anonymous"
                   />
                 </div>
               ) : (
@@ -507,19 +442,12 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                 src={student?.profileUrl || `/assets/images/lit-id-front.svg`}
                 alt="LIT ID Card"
                 className="w-16 h-16 rounded-xl bg-white py-1"
+                crossOrigin="anonymous"
               />
               {student?.bloodGroup ? (
                 <div
                   className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                   onClick={() => setOpen(true)}
-                  role="button"
-                  tabIndex={0}
-                  aria-label="View LIT ID Card"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      setOpen(true);
-                    }
-                  }}
                 >
                   <Eye className="text-white w-6 h-6" />
                 </div>
@@ -540,60 +468,30 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
           </div>
 
           {student?.bloodGroup && (
-            <Button
-              size="xl"
-              variant="outline"
-              className="flex w-full lg:w-fit items-center gap-2"
-              onClick={handleDownloadPDF}
-            >
-              <Download className="h-4 w-4" />
-              {isGeneratingPDF ? "Downloading..." : "Download"}
-            </Button>
+            <SimpleIdCardGenerator
+              student={student}
+              className="w-full lg:w-fit"
+            />
           )}
         </Card>
-
-        <div
-          style={{
-            position: "absolute",
-            top: "-10000px",
-            left: "-10000px",
-            width: "400px",
-          }}
-          ref={pdfRef}
-          id="pdf-content"
-        >
-          <div className="flex flex-col gap-6 items-center justify-center p-4">
-            <div id="front">
-              <LitIdFront data={details} />
-            </div>
-            <div id="back">
-              <LitIdBack data={details} />
-            </div>
-          </div>
-        </div>
 
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTitle></DialogTitle>
           <DialogContent className="flex justify-center items-start max-w-[90vw] sm:max-w-4xl py-2 px-6 max-h-[70vh] sm:max-h-[90vh] overflow-y-auto">
             <div className="flex flex-col justify-center">
               <div className="flex flex-col sm:flex-row mx-auto gap-4 items-center justify-center">
-                <div className="w-1/2 sm:w-full">
+                <div className="w-1/2 sm:w-full" id="front">
                   <LitIdFront data={student} />
                 </div>
-                <div className="w-1/2 sm:w-full">
+                <div className="w-1/2 sm:w-full" id="back">
                   <LitIdBack data={student} />
                 </div>
               </div>
 
-              <Button
-                size="xl"
-                variant="outline"
-                className="w-fit flex items-center gap-2 mx-auto mt-4"
-                onClick={handleDownloadPDF}
-              >
-                <Download className="h-4 w-4" />
-                {isGeneratingPDF ? "Downloading..." : "Download"}
-              </Button>
+              <SimpleIdCardGenerator
+                student={student}
+                className="w-fit mx-auto mt-4"
+              />
             </div>
           </DialogContent>
         </Dialog>

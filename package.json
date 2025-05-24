@@ -44,6 +44,7 @@
     "fetch-intercept": "^2.4.0",
     "firebase": "^11.2.0",
     "html2canvas": "^1.4.1",
+    "html2pdf.js": "^0.10.3",
     "input-otp": "^1.2.4",
     "isbot": "^4.1.0",
     "jotai": "^2.12.2",
