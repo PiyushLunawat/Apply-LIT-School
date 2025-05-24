@@ -1,7 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 
-// Firebase configuration (replace with your project details)
 const firebaseConfig = {
   apiKey: "AIzaSyDEzuKZKyMCzwAOGe4Pj0gi9wJI1OVuAsg",
   authDomain: "lit-application-portal-e53df.firebaseapp.com",
@@ -12,8 +11,6 @@ const firebaseConfig = {
   measurementId: "G-YWEXXYCP4Y",
 };
 
-// Initialize Firebase App
 const app = initializeApp(firebaseConfig);
 
-// Export the Firebase Auth instance
 export const auth = getAuth(app);
