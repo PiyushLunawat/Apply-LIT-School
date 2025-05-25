@@ -365,7 +365,9 @@ useEffect(() => {
       try {
         const student = await getCurrentStudent(studentData._id);
         // console.log("dbab",student);
-         if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'enrolled'){
+        if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'dropped'){
+          navigate('../../new-application');
+        } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'enrolled'){
           navigate('../../dashboard');
         } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'reviewing'){
           navigate('../../application/status');
@@ -373,8 +375,6 @@ useEffect(() => {
           navigate('../../application/task');
         } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'initiated'){
           navigate('../../application');
-        } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'dropped'){
-          navigate('../../application/new-application');
         } else {
           navigate('../../application');
         }

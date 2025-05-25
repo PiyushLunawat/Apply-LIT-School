@@ -1,10 +1,11 @@
 // app/components/auth/AuthLayout.tsx
-import React from 'react';
+import React, { useContext } from 'react';
 import { Outlet, useLocation, useNavigate } from '@remix-run/react';
 import Footer from '~/components/organisms/Footer/Footer';
 import { Card } from '~/components/ui/card';
 import { Button } from '~/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { UserContext } from '~/context/UserContext';
 
 interface ApplicationTaskFormProps {
   student: any
@@ -12,12 +13,23 @@ interface ApplicationTaskFormProps {
 
 export default function NewApplication({ student }: ApplicationTaskFormProps) {
 
-  const location = useLocation();
   const navigate = useNavigate();
+  const { studentData, setStudentData } = useContext(UserContext);
 
-  // Determine active tab based on URL
-  const isLoginActive = location.pathname.includes("/auth/login");
-  const isRegisterActive = location.pathname.includes("/auth/sign-up");
+  const handleNav = () => {
+    navigate('../new-application/apply');
+  };
+  
+  const handleLogout = async () => {
+    const response = await fetch("/logout", { method: "POST" });
+  
+    if (response.ok) {
+      localStorage.clear();
+      setStudentData(null);
+      window.location.reload();
+      // navigate('../auth/login');
+    }
+  };
 
   return (
     <div className="w-full">
@@ -42,11 +54,11 @@ export default function NewApplication({ student }: ApplicationTaskFormProps) {
                   To begin your enrolment process in LIT kindly refill your admission form by updating your course preferences and current details.
                 </div>
               </div>
-              <div className='space-y-6'>
-                <Button size="xl" className="w-fit">
+              <div className='flex flex-col items-center gap-6'>
+                <Button size="xl" className="w-fit" onClick={handleNav}>
                   Apply Now
                 </Button>
-                <Button variant="link" className="w-fit flex gap-2 items-center justify-center">
+                <Button variant="link" onClick={handleLogout} className="w-fit flex gap-2 items-center justify-center">
                   <ArrowLeft className='w-4 h-4'/>
                   Logout
                 </Button>

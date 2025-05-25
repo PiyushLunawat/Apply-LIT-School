@@ -39,8 +39,8 @@ const formSchema = z.object({
     contact: z.string().optional(),
     dob: z.string(),
     currentStatus: z.string(),
-    courseOfInterest: z.string(),
-    cohort: z.string(),
+    courseOfInterest: z.string().nonempty("Select course Of Interest"),
+    cohort: z.string().nonempty("Select a cohort"),
     isMobileVerified: z.boolean().optional(),
     linkedInUrl: z.string().optional(),
     instagramUrl: z.string().optional(),
@@ -373,10 +373,6 @@ useEffect(() => {
           navigate('../../application/task');
         } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'initiated'){
           navigate('../../application');
-        } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'dropped'){
-          navigate('../../application/new-application');
-        } else {
-          navigate('../../application');
         }
         
         setFetchedStudentData(student);
@@ -385,7 +381,7 @@ useEffect(() => {
         
         // Payment or "isSaved" checks
         if (student?.appliedCohorts[student.appliedCohorts.length - 1]?.applicationDetails?.studentDetails !== undefined && student?.appliedCohorts[student.appliedCohorts.length - 1]?.applicationDetails?.applicationStatus !== 'incomplete') {
-          setIsSaved(true);
+          setIsSaved(false);
         } else {
           setIsSaved(false);
         }
@@ -420,8 +416,8 @@ useEffect(() => {
               contact: student?.mobileNumber || studentData?.mobileNumber,
               dob: studentData?.dateOfBirth ? studentData.dateOfBirth.split('T')[0] : '',
               currentStatus: studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]?.qualification || '',
-              courseOfInterest: studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]?.cohortId?.programDetail?._id || '',
-              cohort: studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]?.cohortId._id || '',
+              courseOfInterest: '',
+              cohort: '',
               isMobileVerified: student?.isMobileVerified || false,
               linkedInUrl: studentData?.linkedInUrl || '',
               instagramUrl: studentData?.instagramUrl || '',
@@ -474,8 +470,8 @@ useEffect(() => {
             firstName: studentData?.firstName || "",
             lastName: studentData?.lastName || "",
             email: studentData?.email || "",
-            courseOfInterest: existingData?.studentData?.courseOfInterest || studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]?.cohortId?.programDetail?._id || "",
-            cohort: existingData?.studentData?.cohort || studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]?.cohortId._id || "",
+            courseOfInterest: "",
+            cohort: "",
             isMobileVerified: student?.isMobileVerified || false,
             contact: existingData?.studentData?.contact || studentData?.mobileNumber || "",
             dob: existingData?.studentData?.dob.split("T")[0] || studentData.dateOfBirth.split("T")[0],
@@ -2004,7 +2000,7 @@ useEffect(() => {
         <div className={`flex flex-col sm:flex-row ${isSaved ? 'justify-end' : 'justify-between'} items-center mt-10 space-y-4 sm:space-y-0 sm:space-x-4`}>
   
           {/* Submit/Payment Button */}
-          {isPaymentDone ? (
+          {!isPaymentDone ? (
             <Button size="xl" className='w-full sm:w-fit px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90 order-1 sm:order-2'
               type="button" onClick={() => handleContinueToDashboard()} disabled={loading}>
               {loading ? 'Redirecting...' : 'Continue to Dashboard'}
