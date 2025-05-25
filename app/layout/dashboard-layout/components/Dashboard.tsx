@@ -93,46 +93,47 @@ export default function ApplicationDashboard({ student }: ApplicationDashboardPr
   };
 
   const handleScheduleInterview = async () => {
-      const data = {
-        cohortId: student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.cohortId?._id,
-        role: 'Litmus_test_reviewer',
-      };
-  
-      setLoading(true);
-      const response = await GetInterviewers(data);
-      console.log("list", response.data);
-    
-      const payload = {
-        emails: response.data,
-        eventCategory: "Litmus Test Interview", 
-      };      
-      try {
-        const response = await fetch(
-          "https://dev.cal.litschool.in/api/application-portal/get-all-users",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(payload),
-          }
-        );
-        
-        setInterviewOpen(true);
-        if (!response.ok) {
-          throw new Error(`Failed to schedule interview: ${response.statusText}`);
-        }
-    
-        const result = await response.json();
-        setInterviewer(result.data)
-        console.log("Interview scheduled successfully:", result.data);
-      } 
-      catch (error) {
-        console.error("Error scheduling interview:", error);
-      } finally {
-        setLoading(false);
-      }
+    const data = {
+      cohortId:
+        student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.cohortId
+          ?._id,
+      role: "Litmus_test_reviewer",
     };
+
+    setLoading(true);
+    const response = await GetInterviewers(data);
+    console.log("list", response.data);
+
+    const payload = {
+      emails: response.data,
+      eventCategory: "Litmus Test Interview",
+    };
+    try {
+      const response = await fetch(
+        "https://dev.cal.litschool.in/api/application-portal/get-all-users",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      setInterviewOpen(true);
+      if (!response.ok) {
+        throw new Error(`Failed to schedule interview: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      setInterviewer(result.data);
+      console.log("Interview scheduled successfully:", result.data);
+    } catch (error) {
+      console.error("Error scheduling interview:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const isLitmusDetailsAvailable = (litmusTestDetails?.status === 'completed');
 

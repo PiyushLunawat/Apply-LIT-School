@@ -3,11 +3,11 @@ import { getCurrentStudent } from '~/api/studentAPI';
 import { Pencil, X } from 'lucide-react';
 import ProgressBar from '~/components/molecules/ProgressBar/ProgressBar';
 import Review from '~/components/organisms/Review/Review';
-import InterviewDetails from '../components/InterviewDetails';
-import AdmissionFee from '../components/AdmissionFee';
 import SubHeader from '~/components/organisms/SubHeader/SubHeader';
 import { UserContext } from '~/context/UserContext';
 import { useNavigate } from '@remix-run/react';
+import InterviewDetails from '~/layout/application-layout/components/InterviewDetails';
+import AdmissionFee from '~/layout/application-layout/components/AdmissionFee';
 
 export const ApplicationStatus: React.FC = () => {
   const [studentData, setStudentData] = useState<any>(null);
