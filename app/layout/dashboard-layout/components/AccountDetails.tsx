@@ -11,7 +11,7 @@ import {
   Plus,
   SquarePen,
 } from "lucide-react";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { updateStudentData } from "~/api/studentAPI";
 import LitIdBack from "~/components/molecules/LitId/LitIdBack";
 import LitIdFront from "~/components/molecules/LitId/LitIdFront";
@@ -26,9 +26,7 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { UserContext } from "~/context/UserContext";
-
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+import { generateIDCardPDF } from "~/utils/pdf-generator";
 
 interface AccountDetailsProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -59,8 +57,6 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
   );
   const [addSocials, setAddSocials] = useState<boolean>(false);
 
-  const pdfRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     if (student) {
       setDetails(student);
@@ -74,60 +70,37 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
   }, [student]);
 
   const handleDownloadPDF = async () => {
+    if (isGeneratingPDF) return;
+
     setIsGeneratingPDF(true);
+
     try {
-      setOpen(true);
+      console.log("Starting PDF generation...");
 
-      // Wait for the dialog to open and render
-      setTimeout(async () => {
-        const frontElement = document.getElementById("front");
-        const backElement = document.getElementById("back");
-
-        if (!frontElement || !backElement) {
-          console.error("ID card elements not found");
-          setIsGeneratingPDF(false);
-          return;
-        }
-
-        // Create a new PDF document
-        const pdf = new jsPDF({
-          orientation: "landscape",
-          unit: "mm",
-          format: "a4",
-        });
-
-        // Capture front side
-        const frontCanvas = await html2canvas(frontElement, {
-          scale: 2,
-          backgroundColor: null,
-          logging: false,
-        });
-        const frontImgData = frontCanvas.toDataURL("image/png");
-
-        // Add front side to PDF
-        pdf.addImage(frontImgData, "PNG", 10, 10, 140, 85);
-
-        // Capture back side
-        const backCanvas = await html2canvas(backElement, {
-          scale: 2,
-          backgroundColor: null,
-          logging: false,
-        });
-        const backImgData = backCanvas.toDataURL("image/png");
-
-        // Add back side to PDF
-        pdf.addImage(backImgData, "PNG", 10, 100, 140, 85);
-
-        // Save the PDF
-        pdf.save(`LIT_ID_Card_${student?.firstName}_${student?.lastName}.pdf`);
-
-        setIsGeneratingPDF(false);
-        setOpen(false);
-      }, 500);
+      // Try the main method first
+      await generateIDCardPDF(student || details);
+      console.log("PDF generated successfully!");
     } catch (error) {
-      console.error("Error generating PDF:", error);
+      console.error(
+        "Main PDF generation failed, trying simple fallback:",
+        error
+      );
+
+      try {
+        // Import the simple fallback
+        const { generateSimpleIDCardPDF } = await import(
+          "~/utils/pdf-generator"
+        );
+        await generateSimpleIDCardPDF(student || details);
+        console.log("Fallback PDF generated successfully!");
+      } catch (fallbackError) {
+        console.error("Fallback PDF generation also failed:", fallbackError);
+        alert(
+          "Failed to generate PDF. Please check the console for details and try again."
+        );
+      }
+    } finally {
       setIsGeneratingPDF(false);
-      setOpen(false);
     }
   };
 
@@ -145,17 +118,16 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
 
         if (response.status) {
           setStudentData(response.data);
+          setDetails(response.data);
         }
       } catch (error) {
         console.error("Error uploading image:", error);
-        // alert("An error occurred while uploading the image.");
       } finally {
         setLoading(false);
       }
     }
   };
 
-  // Handle blood group save
   const handleBloodGroup = async () => {
     if (!bloodGroupInput) {
       setBloodGroupError("Please select a blood group");
@@ -169,10 +141,8 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
       formData.append("bloodGroup", bloodGroupInput);
 
       const response = await updateStudentData(formData);
-      console.log(response, "response blood");
 
       if (response.status) {
-        // Update student data with the new blood group and retain the value in the input field
         setDetails(response.data);
         setStudentData({
           ...studentData,
@@ -211,6 +181,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
 
       if (response.status) {
         setStudentData({ ...studentData, linkedInUrl: linkedInInput });
+        setDetails({ ...details, linkedInUrl: linkedInInput });
         setEditLinkedInInput(false);
         setLinkedInError("");
       }
@@ -231,6 +202,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
 
       if (response.status) {
         setStudentData({ ...studentData, instagramUrl: instagramInput });
+        setDetails({ ...details, instagramUrl: instagramInput });
         setEditInstagramInput(false);
         setInstagramError("");
       }
@@ -244,7 +216,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
 
   return (
     <div className="px-4 sm:px-8 py-8 space-y-6">
-      {/* 1) User Details Card */}
+      {/* User Details Card - keeping your existing code */}
       <Card className="bg-[#64748B1F] rounded-xl text-white">
         <CardContent className="p-6 ">
           <div className="flex md:flex-row flex-col items-center gap-4 sm:gap-6">
@@ -253,9 +225,23 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                 <div className="w-full h-full relative">
                   <img
                     src={selectedImage || student?.profileUrl}
-                    alt="id card"
+                    alt="Profile"
                     className="w-full h-full object-cover rounded-lg"
                   />
+                  <label
+                    htmlFor="passport-input"
+                    className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer rounded-lg"
+                  >
+                    <Camera className="w-8 h-8 text-white" />
+                    <input
+                      id="passport-input"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageChange}
+                      disabled={loading}
+                    />
+                  </label>
                 </div>
               ) : (
                 <label
@@ -276,6 +262,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                     accept="image/*"
                     className="hidden"
                     onChange={handleImageChange}
+                    disabled={loading}
                   />
                 </label>
               )}
@@ -364,6 +351,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                   <Select
                     value={bloodGroupInput}
                     onValueChange={setBloodGroupInput}
+                    disabled={loading}
                   >
                     <SelectTrigger className="bg-transparent border-none text-base sm:text-xl focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0">
                       <SelectValue placeholder="Select blood group" />
@@ -391,8 +379,9 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                   size={"lg"}
                   className="rounded-lg"
                   onClick={handleBloodGroup}
+                  disabled={loading}
                 >
-                  Save
+                  {loading ? "Saving..." : "Save"}
                 </Button>
               )}
             </div>
@@ -413,6 +402,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                     onChange={(e) => setLinkedInInput(e.target.value)}
                     placeholder="Enter LinkedIn URL"
                     className="bg-transparent text-white text-base sm:text-xl focus-visible:none border-none focus-visible:outline-none focus-border-none w-full"
+                    disabled={loading}
                   />
                   {linkedInError && (
                     <div className="text-sm text-[#FF503D]">
@@ -432,9 +422,14 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                       setEditLinkedInInput(true);
                     }
                   }}
+                  disabled={loading}
                 >
                   {editLinkedInInput ? (
-                    "Save"
+                    loading ? (
+                      "Saving..."
+                    ) : (
+                      "Save"
+                    )
                   ) : (
                     <SquarePen className="h-4 w-4" />
                   )}
@@ -455,6 +450,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                     onChange={(e) => setInstagramInput(e.target.value)}
                     placeholder="Enter Instagram URL"
                     className="bg-transparent text-base sm:text-xl focus-visible:none border-none focus-visible:outline-none focus-border-none w-full"
+                    disabled={loading}
                   />
                   {instagramError && (
                     <div className="text-sm text-[#FF503D]">
@@ -476,9 +472,14 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                       setEditInstagramInput(true);
                     }
                   }}
+                  disabled={loading}
                 >
                   {editInstagramInput ? (
-                    "Save"
+                    loading ? (
+                      "Saving..."
+                    ) : (
+                      "Save"
+                    )
                   ) : (
                     <SquarePen className="flex-1 h-4 w-4" />
                   )}
@@ -545,42 +546,23 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
               variant="outline"
               className="flex w-full lg:w-fit items-center gap-2"
               onClick={handleDownloadPDF}
+              disabled={isGeneratingPDF}
             >
               <Download className="h-4 w-4" />
-              {isGeneratingPDF ? "Downloading..." : "Download"}
+              {isGeneratingPDF ? "Generating PDF..." : "Download"}
             </Button>
           )}
         </Card>
-
-        <div
-          style={{
-            position: "absolute",
-            top: "-10000px",
-            left: "-10000px",
-            width: "400px",
-          }}
-          ref={pdfRef}
-          id="pdf-content"
-        >
-          <div className="flex flex-col gap-6 items-center justify-center p-4">
-            <div id="front">
-              <LitIdFront data={details} />
-            </div>
-            <div id="back">
-              <LitIdBack data={details} />
-            </div>
-          </div>
-        </div>
 
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTitle></DialogTitle>
           <DialogContent className="flex justify-center items-start max-w-[90vw] sm:max-w-4xl py-2 px-6 max-h-[70vh] sm:max-h-[90vh] overflow-y-auto">
             <div className="flex flex-col justify-center">
               <div className="flex flex-col sm:flex-row mx-auto gap-4 items-center justify-center">
-                <div className="w-1/2 sm:w-full">
+                <div className="w-1/2 sm:w-full" data-testid="front">
                   <LitIdFront data={student} />
                 </div>
-                <div className="w-1/2 sm:w-full">
+                <div className="w-1/2 sm:w-full" data-testid="back">
                   <LitIdBack data={student} />
                 </div>
               </div>
@@ -590,9 +572,10 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                 variant="outline"
                 className="w-fit flex items-center gap-2 mx-auto mt-4"
                 onClick={handleDownloadPDF}
+                disabled={isGeneratingPDF}
               >
                 <Download className="h-4 w-4" />
-                {isGeneratingPDF ? "Downloading..." : "Download"}
+                {isGeneratingPDF ? "Generating PDF..." : "Download"}
               </Button>
             </div>
           </DialogContent>
