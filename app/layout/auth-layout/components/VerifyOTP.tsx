@@ -121,7 +121,9 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
           }
         }
 
-        if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'enrolled'){
+        if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'dropped'){
+          navigate('../../new-application');
+        } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'enrolled'){
           navigate('../../dashboard');
         } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'reviewing'){
           navigate('../../application/status');
@@ -129,8 +131,6 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
           navigate('../../application/task');
         } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'initiated'){
           navigate('../../application');
-        } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'dropped'){
-          navigate('../../application/new-application');
         } else {
           navigate('../../application');
         }

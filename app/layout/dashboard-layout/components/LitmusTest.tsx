@@ -288,7 +288,7 @@ export default function LitmusTest({ student }: LitmusTestProps) {
     
     try {
       const response = await fetch(
-        "https://cal.litschool.in/api/application-portal/get-all-users",
+        "https://dev.cal.litschool.in/api/application-portal/get-all-users",
         {
           method: "POST",
           headers: {
@@ -364,6 +364,11 @@ export default function LitmusTest({ student }: LitmusTestProps) {
     if (percentage <= 80) return "4-icon.png";
     return "5-icon.png";
   }  
+
+  const formatAmount = (value: number | undefined) =>
+    value !== undefined
+      ? new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(Math.round(value))
+      : "--";
 
   return (
   <div className='flex flex-col items-start bg-[#09090B] text-white w-full mx-auto px-4 py-8 sm:p-[52px] space-y-4 sm:space-y-8'>
@@ -688,7 +693,9 @@ export default function LitmusTest({ student }: LitmusTestProps) {
               <div className='space-y-3 sm:space-y-6'>
                 <p className="text-lg sm:text-2xl text-white font-medium">You are eligible for a {litmusTestDetails?.scholarshipDetail?.scholarshipPercentage}% waiver on your fee</p>
                 <p className="text-sm sm:text-base text-white">
-                  With a challenge clearance of <span className='font-semibold'>{(avgTaskScore).toFixed(2) || '--'}%</span>, you may avail a <span className={`!bg-transparent ${getBadgeColor(litmusTestDetails?.scholarshipDetail?.scholarshipName)}`}>discount of INR 15,400/-</span> on your fee.
+                  With a challenge clearance of <span className='font-semibold'>{(avgTaskScore).toFixed(2) || '--'}%</span>, you may avail a <span className={`!bg-transparent ${getBadgeColor(litmusTestDetails?.scholarshipDetail?.scholarshipName)}`}>discount of INR{' '}
+                  {formatAmount(cohortDetails?.baseFee * 1.18 * 0.01 * litmusTestDetails?.scholarshipDetail?.scholarshipPercentage)}
+                  /-</span> on your fee.
                   Access your payment portal to find out and keep track of your fee payments.
                 </p>
               </div>

@@ -85,7 +85,7 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
       };
       try {
         const response = await fetch(
-          "https://cal.litschool.in/api/application-portal/get-all-users",
+          "https://dev.cal.litschool.in/api/application-portal/get-all-users",
           {
             method: "POST",
             headers: {
@@ -115,7 +115,7 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
     const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://apply-lit-school.vercel.app";
 
     const handleCancel = (bookingId: string) => {
-    const url = `https://cal.litschool.in/meetings/cancel/${bookingId}?redirectUrl=${baseUrl}/application/status`;
+    const url = `https://dev.cal.litschool.in/meetings/cancel/${bookingId}?redirectUrl=${baseUrl}/application/status`;
     window.location.href = url;
     };
 

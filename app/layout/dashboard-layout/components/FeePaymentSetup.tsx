@@ -54,6 +54,7 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
   const latestCohort = student?.appliedCohorts?.[student?.appliedCohorts.length - 1];
   const cohortDetails = latestCohort?.cohortId;
   const tokenFeeDetails = latestCohort?.tokenFeeDetails;
+  const litmusTestDetails = latestCohort?.litmusTestDetails;
   
   const [paymentDetails, setPaymentDetails] = useState<any>(latestCohort?.paymentDetails);
 
@@ -519,30 +520,29 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                 <div className="flex justify-between">
                   <span>Base Fee</span>
                   <span>
-                    ₹{formatAmount(paymentDetails?.oneShotPayment?.amountPayable)}
+                    ₹{formatAmount(cohortDetails?.baseFee)}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span>GST</span>
                   <span>
-                    ₹{formatAmount(paymentDetails?.oneShotPayment?.amountPayable * 0.18)}
+                    ₹{formatAmount(cohortDetails?.baseFee * 0.18)}
                   </span>
                 </div>
                 <div className="flex justify-between text-[#F53F3F]">
                   <span>One Shot Payment Discount</span>
                   <span>
-                    - ₹{formatAmount(paymentDetails?.oneShotPayment?.OneShotPaymentAmount)}
+                    - ₹{formatAmount(litmusTestDetails?.scholarshipDetail?.oneShotPaymentDetails?.OneShotPaymentAmount)}
                   </span>
                 </div>
                 <div className="flex justify-between text-[#F53F3F]">
                   <span>Scholarship Amount</span>
-                  <span>- ₹{formatAmount(paymentDetails?.oneShotPayment?.amountPayable * 
-                    paymentDetails?.semesterFeeDetails?.scholarshipPercentage * 0.01)}</span>
+                  <span>- ₹{formatAmount(cohortDetails?.baseFee * 1.18 * litmusTestDetails?.scholarshipDetail?.scholarshipPercentage * 0.01)}</span>
                 </div>
                 <div className="flex justify-between pt-1 border-t border-white/10">
                   <span className="font-medium text-white">Total</span>
                   <span className="font-medium text-white">
-                    ₹{formatAmount(paymentDetails?.oneShotPayment?.amountPayable)}
+                    ₹{formatAmount(litmusTestDetails?.scholarshipDetail?.oneShotPaymentDetails?.amountPayable)}
                   </span>
                 </div>
               </div>

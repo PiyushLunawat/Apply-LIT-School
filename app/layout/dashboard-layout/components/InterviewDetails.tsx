@@ -22,6 +22,7 @@ import Feedback from "~/components/molecules/Feedback/Feedback";
 export default function InterviewDetailsCard({ student }: InterviewDetailsCardProps) {
   const [interviewOpen, setInterviewOpen] = useState(false);
   const [interviewer, setInterviewer] = useState<any>([]);
+  const [isMeetEnded, setIsMeetEnded] = useState(false);
   
     const latestCohort = student?.appliedCohorts?.[student?.appliedCohorts.length - 1];
     const cohortDetails = latestCohort?.cohortId;
@@ -55,18 +56,57 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
       ? new Date().getTime() >= meetingStart.getTime() - 10 * 60000
       : false;
 
-      let durationMin = "";
-      if (lastInterview?.startTime && lastInterview?.endTime) {
-        // Create Date objects using a fixed date so we can compare the times.
-        const startDate = new Date(`1970/01/01 ${lastInterview.startTime}`);
-        const endDate = new Date(`1970/01/01 ${lastInterview.endTime}`);
-        const diffMs = endDate.getTime() - startDate.getTime();
-        const diffMin = Math.round(diffMs / 60000);
-        durationMin = `${diffMin} min`;
-      }
+    let durationMin = "";
+    if (lastInterview?.startTime && lastInterview?.endTime) {
+      // Create Date objects using a fixed date so we can compare the times.
+      const startDate = new Date(`1970/01/01 ${lastInterview.startTime}`);
+      const endDate = new Date(`1970/01/01 ${lastInterview.endTime}`);
+      const diffMs = endDate.getTime() - startDate.getTime();
+      const diffMin = Math.round(diffMs / 60000);
+      durationMin = `${diffMin} min`;
+    }
       
     if (!lastInterview) {
         return null;
+    }
+
+    useEffect(() => {
+      if (!litmusTestDetails) return;
+
+      const checkStatus = () => {
+        const currentStatus = litmusTestDetails?.status;
+        if (currentStatus === "interview scheduled") {
+          checkInterviewStatus(litmusTestDetails?.litmusTestInterviews);
+        }
+      };
+
+      checkStatus();
+
+      const intervalId = setInterval(checkStatus, 60 * 1000); 
+
+      return () => clearInterval(intervalId); 
+    }, [litmusTestDetails]);
+
+    function checkInterviewStatus(interviews: any) {
+      if (!interviews || interviews.length === 0) return;
+
+      const lastInterview = interviews[interviews.length - 1];
+      const endTime = lastInterview?.endTime;
+      const currentTime = new Date();
+
+      let meetingEnd: Date | null = null;
+      if (lastInterview?.meetingDate && lastInterview?.endTime) {
+        meetingEnd = new Date(
+          new Date(lastInterview.meetingDate).toDateString() +
+            " " +
+            lastInterview.endTime
+        );
+
+        console.log("timee", meetingEnd < currentTime, meetingEnd, currentTime);
+        if (meetingEnd < currentTime) {
+          setIsMeetEnded(true);
+        }
+      }
     }
 
     const handleScheduleInterview = async () => {
@@ -84,7 +124,7 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
       };
       try {
         const response = await fetch(
-          "https://cal.litschool.in/api/application-portal/get-all-users",
+          "https://dev.cal.litschool.in/api/application-portal/get-all-users",
           {
             method: "POST",
             headers: {
@@ -112,28 +152,33 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
     const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://apply-lit-school.vercel.app";
 
     const handleCancel = (bookingId: string) => {
-      const url = `https://cal.litschool.in/meetings/cancel/${bookingId}?redirectUrl=${baseUrl}/dashboard/litmus-task`;
+      const url = `https://dev.cal.litschool.in/meetings/cancel/${bookingId}?redirectUrl=${baseUrl}/dashboard/litmus-task`;
       window.location.href = url;
     };
 
     return (
       <div className="space-y-6">
 
-        {litmusTestDetails?.status === 'interview cancelled' && 
+        {(isMeetEnded || litmusTestDetails?.status === 'interview cancelled') && 
           <Card className="mx-auto px-8 py-6 flex flex-col sm:flex-row gap-3 justify-between items-center">
             <div className="flex gap-2 items-center">
               <ScreenShare className="w-4 h-4" />
-              <span className="flex-1">Proceed to reschedule your presentation session with our program team.</span>
+              <span className="flex-1">
+                {litmusTestDetails?.status === 'interview cancelled' ? 
+                  'Proceed to reschedule your presentation session with our program team.' :
+                  'If you were unable to attend this Presentation session you may choose to'
+                }
+              </span>
             </div>
             <Button size={'xl'} variant="default" className="w-full sm:w-fit" onClick={() => handleScheduleInterview()}
             >
-              Book a Presentation session
+              {litmusTestDetails?.status === 'interview cancelled' ?  'Book a Presentation session' : 'Reschedule your Presentation'}
             </Button>
           </Card>
         }
 
         {litmusTestDetails?.litmusTestInterviews.slice().reverse().map((interview: any, index: any) => (
-          <Card key={index} className={`mx-auto md:flex md:flex-row rounded-2xl sm:rounded-3xl ${interview?.meetingStatus === 'cancelled' ? 'border-[#FF503D66] opacity-50 min-h-[680px]' : index === 0 ? 'min-h-[680px]' : 'opacity-50 min-h-[500px]'} `}>
+          <Card key={index} className={`mx-auto md:flex md:flex-row rounded-2xl sm:rounded-3xl ${interview?.meetingStatus === 'cancelled' ? 'border-[#FF503D66] opacity-50 min-h-[680px]' : (index === 0 && !isMeetEnded) ? 'min-h-[680px]' : 'opacity-50 min-h-[500px]'} `}>
             {/* Left Section */}
             <div className={`md:w-1/2 px-8 py-12 flex flex-col gap-8 justify-between ${interview?.meetingStatus === 'cancelled' ? 'bg-[#FF503D66] ' : 'bg-[#1B1B1C]'} !rounded-tl-2xl sm:!rounded-tl-3xl rounded-t-2xl sm:rounded-l-3xl sm:rounded-t-none rounded-l-none`}>
               <div className="space-y-4 sm:space-y-6">
@@ -163,7 +208,7 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
       
             {/* Right Section */}
             <div className="md:w-1/2 px-8 py-12 space-y-6 flex flex-col justify-between">
-              {(interview?.meetingStatus !== 'cancelled' && index !== 0) &&
+              {(interview?.meetingStatus !== 'cancelled' && (isMeetEnded || index !== 0)) &&
                 <div className="flex gap-2 items-center text-2xl">
                   <TimerOff className="w-6 h-6 "/>
                   <span className="flex-1">This meeting is over</span>
@@ -208,7 +253,7 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
                 </div>
                 <div className="text-base sm:text-xl">{interview?.cancelReason}</div>
               </div> : 
-              index === 0 &&
+              (!isMeetEnded && index === 0) &&
                 <div>
                   <Button size={'xl'} variant="default" className="w-full"
                     onClick={() => window.open(interview?.meetingUrl, "_blank")} 

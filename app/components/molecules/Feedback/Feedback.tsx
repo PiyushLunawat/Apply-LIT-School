@@ -48,7 +48,7 @@ const Feedback: React.FC<FeedbackProps> = ({ student, setIsPaymentVerified }) =>
     
     try {
       const response = await fetch(
-        "https://cal.litschool.in/api/application-portal/get-all-users",
+        "https://dev.cal.litschool.in/api/application-portal/get-all-users",
         {
           method: "POST",
           headers: {

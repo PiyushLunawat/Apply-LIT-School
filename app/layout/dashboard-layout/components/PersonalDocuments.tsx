@@ -81,14 +81,14 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
   ]);
   const [parentDocuments, setParentDocuments] = useState<Document[]>([
     {
-      id: "1",
+      id: "6",
       name: "Father’s ID Proof",
       isMandatory: true,
       description: "Mandatory",
       docType: "fatherIdProof"
     },
     {
-      id: "2",
+      id: "7",
       name: "Mother ID Proof",
       isMandatory: true,
       description: "Mandatory",
@@ -291,7 +291,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider> :
-                          <span className={`capitalize ${docDetail.status === "pending" ? "text-white" : docDetail.status === "verified" ? "text-[#00CC92]" : ""}`} >
+                          <span className={`capitalize ${docDetail.status === "verification pending" ? "text-white" : docDetail.status === "verified" ? "text-[#00CC92]" : ""}`} >
                             {docDetail.status}
                           </span>
                           }
@@ -326,7 +326,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                 </Button>
               </div> :
               <div className="flex items-center gap-4 w-full sm:w-fit">
-                {docDetail &&  ["verified", "pending"].includes(docDetail.status) ? (
+                {docDetail &&  ["verified", "verification pending"].includes(docDetail.status) ? (
                   <>
                     <Button
                       size="xl"
@@ -337,7 +337,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                       <Download className="h-4 w-4" />
                       Download
                     </Button>
-                    {docDetail?.status === "pending" &&
+                    {docDetail?.status === "verification pending" &&
                     <>  <input
                         type="file"
                         accept="application/pdf"
@@ -443,7 +443,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider> :
-                          <span className={`capitalize  ${docDetail.status === "pending" ? "text-white" : docDetail.status === "verified" ? "text-[#00CC92]" : ""}`} >
+                          <span className={`capitalize  ${docDetail.status === "verification pending" ? "text-white" : docDetail.status === "verified" ? "text-[#00CC92]" : ""}`} >
                             {docDetail.status}
                           </span>
                           }
@@ -478,7 +478,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                 </Button>
               </div> :
               <div className="flex items-center gap-4 w-full sm:w-fit">
-                {docDetail &&  ["verified", "pending"].includes(docDetail.status) ? (
+                {docDetail &&  ["verified", "verification pending"].includes(docDetail.status) ? (
                   <>
                     <Button
                       size="xl"
@@ -489,7 +489,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                       <Download className="h-4 w-4" />
                       Download
                     </Button>
-                    {docDetail?.status === "pending" &&
+                    {docDetail?.status === "verification pending" &&
                     <>  <input
                         type="file"
                         accept="application/pdf"
