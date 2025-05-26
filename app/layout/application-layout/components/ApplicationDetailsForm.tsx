@@ -54,10 +54,6 @@ import {
 import { UserContext } from "~/context/UserContext";
 import { useFirebaseAuth } from "~/hooks/use-firebase-auth";
 import { VerifyOTP } from "~/layout/auth-layout/components/VerifyOTP";
-import {
-  formatPhoneNumber,
-  validatePhoneNumber,
-} from "~/utils/phone-number-formatter";
 
 type ExperienceType =
   | "Working Professional"
@@ -355,6 +351,9 @@ const ApplicationDetailsForm: React.FC = () => {
     async function fetchData() {
       try {
         // 1. Load all programs, centres, and cohorts
+
+        console.log("api call");
+
         const programsData = await getPrograms();
         setPrograms(programsData.data);
 
@@ -465,8 +464,9 @@ const ApplicationDetailsForm: React.FC = () => {
     const fetchStudentData = async () => {
       if (studentData._id)
         try {
+          console.log("1111");
           const student = await getCurrentStudent(studentData._id);
-          // console.log("dbab",student);
+          console.log("dbab",student);
           if (
             student?.appliedCohorts[student?.appliedCohorts.length - 1]
               ?.status === "enrolled"
@@ -785,10 +785,10 @@ const ApplicationDetailsForm: React.FC = () => {
     fetchStudentData();
   }, [
     studentData,
-    interest,
-    fetchedStudentData?.appliedCohorts,
-    reset,
-    navigate,
+    // interest,
+    // fetchedStudentData?.appliedCohorts,
+    // reset,
+    // navigate,
   ]);
 
   //   useEffect(() => {
@@ -868,16 +868,6 @@ const ApplicationDetailsForm: React.FC = () => {
 
   const handleVerifyClick = async (contact: string) => {
     if (typeof window === "undefined") return;
-
-    const formattedContact = formatPhoneNumber(contact);
-
-    if (!validatePhoneNumber(formattedContact)) {
-      form.setError("studentData.contact", {
-        type: "manual",
-        message: "Please enter a valid phone number (e.g., +91 7766856390)",
-      });
-      return;
-    }
 
     setOtpLoading(true);
 

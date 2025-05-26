@@ -42,7 +42,7 @@ export default function ApplicationLayout() {
     }
 
     fetchCurrentStudentData();
-  }, [studentData?.id, navigate]);
+  }, [studentData?.id]);
 
   return (
     <div className="flex flex-col min-h-screen">
