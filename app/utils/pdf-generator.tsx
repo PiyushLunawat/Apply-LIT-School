@@ -7,13 +7,16 @@ interface StudentData {
   bloodGroup?: string;
   gender?: string;
   dateOfBirth?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   appliedCohorts?: any[];
   linkedInUrl?: string;
   instagramUrl?: string;
   fatherName?: string;
+  motherName?: string;
   emergencyContact?: string;
   address?: string;
   _id?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   program?: any;
 }
 
@@ -41,7 +44,6 @@ export const generateIDCardPDF = async (student: StudentData) => {
     container.style.justifyContent = "center";
     container.style.alignItems = "center";
     container.style.zIndex = "9999";
-    container.style.border = "2px solid red"; // For debugging
 
     // Create card containers
     const frontContainer = document.createElement("div");
@@ -54,87 +56,104 @@ export const generateIDCardPDF = async (student: StudentData) => {
     container.appendChild(backContainer);
     document.body.appendChild(container);
 
-    console.log("Container created and added to DOM");
-
     // Import and render components using innerHTML approach
     const frontHTML = `
-      <div id="lit-id-front" style="width: 400px; height: 590px; background: white; border: 1px solid #ccc;">
-        <div style="width: 398px; height: 355px; background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
-          <img src="${student?.profileUrl || "https://github.com/shadcn.png"}" 
-               style="width: 398px; height: 355px; object-fit: cover;" 
-               crossorigin="anonymous" />
-        </div>
-        <div style="padding: 16px; background: white; height: 235px; display: flex; flex-direction: column; justify-content: space-between;">
-          <div>
-            <div style="padding: 8px 16px; background: white; border: 1px solid #d9d9d9; border-radius: 50px; display: inline-block; margin-bottom: 12px;">
-              <span style="color: #000; font-size: 16px; font-weight: 500;">LIT${
-                student?.program?.prefix || "NBA"
-              }085</span>
-            </div>
-            <div style="margin-bottom: 12px;">
-              <h2 style="color: #000; font-size: 24px; font-weight: 600; margin: 0 0 8px 0;">${
-                student?.firstName || ""
-              } ${student?.lastName || ""}</h2>
-              <p style="color: #4f4f4f; font-size: 14px; margin: 0;">${
-                student?.email || ""
-              }</p>
-              <p style="color: #4f4f4f; font-size: 14px; margin: 0;">${
-                student?.mobileNumber || ""
-              }</p>
-            </div>
-          </div>
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 4px;">
-            <span style="color: #000; font-size: 16px; font-weight: 600;">The LIT School</span>
-            <span style="color: #000; font-size: 16px;">Learn • Innovate • Transform</span>
-          </div>
+    <div id="lit-id-front" style="width: 400px; height: 590px; background: white; border: 1px solid #d9d9d9; border-radius: 12px; overflow: hidden; margin-bottom: 20px; page-break-after: always;">
+    <div style="width: 100%; height: 355px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #d9d9d9;">
+      <img src="${student?.profileUrl || "https://github.com/shadcn.png"}" 
+         style="width: 100%; height: 100%; object-fit: cover;" 
+         crossorigin="anonymous" />
+    </div>
+    <div style="padding: 16px; background: white; height: 219px; display: flex; flex-direction: column; justify-content: space-between;">
+      <div style="margin-left: 0;">
+      <div style="text-align: left; margin-bottom: 12px; padding-left: 4px; display: flex; justify-content: center;">
+        <div style="padding: 8px 16px; background: white; border: 1px solid #d9d9d9; border-radius: 50px; display: inline-block;">
+        <span style="color: #000; font-size: 16px; font-weight: 500;">LIT${
+          student?.program?.prefix || "NBA"
+        }085</span>
         </div>
       </div>
-    `;
+      <div style="text-align: left; margin-bottom: 12px; padding-left: 4px;">
+        <h2 style="color: #000; font-size: 24px; font-weight: 600; margin: 0 0 8px 0;">${
+          student?.firstName || ""
+        } ${student?.lastName || ""}</h2>
+        <p style="color: #4f4f4f; font-size: 14px; margin: 0 0 4px 0;">${
+          student?.email || ""
+        }</p>
+        <p style="color: #4f4f4f; font-size: 14px; margin: 0;">${
+          student?.mobileNumber || ""
+        }</p>
+      </div>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 4px; border-top: 1px solid #f0f0f0; padding-top: 8px;">
+      <span style="color: #000; font-size: 16px; font-weight: 600;">The LIT School</span>
+      <div style="display: flex; align-items: center; line-height: 1;">
+        <span style="color: #000; font-size: 16px;">Learn</span>
+        <span style="color: #4361ee; font-size: 16px; margin: 0 4px;">•</span>
+        <span style="color: #000; font-size: 16px;">Innovate</span>
+        <span style="color: #4361ee; font-size: 16px; margin: 0 4px;">•</span>
+        <span style="color: #000; font-size: 16px;">Transform</span>
+      </div>
+      </div>
+    </div>
+    </div>
+  `;
 
     const backHTML = `
-      <div id="lit-id-back" style="width: 400px; height: 590px; background: white; border: 1px solid #ccc; display: flex; flex-direction: column;">
-        <div style="padding: 60px; display: flex; justify-content: center;">
-          <div style="width: 168px; height: 168px; background: #ededed; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-            <div style="font-size: 12px; color: #666;">
-            <QRCodeCanvas value={vCardURL} size={168} />
-            </div>
-          </div>
-        </div>
-        <div style="padding: 24px; flex: 1; display: flex; flex-direction: column; gap: 16px;">
-          <div style="width: 48px; height: 54px; background: #ccc; border-radius: 4px;"></div>
-          <div>
-            <p style="color: #4f4f4f; font-size: 14px; margin: 0 0 8px 0;">Father's Name: ${
-              student?.fatherName || "John Doe"
-            }</p>
-            <p style="color: #4f4f4f; font-size: 14px; margin: 0 0 8px 0;">Emergency Contact: ${
-              student?.emergencyContact || student?.mobileNumber || "--"
-            }</p>
-            <p style="color: #4f4f4f; font-size: 14px; margin: 0 0 8px 0;">Blood Group: ${
-              student?.bloodGroup || "O+"
-            }</p>
-          </div>
-          <div>
-            <p style="color: #4f4f4f; font-size: 14px; margin: 0 0 8px 0;">Address: ${
-              student?.address || "Sample Address, City, State 123456"
-            }</p>
-          </div>
-          <div>
-            <p style="color: #4f4f4f; font-size: 14px; margin: 0 0 4px 0;">Issued On: ${new Date().toLocaleDateString()}</p>
-            <p style="color: #4f4f4f; font-size: 14px; font-weight: 600; margin: 0;">Expiry Date: ${new Date(
-              Date.now() + 365 * 24 * 60 * 60 * 1000
-            ).toLocaleDateString()}</p>
-          </div>
-          <div style="margin-top: auto; padding-top: 16px; border-top: 1px solid #e5e5e5;">
-            <p style="color: #4f4f4f; font-size: 12px; text-align: center; margin: 0;">www.litschool.in • info@litschool.in</p>
-          </div>
+  <div id="lit-id-back" style="width: 400px; height: 590px; background: white; border: 1px solid #d9d9d9; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;">
+    <div style="height: 288px; display: flex; justify-content: center; align-items: center; border-bottom: 1px solid #d9d9d9;">
+      <div style="width: 168px; height: 168px; background: #ededed; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+        <div style="font-size: 12px; color: #666; text-align: center;">
+        <img src={localStorage.getItem("vCardURL")} alt="" />
         </div>
       </div>
-    `;
+    </div>
+    <div style="padding: 24px; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+      <div>
+        <div style="margin-bottom: 16px;">
+          <div style="width: 48px; height: 54px; border-radius: 4px; margin-bottom: 16px;">
+          <img src="/assets/icons/lit_logo.svg" alt="lit_logo" />
+          </div>
+        </div>
+        <div style="text-align: left; margin-bottom: 16px;">
+          <p style="color: #4f4f4f; font-size: 14px; margin: 0 0 8px 0;">Mother's Name: ${
+            student?.motherName || "John Doe"
+          }</p>
+          <p style="color: #4f4f4f; font-size: 14px; margin: 0 0 8px 0;">Emergency Contact: ${
+            student?.emergencyContact ||
+            student?.appliedCohorts?.[0]?.applicationDetails?.studentDetails
+              ?.emergencyContact?.contactNumber ||
+            student?.mobileNumber ||
+            "--"
+          }</p>
+          <p style="color: #4f4f4f; font-size: 14px; margin: 0 0 8px 0;">Blood Group: ${
+            student?.bloodGroup || "B+"
+          }</p>
+        </div>
+        <div style="text-align: left; margin-bottom: 16px;">
+          <p style="color: #4f4f4f; font-size: 14px; margin: 0 0 8px 0;">Address: ${
+            student?.address ||
+            "Jaya Nagar 1st Block, Jayanagar 3rd Block East, Bengaluru, Karnataka 560011"
+          }</p>
+        </div>
+      </div>
+      <div style="text-align: left; border-top: 1px solid #f0f0f0; padding-top: 12px;">
+        <p style="color: #4f4f4f; font-size: 14px; margin: 0 0 4px 0;">Issued On: ${new Date().toLocaleDateString()}</p>
+        <p style="color: #4f4f4f; font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">Expiry Date: ${new Date(
+          Date.now() + 365 * 24 * 60 * 60 * 1000
+        ).toLocaleDateString()}</p>
+        <div style="display: flex; align-items: center; line-height: 1;">
+          <span style="color: #000; font-size: 12px;">www.litschool.in</span>
+          <span style="color: #4361ee; font-size: 12px; margin: 0 8px;">•</span>
+          <span style="color: #000; font-size: 12px;">info@litschool.in</span>
+        </div>
+      </div>
+    </div>
+  </div>
+`;
 
     frontContainer.innerHTML = frontHTML;
     backContainer.innerHTML = backHTML;
-
-    console.log("HTML content added to containers");
 
     // Wait for images to load
     const images = container.querySelectorAll("img");
@@ -163,7 +182,7 @@ export const generateIDCardPDF = async (student: StudentData) => {
     const canvas = await html2canvas(container, {
       scale: 2,
       backgroundColor: "#ffffff",
-      logging: true, // Enable logging for debugging
+      logging: process.env.NODE_ENV === "development",
       useCORS: true,
       allowTaint: false,
       width: 1000,
@@ -172,9 +191,6 @@ export const generateIDCardPDF = async (student: StudentData) => {
       scrollY: 0,
     });
 
-    console.log("Canvas captured successfully", canvas.width, canvas.height);
-
-    // Create PDF
     const pdfInstance = new jsPDF({
       orientation: "landscape",
       unit: "mm",
@@ -184,26 +200,20 @@ export const generateIDCardPDF = async (student: StudentData) => {
     const imgData = canvas.toDataURL("image/png", 1.0);
     console.log("Image data created, length:", imgData.length);
 
-    // Add image to PDF
     const pdfWidth = pdfInstance.internal.pageSize.getWidth();
     const pdfHeight = pdfInstance.internal.pageSize.getHeight();
 
     pdfInstance.addImage(imgData, "PNG", 10, 10, pdfWidth - 20, pdfHeight - 20);
 
-    // Clean up
     document.body.removeChild(container);
 
-    // Save PDF
     const fileName = `LIT_ID_Card_${student?.firstName || "Student"}_${
       student?.lastName || "Card"
     }.pdf`;
     pdfInstance.save(fileName);
-
-    console.log("PDF saved successfully:", fileName);
   } catch (error) {
     console.error("Detailed error in PDF generation:", error);
 
-    // Clean up container if it exists
     const existingContainer = document.getElementById(
       "pdf-generation-container"
     );

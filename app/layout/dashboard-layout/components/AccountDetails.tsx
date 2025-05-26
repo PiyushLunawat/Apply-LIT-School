@@ -75,7 +75,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
     setIsGeneratingPDF(true);
 
     try {
-      console.log("Starting PDF generation...");
+      console.log("Starting PDF generation...", details);
 
       // Try the main method first
       await generateIDCardPDF(student || details);
