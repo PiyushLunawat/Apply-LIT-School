@@ -1,11 +1,7 @@
 // app/routes/application.tsx
-import { LoaderFunction } from "@remix-run/node";
+import { LoaderFunction, LoaderFunctionArgs } from "@remix-run/node";
 import { redirect } from "@remix-run/react";
-import {
-  accessTokenCookie,
-  refreshTokenCookie,
-  userIdCookie,
-} from "~/cookies/cookies";
+import { accessTokenCookie, refreshTokenCookie, userIdCookie } from "~/cookies/cookies";
 import NewApplicationPage from "~/layout/new-application-layout/pages/new-application";
 
 export const loader: LoaderFunction = async ({ request }) => {
@@ -24,5 +20,7 @@ export const loader: LoaderFunction = async ({ request }) => {
 };
 
 export default function NewApplicationRoute() {
-  return <NewApplicationPage />;
+  return (
+    <NewApplicationPage/>
+  );
 }

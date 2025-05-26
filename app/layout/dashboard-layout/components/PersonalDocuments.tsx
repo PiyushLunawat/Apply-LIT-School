@@ -27,6 +27,11 @@ interface UploadState {
   error: string;
 }
 
+interface DownloadState {
+  uploading: boolean;
+  error: string;
+}
+
 interface PersonalDocumentsProps {
   student: any
 }
@@ -41,6 +46,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
   const [selectedDoc, setSelectedDoc] = useState<any>();
   const [selectedDocName, setSelectedDocName] = useState("");
   const [uploadStates, setUploadStates] = useState<{ [docId: string]: UploadState }>({});
+  const [downloadStates, setDownloadStates] = useState<{ [docId: string]: DownloadState }>({});
   const [docs, setDocs] = useState<any[]>([]);
   const [personalDocuments, setPersonalDocuments] = useState<Document[]>([
     {
@@ -100,12 +106,52 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
     setDocs(latestCohort?.personalDocs?.documents || []);
   }, [student]);
 
-  const handleFileDownload = (fileUrl: string, docType: string) => {
-    if (!fileUrl) {
-      console.error("No file URL available for download.");
-      return;
+  const handleFileDownload = async (url: string, docName: string) => {
+    setDownloadStates((prev) => ({
+    ...prev,
+    [docName]: {
+      uploading: true,
+      error: "",
+    },
+  }));
+
+    try {
+      // 1. Fetch the file as Blob
+      const response = await fetch(url);
+      const blob = await response.blob();
+
+      // 2. Create a temporary object URL for that Blob
+      const blobUrl = URL.createObjectURL(blob);
+
+      // 3. Create a hidden <a> and force download
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `${docName}.pdf`; // or "myImage.png"
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error("Download failed", err);
+      setDownloadStates((prev) => ({
+      ...prev,
+      [docName]: {
+        ...prev[docName],
+        error: `${err}` || "Download failed",
+      },
+    }));
+
+    } finally {
+      setDownloadStates((prev) => ({
+      ...prev,
+      [docName]: {
+        ...prev[docName],
+        uploading: false,
+      },
+    }));
     }
-    window.open(fileUrl, "_blank")
   };
 
   const handleFileChange = async ( e: React.ChangeEvent<HTMLInputElement>, docId: string, docType: string, editId?: string) => {
@@ -308,6 +354,9 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                   {uploadStates[doc.id]?.error &&
                     <p className="text-xs sm:text-base text-[#FF503D] mt-2 sm:mt-0">{uploadStates[doc.id]?.error}</p>
                   }
+                  {downloadStates[doc.id]?.error &&
+                    <p className="text-xs sm:text-base text-[#FF503D] mt-2 sm:mt-0">{downloadStates[doc.id]?.error}</p>
+                  }
                 </div>
               </div>
 
@@ -333,6 +382,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                       variant="ghost"
                       className="flex gap-2 items-center border bg-[#1B1B1C] flex-1"
                       onClick={() => handleFileDownload(docDetail.url || "", doc.docType)}
+                      disabled={downloadStates[doc.docType]?.uploading}
                     >
                       <Download className="h-4 w-4" />
                       Download
@@ -460,6 +510,9 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                   {uploadStates[doc.id]?.error &&
                     <p className="text-xs sm:text-base text-[#FF503D] mt-2 sm:mt-0">{uploadStates[doc.id]?.error}</p>
                   }
+                  {downloadStates[doc.id]?.error &&
+                    <p className="text-xs sm:text-base text-[#FF503D] mt-2 sm:mt-0">{downloadStates[doc.id]?.error}</p>
+                  }
                 </div>
               </div>
 
@@ -485,6 +538,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                       variant="ghost"
                       className="flex gap-2 items-center border bg-[#1B1B1C] flex-1"
                       onClick={() => handleFileDownload(docDetail.url || "", doc.docType)}
+                      disabled={downloadStates[doc.docType]?.uploading}
                     >
                       <Download className="h-4 w-4" />
                       Download
@@ -581,6 +635,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                   variant="ghost"
                   className="flex gap-2 items-center border bg-[#1B1B1C] flex-1"
                   onClick={() => handleFileDownload(doc?.url || "", doc?.documentName)}
+                  disabled={downloadStates[doc.documentName]?.uploading}
                 >
                   <Download className="h-4 w-4 mr-2" />
                   Download
@@ -605,7 +660,9 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                   <span className="flex-1">{selectedDoc.feedback?.[selectedDoc.feedback.length - 1]?.feedbackData}</span>
                 </div> :
                 <Button size="xl" variant="ghost" className="w-full sm:w-fit mx-auto border bg-[#1B1B1C]"
-                  onClick={() => handleFileDownload(selectedDoc?.url || "", selectedDocName)}>
+                  onClick={() => handleFileDownload(selectedDoc?.url || "", selectedDocName)}
+                  disabled={downloadStates[selectedDocName]?.uploading}
+                  >
                     <Download className="h-4 w-4 mr-2" />Download
                 </Button>
               }
