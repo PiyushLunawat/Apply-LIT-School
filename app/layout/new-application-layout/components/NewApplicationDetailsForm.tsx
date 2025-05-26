@@ -54,10 +54,6 @@ import {
 import { UserContext } from "~/context/UserContext";
 import { useFirebaseAuth } from "~/hooks/use-firebase-auth";
 import { VerifyOTP } from "~/layout/auth-layout/components/VerifyOTP";
-import {
-  formatPhoneNumber,
-  validatePhoneNumber,
-} from "~/utils/phone-number-formatter";
 
 type ExperienceType =
   | "Working Professional"
@@ -875,23 +871,9 @@ const NewApplicationDetailsForm: React.FC = () => {
   const handleVerifyClick = async (contact: string) => {
     if (typeof window === "undefined") return;
 
-    // Format and validate phone number
-    const formattedContact = formatPhoneNumber(contact);
-
-    if (!validatePhoneNumber(formattedContact)) {
-      form.setError("studentData.contact", {
-        type: "manual",
-        message: "Please enter a valid phone number (e.g., +91 7766856390)",
-      });
-      return;
-    }
-
     setOtpLoading(true);
 
     try {
-      // Clear any existing reCAPTCHA first
-      clearRecaptcha();
-
       // Wait a bit for cleanup
       await new Promise((resolve) => setTimeout(resolve, 100));
 
@@ -902,10 +884,10 @@ const NewApplicationDetailsForm: React.FC = () => {
       }
 
       // Send OTP with formatted phone number
-      const confirmationResult = await sendOTP(formattedContact);
+      const confirmationResult = await sendOTP(contact);
       if (confirmationResult) {
         setVerificationId(confirmationResult.verificationId);
-        setContactInfo(formattedContact); // Store the formatted number
+        setContactInfo(contact); // Store the formatted number
         setIsDialogOpen(true);
       }
     } catch (error: any) {
