@@ -1,5 +1,10 @@
 import fetchIntercept from "fetch-intercept";
 import { getRefreshToken } from "~/api/authAPI";
+import {
+  accessTokenCookie,
+  refreshTokenCookie,
+  userIdCookie,
+} from "~/cookies/cookies";
 
 // Modify RegisterInterceptor to refresh the token if only accessToken is available
 let refreshingToken = false; // Flag to prevent infinite refresh loop
@@ -15,6 +20,7 @@ export const RegisterInterceptor = (
         console.log("Invalid URL: Expected a string, but got:", url);
         return [url, config]; // Return as is if URL is not a string
       }
+      console.log("URL:", url);
 
       // Skip Firebase endpoints
       if (

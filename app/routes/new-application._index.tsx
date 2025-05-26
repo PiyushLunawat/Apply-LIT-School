@@ -1,11 +1,7 @@
 // app/routes/application.tsx
-import { LoaderFunction } from "@remix-run/node";
+import { LoaderFunction, LoaderFunctionArgs } from "@remix-run/node";
 import { redirect } from "@remix-run/react";
-import {
-  accessTokenCookie,
-  refreshTokenCookie,
-  userIdCookie,
-} from "~/cookies/cookies";
+import { accessTokenCookie, refreshTokenCookie, userIdCookie } from "~/cookies/cookies";
 import NewApplicationPage from "~/layout/new-application-layout/pages/new-application";
 
 export const loader: LoaderFunction = async ({ request }) => {
@@ -14,7 +10,10 @@ export const loader: LoaderFunction = async ({ request }) => {
   const accessToken = await accessTokenCookie.parse(cookieHeader);
   const refreshToken = await refreshTokenCookie.parse(cookieHeader);
   const userId = await userIdCookie.parse(cookieHeader);
+  console.log("applicatonssss");
 
+  console.log("userId", userId);
+  
   // Now you can use `userId` in your logic
   if (!accessToken && !refreshToken) {
     return redirect("/auth/login");
@@ -24,5 +23,7 @@ export const loader: LoaderFunction = async ({ request }) => {
 };
 
 export default function NewApplicationRoute() {
-  return <NewApplicationPage />;
+  return (
+    <NewApplicationPage/>
+  );
 }

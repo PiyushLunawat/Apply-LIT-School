@@ -54,6 +54,10 @@ import {
 import { UserContext } from "~/context/UserContext";
 import { useFirebaseAuth } from "~/hooks/use-firebase-auth";
 import { VerifyOTP } from "~/layout/auth-layout/components/VerifyOTP";
+import {
+  formatPhoneNumber,
+  validatePhoneNumber,
+} from "~/utils/phone-number-formatter";
 
 type ExperienceType =
   | "Working Professional"
@@ -864,6 +868,16 @@ const ApplicationDetailsForm: React.FC = () => {
 
   const handleVerifyClick = async (contact: string) => {
     if (typeof window === "undefined") return;
+
+    const formattedContact = formatPhoneNumber(contact);
+
+    if (!validatePhoneNumber(formattedContact)) {
+      form.setError("studentData.contact", {
+        type: "manual",
+        message: "Please enter a valid phone number (e.g., +91 7766856390)",
+      });
+      return;
+    }
 
     setOtpLoading(true);
 
