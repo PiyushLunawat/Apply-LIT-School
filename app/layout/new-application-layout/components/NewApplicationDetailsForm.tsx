@@ -319,6 +319,9 @@ const NewApplicationDetailsForm: React.FC = () => {
   // Cohorts filtered by the user's chosen program
   const [filteredCohorts, setFilteredCohorts] = useState<any[]>([]);
 
+  // Use Firebase Auth Hook
+  const { initializeRecaptcha, sendOTP, isReady } = useFirebaseAuth();
+
   useEffect(() => {
     const topObserver = new IntersectionObserver(
       ([entry]) => setIsTopVisible(entry.isIntersecting),
@@ -859,8 +862,6 @@ const NewApplicationDetailsForm: React.FC = () => {
     }
   }, [setValue, watch]);
 
-  const { initializeRecaptcha, sendOTP } = useFirebaseAuth();
-
   const clearRecaptcha = () => {
     const recaptchaContainer = document.getElementById("recaptcha-container");
     if (recaptchaContainer) {
@@ -874,20 +875,17 @@ const NewApplicationDetailsForm: React.FC = () => {
     setOtpLoading(true);
 
     try {
+      clearRecaptcha();
+
       // Wait a bit for cleanup
       await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Initialize recaptcha
-      const verifier = await initializeRecaptcha("recaptcha-container");
-      if (!verifier) {
-        throw new Error("Failed to initialize reCAPTCHA");
-      }
+      // Send OTP - the hook will handle initialization automatically
+      const confirmationResult = await sendOTP(contact, "recaptcha-container");
 
-      // Send OTP with formatted phone number
-      const confirmationResult = await sendOTP(contact);
       if (confirmationResult) {
         setVerificationId(confirmationResult.verificationId);
-        setContactInfo(contact); // Store the formatted number
+        setContactInfo(contact);
         setIsDialogOpen(true);
       }
     } catch (error: any) {
