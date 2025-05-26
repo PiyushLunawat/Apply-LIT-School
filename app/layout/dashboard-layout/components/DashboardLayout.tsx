@@ -19,14 +19,14 @@ export default function DashboardLayout() {
       }
       try {
         const student = await getCurrentStudent(studentData._id || studentData?.id);
-        if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'reviewing'){
+        if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'dropped'){
+          navigate('../../new-application');
+        } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'reviewing'){
           navigate('../../application/status');
         } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'applied'){
           navigate('../../application/task');
         } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'initiated'){
           navigate('../../application');
-        } else if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'dropped'){
-          navigate('../../application/new-application');
         }
       } catch (error) {
         console.log("Error fetching student data:", error);
