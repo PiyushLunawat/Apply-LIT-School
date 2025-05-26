@@ -235,14 +235,15 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
   const renderStep1 = () => {
     return (
       <div className="space-y-4">
-        <div className="bg-[#64748B1A] p-6 rounded-xl border mb-8">
+        <div className="bg-[#64748B1A] p-4 sm:p-6 rounded-xl border mb-8">
           <div className="flex justify-center items-center gap-6">
-            <img src="/assets/images/fee-payment-setup-icon.svg" alt="" />
+            <img src="/assets/images/fee-payment-setup-icon.svg" alt="" className="hidden sm:block"/>
             <div>
               <div className="flex items-center gap-4 mb-2">
+                <img src="/assets/images/fee-payment-setup-icon.svg" alt="" className="sm:hidden" />
                 <h2 className="text-xl font-semibold">Fee Payment Setup</h2>
               </div>
-              <p className="w-3/4">
+              <p className="w-3/4 text-sm sm:text-base">
                 Once you have set up your fee payment method, you will be able
                 to access your tracker. Upload your acknowledgment receipts
                 to mark a completed payment.
@@ -386,12 +387,15 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
 
       <div className="bg-[#64748B1A] p-4 sm:p-6 rounded-xl mb-8">
         <div className="flex items-center gap-6">
-          <img src="/assets/images/fee-payment-setup-icon.svg" alt="" />
-          <div className="flex flex-col gap-1">
-            <h2 className="text-xl font-semibold">
-              You are required to make a total payment of INR {paymentDetails?.paymentPlan === 'one-shot' ? `${paymentDetails.oneShotPayment.amountPayable}` : `${formatAmount(paymentDetails?.installments.reduce((total: number, inst: any) => total + inst.amountPayable, 0))}`}.00
-            </h2>
-            <p>
+          <img src="/assets/images/fee-payment-setup-icon.svg" alt="" className="hidden sm:block" />
+          <div className="flex flex-col gap-2 sm:gap-1">
+            <div className="flex items-center gap-4">
+              <img src="/assets/images/fee-payment-setup-icon.svg" alt="" className="sm:hidden" />
+              <h2 className="text-lg sm:text-xl font-semibold">
+                You are required to make a total payment of INR {paymentDetails?.paymentPlan === 'one-shot' ? `${formatAmount(paymentDetails.oneShotPayment.amountPayable)}` : `${formatAmount(paymentDetails?.installments.reduce((total: number, inst: any) => total + inst.amountPayable, 0))}`}.00
+              </h2>
+            </div>
+            <p className="text-sm sm:text-base">
               Over a course of {paymentDetails?.paymentPlan === 'one-shot' ? `1` : `${Number(cohortDetails?.cohortFeesDetail?.semesters) * Number(cohortDetails?.cohortFeesDetail?.installmentsPerSemester)}`} instalments
               starting on {new Date(cohortDetails?.startDate).toDateString()}. This
               is inclusive of your scholarship waiver.
@@ -404,7 +408,7 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
         <div className="flex flex-col sm:flex-row sm:gap-2 sm:justify-between">
           <h2 className="flex gap-2.5 text-lg sm:text-xl items-center font-semibold">
             <CircleCheck className="w-4 sm:w-6 h-4 sm:h-6 text-[#00AB7B]" />
-            INR {(Number(cohortDetails?.cohortFeesDetail?.tokenFee)).toLocaleString()}
+            INR {(formatAmount(cohortDetails?.cohortFeesDetail?.tokenFee))}
           </h2>
           <div className="flex h-5 items-center gap-2 text-sm sm:text-base">
             <div>Admission Fee paid</div>
@@ -493,55 +497,62 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                   />
               }
               {paymentDetails?.oneShotPayment.feedback && paymentDetails?.oneShotPayment.feedback.slice().reverse().map((flag: any, index: any) => (
-                <div key={index} className="bg-[#09090b] p-3 flex gap-2 items-center">
-                  <div className="relative group w-[90px] h-[90px]">
-                    <img
-                      src={paymentDetails?.oneShotPayment?.receiptUrls?.[paymentDetails?.oneShotPayment.feedback.length-1 - index]?.url}
-                      alt="Fee_Receipt"
-                      className="w-[90px] h-[90px] rounded-lg object-contain bg-white py-1"
-                    />
-                    <div
-                      className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                      onClick={() => handleViewReciept(paymentDetails?.oneShotPayment?.receiptUrls?.[paymentDetails?.oneShotPayment.feedback.length-1 - index]?.url)}
-                    >
-                      <Eye className="text-white w-7 h-7" />
+                <div key={index} className="bg-[#09090b] p-3 flex flex-col gap-1 items-center">
+                  <div className="flex gap-2 items-center">
+                    <div className="relative group w-[90px] h-[90px]">
+                      <img
+                        src={paymentDetails?.oneShotPayment?.receiptUrls?.[paymentDetails?.oneShotPayment.feedback.length-1 - index]?.url}
+                        alt="Fee_Receipt"
+                        className="w-[90px] h-[90px] rounded-lg object-contain bg-white py-1"
+                      />
+                      <div
+                        className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                        onClick={() => handleViewReciept(paymentDetails?.oneShotPayment?.receiptUrls?.[paymentDetails?.oneShotPayment.feedback.length-1 - index]?.url)}
+                      >
+                        <Eye className="text-white w-7 h-7" />
+                      </div>
+                    </div>
+                    <div className="flex-1 text-xs">
+                      <div className="text-[#F53F3F]">Your previously attached Acknowledgement Receipt has been marked invalid.</div>
+                      <div className="mt-1.5">Kindly upload a scanned copy of the receipt issued to you by our fee manager for this specific instalment.</div>
+                      <div className="hidden sm:block mt-2 text-muted-foreground">Reason: {flag?.feedbackData?.[0]}</div>
                     </div>
                   </div>
-                  <div className="text-xs">
-                    <div className="text-[#F53F3F]">Your previously attached Acknowledgement Receipt has been marked invalid.</div>
-                    <div className="mt-1.5">Kindly upload a scanned copy of the receipt issued to you by our fee manager for this specific instalment.</div>
-                    <div className="mt-2 text-muted-foreground">Reason: {flag?.feedbackData?.[0]}</div>
-                  </div>
+                  <div className="sm:hidden mt-2 text-xs text-muted-foreground">Reason: {flag?.feedbackData?.[0]}</div>
                 </div>
               ))}
 
-              <div className="p-3 rounded-lg text-sm text-white/70 space-y-1">
+              <div className="p-3 rounded-lg space-y-1 sm:space-y-3">
                 <p className="font-medium text-base text-white">Fee Breakdown</p>
-                <div className="flex justify-between">
-                  <span>Base Fee</span>
-                  <span>
-                    ₹{formatAmount(cohortDetails?.baseFee)}
-                  </span>
+                <div className="text-sm text-white/70 space-y-0 sm:space-y-1.5">
+                  <div className="flex justify-between">
+                    <span>Base Fee</span>
+                    <span>
+                      ₹{formatAmount(cohortDetails?.baseFee)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>GST</span>
+                    <span>
+                      ₹{formatAmount(cohortDetails?.baseFee * 0.18)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-[#F53F3F]">
+                    <span>One Shot Payment Discount</span>
+                    <span>
+                      - ₹{formatAmount(litmusTestDetails?.scholarshipDetail?.oneShotPaymentDetails?.OneShotPaymentAmount)}
+                    </span>
+                  </div>
+                  {litmusTestDetails?.scholarshipDetail &&
+                    <div className="flex justify-between text-[#F53F3F]">
+                      <span>Scholarship Amount</span>
+                      <span>- ₹{formatAmount(cohortDetails?.baseFee * 1.18 * litmusTestDetails?.scholarshipDetail?.scholarshipPercentage * 0.01)}</span>
+                    </div>
+                  }
                 </div>
-                <div className="flex justify-between">
-                  <span>GST</span>
-                  <span>
-                    ₹{formatAmount(cohortDetails?.baseFee * 0.18)}
-                  </span>
-                </div>
-                <div className="flex justify-between text-[#F53F3F]">
-                  <span>One Shot Payment Discount</span>
-                  <span>
-                    - ₹{formatAmount(litmusTestDetails?.scholarshipDetail?.oneShotPaymentDetails?.OneShotPaymentAmount)}
-                  </span>
-                </div>
-                <div className="flex justify-between text-[#F53F3F]">
-                  <span>Scholarship Amount</span>
-                  <span>- ₹{formatAmount(cohortDetails?.baseFee * 1.18 * litmusTestDetails?.scholarshipDetail?.scholarshipPercentage * 0.01)}</span>
-                </div>
-                <div className="flex justify-between pt-1 border-t border-white/10">
+                <div className="flex justify-between text-lg sm:text-xl pt-1">
                   <span className="font-medium text-white">Total</span>
-                  <span className="font-medium text-white">
+                  <span className="font-medium text-[#1388FF]">
                     ₹{formatAmount(litmusTestDetails?.scholarshipDetail?.oneShotPaymentDetails?.amountPayable)}
                   </span>
                 </div>
@@ -633,50 +644,55 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                         }
 
                         {instalment.feedback && instalment.feedback.slice().reverse().map((flag: any, index: any) => (
-                          <div key={index} className="bg-[#09090b] p-3 flex gap-2 items-center">
-                            <div className="relative group w-[90px] h-[90px]">
-                              <img
-                                src={instalment?.receiptUrls?.[instalment.feedback.length-1 - index]?.url}
-                                alt="Fee_Receipt"
-                                className="w-[90px] h-[90px] rounded-lg object-contain bg-white py-1"
-                              />
-                              <div
-                                className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                                onClick={() => handleViewReciept(instalment?.receiptUrls?.[instalment.feedback.length-1 - index]?.url)}
-                              >
-                                <Eye className="text-white w-7 h-7" />
+                          <div key={index} className="bg-[#09090b] p-3 flex gap-1 items-center">
+                            <div className="flex gap-2 items-center">
+                              <div className="relative group w-[90px] h-[90px]">
+                                <img
+                                  src={instalment?.receiptUrls?.[instalment.feedback.length-1 - index]?.url}
+                                  alt="Fee_Receipt"
+                                  className="w-[90px] h-[90px] rounded-lg object-contain bg-white py-1"
+                                />
+                                <div
+                                  className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                  onClick={() => handleViewReciept(instalment?.receiptUrls?.[instalment.feedback.length-1 - index]?.url)}
+                                >
+                                  <Eye className="text-white w-7 h-7" />
+                                </div>
+                              </div>
+                              <div className="text-xs">
+                                <div className="text-[#F53F3F]">Your previously attached Acknowledgement Receipt has been marked invalid.</div>
+                                <div className="mt-1.5">Kindly upload a scanned copy of the receipt issued to you by our fee manager for this specific instalment.</div>
+                                <div className="hidden sm:block mt-2 text-muted-foreground">Reason: {flag?.feedbackData?.[0]}</div>
                               </div>
                             </div>
-                            <div className="text-xs">
-                              <div className="text-[#F53F3F]">Your previously attached Acknowledgement Receipt has been marked invalid.</div>
-                              <div className="mt-1.5">Kindly upload a scanned copy of the receipt issued to you by our fee manager for this specific instalment.</div>
-                              <div className="mt-2 text-muted-foreground">Reason: {flag?.feedbackData?.[0]}</div>
-                            </div>
+                            <div className="sm:hidden text-xs mt-2 text-muted-foreground">Reason: {flag?.feedbackData?.[0]}</div>
                           </div>
                         ))}
 
-                        <div className="p-3 rounded-lg text-sm text-white/70 space-y-1">
+                        <div className="p-3 rounded-lg space-y-1 sm:space-y-3">
                           <p className="font-medium text-base text-white">Fee Breakdown</p>
-                          <div className="flex justify-between text-sm">
-                            <span>Base Fee</span>
-                            <span>
-                              ₹
-                              {formatAmount(instalment?.baseFee + instalment?.scholarshipAmount)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span>GST</span>
-                            <span>
-                              ₹{formatAmount(instalment?.baseFee * 0.18)}
-                            </span>
-                          </div>
-                          {instalment.scholarshipAmount > 0 && (
-                            <div className="flex justify-between text-[#F53F3F] text-sm">
-                              <span>Scholarship Amount</span>
-                              <span>- ₹{formatAmount(instalment?.scholarshipAmount)}</span>
+                          <div className="text-sm text-white/70 space-y-0 sm:space-y-1.5">
+                            <div className="flex justify-between text-sm">
+                              <span>Base Fee</span>
+                              <span>
+                                ₹
+                                {formatAmount(instalment?.baseFee + instalment?.scholarshipAmount)}
+                              </span>
                             </div>
-                          )}
-                          <div className="flex justify-between text-lg sm:text-xl pt-1 border-t border-white/10">
+                            <div className="flex justify-between text-sm">
+                              <span>GST</span>
+                              <span>
+                                ₹{formatAmount(instalment?.baseFee * 0.18)}
+                              </span>
+                            </div>
+                            {instalment.scholarshipAmount > 0 && (
+                              <div className="flex justify-between text-[#F53F3F] text-sm">
+                                <span>Scholarship Amount</span>
+                                <span>- ₹{formatAmount(instalment?.scholarshipAmount)}</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex justify-between text-lg sm:text-xl pt-1">
                             <span className="font-medium text-white">Total</span>
                             <span className="font-medium text-[#1388FF]">
                               ₹{formatAmount(instalment?.amountPayable)}

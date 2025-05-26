@@ -355,6 +355,9 @@ const ApplicationDetailsForm: React.FC = () => {
     async function fetchData() {
       try {
         // 1. Load all programs, centres, and cohorts
+
+        console.log("api call");
+
         const programsData = await getPrograms();
         setPrograms(programsData.data);
 
@@ -465,8 +468,9 @@ const ApplicationDetailsForm: React.FC = () => {
     const fetchStudentData = async () => {
       if (studentData._id)
         try {
+          console.log("1111");
           const student = await getCurrentStudent(studentData._id);
-          // console.log("dbab",student);
+          console.log("dbab",student);
           if (
             student?.appliedCohorts[student?.appliedCohorts.length - 1]
               ?.status === "enrolled"
@@ -785,10 +789,10 @@ const ApplicationDetailsForm: React.FC = () => {
     fetchStudentData();
   }, [
     studentData,
-    interest,
-    fetchedStudentData?.appliedCohorts,
-    reset,
-    navigate,
+    // interest,
+    // fetchedStudentData?.appliedCohorts,
+    // reset,
+    // navigate,
   ]);
 
   //   useEffect(() => {

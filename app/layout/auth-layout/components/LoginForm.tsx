@@ -53,7 +53,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ }) => {
       setLoading(true);
       console.log("Submitted data:", data);
       const res = await loginOTP(data);
-      console.log("Error:", res);
+      // console.log("Error:", res);
       setEmail(data.email);
       setShowOtp(true);
     } catch (error: any) {
