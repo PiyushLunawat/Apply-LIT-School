@@ -290,8 +290,6 @@ const ApplicationDetailsForm: React.FC = () => {
   const [otpLoading, setOtpLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
-  const [interest, setInterest] = useState<any[]>([]);
-  const [cohorts, setCohorts] = useState<any[]>([]);
   const [contactInfo, setContactInfo] = useState<string>("");
   const [isSaved, setIsSaved] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -348,12 +346,11 @@ const ApplicationDetailsForm: React.FC = () => {
     };
   }, []);
 
+  // FIXED: Single data fetching useEffect
   useEffect(() => {
     async function fetchData() {
       try {
-        // 1. Load all programs, centres, and cohorts
-
-        console.log("api call");
+        console.log("Fetching programs, centres, and cohorts...");
 
         const programsData = await getPrograms();
         setPrograms(programsData.data);
@@ -363,42 +360,30 @@ const ApplicationDetailsForm: React.FC = () => {
 
         const cohortsData = await getCohorts();
 
-        // 2. Filter only OPEN cohorts
+        // Filter only OPEN cohorts
         const open = cohortsData.data.filter(
           (cohort: any) => cohort.status === "Open"
         );
         setOpenCohorts(open);
 
-        // 3. Extract unique program IDs from openCohorts
+        // Extract unique program IDs from openCohorts
         const uniquePrograms = Array.from(
           new Set(open.map((cohort: any) => cohort.programDetail))
         );
         setAvailablePrograms(uniquePrograms);
+
+        console.log("Data fetched successfully:", {
+          programs: programsData.data.length,
+          centres: centresData.data.length,
+          openCohorts: open.length,
+          availablePrograms: uniquePrograms.length,
+        });
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     }
 
     fetchData();
-  }, []);
-
-  useEffect(() => {
-    async function fetchCohorts() {
-      try {
-        const programsData = await getPrograms();
-        setPrograms(programsData.data);
-        const centresData = await getCentres();
-        setCentres(centresData.data);
-        const cohortsData = await getCohorts();
-        const openCohorts = cohortsData.data.filter(
-          (cohort: any) => cohort.status === "Open"
-        );
-        setInterest(openCohorts);
-      } catch (error) {
-        console.error("Error fetching cohorts:", error);
-      }
-    }
-    fetchCohorts();
   }, []);
 
   const form = useForm<FormData>({
@@ -414,11 +399,16 @@ const ApplicationDetailsForm: React.FC = () => {
     watch,
   } = form;
 
+  // FIXED: Single filtering useEffect with proper dependencies
   useEffect(() => {
     const selectedProgram = form.watch("studentData.courseOfInterest");
+    console.log("Selected program changed:", selectedProgram);
+
     if (!selectedProgram) {
       // No program chosen yet—empty the "Select Cohort" list
       setFilteredCohorts([]);
+      // Also clear the cohort selection
+      form.setValue("studentData.cohort", "");
       return;
     }
 
@@ -426,8 +416,13 @@ const ApplicationDetailsForm: React.FC = () => {
     const matching = openCohorts.filter(
       (cohort) => cohort.programDetail === selectedProgram
     );
+
+    console.log("Filtered cohorts:", matching.length);
     setFilteredCohorts(matching);
-  }, [form, openCohorts]);
+
+    // Clear cohort selection when program changes
+    form.setValue("studentData.cohort", "");
+  }, [form.watch("studentData.courseOfInterest"), openCohorts, form]);
 
   // Move the watched value outside the useEffect
   const currentStatus = form.watch("studentData.currentStatus");
@@ -465,9 +460,9 @@ const ApplicationDetailsForm: React.FC = () => {
     const fetchStudentData = async () => {
       if (studentData._id)
         try {
-          console.log("1111");
+          console.log("Fetching student data...");
           const student = await getCurrentStudent(studentData._id);
-          console.log("dbab", student);
+          console.log("Student data:", student);
           if (
             student?.appliedCohorts[student?.appliedCohorts.length - 1]
               ?.status === "enrolled"
@@ -786,31 +781,6 @@ const ApplicationDetailsForm: React.FC = () => {
     fetchStudentData();
   }, [studentData]);
 
-  //   useEffect(() => {
-  //   // If we don't have studentData yet, or if there's no user ID,
-  //   // skip until we have the data we need
-  //   if (!studentData || !studentData._id || interest) return;
-
-  //   // Check if something already exists in localStorage
-  //   const existingData = localStorage.getItem("applicationDetailsForm");
-
-  //   // If nothing is stored yet, we create a minimal object with those three fields
-  //   if (!existingData) {
-  //     const initialForm = {
-  //       // Only the fields you want to seed
-  //       studentData: {
-  //         currentStatus: studentData?.qualification || "",
-  //         courseOfInterest: studentData?.program || "",
-  //         cohort: studentData?.cohort || "",
-  //       },
-  //       // Everything else can remain empty or undefined
-  //       applicationData: {},
-  //     };
-
-  //     localStorage.setItem("applicationDetailsForm", JSON.stringify(initialForm));
-  //   }
-  // }, [studentData, interest]);
-
   useEffect(() => {
     const storedFormJSON = localStorage.getItem(
       `applicationDetailsForm-${studentData?.email}`
@@ -892,17 +862,6 @@ const ApplicationDetailsForm: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    // Filter cohorts by selected program
-    if (form.watch("studentData.courseOfInterest")) {
-      const filteredCohorts = interest.filter(
-        (interest) =>
-          interest?.programDetail === form.watch("studentData.courseOfInterest")
-      );
-      setCohorts(filteredCohorts);
-    }
-  }, [form, interest]);
-
   const getProgramName = (programId: string) => {
     const program = programs.find((p) => p._id === programId);
     return program ? program.name : "--";
@@ -961,7 +920,7 @@ const ApplicationDetailsForm: React.FC = () => {
         studentId: sId,
         cohortId: cId,
       };
-      console.log("sdfdv", feePayLoad);
+      console.log("Payment payload:", feePayLoad);
 
       const feeResponse = await payApplicationFee(feePayLoad);
       console.log("Fee payment response:", feeResponse);
@@ -1127,7 +1086,11 @@ const ApplicationDetailsForm: React.FC = () => {
   };
 
   const onSubmit = async (data: FormData) => {
-    console.log("save", fetchedStudentData?.applicationDetails, isSaved);
+    console.log(
+      "Submitting form:",
+      fetchedStudentData?.applicationDetails,
+      isSaved
+    );
     await submitData(data, true);
   };
 
@@ -1340,7 +1303,10 @@ const ApplicationDetailsForm: React.FC = () => {
                     <FormControl>
                       <Select
                         disabled={isSaved}
-                        onValueChange={(value) => field.onChange(value)}
+                        onValueChange={(value) => {
+                          console.log("Course of interest changed to:", value);
+                          field.onChange(value);
+                        }}
                         value={field.value}
                       >
                         <SelectTrigger>
@@ -1398,7 +1364,10 @@ const ApplicationDetailsForm: React.FC = () => {
                     <FormControl>
                       <Select
                         disabled={isSaved}
-                        onValueChange={(value) => field.onChange(value)}
+                        onValueChange={(value) => {
+                          console.log("Cohort changed to:", value);
+                          field.onChange(value);
+                        }}
                         value={field.value}
                       >
                         <SelectTrigger>
