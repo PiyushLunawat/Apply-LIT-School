@@ -313,14 +313,9 @@ const ApplicationDetailsForm: React.FC = () => {
 
   // All open cohorts from the server
   const [openCohorts, setOpenCohorts] = useState<any[]>([]);
-
-  // Unique Program IDs extracted from openCohorts for the "Course of Interest" dropdown
   const [availablePrograms, setAvailablePrograms] = useState<any[]>([]);
-
-  // Cohorts filtered by the user's chosen program
   const [filteredCohorts, setFilteredCohorts] = useState<any[]>([]);
 
-  // Use Firebase Auth Hook
   const { initializeRecaptcha, sendOTP, clearRecaptcha, isReady } =
     useFirebaseAuth();
 
@@ -352,9 +347,6 @@ const ApplicationDetailsForm: React.FC = () => {
   useEffect(() => {
     async function fetchData() {
       try {
-        // 1. Load all programs, centres, and cohorts
-
-        console.log("api call");
 
         const programsData = await getPrograms();
         setPrograms(programsData.data);
@@ -384,30 +376,6 @@ const ApplicationDetailsForm: React.FC = () => {
     fetchData();
   }, []);
 
-  // useEffect(() => {
-  //   async function fetchCohorts() {
-  //     try {
-  //       const programsData = await getPrograms();
-  //       setPrograms(programsData.data);
-        
-  //       const centresData = await getCentres();
-  //       setCentres(centresData.data);
-        
-  //       const cohortsData = await getCohorts();
-  //       const openCohorts = cohortsData.data.filter(
-  //         (cohort: any) => cohort.status === "Open"
-  //       );
-  //       console.log("cohorts:", openCohorts);
-  //       setInterest(openCohorts);
-  //     } catch (error) {
-  //       console.error("Error fetching cohorts:", error);
-  //     }
-  //   }
-  //   if (!interest) {
-  //     fetchCohorts(); // now runs only when interest is falsy
-  //   }
-  // }, [!interest]);
-
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
   });
@@ -424,19 +392,16 @@ const ApplicationDetailsForm: React.FC = () => {
   useEffect(() => {
     const selectedProgram = form.watch("studentData.courseOfInterest");
     if (!selectedProgram) {
-      // No program chosen yet—empty the "Select Cohort" list
       setFilteredCohorts([]);
       return;
     }
 
-    // Filter openCohorts by the chosen program ID
     const matching = openCohorts.filter(
       (cohort) => cohort.programDetail === selectedProgram
     );
     setFilteredCohorts(matching);
   }, [form.watch("studentData.courseOfInterest"), openCohorts]);
 
-  // Move the watched value outside the useEffect
   const currentStatus = form.watch("studentData.currentStatus");
 
   useEffect(() => {
@@ -499,10 +464,7 @@ const ApplicationDetailsForm: React.FC = () => {
               ?.status === "dropped"
           ) {
             navigate("../../application/new-application");
-          } else {
-            navigate("../../application");
           }
-
           setFetchedStudentData(student);
 
           const sData =
