@@ -66,12 +66,12 @@ const formSchema = z
     studentData: z.object({
       firstName: z.string().optional(),
       lastName: z.string().optional(),
-      email: z.string().optional(),
-      contact: z.string().optional(),
-      dob: z.string(),
-      currentStatus: z.string(),
-      courseOfInterest: z.string(),
-      cohort: z.string(),
+      email: z.string().nonempty("Email is required"),
+      contact: z.string().nonempty("Contact number is required"),
+      dob: z.string().nonempty("Date of birth is required"),
+      currentStatus: z.string().nonempty("Qualification is required"),
+      courseOfInterest: z.string().nonempty("Course of interest is required"),
+      cohort: z.string().nonempty("Cohort is required"),
       isMobileVerified: z.boolean().optional(),
       linkedInUrl: z.string().optional(),
       instagramUrl: z.string().optional(),
@@ -427,7 +427,7 @@ const ApplicationDetailsForm: React.FC = () => {
       (cohort) => cohort.programDetail === selectedProgram
     );
     setFilteredCohorts(matching);
-  }, [form, openCohorts]);
+  }, [form.watch("studentData.courseOfInterest"), openCohorts]);
 
   // Move the watched value outside the useEffect
   const currentStatus = form.watch("studentData.currentStatus");
@@ -784,7 +784,11 @@ const ApplicationDetailsForm: React.FC = () => {
     };
 
     fetchStudentData();
-  }, [studentData]);
+  }, [studentData,
+    interest,
+    reset,
+    navigate,
+  ]);
 
   //   useEffect(() => {
   //   // If we don't have studentData yet, or if there's no user ID,
@@ -921,7 +925,7 @@ const ApplicationDetailsForm: React.FC = () => {
   const handleContinueToDashboard = () => {
     window.location.href = "/application/task";
     setSuccessDialogOpen(false);
-    localStorage.removeItem(`applicationDetailsForm-${studentData?.email}`);
+    // localStorage.removeItem(`applicationDetailsForm-${studentData?.email}`);
   };
 
   const loadScript = (src: string): Promise<boolean> => {
@@ -983,9 +987,11 @@ const ApplicationDetailsForm: React.FC = () => {
             );
             console.log("Payment verification response:", verifyResponse);
 
-            if (verifyResponse.success) {
+            if (verifyResponse.data.latestStatus === "paid") {
               setIsPaymentDone(true);
               setSuccessDialogOpen(true);
+            } else {
+              setFailedDialogOpen(true);
             }
           } catch (verificationError) {
             console.error("Error verifying payment:", verificationError);
@@ -1027,22 +1033,22 @@ const ApplicationDetailsForm: React.FC = () => {
     const apiPayload = {
       cohortId: data.studentData?.cohort,
       studentDetailId:
-        studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]
+        fetchedStudentData?.appliedCohorts[fetchedStudentData?.appliedCohorts.length - 1]
           ?.applicationDetails?.studentDetails?._id,
       studentData: {
         firstName: studentData?.firstName || "",
         lastName: studentData?.lastName || "",
-        mobileNumber: studentData?.mobileNumber || "",
-        isMobileVerified: studentData?.isMobileVerified || false,
+        mobileNumber: data.studentData?.contact || studentData?.mobileNumber || "",
+        isMobileVerified: data.studentData?.isMobileVerified || studentData?.isMobileVerified || false,
         email: studentData?.email || "",
-        qualification:
+        qualification: data.studentData.currentStatus ||
           studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]
             ?.qualification || "",
         program: data.studentData?.courseOfInterest || "",
         cohort: data.studentData?.cohort || "",
         gender: data.studentData.gender,
         isVerified: studentData?.isVerified || false,
-        dateOfBirth: new Date(studentData?.dateOfBirth || Date.now()),
+        dateOfBirth: new Date(data.studentData.dob || studentData?.dateOfBirth),
         profileImage: [],
         linkedInUrl: data.studentData.linkedInUrl || "",
         instagramUrl: data.studentData.instagramUrl || "",
@@ -1104,10 +1110,11 @@ const ApplicationDetailsForm: React.FC = () => {
         setSaveLoading(true);
       }
 
+      console.log("apiPayload",apiPayload);
       const response = await submitApplication(apiPayload);
+      console.log("Form submitted successfully", response);
 
       if (isSubmit) {
-        console.log("Form submitted successfully", response);
         setIsPaymentDialogOpen(true);
         setIsSaved(true);
       } else {
@@ -1116,7 +1123,8 @@ const ApplicationDetailsForm: React.FC = () => {
       }
     } catch (error) {
       console.error("Error submitting application:", error);
-      setFailedDialogOpen(true);
+      if (isSubmit)
+        setFailedDialogOpen(true);
     } finally {
       if (isSubmit) {
         setLoading(false);
