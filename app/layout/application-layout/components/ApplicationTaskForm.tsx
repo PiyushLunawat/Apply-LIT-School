@@ -442,7 +442,7 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
                       value={field.value}
                     />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className='pl-3'/>
                 </FormItem>
               )}
             />
@@ -464,7 +464,7 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
                       value={field.value}
                     />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className='pl-3'/>
                 </FormItem>
               )}
             />
@@ -629,7 +629,7 @@ export default function ApplicationTaskForm({ student }: ApplicationTaskFormProp
             size="xl"
             className="w-full sm:w-fit space-y-1 order-1 sm:order-2"
             type="submit"
-            disabled={loading || uploading || !isValid}
+            disabled={loading || uploading}
           >
             {loading ? 'Submitting...' : 'Submit Application'}
           </Button>
@@ -671,6 +671,14 @@ const TaskConfigItem: React.FC<TaskConfigItemProps> = ({
 }) => {
   const fieldName = `tasks.${taskIndex}.configItems.${configIndex}.answer`;
 
+  const getErrorMessage = (error: any, index?: number) => {
+    if (error?.type === 'too_small') return 'This field is required';
+    if (error?.type === 'invalid_type') return 'This field is required';
+    if (error?.type === 'invalid_url') return 'Invalid URL format';
+    if (error?.type === 'too_big') return `Maximum ${configItem.characterLimit} characters`;
+    return error?.message || 'Invalid value';
+  };
+
   const wordLimitHandler = ( event: React.ChangeEvent<HTMLTextAreaElement>, field: any, maxWordLimit: number ) => {
     const text = event.target.value;
     const wordCount = text.split(/\s+/).filter(Boolean).length;
@@ -687,7 +695,7 @@ const TaskConfigItem: React.FC<TaskConfigItemProps> = ({
         <FormField
           control={control}
           name={fieldName}
-          render={({ field }) => (
+          render={({ field, fieldState }) => (
             <FormItem>
               <FormControl>
                 <Textarea
@@ -697,7 +705,11 @@ const TaskConfigItem: React.FC<TaskConfigItemProps> = ({
                   value={field.value}
                 />
               </FormControl>
-              <FormMessage />
+              {fieldState.error && (
+                <p className="text-red-500 text-sm pl-3">
+                  {getErrorMessage(fieldState.error)}
+                </p>
+              )}
             </FormItem>
           )}
         />
@@ -729,33 +741,41 @@ const TaskConfigItem: React.FC<TaskConfigItemProps> = ({
               <FormControl>
                 <div className="flex flex-col space-y-2 mt-2">
                   {Array.from({ length: configItem.characterLimit || 1 }).map(
-                    (_, index) => (
-                      <div key={index} className="relative">
-                        <Input
-                          type="url"
-                          className={`w-full text-white text-base mt-2 pl-10 ${
-                            fieldState.error ? 'border-red-500' : ''
-                          }`}
-                          placeholder={`Enter URL ${index + 1}`}
-                          value={field.value?.[index] || ''}
-                          onChange={(e) => {
-                            const newLinks = [...(field.value || [])];
-                            newLinks[index] = e.target.value;
-                            field.onChange(newLinks);
-                          }}
-                        />
-                        <Link2Icon className="absolute left-3 top-[30px] w-5 h-5" />
-                      </div>
-                    )
+                    (_, index) => {
+                      const error = Array.isArray(fieldState.error)
+                        ? fieldState.error[index]
+                        : fieldState.error;
+                        return(
+                  <div key={index} className="relative">
+                    <Input
+                      className={`w-full text-white text-base mt-2 pl-10 ${
+                        fieldState.error ? 'border-red-500' : ''
+                      }`}
+                      placeholder={`Enter URL ${index + 1}`}
+                      value={field.value?.[index] || ''}
+                      onChange={(e) => {
+                        const newLinks = [...(field.value || [])];
+                        newLinks[index] = e.target.value;
+                        field.onChange(newLinks);
+                      }}
+                    />
+                    <Link2Icon className="absolute left-3 top-[30px] w-5 h-5" />
+                    {error && (
+                      <p className="text-red-500 text-sm pl-3 mt-1">
+                        {getErrorMessage(error)}
+                      </p>
+                    )}
+                  </div>
+                )}
                   )}
                 </div>
               </FormControl>
               {fieldState.error && (
-                <p className="text-red-500 text-sm">
+                <p className="text-red-500 text-sm pl-3">
                   {fieldState.error.message || 'Please enter a valid URL'}
                 </p>
               )}
-              <FormMessage />
+              <FormMessage className='pl-3'/>
             </FormItem>
           )}
         />
