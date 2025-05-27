@@ -41,7 +41,7 @@ export const ApplicationStatus: React.FC = () => {
             const res = await getCurrentStudent(studentData._id);
             console.log("res",res);
 
-            if (student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status === 'dropped'){
+            if (res?.appliedCohorts[res?.appliedCohorts.length - 1]?.status === 'dropped'){
               navigate('../../new-application');
             } else if (res?.appliedCohorts[res?.appliedCohorts.length - 1]?.status === 'enrolled'){
               navigate('../../dashboard');
