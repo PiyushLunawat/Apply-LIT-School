@@ -33,6 +33,7 @@ import {
   PaymentSuccessDialog,
 } from "~/components/molecules/PaymentDialog/PaymentDialog";
 import { Button } from "~/components/ui/button";
+import DateSelector from "~/components/ui/date-selector";
 import { Dialog, DialogContent, DialogTitle } from "~/components/ui/dialog";
 import {
   Form,
@@ -51,7 +52,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import { Skeleton } from "~/components/ui/skeleton";
 import { UserContext } from "~/context/UserContext";
 import { useFirebaseAuth } from "~/hooks/use-firebase-auth";
 import { VerifyOTP } from "~/layout/auth-layout/components/VerifyOTP";
@@ -291,8 +291,6 @@ const ApplicationDetailsForm: React.FC = () => {
   const [otpLoading, setOtpLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
-  const [interest, setInterest] = useState<any[]>([]);
-  const [cohorts, setCohorts] = useState<any[]>([]);
   const [contactInfo, setContactInfo] = useState<string>("");
   const [isSaved, setIsSaved] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -313,9 +311,14 @@ const ApplicationDetailsForm: React.FC = () => {
 
   // All open cohorts from the server
   const [openCohorts, setOpenCohorts] = useState<any[]>([]);
+
+  // Unique Program IDs extracted from openCohorts for the "Course of Interest" dropdown
   const [availablePrograms, setAvailablePrograms] = useState<any[]>([]);
+
+  // Cohorts filtered by the user's chosen program
   const [filteredCohorts, setFilteredCohorts] = useState<any[]>([]);
 
+  // Use Firebase Auth Hook
   const { initializeRecaptcha, sendOTP, clearRecaptcha, isReady } =
     useFirebaseAuth();
 
@@ -344,9 +347,11 @@ const ApplicationDetailsForm: React.FC = () => {
     };
   }, []);
 
+  // FIXED: Single data fetching useEffect
   useEffect(() => {
     async function fetchData() {
       try {
+        console.log("Fetching programs, centres, and cohorts...");
 
         const programsData = await getPrograms();
         setPrograms(programsData.data);
@@ -356,18 +361,24 @@ const ApplicationDetailsForm: React.FC = () => {
 
         const cohortsData = await getCohorts();
 
-        // 2. Filter only OPEN cohorts
+        // Filter only OPEN cohorts
         const open = cohortsData.data.filter(
           (cohort: any) => cohort.status === "Open"
         );
         setOpenCohorts(open);
-        setInterest(open);
 
-        // 3. Extract unique program IDs from openCohorts
+        // Extract unique program IDs from openCohorts
         const uniquePrograms = Array.from(
           new Set(open.map((cohort: any) => cohort.programDetail))
         );
         setAvailablePrograms(uniquePrograms);
+
+        console.log("Data fetched successfully:", {
+          programs: programsData.data.length,
+          centres: centresData.data.length,
+          openCohorts: open.length,
+          availablePrograms: uniquePrograms.length,
+        });
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -389,19 +400,32 @@ const ApplicationDetailsForm: React.FC = () => {
     watch,
   } = form;
 
+  // FIXED: Single filtering useEffect with proper dependencies and cohort clearing
   useEffect(() => {
     const selectedProgram = form.watch("studentData.courseOfInterest");
+    console.log("Selected program changed:", selectedProgram);
+
     if (!selectedProgram) {
+      // No program chosen yet—empty the "Select Cohort" list
       setFilteredCohorts([]);
+      // Also clear the cohort selection
+      form.setValue("studentData.cohort", "");
       return;
     }
 
+    // Filter openCohorts by the chosen program ID
     const matching = openCohorts.filter(
       (cohort) => cohort.programDetail === selectedProgram
     );
-    setFilteredCohorts(matching);
-  }, [form.watch("studentData.courseOfInterest"), openCohorts]);
 
+    console.log("Filtered cohorts:", matching.length);
+    setFilteredCohorts(matching);
+
+    // Clear cohort selection when program changes
+    form.setValue("studentData.cohort", "");
+  }, [form.watch("studentData.courseOfInterest"), openCohorts, form]);
+
+  // Move the watched value outside the useEffect
   const currentStatus = form.watch("studentData.currentStatus");
 
   useEffect(() => {
@@ -435,10 +459,11 @@ const ApplicationDetailsForm: React.FC = () => {
 
   useEffect(() => {
     const fetchStudentData = async () => {
-      if (studentData._id && interest)
+      if (studentData._id && openCohorts.length > 0 && openCohorts.length > 0)
         try {
           const student = await getCurrentStudent(studentData._id);
-          // console.log("dbab", student);
+          console.log("Student data fetched:", student);
+
           if (
             student?.appliedCohorts[student?.appliedCohorts.length - 1]
               ?.status === "enrolled"
@@ -464,7 +489,10 @@ const ApplicationDetailsForm: React.FC = () => {
               ?.status === "dropped"
           ) {
             navigate("../../application/new-application");
+          } else {
+            navigate("../../application");
           }
+
           setFetchedStudentData(student);
 
           const sData =
@@ -752,36 +780,7 @@ const ApplicationDetailsForm: React.FC = () => {
     };
 
     fetchStudentData();
-  }, [studentData,
-    interest,
-    reset,
-    navigate,
-  ]);
-
-  //   useEffect(() => {
-  //   // If we don't have studentData yet, or if there's no user ID,
-  //   // skip until we have the data we need
-  //   if (!studentData || !studentData._id || interest) return;
-
-  //   // Check if something already exists in localStorage
-  //   const existingData = localStorage.getItem("applicationDetailsForm");
-
-  //   // If nothing is stored yet, we create a minimal object with those three fields
-  //   if (!existingData) {
-  //     const initialForm = {
-  //       // Only the fields you want to seed
-  //       studentData: {
-  //         currentStatus: studentData?.qualification || "",
-  //         courseOfInterest: studentData?.program || "",
-  //         cohort: studentData?.cohort || "",
-  //       },
-  //       // Everything else can remain empty or undefined
-  //       applicationData: {},
-  //     };
-
-  //     localStorage.setItem("applicationDetailsForm", JSON.stringify(initialForm));
-  //   }
-  // }, [studentData, interest]);
+  }, [studentData, openCohorts, reset, navigate, openCohorts, reset, navigate]);
 
   useEffect(() => {
     const storedFormJSON = localStorage.getItem(
@@ -864,17 +863,6 @@ const ApplicationDetailsForm: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    // Filter cohorts by selected program
-    if (form.watch("studentData.courseOfInterest")) {
-      const filteredCohorts = interest.filter(
-        (interest) =>
-          interest?.programDetail === form.watch("studentData.courseOfInterest")
-      );
-      setCohorts(filteredCohorts);
-    }
-  }, [form.watch("studentData.courseOfInterest"), interest]);
-
   const getProgramName = (programId: string) => {
     const program = programs.find((p) => p._id === programId);
     return program ? program.name : "--";
@@ -893,7 +881,7 @@ const ApplicationDetailsForm: React.FC = () => {
   const handleContinueToDashboard = () => {
     window.location.href = "/application/task";
     setSuccessDialogOpen(false);
-    // localStorage.removeItem(`applicationDetailsForm-${studentData?.email}`);
+    localStorage.removeItem(`applicationDetailsForm-${studentData?.email}`);
   };
 
   const loadScript = (src: string): Promise<boolean> => {
@@ -933,7 +921,7 @@ const ApplicationDetailsForm: React.FC = () => {
         studentId: sId,
         cohortId: cId,
       };
-      console.log("sdfdv", feePayLoad);
+      console.log("Payment payload:", feePayLoad);
 
       const feeResponse = await payApplicationFee(feePayLoad);
       console.log("Fee payment response:", feeResponse);
@@ -1001,17 +989,24 @@ const ApplicationDetailsForm: React.FC = () => {
     const apiPayload = {
       cohortId: data.studentData?.cohort,
       studentDetailId:
-        fetchedStudentData?.appliedCohorts[fetchedStudentData?.appliedCohorts.length - 1]
-          ?.applicationDetails?.studentDetails?._id,
+        fetchedStudentData?.appliedCohorts[
+          fetchedStudentData?.appliedCohorts.length - 1
+        ]?.applicationDetails?.studentDetails?._id,
       studentData: {
         firstName: studentData?.firstName || "",
         lastName: studentData?.lastName || "",
-        mobileNumber: data.studentData?.contact || studentData?.mobileNumber || "",
-        isMobileVerified: data.studentData?.isMobileVerified || studentData?.isMobileVerified || false,
+        mobileNumber:
+          data.studentData?.contact || studentData?.mobileNumber || "",
+        isMobileVerified:
+          data.studentData?.isMobileVerified ||
+          studentData?.isMobileVerified ||
+          false,
         email: studentData?.email || "",
-        qualification: data.studentData.currentStatus ||
+        qualification:
+          data.studentData.currentStatus ||
           studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]
-            ?.qualification || "",
+            ?.qualification ||
+          "",
         program: data.studentData?.courseOfInterest || "",
         cohort: data.studentData?.cohort || "",
         gender: data.studentData.gender,
@@ -1078,8 +1073,10 @@ const ApplicationDetailsForm: React.FC = () => {
         setSaveLoading(true);
       }
 
-      console.log("apiPayload",apiPayload);
+      console.log("apiPayload", apiPayload);
+      console.log("apiPayload", apiPayload);
       const response = await submitApplication(apiPayload);
+      console.log("Form submitted successfully", response);
       console.log("Form submitted successfully", response);
 
       if (isSubmit) {
@@ -1091,8 +1088,7 @@ const ApplicationDetailsForm: React.FC = () => {
       }
     } catch (error) {
       console.error("Error submitting application:", error);
-      if (isSubmit)
-        setFailedDialogOpen(true);
+      if (isSubmit) setFailedDialogOpen(true);
     } finally {
       if (isSubmit) {
         setLoading(false);
@@ -1103,7 +1099,11 @@ const ApplicationDetailsForm: React.FC = () => {
   };
 
   const onSubmit = async (data: FormData) => {
-    console.log("save", fetchedStudentData?.applicationDetails, isSaved);
+    console.log(
+      "Submitting form:",
+      fetchedStudentData?.applicationDetails,
+      isSaved
+    );
     await submitData(data, true);
   };
 
@@ -1113,445 +1113,468 @@ const ApplicationDetailsForm: React.FC = () => {
   };
 
   return (
-    <> 
-      {!(fetchedStudentData && interest) ? 
-        <div className="">
-          <Skeleton className="h-[100px] w-full rounded-xl" />
-          <Skeleton className="h-[100px] w-full rounded-xl" />
-        </div> :
-        <Form {...form}>
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="flex flex-col gap-6 mt-8"
-          >
-            <div ref={topRef} />
-            <div className="flex-1 bg-[#00A3FF]/[0.2] text-[#00A3FF] text-center py-4 mt-10 text-2xl rounded-full">
-              Personal Details
-            </div>
-            <div className="flex flex-col gap-4 sm:gap-6">
-              {/* Full Name */}
-              <FormField
-                control={control}
-                name="studentData.firstName"
-                render={({ field }) => (
-                  <FormItem className="flex-1 space-y-1">
-                    <Label className="text-sm font-normal pl-3">Full Name</Label>
-                    <FormControl>
-                      <Input
-                        id="fullName"
-                        value={
-                          (fetchedStudentData?.firstName || "") +
-                          " " +
-                          (fetchedStudentData?.lastName || "")
-                        }
-                        placeholder="John Doe"
-                        disabled
-                      />
-                    </FormControl>
-                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                {/* Email */}
-                <FormField
-                  control={control}
-                  name="studentData.email"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1 relative">
-                      <CheckCircle className="text-[#00CC92] absolute left-3 top-[46px] w-5 h-5 " />
-                      <Label className="text-sm font-normal pl-3">Email</Label>
-                      <FormControl>
-                        <Input
-                          id="email"
-                          type="email"
-                          disabled
-                          placeholder="johndoe@gmail.com"
-                          className="pl-10"
-                          value={fetchedStudentData?.email || ""}
-                        />
-                      </FormControl>
-                      <Mail className="absolute right-3 top-[42px] w-5 h-5 " />
-                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                    </FormItem>
-                  )}
-                />
-                {/* Contact */}
-                <FormField
-                  control={control}
-                  name="studentData.contact"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1 relative">
-                      {fetchedStudentData?.isMobileVerified ? (
-                        <CheckCircle className="text-[#00CC92] absolute left-3 top-[46px] w-5 h-5 " />
-                      ) : (
-                        <Phone className="absolute left-3 top-[46px] w-5 h-5 " />
-                      )}
-                      <Label className="text-sm font-normal pl-3">
-                        Contact No.
-                      </Label>
-                      <FormControl>
-                        <Input
-                          disabled={
-                            isSaved || fetchedStudentData?.isMobileVerified
-                          }
-                          id="contact"
-                          type="tel"
-                          placeholder="+91 95568 97688"
-                          className="pl-10"
-                          maxLength={13}
-                          defaultValue={
-                            fetchedStudentData?.mobileNumber ||
-                            studentData?.mobileNumber ||
-                            "--"
-                          }
-                          {...field}
-                        />
-                      </FormControl>
-                      {fetchedStudentData?.isMobileVerified ? (
-                        <Phone className="absolute right-3 top-[42px] w-5 h-5" />
-                      ) : (
-                        <Button
-                          size="sm"
-                          className="absolute right-3 top-9 rounded-full px-4 font-normal bg-[#2C2C2C] hover:bg-[#2C2C2C]/80"
-                          disabled={otpLoading}
-                          onClick={() =>
-                            handleVerifyClick(
-                              field.value || studentData?.mobileNumber
-                            )
-                          }
-                          type="button"
-                        >
-                          {otpLoading ? "Sending OTP..." : "VERIFY"}
-                        </Button>
-                      )}
-                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                {/* Date of Birth */}
-                <FormField
-                  control={control}
-                  name="studentData.dob"
-                  render={({ field }) => {
-                    const maxDate = new Date();
-                    maxDate.setFullYear(maxDate.getFullYear() - 16); // Subtract 16 years from today's date
-                    const maxDateString = maxDate.toISOString().split("T")[0];
-                    return (
-                      <FormItem className="flex-1 flex flex-col space-y-1 relative">
-                        <Label className="text-sm font-normal pl-3">
-                          Date of Birth
-                        </Label>
-                        <FormControl>
-                          <input
-                            type="date"
-                            disabled={isSaved}
-                            className="w-full !h-[64px] bg-[#09090B] px-3 uppercase rounded-xl border"
-                            id="dob"
-                            name="dateOfBirth"
-                            value={field.value || ""}
-                            onChange={(e) => {
-                              field.onChange(e.target.value);
-                            }}
-                            max={maxDateString}
-                          />
-                        </FormControl>
-                        <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                      </FormItem>
-                    );
-                  }}
-                />
-                {/* Currently a */}
-                <FormField
-                  control={control}
-                  name="studentData.currentStatus"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 flex flex-col space-y-1 relative">
-                      <Label className="text-sm font-normal pl-3">
-                        You are Currently a
-                      </Label>
-                      <FormControl>
-                        <Select
-                          disabled={isSaved}
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Student">Student</SelectItem>
-                            <SelectItem value="Highschool Graduate">
-                              Highschool Graduate
-                            </SelectItem>
-                            <SelectItem value="College Graduate">
-                              College Graduate
-                            </SelectItem>
-                            <SelectItem value="Working Professional">
-                              Working Professional
-                            </SelectItem>
-                            <SelectItem value="Freelancer">Freelancer</SelectItem>
-                            <SelectItem value="Business Owner">
-                              Business Owner
-                            </SelectItem>
-                            <SelectItem value="Consultant">Consultant</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                {/* Course of Interest */}
-                <FormField
-                  control={control}
-                  name="studentData.courseOfInterest"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1">
-                      <Label className="text-sm font-normal pl-3">
-                        Course of Interest
-                      </Label>
-                      <FormControl>
-                        <Select
-                          disabled={isSaved}
-                          onValueChange={(value) => field.onChange(value)}
-                          value={field.value}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a Program" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem
-                              key={
-                                fetchedStudentData?.appliedCohorts?.[
-                                  fetchedStudentData?.appliedCohorts.length - 1
-                                ]?.cohortId?.programDetail?._id
-                              }
-                              value={
-                                fetchedStudentData?.appliedCohorts?.[
-                                  fetchedStudentData?.appliedCohorts.length - 1
-                                ]?.cohortId?.programDetail?._id
-                              }
-                            >
-                              {
-                                fetchedStudentData?.appliedCohorts?.[
-                                  fetchedStudentData?.appliedCohorts.length - 1
-                                ]?.cohortId?.programDetail?.name
-                              }
-                            </SelectItem>
-                            {availablePrograms
-                              .filter(
-                                (programId) =>
-                                  programId !==
-                                  fetchedStudentData?.appliedCohorts?.[
-                                    fetchedStudentData?.appliedCohorts.length - 1
-                                  ]?.cohortId?.programDetail?._id
-                              )
-                              .map((programId) => (
-                                <SelectItem key={programId} value={programId}>
-                                  {getProgramName(programId)}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Select Cohort */}
-                <FormField
-                  control={control}
-                  name="studentData.cohort"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1">
-                      <Label className="text-sm font-normal pl-3">
-                        Select Cohort
-                      </Label>
-                      <FormControl>
-                        <Select
-                          disabled={isSaved}
-                          onValueChange={(value) => field.onChange(value)}
-                          value={field.value}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem
-                              key={
-                                fetchedStudentData?.appliedCohorts?.[
-                                  fetchedStudentData?.appliedCohorts.length - 1
-                                ]?.cohortId._id
-                              }
-                              value={
-                                fetchedStudentData?.appliedCohorts?.[
-                                  fetchedStudentData?.appliedCohorts.length - 1
-                                ]?.cohortId._id
-                              }
-                            >
-                              {formatDateToMonthYear(
-                                fetchedStudentData?.appliedCohorts?.[
-                                  fetchedStudentData?.appliedCohorts.length - 1
-                                ]?.cohortId.startDate
-                              )}{" "}
-                              (
-                              {
-                                fetchedStudentData?.appliedCohorts?.[
-                                  fetchedStudentData?.appliedCohorts.length - 1
-                                ]?.cohortId.timeSlot
-                              }
-                              ),{" "}
-                              {getCenterName(
-                                fetchedStudentData?.appliedCohorts?.[
-                                  fetchedStudentData?.appliedCohorts.length - 1
-                                ]?.cohortId.centerDetail
-                              )}
-                            </SelectItem>
-                            {filteredCohorts
-                              .filter(
-                                (cohort) =>
-                                  cohort._id !==
-                                  fetchedStudentData?.appliedCohorts?.[
-                                    fetchedStudentData?.appliedCohorts.length - 1
-                                  ]?.cohortId._id
-                              )
-                              .map((cohort) => (
-                                <SelectItem key={cohort._id} value={cohort._id}>
-                                  {formatDateToMonthYear(cohort.startDate)} (
-                                  {cohort.timeSlot}),{" "}
-                                  {getCenterName(cohort.centerDetail)}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-              {/* LinkedIn ID */}
-              <FormField
-                control={control}
-                name="studentData.linkedInUrl"
-                render={({ field }) => (
-                  <FormItem className="flex-1 space-y-1 relative">
-                    <Label className="text-sm font-normal pl-3">
-                      Your LinkedIn Profile Link (Not Compulsory)
-                    </Label>
-                    <FormControl>
-                      <Input
-                        className="pr-12"
-                        id="linkedInUrl"
-                        placeholder="https://www.linkedin.com/JohnDoe"
-                        {...field}
-                        onChange={(e) => {
-                          const newValue = e.target.value.replace(/\s/g, "");
-                          field.onChange(newValue);
-                        }}
-                        disabled={isSaved}
-                      />
-                    </FormControl>
-                    <Linkedin className="absolute right-3 top-[42px] w-5 h-5" />
-                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                  </FormItem>
-                )}
-              />
-              {/* Instagram ID */}
-              <FormField
-                control={control}
-                name="studentData.instagramUrl"
-                render={({ field }) => (
-                  <FormItem className="flex-1 space-y-1 relative">
-                    <Label className="text-sm font-normal pl-3">
-                      Your Instagram ID (Not Compulsory)
-                    </Label>
-                    <FormControl>
-                      <Input
-                        className="pr-12"
-                        id="instagramUrl"
-                        placeholder="@john_doe"
-                        {...field}
-                        onChange={(e) => {
-                          const newValue = e.target.value.replace(/\s/g, "");
-                          field.onChange(newValue);
-                        }}
-                        disabled={isSaved}
-                      />
-                    </FormControl>
-                    <Instagram className="absolute right-3 top-[42px] w-5 h-5" />
-                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Gender Selection */}
+    <>
+      <Form {...form}>
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="flex flex-col gap-6 mt-8"
+        >
+          <div ref={topRef} />
+          <div className="flex-1 bg-[#00A3FF]/[0.2] text-[#00A3FF] text-center py-4 mt-10 text-2xl rounded-full">
+            Personal Details
+          </div>
+          <div className="flex flex-col gap-4 sm:gap-6">
+            {/* Full Name */}
             <FormField
               control={control}
-              name="studentData.gender"
+              name="studentData.firstName"
               render={({ field }) => (
-                <FormItem className="flex-1 space-y-1 pl-3">
-                  <Label className="text-sm font-normal">
-                    Select Your Gender
-                  </Label>
+                <FormItem className="flex-1 space-y-1">
+                  <Label className="text-sm font-normal pl-3">Full Name</Label>
                   <FormControl>
-                    <RadioGroup
-                      disabled={isSaved}
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      className="flex space-x-6 mt-2"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="male" id="male" />
-                        <Label htmlFor="male" className="text-base font-normal">
-                          Male
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="female" id="female" />
-                        <Label htmlFor="female" className="text-base font-normal">
-                          Female
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="other" id="other" />
-                        <Label htmlFor="other" className="text-base font-normal">
-                          Other
-                        </Label>
-                      </div>
-                    </RadioGroup>
+                    <Input
+                      id="fullName"
+                      value={
+                        (fetchedStudentData?.firstName || "") +
+                        " " +
+                        (fetchedStudentData?.lastName || "")
+                      }
+                      placeholder="John Doe"
+                      disabled
+                    />
                   </FormControl>
                   <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
                 </FormItem>
               )}
             />
 
-            {/* Current Address */}
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
+              {/* Email */}
+              <FormField
+                control={control}
+                name="studentData.email"
+                render={({ field }) => (
+                  <FormItem className="flex-1 space-y-1 relative">
+                    <CheckCircle className="text-[#00CC92] absolute left-3 top-[46px] w-5 h-5 " />
+                    <Label className="text-sm font-normal pl-3">Email</Label>
+                    <FormControl>
+                      <Input
+                        id="email"
+                        type="email"
+                        disabled
+                        placeholder="johndoe@gmail.com"
+                        className="pl-10"
+                        value={fetchedStudentData?.email || ""}
+                      />
+                    </FormControl>
+                    <Mail className="absolute right-3 top-[42px] w-5 h-5 " />
+                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                  </FormItem>
+                )}
+              />
+              {/* Contact */}
+              <FormField
+                control={control}
+                name="studentData.contact"
+                render={({ field }) => (
+                  <FormItem className="flex-1 space-y-1 relative">
+                    {fetchedStudentData?.isMobileVerified ? (
+                      <CheckCircle className="text-[#00CC92] absolute left-3 top-[46px] w-5 h-5 " />
+                    ) : (
+                      <Phone className="absolute left-3 top-[46px] w-5 h-5 " />
+                    )}
+                    <Label className="text-sm font-normal pl-3">
+                      Contact No.
+                    </Label>
+                    <FormControl>
+                      <Input
+                        disabled={
+                          isSaved || fetchedStudentData?.isMobileVerified
+                        }
+                        id="contact"
+                        type="tel"
+                        placeholder="+91 95568 97688"
+                        className="pl-10"
+                        maxLength={13}
+                        defaultValue={
+                          fetchedStudentData?.mobileNumber ||
+                          studentData?.mobileNumber ||
+                          "--"
+                        }
+                        {...field}
+                      />
+                    </FormControl>
+                    {fetchedStudentData?.isMobileVerified ? (
+                      <Phone className="absolute right-3 top-[42px] w-5 h-5" />
+                    ) : (
+                      <Button
+                        size="sm"
+                        className="absolute right-3 top-9 rounded-full px-4 font-normal bg-[#2C2C2C] hover:bg-[#2C2C2C]/80"
+                        disabled={otpLoading}
+                        onClick={() =>
+                          handleVerifyClick(
+                            field.value || studentData?.mobileNumber
+                          )
+                        }
+                        type="button"
+                      >
+                        {otpLoading ? "Sending OTP..." : "VERIFY"}
+                      </Button>
+                    )}
+                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
+              {/* Date of Birth */}
+              <FormField
+                control={control}
+                name="studentData.dob"
+                render={({ field }) => {
+                  const maxDate = new Date();
+                  maxDate.setFullYear(maxDate.getFullYear() - 16); // Subtract 16 years
+                  const maxDateString = maxDate.toISOString().split("T")[0];
+
+                  return (
+                    <FormItem className="flex-1 flex flex-col space-y-1 relative">
+                      <Label className="text-sm font-normal pl-3">
+                        Date of Birth
+                      </Label>
+                      <FormControl>
+                        <DateSelector
+                          id="dob"
+                          name="dateOfBirth"
+                          disabled={isSaved}
+                          value={field.value || ""}
+                          maxDate={maxDateString}
+                          onChange={(date) => field.onChange(date)} // Correct onChange
+                        />
+                      </FormControl>
+                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                    </FormItem>
+                  );
+                }}
+              />
+
+              {/* Currently a */}
+              <FormField
+                control={control}
+                name="studentData.currentStatus"
+                render={({ field }) => (
+                  <FormItem className="flex-1 flex flex-col space-y-1 relative">
+                    <Label className="text-sm font-normal pl-3">
+                      You are Currently a
+                    </Label>
+                    <FormControl>
+                      <Select
+                        disabled={isSaved}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Student">Student</SelectItem>
+                          <SelectItem value="Highschool Graduate">
+                            Highschool Graduate
+                          </SelectItem>
+                          <SelectItem value="College Graduate">
+                            College Graduate
+                          </SelectItem>
+                          <SelectItem value="Working Professional">
+                            Working Professional
+                          </SelectItem>
+                          <SelectItem value="Freelancer">Freelancer</SelectItem>
+                          <SelectItem value="Business Owner">
+                            Business Owner
+                          </SelectItem>
+                          <SelectItem value="Consultant">Consultant</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
+            {/* Course of Interest */}
             <FormField
               control={control}
-              name="applicationData.address"
+              name="studentData.courseOfInterest"
               render={({ field }) => (
                 <FormItem className="flex-1 space-y-1">
-                  <Label htmlFor="address" className="text-sm font-normal pl-3">
-                    Your Current Address
+                  <Label className="text-sm font-normal pl-3">
+                    Course of Interest
+                  </Label>
+                  <FormControl>
+                    <Select
+                      disabled={isSaved}
+                      onValueChange={(value) => {
+                        console.log("Course of interest changed to:", value);
+                        field.onChange(value);
+                      }}
+                      value={field.value}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a Program" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem
+                          key={
+                            fetchedStudentData?.appliedCohorts?.[
+                              fetchedStudentData?.appliedCohorts.length - 1
+                            ]?.cohortId?.programDetail?._id
+                          }
+                          value={
+                            fetchedStudentData?.appliedCohorts?.[
+                              fetchedStudentData?.appliedCohorts.length - 1
+                            ]?.cohortId?.programDetail?._id
+                          }
+                        >
+                          {
+                            fetchedStudentData?.appliedCohorts?.[
+                              fetchedStudentData?.appliedCohorts.length - 1
+                            ]?.cohortId?.programDetail?.name
+                          }
+                        </SelectItem>
+                        {availablePrograms
+                          .filter(
+                            (programId) =>
+                              programId !==
+                              fetchedStudentData?.appliedCohorts?.[
+                                fetchedStudentData?.appliedCohorts.length - 1
+                              ]?.cohortId?.programDetail?._id
+                          )
+                          .map((programId) => (
+                            <SelectItem key={programId} value={programId}>
+                              {getProgramName(programId)}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                </FormItem>
+              )}
+            />
+
+            {/* Select Cohort */}
+            <FormField
+              control={control}
+              name="studentData.cohort"
+              render={({ field }) => (
+                <FormItem className="flex-1 space-y-1">
+                  <Label className="text-sm font-normal pl-3">
+                    Select Cohort
+                  </Label>
+                  <FormControl>
+                    <Select
+                      disabled={isSaved}
+                      onValueChange={(value) => {
+                        console.log("Cohort changed to:", value);
+                        field.onChange(value);
+                      }}
+                      value={field.value}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem
+                          key={
+                            fetchedStudentData?.appliedCohorts?.[
+                              fetchedStudentData?.appliedCohorts.length - 1
+                            ]?.cohortId._id
+                          }
+                          value={
+                            fetchedStudentData?.appliedCohorts?.[
+                              fetchedStudentData?.appliedCohorts.length - 1
+                            ]?.cohortId._id
+                          }
+                        >
+                          {formatDateToMonthYear(
+                            fetchedStudentData?.appliedCohorts?.[
+                              fetchedStudentData?.appliedCohorts.length - 1
+                            ]?.cohortId.startDate
+                          )}{" "}
+                          (
+                          {
+                            fetchedStudentData?.appliedCohorts?.[
+                              fetchedStudentData?.appliedCohorts.length - 1
+                            ]?.cohortId.timeSlot
+                          }
+                          ),{" "}
+                          {getCenterName(
+                            fetchedStudentData?.appliedCohorts?.[
+                              fetchedStudentData?.appliedCohorts.length - 1
+                            ]?.cohortId.centerDetail
+                          )}
+                        </SelectItem>
+                        {filteredCohorts
+                          .filter(
+                            (cohort) =>
+                              cohort._id !==
+                              fetchedStudentData?.appliedCohorts?.[
+                                fetchedStudentData?.appliedCohorts.length - 1
+                              ]?.cohortId._id
+                          )
+                          .map((cohort) => (
+                            <SelectItem key={cohort._id} value={cohort._id}>
+                              {formatDateToMonthYear(cohort.startDate)} (
+                              {cohort.timeSlot}),{" "}
+                              {getCenterName(cohort.centerDetail)}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
+            {/* LinkedIn ID */}
+            <FormField
+              control={control}
+              name="studentData.linkedInUrl"
+              render={({ field }) => (
+                <FormItem className="flex-1 space-y-1 relative">
+                  <Label className="text-sm font-normal pl-3">
+                    Your LinkedIn Profile Link (Not Compulsory)
                   </Label>
                   <FormControl>
                     <Input
-                      id="address"
-                      placeholder="Street Address"
+                      className="pr-12"
+                      id="linkedInUrl"
+                      placeholder="https://www.linkedin.com/JohnDoe"
+                      {...field}
+                      onChange={(e) => {
+                        const newValue = e.target.value.replace(/\s/g, "");
+                        field.onChange(newValue);
+                      }}
+                      disabled={isSaved}
+                    />
+                  </FormControl>
+                  <Linkedin className="absolute right-3 top-[42px] w-5 h-5" />
+                  <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                </FormItem>
+              )}
+            />
+            {/* Instagram ID */}
+            <FormField
+              control={control}
+              name="studentData.instagramUrl"
+              render={({ field }) => (
+                <FormItem className="flex-1 space-y-1 relative">
+                  <Label className="text-sm font-normal pl-3">
+                    Your Instagram ID (Not Compulsory)
+                  </Label>
+                  <FormControl>
+                    <Input
+                      className="pr-12"
+                      id="instagramUrl"
+                      placeholder="@john_doe"
+                      {...field}
+                      onChange={(e) => {
+                        const newValue = e.target.value.replace(/\s/g, "");
+                        field.onChange(newValue);
+                      }}
+                      disabled={isSaved}
+                    />
+                  </FormControl>
+                  <Instagram className="absolute right-3 top-[42px] w-5 h-5" />
+                  <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* Gender Selection */}
+          <FormField
+            control={control}
+            name="studentData.gender"
+            render={({ field }) => (
+              <FormItem className="flex-1 space-y-1 pl-3">
+                <Label className="text-sm font-normal">
+                  Select Your Gender
+                </Label>
+                <FormControl>
+                  <RadioGroup
+                    disabled={isSaved}
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    className="flex space-x-6 mt-2"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="male" id="male" />
+                      <Label htmlFor="male" className="text-base font-normal">
+                        Male
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="female" id="female" />
+                      <Label htmlFor="female" className="text-base font-normal">
+                        Female
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="other" id="other" />
+                      <Label htmlFor="other" className="text-base font-normal">
+                        Other
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </FormControl>
+                <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+              </FormItem>
+            )}
+          />
+
+          {/* Current Address */}
+          <FormField
+            control={control}
+            name="applicationData.address"
+            render={({ field }) => (
+              <FormItem className="flex-1 space-y-1">
+                <Label htmlFor="address" className="text-sm font-normal pl-3">
+                  Your Current Address
+                </Label>
+                <FormControl>
+                  <Input
+                    id="address"
+                    placeholder="Street Address"
+                    {...field}
+                    disabled={isSaved}
+                  />
+                </FormControl>
+                <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+              </FormItem>
+            )}
+          />
+
+          {/* City and Zip Code */}
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
+            {/* City */}
+            <FormField
+              control={control}
+              name="applicationData.city"
+              render={({ field }) => (
+                <FormItem className="flex-1 space-y-1">
+                  <Label htmlFor="city" className="text-sm font-normal pl-3">
+                    City, State
+                  </Label>
+                  <FormControl>
+                    <Input
+                      id="city"
+                      placeholder="City, State"
                       {...field}
                       disabled={isSaved}
                     />
@@ -1560,22 +1583,95 @@ const ApplicationDetailsForm: React.FC = () => {
                 </FormItem>
               )}
             />
+            {/* Zip Code */}
+            <FormField
+              control={control}
+              name="applicationData.zipcode"
+              render={({ field }) => (
+                <FormItem className="flex-1 space-y-1">
+                  <Label htmlFor="zipcode" className="text-sm font-normal pl-3">
+                    Postal/Zip Code
+                  </Label>
+                  <FormControl>
+                    <Input
+                      maxLength={6}
+                      id="zipcode"
+                      placeholder="Postal/Zip Code"
+                      {...field}
+                      onInput={(e) => {
+                        const target = e.target as HTMLInputElement;
+                        target.value = target.value.replace(/[^0-9]/g, "");
+                        field.onChange(target.value);
+                      }}
+                      disabled={isSaved}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                </FormItem>
+              )}
+            />
+          </div>
 
-            {/* City and Zip Code */}
+          {/* Previous Education */}
+          <div className="flex-1 bg-[#FF791F]/[0.2] text-[#FF791F] text-center py-4 mt-10 text-2xl rounded-full">
+            Previous Education
+          </div>
+          <div className="flex flex-col gap-4 sm:gap-6">
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-              {/* City */}
+              {/* Education Level */}
               <FormField
                 control={control}
-                name="applicationData.city"
+                name="applicationData.educationLevel"
                 render={({ field }) => (
                   <FormItem className="flex-1 space-y-1">
-                    <Label htmlFor="city" className="text-sm font-normal pl-3">
-                      City, State
+                    <Label
+                      htmlFor="educationLevel"
+                      className="text-sm font-normal pl-3"
+                    >
+                      Highest Level of Education Attained
+                    </Label>
+                    <FormControl>
+                      <Select
+                        disabled={isSaved}
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="highschool">
+                            High School
+                          </SelectItem>
+                          <SelectItem value="bachelor">
+                            Bachelor&apos;s Degree
+                          </SelectItem>
+                          <SelectItem value="master">
+                            Master&apos;s Degree
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                  </FormItem>
+                )}
+              />
+              {/* Field of Study */}
+              <FormField
+                control={control}
+                name="applicationData.fieldOfStudy"
+                render={({ field }) => (
+                  <FormItem className="flex-1 space-y-1">
+                    <Label
+                      htmlFor="fieldOfStudy"
+                      className="text-sm font-normal pl-3"
+                    >
+                      Field of Study (Your Major)
                     </Label>
                     <FormControl>
                       <Input
-                        id="city"
-                        placeholder="City, State"
+                        id="fieldOfStudy"
+                        placeholder="Type here"
                         {...field}
                         disabled={isSaved}
                       />
@@ -1584,21 +1680,853 @@ const ApplicationDetailsForm: React.FC = () => {
                   </FormItem>
                 )}
               />
-              {/* Zip Code */}
+            </div>
+
+            {/* Institution Name and Graduation Year */}
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
+              {/* Institution Name */}
               <FormField
                 control={control}
-                name="applicationData.zipcode"
+                name="applicationData.institutionName"
                 render={({ field }) => (
-                  <FormItem className="flex-1 space-y-1">
-                    <Label htmlFor="zipcode" className="text-sm font-normal pl-3">
-                      Postal/Zip Code
+                  <FormItem className="flex-1 flex flex-col space-y-1 relative">
+                    <Label
+                      htmlFor="institutionName"
+                      className="text-sm font-normal pl-3"
+                    >
+                      Name of Institution
                     </Label>
                     <FormControl>
                       <Input
-                        maxLength={6}
-                        id="zipcode"
-                        placeholder="Postal/Zip Code"
+                        id="institutionName"
+                        placeholder="Type here"
                         {...field}
+                        disabled={isSaved}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                  </FormItem>
+                )}
+              />
+              {/* Graduation Year */}
+              <FormField
+                control={control}
+                name="applicationData.graduationYear"
+                render={({ field }) => (
+                  <FormItem className="flex-1 flex flex-col space-y-1">
+                    <Label
+                      htmlFor="graduationYear"
+                      className="text-sm font-normal pl-3"
+                    >
+                      Year of Graduation
+                    </Label>
+                    <FormControl>
+                      <input
+                        placeholder="MM YYYY"
+                        type="month"
+                        className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border"
+                        id="graduationYear"
+                        {...field}
+                        max={new Date().toISOString().slice(0, 7)}
+                        disabled={isSaved}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Work Experience */}
+            <FormField
+              control={control}
+              name="applicationData.isExperienced"
+              render={({ field }) => (
+                <FormItem className="flex flex-col sm:flex-row gap-2">
+                  <div className="flex-1 space-y-1 pl-3">
+                    <Label className="text-sm font-normal">
+                      Do you have any work experience?
+                    </Label>
+                    <FormControl>
+                      <RadioGroup
+                        disabled={isSaved}
+                        className="flex space-x-6 mt-2"
+                        onValueChange={(value) => {
+                          const booleanValue = value === "yes";
+                          field.onChange(booleanValue);
+                          setHasWorkExperience(booleanValue);
+                        }}
+                        value={field.value ? "yes" : "no"}
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="yes" id="yesWorkExperience" />
+                          <Label
+                            htmlFor="yesWorkExperience"
+                            className="text-base font-normal"
+                          >
+                            Yes
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="no" id="noWorkExperience" />
+                          <Label
+                            htmlFor="noWorkExperience"
+                            className="text-base font-normal"
+                          >
+                            No
+                          </Label>
+                        </div>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                  </div>
+                </FormItem>
+              )}
+            />
+
+            {/* Conditional Work Experience Section */}
+            {watchHasWorkExperience && (
+              <>
+                {/* Experience Type and Job Description */}
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
+                  {/* Experience Type */}
+                  <FormField
+                    control={control}
+                    name="applicationData.experienceType"
+                    render={({ field }) => (
+                      <FormItem className="flex-1 space-y-1">
+                        <Label
+                          htmlFor="experienceType"
+                          className="text-sm font-normal pl-3"
+                        >
+                          Select Your Latest Work Experience Type
+                        </Label>
+                        <FormControl>
+                          <Select
+                            value={field.value}
+                            disabled={isSaved}
+                            onValueChange={(value) => {
+                              field.onChange(value);
+                              setExperienceType(value as ExperienceType);
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Working Professional">
+                                Employee
+                              </SelectItem>
+                              <SelectItem value="Freelancer">
+                                Freelancer
+                              </SelectItem>
+                              <SelectItem value="Business Owner">
+                                Business Owner
+                              </SelectItem>
+                              <SelectItem value="Consultant">
+                                Consultant
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                      </FormItem>
+                    )}
+                  />
+                  {/* Job Description */}
+                  <FormField
+                    control={control}
+                    name="applicationData.jobDescription"
+                    render={({ field }) => (
+                      <FormItem className="flex-1 space-y-1">
+                        <Label
+                          htmlFor="jobDescription"
+                          className="text-sm font-normal pl-3"
+                        >
+                          Latest Job/Service Description
+                        </Label>
+                        <FormControl>
+                          <Input
+                            id="jobDescription"
+                            placeholder="Type here"
+                            {...field}
+                            disabled={isSaved}
+                          />
+                        </FormControl>
+                        <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Conditional Fields Based on Experience Type */}
+                {watchExperienceType === "Working Professional" && (
+                  <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
+                    {/* Company Name */}
+                    <FormField
+                      control={control}
+                      name="applicationData.nameOfCompany"
+                      render={({ field }) => (
+                        <FormItem className="flex-1 space-y-1">
+                          <Label
+                            htmlFor="companyName"
+                            className="text-sm font-normal pl-3"
+                          >
+                            Name of Company (Latest or Current)
+                          </Label>
+                          <FormControl>
+                            <Input
+                              id="companyName"
+                              placeholder="Type here"
+                              {...field}
+                              disabled={isSaved}
+                            />
+                          </FormControl>
+                          <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                        </FormItem>
+                      )}
+                    />
+                    {/* Work Duration */}
+                    <div className="flex-1 space-y-1">
+                      <Label
+                        htmlFor="duration"
+                        className="text-sm font-normal pl-3"
+                      >
+                        Apx. Duration of Work
+                      </Label>
+                      <div className="grid sm:flex flex-1 items-center gap-4 sm:gap-2">
+                        <FormField
+                          control={control}
+                          name="applicationData.durationFrom"
+                          render={({ field }) => (
+                            <FormItem className="flex-1 flex flex-col space-y-1">
+                              <FormControl>
+                                <Input
+                                  type="month"
+                                  id="durationFrom"
+                                  {...field}
+                                  disabled={isSaved}
+                                  max={new Date().toISOString().slice(0, 7)}
+                                  className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border"
+                                />
+                              </FormControl>
+                              <FormMessage className="text-xs sm:text-sm font-normal pl-3">
+                                {errors.applicationData?.durationFrom && (
+                                  <span className="text-red-500 text-sm">
+                                    {
+                                      errors.applicationData.durationFrom
+                                        .message
+                                    }
+                                  </span>
+                                )}
+                              </FormMessage>
+                            </FormItem>
+                          )}
+                        />
+
+                        <Minus className="w-4 h-4 mx-auto" />
+
+                        <FormField
+                          control={control}
+                          name="applicationData.durationTo"
+                          render={({ field }) => (
+                            <FormItem className="flex-1 flex flex-col space-y-1">
+                              <FormControl>
+                                <Input
+                                  type="month"
+                                  id="durationTo"
+                                  {...field}
+                                  disabled={isSaved}
+                                  min={
+                                    watch("applicationData.durationFrom") ||
+                                    undefined
+                                  }
+                                  max={new Date().toISOString().slice(0, 7)}
+                                  className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border"
+                                />
+                              </FormControl>
+                              <FormMessage className="text-xs sm:text-sm font-normal pl-3">
+                                {errors.applicationData?.durationTo && (
+                                  <span className="text-red-500">
+                                    {errors.applicationData.durationTo.message}
+                                  </span>
+                                )}
+                              </FormMessage>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {watchExperienceType === "Business Owner" && (
+                  <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
+                    {/* Company Name */}
+                    <FormField
+                      control={control}
+                      name="applicationData.nameOfCompany"
+                      render={({ field }) => (
+                        <FormItem className="flex-1 space-y-1">
+                          <Label
+                            htmlFor="companyName"
+                            className="text-sm font-normal pl-3"
+                          >
+                            Name of Company
+                          </Label>
+                          <FormControl>
+                            <Input
+                              id="companyName"
+                              placeholder="Type here"
+                              {...field}
+                              disabled={isSaved}
+                            />
+                          </FormControl>
+                          <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                        </FormItem>
+                      )}
+                    />
+                    {/* Company Start Date */}
+                    <FormField
+                      control={control}
+                      name="applicationData.duration"
+                      render={({ field }) => (
+                        <FormItem className="flex-1 flex flex-col">
+                          <Label
+                            htmlFor="companyStartDate"
+                            className="text-sm font-normal pl-3"
+                          >
+                            When Did You Start Your Company?
+                          </Label>
+                          <FormControl>
+                            <input
+                              placeholder="MM/YYYY"
+                              type="month"
+                              className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border"
+                              id="companyStartDate"
+                              {...field}
+                              max={new Date().toISOString().slice(0, 7)}
+                              disabled={isSaved}
+                            />
+                          </FormControl>
+                          <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
+
+                {watchExperienceType === "Freelancer" && (
+                  <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
+                    {/* Duration of Work */}
+                    <div className="flex-1 space-y-1">
+                      <Label
+                        htmlFor="duration"
+                        className="text-sm font-normal pl-3"
+                      >
+                        Apx. Duration of Work
+                      </Label>
+                      <div className="grid sm:flex flex-1 items-start gap-2">
+                        <FormField
+                          control={control}
+                          name="applicationData.durationFrom"
+                          render={({ field }) => (
+                            <FormItem className="flex-1 flex flex-col space-y-1">
+                              <FormControl>
+                                <Input
+                                  type="month"
+                                  id="durationFrom"
+                                  {...field}
+                                  disabled={isSaved}
+                                  max={new Date().toISOString().slice(0, 7)}
+                                  className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border"
+                                />
+                              </FormControl>
+                              <FormMessage className="text-xs sm:text-sm font-normal pl-3">
+                                {errors.applicationData?.durationFrom && (
+                                  <span className="text-red-500">
+                                    {
+                                      errors.applicationData.durationFrom
+                                        .message
+                                    }
+                                  </span>
+                                )}
+                              </FormMessage>
+                            </FormItem>
+                          )}
+                        />
+
+                        <Minus className="w-4 h-16 mx-auto" />
+
+                        <FormField
+                          control={control}
+                          name="applicationData.durationTo"
+                          render={({ field }) => (
+                            <FormItem className="flex-1 flex flex-col space-y-1">
+                              <FormControl>
+                                <Input
+                                  type="month"
+                                  id="durationTo"
+                                  {...field}
+                                  disabled={isSaved}
+                                  min={
+                                    watch("applicationData.durationFrom") ||
+                                    undefined
+                                  }
+                                  max={new Date().toISOString().slice(0, 7)}
+                                  className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border"
+                                />
+                              </FormControl>
+                              <FormMessage className="text-xs sm:text-sm font-normal pl-3">
+                                {errors.applicationData?.durationTo && (
+                                  <span className="text-red-500">
+                                    {errors.applicationData.durationTo.message}
+                                  </span>
+                                )}
+                              </FormMessage>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {watchExperienceType === "Consultant" && (
+                  <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
+                    <FormField
+                      control={control}
+                      name="applicationData.nameOfCompany"
+                      render={({ field }) => (
+                        <FormItem className="flex-1 space-y-1">
+                          <Label
+                            htmlFor="companyName"
+                            className="text-sm font-normal pl-3"
+                          >
+                            Name of Company (Latest or Current)
+                          </Label>
+                          <FormControl>
+                            <Input
+                              id="companyName"
+                              placeholder="Type here"
+                              {...field}
+                              disabled={isSaved}
+                            />
+                          </FormControl>
+                          <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                        </FormItem>
+                      )}
+                    />
+                    {/* Duration of Work */}
+                    <div className="flex-1 space-y-1">
+                      <Label
+                        htmlFor="duration"
+                        className="text-sm font-normal pl-3"
+                      >
+                        Apx. Duration of Work
+                      </Label>
+                      <div className="grid sm:flex flex-1 items-center gap-2">
+                        <FormField
+                          control={control}
+                          name="applicationData.durationFrom"
+                          render={({ field }) => (
+                            <FormItem className="flex-1 flex flex-col space-y-1">
+                              <FormControl>
+                                <Input
+                                  type="month"
+                                  id="durationFrom"
+                                  {...field}
+                                  disabled={isSaved}
+                                  max={new Date().toISOString().slice(0, 7)}
+                                  className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border text-white"
+                                />
+                              </FormControl>
+                              <FormMessage className="text-xs sm:text-sm font-normal pl-3">
+                                {errors.applicationData?.durationFrom && (
+                                  <span className="text-red-500">
+                                    {
+                                      errors.applicationData.durationFrom
+                                        .message
+                                    }
+                                  </span>
+                                )}
+                              </FormMessage>
+                            </FormItem>
+                          )}
+                        />
+
+                        <Minus className="w-4 h-4 mx-auto" />
+
+                        <FormField
+                          control={control}
+                          name="applicationData.durationTo"
+                          render={({ field }) => (
+                            <FormItem className="flex-1 flex flex-col space-y-1">
+                              <FormControl>
+                                <Input
+                                  type="month"
+                                  id="durationTo"
+                                  {...field}
+                                  disabled={isSaved}
+                                  min={
+                                    watch("applicationData.durationFrom") ||
+                                    undefined
+                                  }
+                                  max={new Date().toISOString().slice(0, 7)}
+                                  className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border text-white"
+                                />
+                              </FormControl>
+                              <FormMessage className="text-xs sm:text-sm font-normal pl-3">
+                                {errors.applicationData?.durationTo && (
+                                  <span className="text-red-500">
+                                    {errors.applicationData.durationTo.message}
+                                  </span>
+                                )}
+                              </FormMessage>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Emergency Contact Details */}
+          <div className="flex-1 bg-[#00AB7B]/[0.2] text-[#00AB7B] text-center py-4 mt-10 text-2xl rounded-full">
+            Emergency Contact Details
+          </div>
+          <div className="flex flex-col gap-4 sm:gap-6">
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
+              {/* Emergency Contact First Name */}
+              <FormField
+                control={control}
+                name="applicationData.emergencyFirstName"
+                render={({ field }) => (
+                  <FormItem className="flex-1 space-y-1">
+                    <Label
+                      htmlFor="emergencyFirstName"
+                      className="text-sm font-normal pl-3"
+                    >
+                      First Name
+                    </Label>
+                    <FormControl>
+                      <Input
+                        id="emergencyFirstName"
+                        placeholder="Mary"
+                        {...field}
+                        disabled={isSaved}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                  </FormItem>
+                )}
+              />
+              {/* Emergency Contact Last Name */}
+              <FormField
+                control={control}
+                name="applicationData.emergencyLastName"
+                render={({ field }) => (
+                  <FormItem className="flex-1 space-y-1">
+                    <Label
+                      htmlFor="emergencyLastName"
+                      className="text-sm font-normal pl-3"
+                    >
+                      Last Name
+                    </Label>
+                    <FormControl>
+                      <Input
+                        id="emergencyLastName"
+                        placeholder="Smith"
+                        {...field}
+                        disabled={isSaved}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
+              {/* Emergency Contact Number */}
+              <FormField
+                control={control}
+                name="applicationData.emergencyContact"
+                render={({ field }) => (
+                  <FormItem className="flex-1 space-y-1 relative">
+                    <Label
+                      htmlFor="emergencyContact"
+                      className="text-sm font-normal pl-3"
+                    >
+                      Contact No.
+                    </Label>
+                    <div className="absolute left-3 top-[40.5px]">+91</div>
+                    <FormControl>
+                      <Input
+                        id="emergencyContact"
+                        type="tel"
+                        className="px-10"
+                        placeholder="00000 00000"
+                        {...field}
+                        maxLength={10}
+                        value={field.value}
+                        onInput={(e) => {
+                          const target = e.target as HTMLInputElement;
+                          target.value = target.value.replace(/[^0-9]/g, "");
+                          field.onChange(target.value);
+                        }}
+                        disabled={isSaved}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                  </FormItem>
+                )}
+              />
+              {/* Relationship */}
+              <FormField
+                control={control}
+                name="applicationData.relationship"
+                render={({ field }) => (
+                  <FormItem className="flex-1 space-y-1">
+                    <Label
+                      htmlFor="relationship"
+                      className="text-sm font-normal pl-3"
+                    >
+                      Relationship with Contact
+                    </Label>
+                    <FormControl>
+                      <Input
+                        id="relationship"
+                        placeholder="Father/Mother/Sibling"
+                        {...field}
+                        disabled={isSaved}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+
+          {/* Parental Information */}
+          <div className="flex-1 bg-[#FA69E5]/[0.2] text-[#FA69E5] text-center py-4 mt-10 text-2xl rounded-full">
+            Parental Information
+          </div>
+          <div className="flex flex-col gap-4 sm:gap-6">
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
+              {/* Father's First Name */}
+              <FormField
+                control={control}
+                name="applicationData.fatherFirstName"
+                render={({ field }) => (
+                  <FormItem className="flex-1 space-y-1">
+                    <Label
+                      htmlFor="fatherFirstName"
+                      className="text-sm font-normal pl-3"
+                    >
+                      Father&apos;s First Name
+                    </Label>
+                    <FormControl>
+                      <Input
+                        id="fatherFirstName"
+                        placeholder="Richard"
+                        {...field}
+                        disabled={isSaved}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                  </FormItem>
+                )}
+              />
+              {/* Father's Last Name */}
+              <FormField
+                control={control}
+                name="applicationData.fatherLastName"
+                render={({ field }) => (
+                  <FormItem className="flex-1 space-y-1">
+                    <Label
+                      htmlFor="fatherLastName"
+                      className="text-sm font-normal pl-3"
+                    >
+                      Father&apos;s Last Name
+                    </Label>
+                    <FormControl>
+                      <Input
+                        id="fatherLastName"
+                        placeholder="Doe"
+                        {...field}
+                        disabled={isSaved}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
+              {/* Father's Contact Number */}
+              <FormField
+                control={control}
+                name="applicationData.fatherContact"
+                render={({ field }) => (
+                  <FormItem className="flex-1 space-y-1 relative">
+                    <Label
+                      htmlFor="fatherContact"
+                      className="text-sm font-normal pl-3"
+                    >
+                      Father&apos;s Contact No.
+                    </Label>
+                    <div className="absolute left-3 top-[40.5px]">+91</div>
+                    <FormControl>
+                      <Input
+                        id="fatherContact"
+                        type="tel"
+                        className="px-10"
+                        placeholder="00000 00000"
+                        {...field}
+                        maxLength={10}
+                        value={field.value}
+                        onInput={(e) => {
+                          const target = e.target as HTMLInputElement;
+                          target.value = target.value.replace(/[^0-9]/g, "");
+                          field.onChange(target.value);
+                        }}
+                        disabled={isSaved}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                  </FormItem>
+                )}
+              />
+              {/* Father's Occupation */}
+              <FormField
+                control={control}
+                name="applicationData.fatherOccupation"
+                render={({ field }) => (
+                  <FormItem className="flex-1 space-y-1">
+                    <Label
+                      htmlFor="fatherOccupation"
+                      className="text-sm font-normal pl-3"
+                    >
+                      Father&apos;s Occupation
+                    </Label>
+                    <FormControl>
+                      <Input
+                        id="fatherOccupation"
+                        placeholder="Type here"
+                        {...field}
+                        disabled={isSaved}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
+              {/* Father's Email */}
+              <FormField
+                control={control}
+                name="applicationData.fatherEmail"
+                render={({ field }) => (
+                  <FormItem className="flex-1 space-y-1">
+                    <Label
+                      htmlFor="fatherEmail"
+                      className="text-sm font-normal pl-3"
+                    >
+                      Father&apos;s Email
+                    </Label>
+                    <FormControl>
+                      <Input
+                        id="fatherEmail"
+                        placeholder="richard@gmail.com"
+                        {...field}
+                        disabled={isSaved}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                  </FormItem>
+                )}
+              />
+              {/* Mother's First Name */}
+              <FormField
+                control={control}
+                name="applicationData.motherFirstName"
+                render={({ field }) => (
+                  <FormItem className="flex-1 space-y-1">
+                    <Label
+                      htmlFor="motherFirstName"
+                      className="text-sm font-normal pl-3"
+                    >
+                      Mother&apos;s First Name
+                    </Label>
+                    <FormControl>
+                      <Input
+                        id="motherFirstName"
+                        placeholder="Jane"
+                        {...field}
+                        disabled={isSaved}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
+              {/* Mother's Last Name */}
+              <FormField
+                control={control}
+                name="applicationData.motherLastName"
+                render={({ field }) => (
+                  <FormItem className="flex-1 space-y-1">
+                    <Label
+                      htmlFor="motherLastName"
+                      className="text-sm font-normal pl-3"
+                    >
+                      Mother&apos;s Last Name
+                    </Label>
+                    <FormControl>
+                      <Input
+                        id="motherLastName"
+                        placeholder="Doe"
+                        {...field}
+                        disabled={isSaved}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                  </FormItem>
+                )}
+              />
+              {/* Mother's Contact Number */}
+              <FormField
+                control={control}
+                name="applicationData.motherContact"
+                render={({ field }) => (
+                  <FormItem className="flex-1 space-y-1 relative">
+                    <Label
+                      htmlFor="motherContact"
+                      className="text-sm font-normal pl-3"
+                    >
+                      Mother&apos;s Contact No.
+                    </Label>
+                    <div className="absolute left-3 top-[40.5px]">+91</div>
+                    <FormControl>
+                      <Input
+                        id="motherContact"
+                        type="tel"
+                        className="px-10"
+                        placeholder="00000 00000"
+                        {...field}
+                        maxLength={10}
+                        value={field.value}
                         onInput={(e) => {
                           const target = e.target as HTMLInputElement;
                           target.value = target.value.replace(/[^0-9]/g, "");
@@ -1613,1160 +2541,230 @@ const ApplicationDetailsForm: React.FC = () => {
               />
             </div>
 
-            {/* Previous Education */}
-            <div className="flex-1 bg-[#FF791F]/[0.2] text-[#FF791F] text-center py-4 mt-10 text-2xl rounded-full">
-              Previous Education
-            </div>
-            <div className="flex flex-col gap-4 sm:gap-6">
-              <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                {/* Education Level */}
-                <FormField
-                  control={control}
-                  name="applicationData.educationLevel"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1">
-                      <Label
-                        htmlFor="educationLevel"
-                        className="text-sm font-normal pl-3"
-                      >
-                        Highest Level of Education Attained
-                      </Label>
-                      <FormControl>
-                        <Select
-                          disabled={isSaved}
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="highschool">
-                              High School
-                            </SelectItem>
-                            <SelectItem value="bachelor">
-                              Bachelor&apos;s Degree
-                            </SelectItem>
-                            <SelectItem value="master">
-                              Master&apos;s Degree
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                    </FormItem>
-                  )}
-                />
-                {/* Field of Study */}
-                <FormField
-                  control={control}
-                  name="applicationData.fieldOfStudy"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1">
-                      <Label
-                        htmlFor="fieldOfStudy"
-                        className="text-sm font-normal pl-3"
-                      >
-                        Field of Study (Your Major)
-                      </Label>
-                      <FormControl>
-                        <Input
-                          id="fieldOfStudy"
-                          placeholder="Type here"
-                          {...field}
-                          disabled={isSaved}
-                        />
-                      </FormControl>
-                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {/* Institution Name and Graduation Year */}
-              <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                {/* Institution Name */}
-                <FormField
-                  control={control}
-                  name="applicationData.institutionName"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 flex flex-col space-y-1 relative">
-                      <Label
-                        htmlFor="institutionName"
-                        className="text-sm font-normal pl-3"
-                      >
-                        Name of Institution
-                      </Label>
-                      <FormControl>
-                        <Input
-                          id="institutionName"
-                          placeholder="Type here"
-                          {...field}
-                          disabled={isSaved}
-                        />
-                      </FormControl>
-                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                    </FormItem>
-                  )}
-                />
-                {/* Graduation Year */}
-                <FormField
-                  control={control}
-                  name="applicationData.graduationYear"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 flex flex-col space-y-1">
-                      <Label
-                        htmlFor="graduationYear"
-                        className="text-sm font-normal pl-3"
-                      >
-                        Year of Graduation
-                      </Label>
-                      <FormControl>
-                        <input
-                          placeholder="MM YYYY"
-                          type="month"
-                          className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border"
-                          id="graduationYear"
-                          {...field}
-                          max={new Date().toISOString().slice(0, 7)}
-                          disabled={isSaved}
-                        />
-                      </FormControl>
-                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {/* Work Experience */}
-              <FormField
-                control={control}
-                name="applicationData.isExperienced"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col sm:flex-row gap-2">
-                    <div className="flex-1 space-y-1 pl-3">
-                      <Label className="text-sm font-normal">
-                        Do you have any work experience?
-                      </Label>
-                      <FormControl>
-                        <RadioGroup
-                          disabled={isSaved}
-                          className="flex space-x-6 mt-2"
-                          onValueChange={(value) => {
-                            const booleanValue = value === "yes";
-                            field.onChange(booleanValue);
-                            setHasWorkExperience(booleanValue);
-                          }}
-                          value={field.value ? "yes" : "no"}
-                        >
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="yes" id="yesWorkExperience" />
-                            <Label
-                              htmlFor="yesWorkExperience"
-                              className="text-base font-normal"
-                            >
-                              Yes
-                            </Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="no" id="noWorkExperience" />
-                            <Label
-                              htmlFor="noWorkExperience"
-                              className="text-base font-normal"
-                            >
-                              No
-                            </Label>
-                          </div>
-                        </RadioGroup>
-                      </FormControl>
-                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                    </div>
-                  </FormItem>
-                )}
-              />
-
-              {/* Conditional Work Experience Section */}
-              {watchHasWorkExperience && (
-                <>
-                  {/* Experience Type and Job Description */}
-                  <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                    {/* Experience Type */}
-                    <FormField
-                      control={control}
-                      name="applicationData.experienceType"
-                      render={({ field }) => (
-                        <FormItem className="flex-1 space-y-1">
-                          <Label
-                            htmlFor="experienceType"
-                            className="text-sm font-normal pl-3"
-                          >
-                            Select Your Latest Work Experience Type
-                          </Label>
-                          <FormControl>
-                            <Select
-                              value={field.value}
-                              disabled={isSaved}
-                              onValueChange={(value) => {
-                                field.onChange(value);
-                                setExperienceType(value as ExperienceType);
-                              }}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="Working Professional">
-                                  Employee
-                                </SelectItem>
-                                <SelectItem value="Freelancer">
-                                  Freelancer
-                                </SelectItem>
-                                <SelectItem value="Business Owner">
-                                  Business Owner
-                                </SelectItem>
-                                <SelectItem value="Consultant">
-                                  Consultant
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </FormControl>
-                          <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                        </FormItem>
-                      )}
-                    />
-                    {/* Job Description */}
-                    <FormField
-                      control={control}
-                      name="applicationData.jobDescription"
-                      render={({ field }) => (
-                        <FormItem className="flex-1 space-y-1">
-                          <Label
-                            htmlFor="jobDescription"
-                            className="text-sm font-normal pl-3"
-                          >
-                            Latest Job/Service Description
-                          </Label>
-                          <FormControl>
-                            <Input
-                              id="jobDescription"
-                              placeholder="Type here"
-                              {...field}
-                              disabled={isSaved}
-                            />
-                          </FormControl>
-                          <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  {/* Conditional Fields Based on Experience Type */}
-                  {watchExperienceType === "Working Professional" && (
-                    <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                      {/* Company Name */}
-                      <FormField
-                        control={control}
-                        name="applicationData.nameOfCompany"
-                        render={({ field }) => (
-                          <FormItem className="flex-1 space-y-1">
-                            <Label
-                              htmlFor="companyName"
-                              className="text-sm font-normal pl-3"
-                            >
-                              Name of Company (Latest or Current)
-                            </Label>
-                            <FormControl>
-                              <Input
-                                id="companyName"
-                                placeholder="Type here"
-                                {...field}
-                                disabled={isSaved}
-                              />
-                            </FormControl>
-                            <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                          </FormItem>
-                        )}
-                      />
-                      {/* Work Duration */}
-                      <div className="flex-1 space-y-1">
-                        <Label
-                          htmlFor="duration"
-                          className="text-sm font-normal pl-3"
-                        >
-                          Apx. Duration of Work
-                        </Label>
-                        <div className="grid sm:flex flex-1 items-center gap-4 sm:gap-2">
-                          <FormField
-                            control={control}
-                            name="applicationData.durationFrom"
-                            render={({ field }) => (
-                              <FormItem className="flex-1 flex flex-col space-y-1">
-                                <FormControl>
-                                  <Input
-                                    type="month"
-                                    id="durationFrom"
-                                    {...field}
-                                    disabled={isSaved}
-                                    max={new Date().toISOString().slice(0, 7)}
-                                    className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border"
-                                  />
-                                </FormControl>
-                                <FormMessage className="text-xs sm:text-sm font-normal pl-3">
-                                  {errors.applicationData?.durationFrom && (
-                                    <span className="text-red-500 text-sm">
-                                      {
-                                        errors.applicationData.durationFrom
-                                          .message
-                                      }
-                                    </span>
-                                  )}
-                                </FormMessage>
-                              </FormItem>
-                            )}
-                          />
-
-                          <Minus className="w-4 h-4 mx-auto" />
-
-                          <FormField
-                            control={control}
-                            name="applicationData.durationTo"
-                            render={({ field }) => (
-                              <FormItem className="flex-1 flex flex-col space-y-1">
-                                <FormControl>
-                                  <Input
-                                    type="month"
-                                    id="durationTo"
-                                    {...field}
-                                    disabled={isSaved}
-                                    min={
-                                      watch("applicationData.durationFrom") ||
-                                      undefined
-                                    }
-                                    max={new Date().toISOString().slice(0, 7)}
-                                    className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border"
-                                  />
-                                </FormControl>
-                                <FormMessage className="text-xs sm:text-sm font-normal pl-3">
-                                  {errors.applicationData?.durationTo && (
-                                    <span className="text-red-500">
-                                      {errors.applicationData.durationTo.message}
-                                    </span>
-                                  )}
-                                </FormMessage>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {watchExperienceType === "Business Owner" && (
-                    <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                      {/* Company Name */}
-                      <FormField
-                        control={control}
-                        name="applicationData.nameOfCompany"
-                        render={({ field }) => (
-                          <FormItem className="flex-1 space-y-1">
-                            <Label
-                              htmlFor="companyName"
-                              className="text-sm font-normal pl-3"
-                            >
-                              Name of Company
-                            </Label>
-                            <FormControl>
-                              <Input
-                                id="companyName"
-                                placeholder="Type here"
-                                {...field}
-                                disabled={isSaved}
-                              />
-                            </FormControl>
-                            <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                          </FormItem>
-                        )}
-                      />
-                      {/* Company Start Date */}
-                      <FormField
-                        control={control}
-                        name="applicationData.duration"
-                        render={({ field }) => (
-                          <FormItem className="flex-1 flex flex-col">
-                            <Label
-                              htmlFor="companyStartDate"
-                              className="text-sm font-normal pl-3"
-                            >
-                              When Did You Start Your Company?
-                            </Label>
-                            <FormControl>
-                              <input
-                                placeholder="MM/YYYY"
-                                type="month"
-                                className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border"
-                                id="companyStartDate"
-                                {...field}
-                                max={new Date().toISOString().slice(0, 7)}
-                                disabled={isSaved}
-                              />
-                            </FormControl>
-                            <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  )}
-
-                  {watchExperienceType === "Freelancer" && (
-                    <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                      {/* Duration of Work */}
-                      <div className="flex-1 space-y-1">
-                        <Label
-                          htmlFor="duration"
-                          className="text-sm font-normal pl-3"
-                        >
-                          Apx. Duration of Work
-                        </Label>
-                        <div className="grid sm:flex flex-1 items-start gap-2">
-                          <FormField
-                            control={control}
-                            name="applicationData.durationFrom"
-                            render={({ field }) => (
-                              <FormItem className="flex-1 flex flex-col space-y-1">
-                                <FormControl>
-                                  <Input
-                                    type="month"
-                                    id="durationFrom"
-                                    {...field}
-                                    disabled={isSaved}
-                                    max={new Date().toISOString().slice(0, 7)}
-                                    className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border"
-                                  />
-                                </FormControl>
-                                <FormMessage className="text-xs sm:text-sm font-normal pl-3">
-                                  {errors.applicationData?.durationFrom && (
-                                    <span className="text-red-500">
-                                      {
-                                        errors.applicationData.durationFrom
-                                          .message
-                                      }
-                                    </span>
-                                  )}
-                                </FormMessage>
-                              </FormItem>
-                            )}
-                          />
-
-                          <Minus className="w-4 h-16 mx-auto" />
-
-                          <FormField
-                            control={control}
-                            name="applicationData.durationTo"
-                            render={({ field }) => (
-                              <FormItem className="flex-1 flex flex-col space-y-1">
-                                <FormControl>
-                                  <Input
-                                    type="month"
-                                    id="durationTo"
-                                    {...field}
-                                    disabled={isSaved}
-                                    min={
-                                      watch("applicationData.durationFrom") ||
-                                      undefined
-                                    }
-                                    max={new Date().toISOString().slice(0, 7)}
-                                    className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border"
-                                  />
-                                </FormControl>
-                                <FormMessage className="text-xs sm:text-sm font-normal pl-3">
-                                  {errors.applicationData?.durationTo && (
-                                    <span className="text-red-500">
-                                      {errors.applicationData.durationTo.message}
-                                    </span>
-                                  )}
-                                </FormMessage>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {watchExperienceType === "Consultant" && (
-                    <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                      <FormField
-                        control={control}
-                        name="applicationData.nameOfCompany"
-                        render={({ field }) => (
-                          <FormItem className="flex-1 space-y-1">
-                            <Label
-                              htmlFor="companyName"
-                              className="text-sm font-normal pl-3"
-                            >
-                              Name of Company (Latest or Current)
-                            </Label>
-                            <FormControl>
-                              <Input
-                                id="companyName"
-                                placeholder="Type here"
-                                {...field}
-                                disabled={isSaved}
-                              />
-                            </FormControl>
-                            <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                          </FormItem>
-                        )}
-                      />
-                      {/* Duration of Work */}
-                      <div className="flex-1 space-y-1">
-                        <Label
-                          htmlFor="duration"
-                          className="text-sm font-normal pl-3"
-                        >
-                          Apx. Duration of Work
-                        </Label>
-                        <div className="grid sm:flex flex-1 items-center gap-2">
-                          <FormField
-                            control={control}
-                            name="applicationData.durationFrom"
-                            render={({ field }) => (
-                              <FormItem className="flex-1 flex flex-col space-y-1">
-                                <FormControl>
-                                  <Input
-                                    type="month"
-                                    id="durationFrom"
-                                    {...field}
-                                    disabled={isSaved}
-                                    max={new Date().toISOString().slice(0, 7)}
-                                    className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border text-white"
-                                  />
-                                </FormControl>
-                                <FormMessage className="text-xs sm:text-sm font-normal pl-3">
-                                  {errors.applicationData?.durationFrom && (
-                                    <span className="text-red-500">
-                                      {
-                                        errors.applicationData.durationFrom
-                                          .message
-                                      }
-                                    </span>
-                                  )}
-                                </FormMessage>
-                              </FormItem>
-                            )}
-                          />
-
-                          <Minus className="w-4 h-4 mx-auto" />
-
-                          <FormField
-                            control={control}
-                            name="applicationData.durationTo"
-                            render={({ field }) => (
-                              <FormItem className="flex-1 flex flex-col space-y-1">
-                                <FormControl>
-                                  <Input
-                                    type="month"
-                                    id="durationTo"
-                                    {...field}
-                                    disabled={isSaved}
-                                    min={
-                                      watch("applicationData.durationFrom") ||
-                                      undefined
-                                    }
-                                    max={new Date().toISOString().slice(0, 7)}
-                                    className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border text-white"
-                                  />
-                                </FormControl>
-                                <FormMessage className="text-xs sm:text-sm font-normal pl-3">
-                                  {errors.applicationData?.durationTo && (
-                                    <span className="text-red-500">
-                                      {errors.applicationData.durationTo.message}
-                                    </span>
-                                  )}
-                                </FormMessage>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-
-            {/* Emergency Contact Details */}
-            <div className="flex-1 bg-[#00AB7B]/[0.2] text-[#00AB7B] text-center py-4 mt-10 text-2xl rounded-full">
-              Emergency Contact Details
-            </div>
-            <div className="flex flex-col gap-4 sm:gap-6">
-              <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                {/* Emergency Contact First Name */}
-                <FormField
-                  control={control}
-                  name="applicationData.emergencyFirstName"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1">
-                      <Label
-                        htmlFor="emergencyFirstName"
-                        className="text-sm font-normal pl-3"
-                      >
-                        First Name
-                      </Label>
-                      <FormControl>
-                        <Input
-                          id="emergencyFirstName"
-                          placeholder="Mary"
-                          {...field}
-                          disabled={isSaved}
-                        />
-                      </FormControl>
-                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                    </FormItem>
-                  )}
-                />
-                {/* Emergency Contact Last Name */}
-                <FormField
-                  control={control}
-                  name="applicationData.emergencyLastName"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1">
-                      <Label
-                        htmlFor="emergencyLastName"
-                        className="text-sm font-normal pl-3"
-                      >
-                        Last Name
-                      </Label>
-                      <FormControl>
-                        <Input
-                          id="emergencyLastName"
-                          placeholder="Smith"
-                          {...field}
-                          disabled={isSaved}
-                        />
-                      </FormControl>
-                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                {/* Emergency Contact Number */}
-                <FormField
-                  control={control}
-                  name="applicationData.emergencyContact"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1 relative">
-                      <Label
-                        htmlFor="emergencyContact"
-                        className="text-sm font-normal pl-3"
-                      >
-                        Contact No.
-                      </Label>
-                      <div className="absolute left-3 top-[40.5px]">+91</div>
-                      <FormControl>
-                        <Input
-                          id="emergencyContact"
-                          type="tel"
-                          className="px-10"
-                          placeholder="00000 00000"
-                          {...field}
-                          maxLength={10}
-                          value={field.value}
-                          onInput={(e) => {
-                            const target = e.target as HTMLInputElement;
-                            target.value = target.value.replace(/[^0-9]/g, "");
-                            field.onChange(target.value);
-                          }}
-                          disabled={isSaved}
-                        />
-                      </FormControl>
-                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                    </FormItem>
-                  )}
-                />
-                {/* Relationship */}
-                <FormField
-                  control={control}
-                  name="applicationData.relationship"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1">
-                      <Label
-                        htmlFor="relationship"
-                        className="text-sm font-normal pl-3"
-                      >
-                        Relationship with Contact
-                      </Label>
-                      <FormControl>
-                        <Input
-                          id="relationship"
-                          placeholder="Father/Mother/Sibling"
-                          {...field}
-                          disabled={isSaved}
-                        />
-                      </FormControl>
-                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
-            {/* Parental Information */}
-            <div className="flex-1 bg-[#FA69E5]/[0.2] text-[#FA69E5] text-center py-4 mt-10 text-2xl rounded-full">
-              Parental Information
-            </div>
-            <div className="flex flex-col gap-4 sm:gap-6">
-              <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                {/* Father's First Name */}
-                <FormField
-                  control={control}
-                  name="applicationData.fatherFirstName"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1">
-                      <Label
-                        htmlFor="fatherFirstName"
-                        className="text-sm font-normal pl-3"
-                      >
-                        Father&apos;s First Name
-                      </Label>
-                      <FormControl>
-                        <Input
-                          id="fatherFirstName"
-                          placeholder="Richard"
-                          {...field}
-                          disabled={isSaved}
-                        />
-                      </FormControl>
-                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                    </FormItem>
-                  )}
-                />
-                {/* Father's Last Name */}
-                <FormField
-                  control={control}
-                  name="applicationData.fatherLastName"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1">
-                      <Label
-                        htmlFor="fatherLastName"
-                        className="text-sm font-normal pl-3"
-                      >
-                        Father&apos;s Last Name
-                      </Label>
-                      <FormControl>
-                        <Input
-                          id="fatherLastName"
-                          placeholder="Doe"
-                          {...field}
-                          disabled={isSaved}
-                        />
-                      </FormControl>
-                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                {/* Father's Contact Number */}
-                <FormField
-                  control={control}
-                  name="applicationData.fatherContact"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1 relative">
-                      <Label
-                        htmlFor="fatherContact"
-                        className="text-sm font-normal pl-3"
-                      >
-                        Father&apos;s Contact No.
-                      </Label>
-                      <div className="absolute left-3 top-[40.5px]">+91</div>
-                      <FormControl>
-                        <Input
-                          id="fatherContact"
-                          type="tel"
-                          className="px-10"
-                          placeholder="00000 00000"
-                          {...field}
-                          maxLength={10}
-                          value={field.value}
-                          onInput={(e) => {
-                            const target = e.target as HTMLInputElement;
-                            target.value = target.value.replace(/[^0-9]/g, "");
-                            field.onChange(target.value);
-                          }}
-                          disabled={isSaved}
-                        />
-                      </FormControl>
-                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                    </FormItem>
-                  )}
-                />
-                {/* Father's Occupation */}
-                <FormField
-                  control={control}
-                  name="applicationData.fatherOccupation"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1">
-                      <Label
-                        htmlFor="fatherOccupation"
-                        className="text-sm font-normal pl-3"
-                      >
-                        Father&apos;s Occupation
-                      </Label>
-                      <FormControl>
-                        <Input
-                          id="fatherOccupation"
-                          placeholder="Type here"
-                          {...field}
-                          disabled={isSaved}
-                        />
-                      </FormControl>
-                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                {/* Father's Email */}
-                <FormField
-                  control={control}
-                  name="applicationData.fatherEmail"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1">
-                      <Label
-                        htmlFor="fatherEmail"
-                        className="text-sm font-normal pl-3"
-                      >
-                        Father&apos;s Email
-                      </Label>
-                      <FormControl>
-                        <Input
-                          id="fatherEmail"
-                          placeholder="richard@gmail.com"
-                          {...field}
-                          disabled={isSaved}
-                        />
-                      </FormControl>
-                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                    </FormItem>
-                  )}
-                />
-                {/* Mother's First Name */}
-                <FormField
-                  control={control}
-                  name="applicationData.motherFirstName"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1">
-                      <Label
-                        htmlFor="motherFirstName"
-                        className="text-sm font-normal pl-3"
-                      >
-                        Mother&apos;s First Name
-                      </Label>
-                      <FormControl>
-                        <Input
-                          id="motherFirstName"
-                          placeholder="Jane"
-                          {...field}
-                          disabled={isSaved}
-                        />
-                      </FormControl>
-                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                {/* Mother's Last Name */}
-                <FormField
-                  control={control}
-                  name="applicationData.motherLastName"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1">
-                      <Label
-                        htmlFor="motherLastName"
-                        className="text-sm font-normal pl-3"
-                      >
-                        Mother&apos;s Last Name
-                      </Label>
-                      <FormControl>
-                        <Input
-                          id="motherLastName"
-                          placeholder="Doe"
-                          {...field}
-                          disabled={isSaved}
-                        />
-                      </FormControl>
-                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                    </FormItem>
-                  )}
-                />
-                {/* Mother's Contact Number */}
-                <FormField
-                  control={control}
-                  name="applicationData.motherContact"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1 relative">
-                      <Label
-                        htmlFor="motherContact"
-                        className="text-sm font-normal pl-3"
-                      >
-                        Mother&apos;s Contact No.
-                      </Label>
-                      <div className="absolute left-3 top-[40.5px]">+91</div>
-                      <FormControl>
-                        <Input
-                          id="motherContact"
-                          type="tel"
-                          className="px-10"
-                          placeholder="00000 00000"
-                          {...field}
-                          maxLength={10}
-                          value={field.value}
-                          onInput={(e) => {
-                            const target = e.target as HTMLInputElement;
-                            target.value = target.value.replace(/[^0-9]/g, "");
-                            field.onChange(target.value);
-                          }}
-                          disabled={isSaved}
-                        />
-                      </FormControl>
-                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                {/* Mother's Occupation */}
-                <FormField
-                  control={control}
-                  name="applicationData.motherOccupation"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1">
-                      <Label
-                        htmlFor="motherOccupation"
-                        className="text-sm font-normal pl-3"
-                      >
-                        Mother&apos;s Occupation
-                      </Label>
-                      <FormControl>
-                        <Input
-                          id="motherOccupation"
-                          placeholder="Type here"
-                          {...field}
-                          disabled={isSaved}
-                        />
-                      </FormControl>
-                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                    </FormItem>
-                  )}
-                />
-                {/* Mother's Email */}
-                <FormField
-                  control={control}
-                  name="applicationData.motherEmail"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1">
-                      <Label
-                        htmlFor="motherEmail"
-                        className="text-sm font-normal pl-3"
-                      >
-                        Mother&apos;s Email
-                      </Label>
-                      <FormControl>
-                        <Input
-                          id="motherEmail"
-                          placeholder="jane@gmail.com"
-                          {...field}
-                          disabled={isSaved}
-                        />
-                      </FormControl>
-                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-              {/* Financially Dependent */}
+              {/* Mother's Occupation */}
               <FormField
                 control={control}
-                name="applicationData.financiallyDependent"
+                name="applicationData.motherOccupation"
                 render={({ field }) => (
-                  <FormItem className="flex-1 space-y-1 p-4 sm:p-6 bg-[#27272A]/[0.6] rounded-2xl">
-                    <Label className="text-sm font-normal">
-                      Are you financially dependent on your Parents?
+                  <FormItem className="flex-1 space-y-1">
+                    <Label
+                      htmlFor="motherOccupation"
+                      className="text-sm font-normal pl-3"
+                    >
+                      Mother&apos;s Occupation
                     </Label>
                     <FormControl>
-                      <RadioGroup
+                      <Input
+                        id="motherOccupation"
+                        placeholder="Type here"
+                        {...field}
                         disabled={isSaved}
-                        className="flex space-x-6 mt-2"
-                        onValueChange={(value) => field.onChange(value === "yes")}
-                        value={field.value ? "yes" : "no"}
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem
-                            value="yes"
-                            id="yesFinanciallyDependent"
-                          />
-                          <Label
-                            htmlFor="yesFinanciallyDependent"
-                            className="text-base font-normal"
-                          >
-                            Yes
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem
-                            value="no"
-                            id="noFinanciallyDependent"
-                          />
-                          <Label
-                            htmlFor="noFinanciallyDependent"
-                            className="text-base font-normal"
-                          >
-                            No
-                          </Label>
-                        </div>
-                      </RadioGroup>
+                      />
                     </FormControl>
                     <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
                   </FormItem>
                 )}
               />
-              {/* Applied for Financial Aid */}
+              {/* Mother's Email */}
               <FormField
                 control={control}
-                name="applicationData.appliedForFinancialAid"
+                name="applicationData.motherEmail"
                 render={({ field }) => (
-                  <FormItem className="flex-1 space-y-1 p-4 sm:p-6 bg-[#27272A]/[0.6] rounded-2xl">
-                    <Label className="text-sm font-normal">
-                      Have you tried applying for financial aid earlier?
+                  <FormItem className="flex-1 space-y-1">
+                    <Label
+                      htmlFor="motherEmail"
+                      className="text-sm font-normal pl-3"
+                    >
+                      Mother&apos;s Email
                     </Label>
                     <FormControl>
-                      <RadioGroup
+                      <Input
+                        id="motherEmail"
+                        placeholder="jane@gmail.com"
+                        {...field}
                         disabled={isSaved}
-                        className="flex space-x-6 mt-2"
-                        onValueChange={(value) => field.onChange(value === "yes")}
-                        value={field.value ? "yes" : "no"}
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="yes" id="yesFinancialAid" />
-                          <Label
-                            htmlFor="yesFinancialAid"
-                            className="text-base font-normal"
-                          >
-                            Yes
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="no" id="noFinancialAid" />
-                          <Label
-                            htmlFor="noFinancialAid"
-                            className="text-base font-normal"
-                          >
-                            No
-                          </Label>
-                        </div>
-                      </RadioGroup>
+                      />
                     </FormControl>
                     <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
                   </FormItem>
                 )}
               />
             </div>
+          </div>
 
-            <div
-              className={`flex flex-col sm:flex-row ${
-                isSaved ? "justify-end" : "justify-between"
-              } items-center mt-10 space-y-4 sm:space-y-0 sm:space-x-4`}
-            >
-              {/* Submit/Payment Button */}
-              {isPaymentDone ? (
-                <Button
-                  size="xl"
-                  className="w-full sm:w-fit px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90 order-1 sm:order-2"
-                  type="button"
-                  onClick={() => handleContinueToDashboard()}
-                  disabled={loading}
-                >
-                  {loading ? "Redirecting..." : "Continue to Dashboard"}
-                </Button>
-              ) : isSaved ? (
-                <Button
-                  size="xl"
-                  className="w-full sm:w-fit px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90 order-1 sm:order-2"
-                  type="button"
-                  onClick={() => handlePayment()}
-                  disabled={loading}
-                >
-                  {loading
-                    ? "Initializing Payment..."
-                    : `Pay INR ₹${applicationFees || 0}.00`}
-                </Button>
-              ) : (
-                <Button
-                  size="xl"
-                  className="w-full sm:w-fit px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90 order-1 sm:order-2"
-                  type="submit"
-                  disabled={loading}
-                >
-                  <div className="flex items-center gap-2">
-                    <SaveIcon className="w-5 h-5" />
-                    {loading
-                      ? "Submitting..."
-                      : `Submit and Pay INR ₹${applicationFees || 0}.00`}
-                  </div>
-                </Button>
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
+            {/* Financially Dependent */}
+            <FormField
+              control={control}
+              name="applicationData.financiallyDependent"
+              render={({ field }) => (
+                <FormItem className="flex-1 space-y-1 p-4 sm:p-6 bg-[#27272A]/[0.6] rounded-2xl">
+                  <Label className="text-sm font-normal">
+                    Are you financially dependent on your Parents?
+                  </Label>
+                  <FormControl>
+                    <RadioGroup
+                      disabled={isSaved}
+                      className="flex space-x-6 mt-2"
+                      onValueChange={(value) => field.onChange(value === "yes")}
+                      value={field.value ? "yes" : "no"}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem
+                          value="yes"
+                          id="yesFinanciallyDependent"
+                        />
+                        <Label
+                          htmlFor="yesFinanciallyDependent"
+                          className="text-base font-normal"
+                        >
+                          Yes
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem
+                          value="no"
+                          id="noFinanciallyDependent"
+                        />
+                        <Label
+                          htmlFor="noFinanciallyDependent"
+                          className="text-base font-normal"
+                        >
+                          No
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                </FormItem>
               )}
+            />
+            {/* Applied for Financial Aid */}
+            <FormField
+              control={control}
+              name="applicationData.appliedForFinancialAid"
+              render={({ field }) => (
+                <FormItem className="flex-1 space-y-1 p-4 sm:p-6 bg-[#27272A]/[0.6] rounded-2xl">
+                  <Label className="text-sm font-normal">
+                    Have you tried applying for financial aid earlier?
+                  </Label>
+                  <FormControl>
+                    <RadioGroup
+                      disabled={isSaved}
+                      className="flex space-x-6 mt-2"
+                      onValueChange={(value) => field.onChange(value === "yes")}
+                      value={field.value ? "yes" : "no"}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="yes" id="yesFinancialAid" />
+                        <Label
+                          htmlFor="yesFinancialAid"
+                          className="text-base font-normal"
+                        >
+                          Yes
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="no" id="noFinancialAid" />
+                        <Label
+                          htmlFor="noFinancialAid"
+                          className="text-base font-normal"
+                        >
+                          No
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                </FormItem>
+              )}
+            />
+          </div>
 
-              {/* "Clear Form" Button */}
-              {!isSaved && (
-                <Button
-                  variant="link"
-                  type="button"
-                  className="underline w-full sm:w-auto order-2 sm:order-1"
-                  onClick={() => {
-                    form.reset();
-                    localStorage.removeItem(
-                      `applicationDetailsForm-${studentData?.email}`
-                    );
-                  }}
-                >
-                  Clear Form
-                </Button>
-              )}
-            </div>
-            {!isTopVisible && !isBottomVisible && (
+          <div
+            className={`flex flex-col sm:flex-row ${
+              isSaved ? "justify-end" : "justify-between"
+            } items-center mt-10 space-y-4 sm:space-y-0 sm:space-x-4`}
+          >
+            {/* Submit/Payment Button */}
+            {isPaymentDone ? (
               <Button
                 size="xl"
-                variant="outline"
-                className="fixed bottom-24 right-44 bg-[#09090b] hover:bg-[#09090b]/80"
+                className="w-full sm:w-fit px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90 order-1 sm:order-2"
                 type="button"
-                disabled={saveLoading || saved}
-                onClick={() => submitData(form.getValues())}
+                onClick={() => handleContinueToDashboard()}
+                disabled={loading}
+              >
+                {loading ? "Redirecting..." : "Continue to Dashboard"}
+              </Button>
+            ) : isSaved ? (
+              <Button
+                size="xl"
+                className="w-full sm:w-fit px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90 order-1 sm:order-2"
+                type="button"
+                onClick={() => handlePayment()}
+                disabled={loading}
+              >
+                {loading
+                  ? "Initializing Payment..."
+                  : `Pay INR ₹${applicationFees || 0}.00`}
+              </Button>
+            ) : (
+              <Button
+                size="xl"
+                className="w-full sm:w-fit px-4 bg-[#00AB7B] hover:bg-[#00AB7B]/90 order-1 sm:order-2"
+                type="submit"
+                disabled={loading}
               >
                 <div className="flex items-center gap-2">
-                  {saved ? (
-                    <ClipboardCheck className="w-4 h-4" />
-                  ) : (
-                    <Clipboard className="h-4 w-4" />
-                  )}
-                  {saved ? "Updates Saved" : "Save Updates"}
+                  <SaveIcon className="w-5 h-5" />
+                  {loading
+                    ? "Submitting..."
+                    : `Submit and Pay INR ₹${applicationFees || 0}.00`}
                 </div>
               </Button>
             )}
-            <div ref={bottomRef} />
-          </form>
-        </Form>
-      }
+
+            {/* "Clear Form" Button */}
+            {!isSaved && (
+              <Button
+                variant="link"
+                type="button"
+                className="underline w-full sm:w-auto order-2 sm:order-1"
+                onClick={() => {
+                  form.reset();
+                  localStorage.removeItem(
+                    `applicationDetailsForm-${studentData?.email}`
+                  );
+                }}
+              >
+                Clear Form
+              </Button>
+            )}
+          </div>
+          {!isTopVisible && !isBottomVisible && (
+            <Button
+              size="xl"
+              variant="outline"
+              className="fixed bottom-24 right-44 bg-[#09090b] hover:bg-[#09090b]/80"
+              type="button"
+              disabled={saveLoading || saved}
+              onClick={() => submitData(form.getValues())}
+            >
+              <div className="flex items-center gap-2">
+                {saved ? (
+                  <ClipboardCheck className="w-4 h-4" />
+                ) : (
+                  <Clipboard className="h-4 w-4" />
+                )}
+                {saved ? "Updates Saved" : "Save Updates"}
+              </div>
+            </Button>
+          )}
+          <div ref={bottomRef} />
+        </form>
+      </Form>
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogTitle></DialogTitle>
         <DialogContent className="flex flex-col bg-[#1C1C1C] gap-6 sm:gap rounded-3xl max-h-[70vh] sm:max-h-[90vh] overflow-y-auto max-w-[90vw] sm:max-w-2xl lg:max-w-4xl mx-auto !p-0">
