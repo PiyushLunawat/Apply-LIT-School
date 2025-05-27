@@ -213,11 +213,11 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
     try {
       setLoading(true);
       if (verificationType === "contact" && onResendOtp) {
-        // Use parent's resend logic for contact verification
+        // Use the same logic as send OTP function
         await onResendOtp(contactInfo);
         form.clearErrors("otp");
         reset({ otp: "" });
-        setTimer(60);
+        setTimer(59); // Reset timer to 59 to match the initial timer
       } else {
         // Existing email resend logic
         await resendOtp({ email: contactInfo });
