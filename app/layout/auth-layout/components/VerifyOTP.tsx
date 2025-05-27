@@ -23,7 +23,6 @@ import {
   InputOTPSlot,
 } from "~/components/ui/input-otp";
 import { UserContext } from "~/context/UserContext";
-import { useFirebaseAuth } from "~/hooks/use-firebase-auth";
 import { RegisterInterceptor } from "~/utils/interceptor";
 
 const formSchema = z.object({
@@ -48,9 +47,9 @@ interface VerifyOTPProps {
 export const VerifyOTP: React.FC<VerifyOTPProps> = ({
   verificationType,
   contactInfo,
-
+  errorMessage,
   setIsDialogOpen,
-
+  onVerificationSuccess,
   verificationId,
   onResendOtp,
 }) => {
@@ -59,7 +58,6 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
   const [timer, setTimer] = useState(59);
   const [loading, setLoading] = useState(false);
   const { revalidate } = useRevalidator();
-  const { initializeRecaptcha } = useFirebaseAuth();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -68,7 +66,12 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
     },
   });
 
-  const { reset } = form;
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = form;
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -208,8 +211,6 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
 
   const handleResendOtp = async () => {
     try {
-      initializeRecaptcha("recaptcha-container");
-
       setLoading(true);
       if (verificationType === "contact" && onResendOtp) {
         // Use parent's resend logic for contact verification
@@ -286,8 +287,8 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
                   <InputOTP
                     maxLength={6}
                     {...field}
-                    onChange={(value: string) => {
-                      field.onChange(value);
+                    onChange={(e: any) => {
+                      field.onChange(e);
                     }}
                   >
                     <InputOTPGroup>

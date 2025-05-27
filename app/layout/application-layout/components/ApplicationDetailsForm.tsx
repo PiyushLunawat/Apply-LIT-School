@@ -459,7 +459,7 @@ const ApplicationDetailsForm: React.FC = () => {
 
   useEffect(() => {
     const fetchStudentData = async () => {
-      if (studentData._id && openCohorts.length > 0)
+      if (studentData._id && openCohorts.length > 0 && openCohorts.length > 0)
         try {
           const student = await getCurrentStudent(studentData._id);
           console.log("Student data fetched:", student);
@@ -780,7 +780,7 @@ const ApplicationDetailsForm: React.FC = () => {
     };
 
     fetchStudentData();
-  }, [studentData, openCohorts, reset, navigate]);
+  }, [studentData, openCohorts, reset, navigate, openCohorts, reset, navigate]);
 
   useEffect(() => {
     const storedFormJSON = localStorage.getItem(
@@ -1074,7 +1074,9 @@ const ApplicationDetailsForm: React.FC = () => {
       }
 
       console.log("apiPayload", apiPayload);
+      console.log("apiPayload", apiPayload);
       const response = await submitApplication(apiPayload);
+      console.log("Form submitted successfully", response);
       console.log("Form submitted successfully", response);
 
       if (isSubmit) {
@@ -1112,7 +1114,6 @@ const ApplicationDetailsForm: React.FC = () => {
 
   return (
     <>
-      (
       <Form {...form}>
         <form
           onSubmit={handleSubmit(onSubmit)}
