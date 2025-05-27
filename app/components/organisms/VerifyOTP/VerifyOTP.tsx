@@ -19,6 +19,7 @@ import {
 } from "~/components/ui/form";
 import { Label } from "~/components/ui/label";
 import { UserContext } from "~/context/UserContext";
+import { useFirebaseAuth } from "~/hooks/use-firebase-auth";
 import {
   InputOTP,
   InputOTPGroup,
@@ -47,19 +48,17 @@ interface VerifyOTPProps {
 export const VerifyOTP: React.FC<VerifyOTPProps> = ({
   verificationType,
   contactInfo,
-  errorMessage,
   setIsDialogOpen,
-  onVerificationSuccess,
   verificationId,
   back,
 }) => {
   const navigate = useNavigate();
-  const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
   const [timer, setTimer] = useState(59);
   const [resendError, setResendError] = useState<string | null>(null);
   const [verifyError, setVerifyError] = useState<string | null>(null);
   const { studentData, setStudentData } = useContext(UserContext);
   const [loading, setLoading] = useState(false);
+  const { initializeRecaptcha } = useFirebaseAuth();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -69,8 +68,6 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
   });
 
   const {
-    register,
-    handleSubmit,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(formSchema),
@@ -170,6 +167,8 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
   };
 
   const handleResendOtp = async () => {
+    initializeRecaptcha("recaptcha-container");
+
     try {
       setLoading(true);
 
