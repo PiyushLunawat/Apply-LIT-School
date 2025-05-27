@@ -320,7 +320,8 @@ const ApplicationDetailsForm: React.FC = () => {
   const [filteredCohorts, setFilteredCohorts] = useState<any[]>([]);
 
   // Use Firebase Auth Hook
-  const { initializeRecaptcha, sendOTP } = useFirebaseAuth();
+  const { initializeRecaptcha, sendOTP, clearRecaptcha, isReady } =
+    useFirebaseAuth();
 
   useEffect(() => {
     const topObserver = new IntersectionObserver(
@@ -466,7 +467,7 @@ const ApplicationDetailsForm: React.FC = () => {
         try {
           console.log("1111");
           const student = await getCurrentStudent(studentData._id);
-          console.log("dbab",student);
+          console.log("dbab", student);
           if (
             student?.appliedCohorts[student?.appliedCohorts.length - 1]
               ?.status === "enrolled"
@@ -783,13 +784,7 @@ const ApplicationDetailsForm: React.FC = () => {
     };
 
     fetchStudentData();
-  }, [
-    studentData,
-    // interest,
-    // fetchedStudentData?.appliedCohorts,
-    // reset,
-    // navigate,
-  ]);
+  }, [studentData]);
 
   //   useEffect(() => {
   //   // If we don't have studentData yet, or if there's no user ID,
@@ -872,14 +867,15 @@ const ApplicationDetailsForm: React.FC = () => {
     setOtpLoading(true);
 
     try {
-      // Initialize recaptcha if not already done
-      const verifier = await initializeRecaptcha("recaptcha-container");
-      if (!verifier) {
-        throw new Error("Failed to initialize reCAPTCHA");
-      }
+      // Clear any existing reCAPTCHA first
+      clearRecaptcha();
 
-      // Send OTP
-      const confirmationResult = await sendOTP(contact);
+      // Wait a bit for cleanup
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Send OTP - the hook will handle initialization automatically
+      const confirmationResult = await sendOTP(contact, "recaptcha-container");
+
       if (confirmationResult) {
         setVerificationId(confirmationResult.verificationId);
         setContactInfo(contact);
