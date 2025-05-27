@@ -33,6 +33,7 @@ import {
   PaymentSuccessDialog,
 } from "~/components/molecules/PaymentDialog/PaymentDialog";
 import { Button } from "~/components/ui/button";
+import DateSelector from "~/components/ui/date-selector";
 import { Dialog, DialogContent, DialogTitle } from "~/components/ui/dialog";
 import {
   Form,
@@ -66,12 +67,12 @@ const formSchema = z
     studentData: z.object({
       firstName: z.string().optional(),
       lastName: z.string().optional(),
-      email: z.string().optional(),
-      contact: z.string().optional(),
-      dob: z.string(),
-      currentStatus: z.string(),
-      courseOfInterest: z.string(),
-      cohort: z.string(),
+      email: z.string().nonempty("Email is required"),
+      contact: z.string().nonempty("Contact number is required"),
+      dob: z.string().nonempty("Date of birth is required"),
+      currentStatus: z.string().nonempty("Qualification is required"),
+      courseOfInterest: z.string().nonempty("Course of interest is required"),
+      cohort: z.string().nonempty("Cohort is required"),
       isMobileVerified: z.boolean().optional(),
       linkedInUrl: z.string().optional(),
       instagramUrl: z.string().optional(),
@@ -399,7 +400,7 @@ const ApplicationDetailsForm: React.FC = () => {
     watch,
   } = form;
 
-  // FIXED: Single filtering useEffect with proper dependencies
+  // FIXED: Single filtering useEffect with proper dependencies and cohort clearing
   useEffect(() => {
     const selectedProgram = form.watch("studentData.courseOfInterest");
     console.log("Selected program changed:", selectedProgram);
@@ -458,11 +459,11 @@ const ApplicationDetailsForm: React.FC = () => {
 
   useEffect(() => {
     const fetchStudentData = async () => {
-      if (studentData._id)
+      if (studentData._id && openCohorts.length > 0)
         try {
-          console.log("Fetching student data...");
           const student = await getCurrentStudent(studentData._id);
-          console.log("Student data:", student);
+          console.log("Student data fetched:", student);
+
           if (
             student?.appliedCohorts[student?.appliedCohorts.length - 1]
               ?.status === "enrolled"
@@ -779,7 +780,7 @@ const ApplicationDetailsForm: React.FC = () => {
     };
 
     fetchStudentData();
-  }, [studentData]);
+  }, [studentData, openCohorts, reset, navigate]);
 
   useEffect(() => {
     const storedFormJSON = localStorage.getItem(
@@ -942,9 +943,11 @@ const ApplicationDetailsForm: React.FC = () => {
             );
             console.log("Payment verification response:", verifyResponse);
 
-            if (verifyResponse.success) {
+            if (verifyResponse.data.latestStatus === "paid") {
               setIsPaymentDone(true);
               setSuccessDialogOpen(true);
+            } else {
+              setFailedDialogOpen(true);
             }
           } catch (verificationError) {
             console.error("Error verifying payment:", verificationError);
@@ -986,22 +989,29 @@ const ApplicationDetailsForm: React.FC = () => {
     const apiPayload = {
       cohortId: data.studentData?.cohort,
       studentDetailId:
-        studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]
-          ?.applicationDetails?.studentDetails?._id,
+        fetchedStudentData?.appliedCohorts[
+          fetchedStudentData?.appliedCohorts.length - 1
+        ]?.applicationDetails?.studentDetails?._id,
       studentData: {
         firstName: studentData?.firstName || "",
         lastName: studentData?.lastName || "",
-        mobileNumber: studentData?.mobileNumber || "",
-        isMobileVerified: studentData?.isMobileVerified || false,
+        mobileNumber:
+          data.studentData?.contact || studentData?.mobileNumber || "",
+        isMobileVerified:
+          data.studentData?.isMobileVerified ||
+          studentData?.isMobileVerified ||
+          false,
         email: studentData?.email || "",
         qualification:
+          data.studentData.currentStatus ||
           studentData?.appliedCohorts[studentData?.appliedCohorts.length - 1]
-            ?.qualification || "",
+            ?.qualification ||
+          "",
         program: data.studentData?.courseOfInterest || "",
         cohort: data.studentData?.cohort || "",
         gender: data.studentData.gender,
         isVerified: studentData?.isVerified || false,
-        dateOfBirth: new Date(studentData?.dateOfBirth || Date.now()),
+        dateOfBirth: new Date(data.studentData.dob || studentData?.dateOfBirth),
         profileImage: [],
         linkedInUrl: data.studentData.linkedInUrl || "",
         instagramUrl: data.studentData.instagramUrl || "",
@@ -1063,10 +1073,11 @@ const ApplicationDetailsForm: React.FC = () => {
         setSaveLoading(true);
       }
 
+      console.log("apiPayload", apiPayload);
       const response = await submitApplication(apiPayload);
+      console.log("Form submitted successfully", response);
 
       if (isSubmit) {
-        console.log("Form submitted successfully", response);
         setIsPaymentDialogOpen(true);
         setIsSaved(true);
       } else {
@@ -1075,7 +1086,7 @@ const ApplicationDetailsForm: React.FC = () => {
       }
     } catch (error) {
       console.error("Error submitting application:", error);
-      setFailedDialogOpen(true);
+      if (isSubmit) setFailedDialogOpen(true);
     } finally {
       if (isSubmit) {
         setLoading(false);
@@ -1101,6 +1112,7 @@ const ApplicationDetailsForm: React.FC = () => {
 
   return (
     <>
+      (
       <Form {...form}>
         <form
           onSubmit={handleSubmit(onSubmit)}
@@ -1221,25 +1233,22 @@ const ApplicationDetailsForm: React.FC = () => {
                 name="studentData.dob"
                 render={({ field }) => {
                   const maxDate = new Date();
-                  maxDate.setFullYear(maxDate.getFullYear() - 16); // Subtract 16 years from today's date
+                  maxDate.setFullYear(maxDate.getFullYear() - 16); // Subtract 16 years
                   const maxDateString = maxDate.toISOString().split("T")[0];
+
                   return (
                     <FormItem className="flex-1 flex flex-col space-y-1 relative">
                       <Label className="text-sm font-normal pl-3">
                         Date of Birth
                       </Label>
                       <FormControl>
-                        <input
-                          type="date"
-                          disabled={isSaved}
-                          className="w-full !h-[64px] bg-[#09090B] px-3 uppercase rounded-xl border"
+                        <DateSelector
                           id="dob"
                           name="dateOfBirth"
+                          disabled={isSaved}
                           value={field.value || ""}
-                          onChange={(e) => {
-                            field.onChange(e.target.value);
-                          }}
-                          max={maxDateString}
+                          maxDate={maxDateString}
+                          onChange={(date) => field.onChange(date)} // Correct onChange
                         />
                       </FormControl>
                       <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
@@ -1247,6 +1256,7 @@ const ApplicationDetailsForm: React.FC = () => {
                   );
                 }}
               />
+
               {/* Currently a */}
               <FormField
                 control={control}
@@ -1289,144 +1299,144 @@ const ApplicationDetailsForm: React.FC = () => {
                 )}
               />
             </div>
+          </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-              {/* Course of Interest */}
-              <FormField
-                control={control}
-                name="studentData.courseOfInterest"
-                render={({ field }) => (
-                  <FormItem className="flex-1 space-y-1">
-                    <Label className="text-sm font-normal pl-3">
-                      Course of Interest
-                    </Label>
-                    <FormControl>
-                      <Select
-                        disabled={isSaved}
-                        onValueChange={(value) => {
-                          console.log("Course of interest changed to:", value);
-                          field.onChange(value);
-                        }}
-                        value={field.value}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a Program" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem
-                            key={
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
+            {/* Course of Interest */}
+            <FormField
+              control={control}
+              name="studentData.courseOfInterest"
+              render={({ field }) => (
+                <FormItem className="flex-1 space-y-1">
+                  <Label className="text-sm font-normal pl-3">
+                    Course of Interest
+                  </Label>
+                  <FormControl>
+                    <Select
+                      disabled={isSaved}
+                      onValueChange={(value) => {
+                        console.log("Course of interest changed to:", value);
+                        field.onChange(value);
+                      }}
+                      value={field.value}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a Program" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem
+                          key={
+                            fetchedStudentData?.appliedCohorts?.[
+                              fetchedStudentData?.appliedCohorts.length - 1
+                            ]?.cohortId?.programDetail?._id
+                          }
+                          value={
+                            fetchedStudentData?.appliedCohorts?.[
+                              fetchedStudentData?.appliedCohorts.length - 1
+                            ]?.cohortId?.programDetail?._id
+                          }
+                        >
+                          {
+                            fetchedStudentData?.appliedCohorts?.[
+                              fetchedStudentData?.appliedCohorts.length - 1
+                            ]?.cohortId?.programDetail?.name
+                          }
+                        </SelectItem>
+                        {availablePrograms
+                          .filter(
+                            (programId) =>
+                              programId !==
                               fetchedStudentData?.appliedCohorts?.[
                                 fetchedStudentData?.appliedCohorts.length - 1
                               ]?.cohortId?.programDetail?._id
-                            }
-                            value={
-                              fetchedStudentData?.appliedCohorts?.[
-                                fetchedStudentData?.appliedCohorts.length - 1
-                              ]?.cohortId?.programDetail?._id
-                            }
-                          >
-                            {
-                              fetchedStudentData?.appliedCohorts?.[
-                                fetchedStudentData?.appliedCohorts.length - 1
-                              ]?.cohortId?.programDetail?.name
-                            }
-                          </SelectItem>
-                          {availablePrograms
-                            .filter(
-                              (programId) =>
-                                programId !==
-                                fetchedStudentData?.appliedCohorts?.[
-                                  fetchedStudentData?.appliedCohorts.length - 1
-                                ]?.cohortId?.programDetail?._id
-                            )
-                            .map((programId) => (
-                              <SelectItem key={programId} value={programId}>
-                                {getProgramName(programId)}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                  </FormItem>
-                )}
-              />
+                          )
+                          .map((programId) => (
+                            <SelectItem key={programId} value={programId}>
+                              {getProgramName(programId)}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                </FormItem>
+              )}
+            />
 
-              {/* Select Cohort */}
-              <FormField
-                control={control}
-                name="studentData.cohort"
-                render={({ field }) => (
-                  <FormItem className="flex-1 space-y-1">
-                    <Label className="text-sm font-normal pl-3">
-                      Select Cohort
-                    </Label>
-                    <FormControl>
-                      <Select
-                        disabled={isSaved}
-                        onValueChange={(value) => {
-                          console.log("Cohort changed to:", value);
-                          field.onChange(value);
-                        }}
-                        value={field.value}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem
-                            key={
+            {/* Select Cohort */}
+            <FormField
+              control={control}
+              name="studentData.cohort"
+              render={({ field }) => (
+                <FormItem className="flex-1 space-y-1">
+                  <Label className="text-sm font-normal pl-3">
+                    Select Cohort
+                  </Label>
+                  <FormControl>
+                    <Select
+                      disabled={isSaved}
+                      onValueChange={(value) => {
+                        console.log("Cohort changed to:", value);
+                        field.onChange(value);
+                      }}
+                      value={field.value}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem
+                          key={
+                            fetchedStudentData?.appliedCohorts?.[
+                              fetchedStudentData?.appliedCohorts.length - 1
+                            ]?.cohortId._id
+                          }
+                          value={
+                            fetchedStudentData?.appliedCohorts?.[
+                              fetchedStudentData?.appliedCohorts.length - 1
+                            ]?.cohortId._id
+                          }
+                        >
+                          {formatDateToMonthYear(
+                            fetchedStudentData?.appliedCohorts?.[
+                              fetchedStudentData?.appliedCohorts.length - 1
+                            ]?.cohortId.startDate
+                          )}{" "}
+                          (
+                          {
+                            fetchedStudentData?.appliedCohorts?.[
+                              fetchedStudentData?.appliedCohorts.length - 1
+                            ]?.cohortId.timeSlot
+                          }
+                          ),{" "}
+                          {getCenterName(
+                            fetchedStudentData?.appliedCohorts?.[
+                              fetchedStudentData?.appliedCohorts.length - 1
+                            ]?.cohortId.centerDetail
+                          )}
+                        </SelectItem>
+                        {filteredCohorts
+                          .filter(
+                            (cohort) =>
+                              cohort._id !==
                               fetchedStudentData?.appliedCohorts?.[
                                 fetchedStudentData?.appliedCohorts.length - 1
                               ]?.cohortId._id
-                            }
-                            value={
-                              fetchedStudentData?.appliedCohorts?.[
-                                fetchedStudentData?.appliedCohorts.length - 1
-                              ]?.cohortId._id
-                            }
-                          >
-                            {formatDateToMonthYear(
-                              fetchedStudentData?.appliedCohorts?.[
-                                fetchedStudentData?.appliedCohorts.length - 1
-                              ]?.cohortId.startDate
-                            )}{" "}
-                            (
-                            {
-                              fetchedStudentData?.appliedCohorts?.[
-                                fetchedStudentData?.appliedCohorts.length - 1
-                              ]?.cohortId.timeSlot
-                            }
-                            ),{" "}
-                            {getCenterName(
-                              fetchedStudentData?.appliedCohorts?.[
-                                fetchedStudentData?.appliedCohorts.length - 1
-                              ]?.cohortId.centerDetail
-                            )}
-                          </SelectItem>
-                          {filteredCohorts
-                            .filter(
-                              (cohort) =>
-                                cohort._id !==
-                                fetchedStudentData?.appliedCohorts?.[
-                                  fetchedStudentData?.appliedCohorts.length - 1
-                                ]?.cohortId._id
-                            )
-                            .map((cohort) => (
-                              <SelectItem key={cohort._id} value={cohort._id}>
-                                {formatDateToMonthYear(cohort.startDate)} (
-                                {cohort.timeSlot}),{" "}
-                                {getCenterName(cohort.centerDetail)}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                  </FormItem>
-                )}
-              />
-            </div>
+                          )
+                          .map((cohort) => (
+                            <SelectItem key={cohort._id} value={cohort._id}>
+                              {formatDateToMonthYear(cohort.startDate)} (
+                              {cohort.timeSlot}),{" "}
+                              {getCenterName(cohort.centerDetail)}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                </FormItem>
+              )}
+            />
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
