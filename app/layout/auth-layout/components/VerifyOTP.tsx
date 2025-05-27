@@ -23,6 +23,7 @@ import {
   InputOTPSlot,
 } from "~/components/ui/input-otp";
 import { UserContext } from "~/context/UserContext";
+import { useFirebaseAuth } from "~/hooks/use-firebase-auth";
 import { RegisterInterceptor } from "~/utils/interceptor";
 
 const formSchema = z.object({
@@ -58,6 +59,7 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
   const [timer, setTimer] = useState(59);
   const [loading, setLoading] = useState(false);
   const { revalidate } = useRevalidator();
+  const { sendOTP } = useFirebaseAuth();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -214,7 +216,7 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
       setLoading(true);
       if (verificationType === "contact" && onResendOtp) {
         // Use the same logic as send OTP function
-        await onResendOtp(contactInfo);
+        sendOTP(contactInfo);
         form.clearErrors("otp");
         reset({ otp: "" });
         setTimer(59); // Reset timer to 59 to match the initial timer
