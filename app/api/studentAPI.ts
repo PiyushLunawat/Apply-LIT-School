@@ -376,7 +376,8 @@ export async function updateStudentData(
 ): Promise<any> {
   try {
     const response = await fetch(`${baseUrl}/student/student-data`, {
-      method: "POST", // Using PATCH for partial updates
+      method: "POST", // Using PATCH for partial updates,
+      credentials: "include",
       headers:
         data instanceof FormData
           ? {} // Let the browser set the Content-Type for FormData
