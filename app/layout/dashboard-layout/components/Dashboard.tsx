@@ -346,7 +346,6 @@ export default function ApplicationDashboard({ student }: ApplicationDashboardPr
             to="/dashboard/fee-payment"
             bgColor="bg-blue-600/10"
             border="border-blue-600"
-            disable={!isLitmusDetailsAvailable}
           />
           <DashboardCard
             title="Account Details"

@@ -29,17 +29,35 @@ const formSchema = z.object({
   tasks: z.array(
     z.object({
       configItems: z.array(
-        z.object({
-          type: z.string(),
-          answer: z.union([
-            // for link (URL)
-            z.string().nonempty('This field is required').url('Please enter a valid Link URL'),
-            // for short/long text
-            z.string().nonempty('This field is required'),
-            // for files/array
-            z.array(z.any()).nonempty('This field is required'),
-          ]),
-        })
+        z.discriminatedUnion('type', [
+          // For 'link' type: array of URLs
+          z.object({
+            type: z.literal('link'),
+            answer: z.array(z.string().url('Please enter a valid URL')).nonempty('At least one link is required'),
+          }),
+          // For 'short' and 'long' types: single string
+          z.object({
+            type: z.literal('short'),
+            answer: z.string().nonempty('This field is required'),
+          }),
+          z.object({
+            type: z.literal('long'),
+            answer: z.string().nonempty('This field is required'),
+          }),
+          // For file upload types: array of files
+          z.object({
+            type: z.literal('image'),
+            answer: z.array(z.any()).nonempty('This field is required'),
+          }),
+          z.object({
+            type: z.literal('video'),
+            answer: z.array(z.any()).nonempty('This field is required'),
+          }),
+          z.object({
+            type: z.literal('file'),
+            answer: z.array(z.any()).nonempty('This field is required'),
+          }),
+        ])
       ),
     })
   ),
@@ -671,14 +689,6 @@ const TaskConfigItem: React.FC<TaskConfigItemProps> = ({
 }) => {
   const fieldName = `tasks.${taskIndex}.configItems.${configIndex}.answer`;
 
-  const getErrorMessage = (error: any, index?: number) => {
-    if (error?.type === 'too_small') return 'This field is required';
-    if (error?.type === 'invalid_type') return 'This field is required';
-    if (error?.type === 'invalid_url') return 'Invalid URL format';
-    if (error?.type === 'too_big') return `Maximum ${configItem.characterLimit} characters`;
-    return error?.message || 'Invalid value';
-  };
-
   const wordLimitHandler = ( event: React.ChangeEvent<HTMLTextAreaElement>, field: any, maxWordLimit: number ) => {
     const text = event.target.value;
     const wordCount = text.split(/\s+/).filter(Boolean).length;
@@ -695,7 +705,7 @@ const TaskConfigItem: React.FC<TaskConfigItemProps> = ({
         <FormField
           control={control}
           name={fieldName}
-          render={({ field, fieldState }) => (
+          render={({ field }) => (
             <FormItem>
               <FormControl>
                 <Textarea
@@ -705,11 +715,7 @@ const TaskConfigItem: React.FC<TaskConfigItemProps> = ({
                   value={field.value}
                 />
               </FormControl>
-              {fieldState.error && (
-                <p className="text-red-500 text-sm pl-3">
-                  {getErrorMessage(fieldState.error)}
-                </p>
-              )}
+              <FormMessage className='pl-3'/>
             </FormItem>
           )}
         />
@@ -729,57 +735,54 @@ const TaskConfigItem: React.FC<TaskConfigItemProps> = ({
       );
 
     case 'link':
-      return (
-        <FormField
-          control={control}
-          name={fieldName}
-          render={({ field, fieldState }) => (
-            <FormItem>
-              <FormLabel className="text-base font-normal text-[#FA69E5] pl-3">
-                {configItem.label || 'Links'}
-              </FormLabel>
-              <FormControl>
-                <div className="flex flex-col space-y-2 mt-2">
-                  {Array.from({ length: configItem.characterLimit || 1 }).map(
-                    (_, index) => {
-                      const error = Array.isArray(fieldState.error)
-                        ? fieldState.error[index]
-                        : fieldState.error;
-                        return(
-                  <div key={index} className="relative">
-                    <Input
-                      className={`w-full text-white text-base mt-2 pl-10 ${
-                        fieldState.error ? 'border-red-500' : ''
-                      }`}
-                      placeholder={`Enter URL ${index + 1}`}
-                      value={field.value?.[index] || ''}
-                      onChange={(e) => {
-                        const newLinks = [...(field.value || [])];
-                        newLinks[index] = e.target.value;
-                        field.onChange(newLinks);
-                      }}
-                    />
-                    <Link2Icon className="absolute left-3 top-[30px] w-5 h-5" />
-                    {error && (
-                      <p className="text-red-500 text-sm pl-3 mt-1">
-                        {getErrorMessage(error)}
-                      </p>
-                    )}
-                  </div>
-                )}
-                  )}
-                </div>
-              </FormControl>
-              {fieldState.error && (
-                <p className="text-red-500 text-sm pl-3">
-                  {fieldState.error.message || 'Please enter a valid URL'}
-                </p>
+  return (
+    <FormField
+      control={control}
+      name={fieldName}
+      render={({ field, fieldState }) => (
+        <FormItem>
+          <FormLabel className="text-base font-normal text-[#FA69E5] pl-3">
+            {configItem.label || 'Links'}
+          </FormLabel>
+          <FormControl>
+            <div className="flex flex-col space-y-2 mt-2">
+              {Array.from({ length: configItem.characterLimit || 1 }).map(
+                (_, index) => {
+                  const linkValue = field.value?.[index] || '';
+                  const error = Array.isArray(fieldState.error)
+                    ? fieldState.error[index]
+                    : fieldState.error;
+                  return (
+                    <div key={index} className="relative">
+                      <Input
+                        className={`w-full text-white text-base mt-2 pl-10 ${
+                          error ? 'border-red-500' : ''
+                        }`}
+                        placeholder={`Enter URL ${index + 1}`}
+                        value={linkValue}
+                        onChange={(e) => {
+                          const newLinks = [...(field.value || [])];
+                          newLinks[index] = e.target.value;
+                          field.onChange(newLinks);
+                        }}
+                      />
+                      <Link2Icon className="absolute left-3 top-[30px] w-5 h-5" />
+                      {error && (
+                        <p className="text-[#FF503D] text-sm pl-3 mt-1">
+                          {error.message}
+                        </p>
+                      )}
+                    </div>
+                  );
+                }
               )}
-              <FormMessage className='pl-3'/>
-            </FormItem>
-          )}
-        />
-      );
+            </div>
+          </FormControl>
+          {/* <FormMessage className='pl-3'/> */}
+        </FormItem>
+      )}
+    />
+  );
 
     default:
       return null;
@@ -1078,7 +1081,7 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({ field, configItem }) 
           {error && <p className="text-red-500 text-sm">{error}</p>}
         </div>
       </FormControl>
-      <FormMessage />
+      <FormMessage className='pl-3'/>
     </FormItem>
   );
 };

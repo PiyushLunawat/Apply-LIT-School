@@ -25,6 +25,7 @@ import {
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 import { Dialog, DialogContent, DialogTitle } from "~/components/ui/dialog";
+import { Skeleton } from "~/components/ui/skeleton";
 
 const s3Client = new S3Client({
   
@@ -252,123 +253,132 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
           </div>
         </div>
 
-        {/* Payment mode & installment type */}
-        <div className="flex flex-col md:flex-row gap-4 md:gap-2">
-          <div className="space-y-2 flex-1">
-            <Label className="pl-3" htmlFor="paymentMethod">
-              Select Your Mode of Payment
-            </Label>
-            <Select
-              onValueChange={(val) => handleSelectChange("paymentMethod", val)}
-              value={formData.paymentMethod}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectItem value="bank transfer">Bank Transfer</SelectItem>
-                  <SelectItem value="cash">Cash</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2 flex-1">
-            <Label className="pl-3" htmlFor="paymentPlan">
-              Select Installment Type
-            </Label>
-            <Select
-              onValueChange={(val) => handleSelectChange("paymentPlan", val)}
-              value={formData.paymentPlan}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectItem value="one-shot">One Shot Payment</SelectItem>
-                  <SelectItem value="instalments">Instalments</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {/* Bank details if 'bank transfer' */}
-        {formData.paymentMethod === "bank transfer" && (
+        {!student ? 
+          <div className="space-y-4">
+            <Skeleton className="w-full h-[72px] rounded-xl" />
+            <Skeleton className="w-full h-[172px] rounded-xl" />
+          </div> :
           <>
-            <div className="flex flex-col md:flex-row gap-4 md:gap-2">
-              <div className="space-y-2 flex-1">
-                <Label className="pl-3" htmlFor="bankDetails.accountHolderName">
-                  Account Holder Name
-                </Label>
-                <Input
-                  id="bankDetails.accountHolderName"
-                  placeholder="Type here"
-                  name="bankDetails.accountHolderName"
-                  value={formData.bankDetails.accountHolderName}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="space-y-2 flex-1">
-                <Label className="pl-3" htmlFor="accountNumber">
-                  Account Number
-                </Label>
-                <Input
-                  id="bankDetails.accountNumber"
-                  placeholder="XXXXXXXXXXXX"
-                  name="bankDetails.accountNumber"
-                  value={formData.bankDetails.accountNumber}
-                  onChange={handleInputChange}
-                />
-              </div>
+          {/* Payment mode & installment type */}
+          <div className="flex flex-col md:flex-row gap-4 md:gap-2">
+            <div className="space-y-2 flex-1">
+              <Label className="pl-3" htmlFor="paymentMethod">
+                Select Your Mode of Payment
+              </Label>
+              <Select
+                onValueChange={(val) => handleSelectChange("paymentMethod", val)}
+                value={formData.paymentMethod}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="bank transfer">Bank Transfer</SelectItem>
+                    <SelectItem value="cash">Cash</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             </div>
-            <div className="flex flex-col md:flex-row gap-4 md:gap-2">
-              <div className="space-y-2 flex-1">
-                <Label className="pl-3" htmlFor="IFSCCode">
-                  IFSC Code
-                </Label>
-                <Input
-                  id="bankDetails.IFSCCode"
-                  placeholder="XXXXXXXXXXX"
-                  name="bankDetails.IFSCCode"
-                  value={formData.bankDetails.IFSCCode}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="space-y-2 flex-1">
-                <Label className="pl-3" htmlFor="branchName">
-                  Branch Name
-                </Label>
-                <Input
-                  id="bankDetails.branchName"
-                  placeholder="Type here"
-                  name="bankDetails.branchName"
-                  value={formData.bankDetails.branchName}
-                  onChange={handleInputChange}
-                />
-              </div>
+
+            <div className="space-y-2 flex-1">
+              <Label className="pl-3" htmlFor="paymentPlan">
+                Select Installment Type
+              </Label>
+              <Select
+                onValueChange={(val) => handleSelectChange("paymentPlan", val)}
+                value={formData.paymentPlan}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="one-shot">One Shot Payment</SelectItem>
+                    <SelectItem value="instalments">Instalments</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             </div>
+          </div>
+
+          {/* Bank details if 'bank transfer' */}
+          {formData.paymentMethod === "bank transfer" && (
+            <>
+              <div className="flex flex-col md:flex-row gap-4 md:gap-2">
+                <div className="space-y-2 flex-1">
+                  <Label className="pl-3" htmlFor="bankDetails.accountHolderName">
+                    Account Holder Name
+                  </Label>
+                  <Input
+                    id="bankDetails.accountHolderName"
+                    placeholder="Type here"
+                    name="bankDetails.accountHolderName"
+                    value={formData.bankDetails.accountHolderName}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="space-y-2 flex-1">
+                  <Label className="pl-3" htmlFor="accountNumber">
+                    Account Number
+                  </Label>
+                  <Input
+                    id="bankDetails.accountNumber"
+                    placeholder="XXXXXXXXXXXX"
+                    name="bankDetails.accountNumber"
+                    value={formData.bankDetails.accountNumber}
+                    onChange={handleInputChange}
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col md:flex-row gap-4 md:gap-2">
+                <div className="space-y-2 flex-1">
+                  <Label className="pl-3" htmlFor="IFSCCode">
+                    IFSC Code
+                  </Label>
+                  <Input
+                    id="bankDetails.IFSCCode"
+                    placeholder="XXXXXXXXXXX"
+                    name="bankDetails.IFSCCode"
+                    value={formData.bankDetails.IFSCCode}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="space-y-2 flex-1">
+                  <Label className="pl-3" htmlFor="branchName">
+                    Branch Name
+                  </Label>
+                  <Input
+                    id="bankDetails.branchName"
+                    placeholder="Type here"
+                    name="bankDetails.branchName"
+                    value={formData.bankDetails.branchName}
+                    onChange={handleInputChange}
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
+          {formData.paymentMethod === "cash" && (
+            <p className="text-sm text-gray-500">
+              Cash payment does not require additional details.
+            </p>
+          )}
+
+          {/* Next Button */}
+          <Button
+            size="xl"
+            onClick={handleNext}
+            className="mt-4"
+            disabled={!isNextButtonEnabled || loading}
+          >
+            {loading ? "Submitting..." : "Next"}
+          </Button>
+          {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+
           </>
-        )}
-
-        {formData.paymentMethod === "cash" && (
-          <p className="text-sm text-gray-500">
-            Cash payment does not require additional details.
-          </p>
-        )}
-
-        {/* Next Button */}
-        <Button
-          size="xl"
-          onClick={handleNext}
-          className="mt-4"
-          disabled={!isNextButtonEnabled || loading}
-        >
-          {loading ? "Submitting..." : "Next"}
-        </Button>
-        {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+        }
       </div>
     );
   };
@@ -562,154 +572,167 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
         </div>
       </div> : 
       <div className="space-y-4">
-        {Object.entries(groupedInstallments)?.map(([semester, installments], semIndex) => (
-          <div key={semIndex} className="border rounded-xl mb-6">
-            {/* Semester Header */}
-            <div className="flex items-center justify-between text-2xl rounded-t-xl p-4 sm:p-6 bg-[#64748B33] font-medium">
-              <h3 className="text-lg font-semibold">Semester 0{semIndex+1}</h3>
-              <h3 className="text-lg font-semibold">
-                ₹{formatAmount(installments.reduce((total: number, inst: any) => total + inst.baseFee, 0))}
-                <span className="text-muted-foreground">.00</span>
-              </h3>
-            </div>
+        {Object.entries(groupedInstallments)?.map(([semester, installments], semIndex) => {
+          // Determine semester status
+          const allPending = installments.every((inst: any) => inst.verificationStatus === "pending");
+          const allPaid = installments.every((inst: any) => inst.verificationStatus === "paid");
+          const semStatus = allPending
+            ? "pending"
+            : allPaid
+            ? "paid"
+            : "verifying";
 
-            {/* Installments */}
-            {installments.map((instalment: any, iIndex: number) => {
-              const installmentKey = `${semIndex}-${iIndex}`;
-              const isExpanded = expandedInstallment === installmentKey;
-              const toggleExpand = () => {
-                setExpandedInstallment((prev: any) =>
-                  prev === installmentKey ? null : installmentKey
-                );
-              };
-                return (
-                  <div key={iIndex} className={`bg-[#64748B1F] p-4 sm:p-6 ${iIndex === (installments.length - 1) ? 'rounded-b-xl' : 'border-b border-gray-700'}`}>
-                    <div
-                      className="flex flex-col sm:flex-row gap-2 sm:justify-between sm:items-center cursor-pointer font-medium"
-                      onClick={toggleExpand}
-                    >
-                      <Badge className="flex w-fit gap-2 bg-[#3698FB]/20 border-[#3698FB] text-base text-white px-4 py-2 ">
-                        {getInstallmentIcon(instalment?.verificationStatus)}
-                        Installment 0{iIndex + 1}
-                      </Badge>
-                      <div className="flex gap-2 sm:gap-4 text-right sm:items-center">
-                        <Badge className={`${instalment?.verificationStatus === 'paid' ? 'border-[#00CC92] bg-[#00CC92]/10' : 'bg-[#64748B1F]/20 border-[#2C2C2C]'} text-sm sm:text-base text-white px-4 py-2`}>
-                          ₹{formatAmount(instalment?.amountPayable)}
+          return(
+            <div key={semIndex} className="border rounded-xl mb-6">
+              {/* Semester Header */}
+              <div className="flex items-center justify-between text-2xl rounded-t-xl p-4 sm:p-6 bg-[#64748B33] font-medium">
+                <div className="flex gap-2">
+                  {getInstallmentIcon(semStatus)}
+                  <h3 className="text-lg font-semibold">Semester 0{semIndex+1}</h3>
+                </div>
+                <h3 className="text-lg font-semibold">
+                  ₹{formatAmount(installments.reduce((total: number, inst: any) => total + inst.amountPayable, 0))}
+                  <span className="text-muted-foreground">.00</span>
+                </h3>
+              </div>
+
+              {/* Installments */}
+              {installments.map((instalment: any, iIndex: number) => {
+                const installmentKey = `${semIndex}-${iIndex}`;
+                const isExpanded = expandedInstallment === installmentKey;
+                const toggleExpand = () => {
+                  setExpandedInstallment((prev: any) =>
+                    prev === installmentKey ? null : installmentKey
+                  );
+                };
+                  return (
+                    <div key={iIndex} className={`bg-[#64748B1F] p-4 sm:p-6 ${iIndex === (installments.length - 1) ? 'rounded-b-xl' : 'border-b border-gray-700'}`}>
+                      <div
+                        className="flex flex-col sm:flex-row gap-2 sm:justify-between sm:items-center cursor-pointer font-medium"
+                        onClick={toggleExpand}
+                      >
+                        <Badge className="flex w-fit gap-2 bg-[#3698FB]/20 border-[#3698FB] text-base text-white px-4 py-2 ">
+                          {getInstallmentIcon(instalment?.verificationStatus)}
+                          Installment 0{iIndex + 1}
                         </Badge>
-                        {instalment?.verificationStatus === 'paid' ?
-                          <Badge className="flex gap-1 bg-[#64748B1F]/20 border-[#2C2C2C] text-sm sm:text-base text-white px-4 py-2">
-                            <span className="font-light text-[#00CC92]">Paid on</span> {new Date(instalment?.receiptUrls?.[instalment?.receiptUrls.length - 1]?.uploadedAt).toLocaleDateString("en-GB", {day: "2-digit", month: "long", year: "numeric",})}
-                          </Badge> :
-                        instalment?.verificationStatus === 'verifying' ?
-                          <Badge className="flex gap-1 bg-[#64748B1F]/20 border-[#2C2C2C] text-sm sm:text-base text-white px-4 py-2">
-                            <span className="font-light">Uploaded on</span> {new Date(instalment?.receiptUrls?.[instalment?.receiptUrls.length - 1]?.uploadedAt).toLocaleDateString("en-GB", {day: "2-digit", month: "long", year: "numeric",})}
-                          </Badge> :
-                        instalment?.verificationStatus === 'flagged' ?
-                          <Badge className="flex gap-1 bg-[#F53F3F]/20 border-[#F53F3F] text-sm sm:text-base text-white px-4 py-2">
-                            <span className="font-light">Pay before</span>  {new Date(instalment?.installmentDate).toLocaleDateString("en-GB", {day: "2-digit", month: "long", year: "numeric",})}
-                          </Badge> :
-                          <Badge className="flex gap-1 bg-[#64748B1F]/20 border-[#2C2C2C] text-sm sm:text-base text-white px-4 py-2">
-                            <span className="font-light">Due:</span> {new Date(instalment?.installmentDate).toLocaleDateString("en-GB", {day: "2-digit", month: "long", year: "numeric",})}
+                        <div className="flex gap-2 sm:gap-4 text-right sm:items-center">
+                          <Badge className={`${instalment?.verificationStatus === 'paid' ? 'border-[#00CC92] bg-[#00CC92]/10' : 'bg-[#64748B1F]/20 border-[#2C2C2C]'} text-sm sm:text-base text-white px-4 py-2`}>
+                            ₹{formatAmount(instalment?.amountPayable)}
                           </Badge>
-                        }
-                        {['verifying', 'paid'].includes(instalment?.verificationStatus) &&
-                          <div className="relative group w-10 h-10">
-                            <img
-                              src={instalment?.receiptUrls?.[instalment?.receiptUrls.length - 1]?.url}
-                              alt="Fee_Receipt"
-                              className="w-10 h-10 rounded-lg object-contain bg-white py-1"
-                            />
-                            {/* Eye icon overlay to open modal */}
-                            <div
-                              className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                              onClick={() => handleViewReciept(instalment?.receiptUrls?.[instalment?.receiptUrls.length - 1]?.url)}
-                            >
-                              <Eye className="text-white w-4 h-4" />
-                            </div>
-                          </div>
-                        }
-                      </div>
-                    </div>
-
-                    {isExpanded && (
-                      <div className="mt-4 space-y-4">
-                        {(lastStatus !== 'pending' && ['pending', 'flagged'].includes(instalment.verificationStatus)) &&
-                        <FileUploadField
-                            semester={instalment?.semester}
-                            installment={instalment?.installmentNumber}
-                            oneShot={false}
-                            studentPaymentId={instalment?._id}
-                            onUploadSuccess={(data) => setPaymentDetails(data)}
-                          />
-                        }
-
-                        {instalment.feedback && instalment.feedback.slice().reverse().map((flag: any, index: any) => (
-                          <div key={index} className="bg-[#09090b] p-3 flex gap-1 items-center">
-                            <div className="flex gap-2 items-center">
-                              <div className="relative group w-[90px] h-[90px]">
-                                <img
-                                  src={instalment?.receiptUrls?.[instalment.feedback.length-1 - index]?.url}
-                                  alt="Fee_Receipt"
-                                  className="w-[90px] h-[90px] rounded-lg object-contain bg-white py-1"
-                                />
-                                <div
-                                  className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                                  onClick={() => handleViewReciept(instalment?.receiptUrls?.[instalment.feedback.length-1 - index]?.url)}
-                                >
-                                  <Eye className="text-white w-7 h-7" />
-                                </div>
-                              </div>
-                              <div className="text-xs">
-                                <div className="text-[#F53F3F]">Your previously attached Acknowledgement Receipt has been marked invalid.</div>
-                                <div className="mt-1.5">Kindly upload a scanned copy of the receipt issued to you by our fee manager for this specific instalment.</div>
-                                <div className="hidden sm:block mt-2 text-muted-foreground">Reason: {flag?.feedbackData?.[0]}</div>
+                          {instalment?.verificationStatus === 'paid' ?
+                            <Badge className="flex gap-1 bg-[#64748B1F]/20 border-[#2C2C2C] text-sm sm:text-base text-white px-4 py-2">
+                              <span className="font-light text-[#00CC92]">Paid on</span> {new Date(instalment?.receiptUrls?.[instalment?.receiptUrls.length - 1]?.uploadedAt).toLocaleDateString("en-GB", {day: "2-digit", month: "long", year: "numeric",})}
+                            </Badge> :
+                          instalment?.verificationStatus === 'verifying' ?
+                            <Badge className="flex gap-1 bg-[#64748B1F]/20 border-[#2C2C2C] text-sm sm:text-base text-white px-4 py-2">
+                              <span className="font-light">Uploaded on</span> {new Date(instalment?.receiptUrls?.[instalment?.receiptUrls.length - 1]?.uploadedAt).toLocaleDateString("en-GB", {day: "2-digit", month: "long", year: "numeric",})}
+                            </Badge> :
+                          instalment?.verificationStatus === 'flagged' ?
+                            <Badge className="flex gap-1 bg-[#F53F3F]/20 border-[#F53F3F] text-sm sm:text-base text-white px-4 py-2">
+                              <span className="font-light">Pay before</span>  {new Date(instalment?.installmentDate).toLocaleDateString("en-GB", {day: "2-digit", month: "long", year: "numeric",})}
+                            </Badge> :
+                            <Badge className="flex gap-1 bg-[#64748B1F]/20 border-[#2C2C2C] text-sm sm:text-base text-white px-4 py-2">
+                              <span className="font-light">Due:</span> {new Date(instalment?.installmentDate).toLocaleDateString("en-GB", {day: "2-digit", month: "long", year: "numeric",})}
+                            </Badge>
+                          }
+                          {['verifying', 'paid'].includes(instalment?.verificationStatus) &&
+                            <div className="relative group w-10 h-10">
+                              <img
+                                src={instalment?.receiptUrls?.[instalment?.receiptUrls.length - 1]?.url}
+                                alt="Fee_Receipt"
+                                className="w-10 h-10 rounded-lg object-contain bg-white py-1"
+                              />
+                              {/* Eye icon overlay to open modal */}
+                              <div
+                                className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                onClick={() => handleViewReciept(instalment?.receiptUrls?.[instalment?.receiptUrls.length - 1]?.url)}
+                              >
+                                <Eye className="text-white w-4 h-4" />
                               </div>
                             </div>
-                            <div className="sm:hidden text-xs mt-2 text-muted-foreground">Reason: {flag?.feedbackData?.[0]}</div>
-                          </div>
-                        ))}
-
-                        <div className="p-3 rounded-lg space-y-1 sm:space-y-3">
-                          <p className="font-medium text-base text-white">Fee Breakdown</p>
-                          <div className="text-sm text-white/70 space-y-0 sm:space-y-1.5">
-                            <div className="flex justify-between text-sm">
-                              <span>Base Fee</span>
-                              <span>
-                                ₹
-                                {formatAmount(instalment?.baseFee + instalment?.scholarshipAmount)}
-                              </span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                              <span>GST</span>
-                              <span>
-                                ₹{formatAmount(instalment?.baseFee * 0.18)}
-                              </span>
-                            </div>
-                            {instalment.scholarshipAmount > 0 && (
-                              <div className="flex justify-between text-[#F53F3F] text-sm">
-                                <span>Scholarship Amount</span>
-                                <span>- ₹{formatAmount(instalment?.scholarshipAmount)}</span>
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex justify-between text-lg sm:text-xl pt-1">
-                            <span className="font-medium text-white">Total</span>
-                            <span className="font-medium text-[#1388FF]">
-                              ₹{formatAmount(instalment?.amountPayable)}
-                            </span>
-                          </div>
+                          }
                         </div>
                       </div>
-                    )}
-                    <div className="hidden">
-                      {lastStatus = instalment.verificationStatus}
+
+                      {isExpanded && (
+                        <div className="mt-4 space-y-4">
+                          {(lastStatus !== 'pending' && ['pending', 'flagged'].includes(instalment.verificationStatus)) &&
+                          <FileUploadField
+                              semester={instalment?.semester}
+                              installment={instalment?.installmentNumber}
+                              oneShot={false}
+                              studentPaymentId={instalment?._id}
+                              onUploadSuccess={(data) => setPaymentDetails(data)}
+                            />
+                          }
+
+                          {instalment.feedback && instalment.feedback.slice().reverse().map((flag: any, index: any) => (
+                            <div key={index} className="bg-[#09090b] p-3 flex gap-1 items-center">
+                              <div className="flex gap-2 items-center">
+                                <div className="relative group w-[90px] h-[90px]">
+                                  <img
+                                    src={instalment?.receiptUrls?.[instalment.feedback.length-1 - index]?.url}
+                                    alt="Fee_Receipt"
+                                    className="w-[90px] h-[90px] rounded-lg object-contain bg-white py-1"
+                                  />
+                                  <div
+                                    className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                    onClick={() => handleViewReciept(instalment?.receiptUrls?.[instalment.feedback.length-1 - index]?.url)}
+                                  >
+                                    <Eye className="text-white w-7 h-7" />
+                                  </div>
+                                </div>
+                                <div className="text-xs">
+                                  <div className="text-[#F53F3F]">Your previously attached Acknowledgement Receipt has been marked invalid.</div>
+                                  <div className="mt-1.5">Kindly upload a scanned copy of the receipt issued to you by our fee manager for this specific instalment.</div>
+                                  <div className="hidden sm:block mt-2 text-muted-foreground">Reason: {flag?.feedbackData?.[0]}</div>
+                                </div>
+                              </div>
+                              <div className="sm:hidden text-xs mt-2 text-muted-foreground">Reason: {flag?.feedbackData?.[0]}</div>
+                            </div>
+                          ))}
+
+                          <div className="p-3 rounded-lg space-y-1 sm:space-y-3">
+                            <p className="font-medium text-base text-white">Fee Breakdown</p>
+                            <div className="text-sm text-white/70 space-y-0 sm:space-y-1.5">
+                              <div className="flex justify-between text-sm">
+                                <span>Base Fee</span>
+                                <span>
+                                  ₹
+                                  {formatAmount(instalment?.baseFee + instalment?.scholarshipAmount)}
+                                </span>
+                              </div>
+                              <div className="flex justify-between text-sm">
+                                <span>GST</span>
+                                <span>
+                                  ₹{formatAmount(instalment?.baseFee * 0.18)}
+                                </span>
+                              </div>
+                              {instalment.scholarshipAmount > 0 && (
+                                <div className="flex justify-between text-[#F53F3F] text-sm">
+                                  <span>Scholarship Amount</span>
+                                  <span>- ₹{formatAmount(instalment?.scholarshipAmount)}</span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex justify-between text-lg sm:text-xl pt-1">
+                              <span className="font-medium text-white">Total</span>
+                              <span className="font-medium text-[#1388FF]">
+                                ₹{formatAmount(instalment?.amountPayable)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      <div className="hidden">
+                        {lastStatus = instalment.verificationStatus}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          )
-        )}
+                  );
+                })}
+              </div>
+            )
+        })}
       </div>}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTitle></DialogTitle>

@@ -251,7 +251,7 @@ export default function InterviewDetailsCard({ student }: InterviewDetailsCardPr
                   <div className="text-base text-muted-foreground">{new Date(interview?.updatedAt).toLocaleDateString()}</div>
                   <div className="text-xl text-muted-foreground">Reason for Cancelling:</div>
                 </div>
-                <div className="text-base sm:text-xl">{interview?.cancelReason}</div>
+                <div className="text-sm sm:text-base">{interview?.cancelReason}</div>
               </div> : 
               (!isMeetEnded && index === 0) &&
                 <div>
