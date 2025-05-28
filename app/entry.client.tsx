@@ -12,8 +12,8 @@ import 'whatwg-fetch';
 startTransition(() => {
   hydrateRoot(
     document,
-    <StrictMode>
+    // <StrictMode>
       <RemixBrowser />
-    </StrictMode>
+    // </StrictMode>
   );
 });

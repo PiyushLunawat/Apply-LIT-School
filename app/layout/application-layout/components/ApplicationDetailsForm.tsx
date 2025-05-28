@@ -4,6 +4,8 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "@remix-run/react";
+import { auth } from "firebase.config";
+import { RecaptchaVerifier } from "firebase/auth";
 import {
   CheckCircle,
   Clipboard,
@@ -459,7 +461,7 @@ const ApplicationDetailsForm: React.FC = () => {
 
   useEffect(() => {
     const fetchStudentData = async () => {
-      if (studentData._id && openCohorts.length > 0 && openCohorts.length > 0)
+      if (studentData._id && openCohorts.length > 0)
         try {
           const student = await getCurrentStudent(studentData._id);
           console.log("Student data fetched:", student);
@@ -495,7 +497,7 @@ const ApplicationDetailsForm: React.FC = () => {
 
           setFetchedStudentData(student);
 
-          const sData =
+          const studentDetail =
             student?.appliedCohorts[student.appliedCohorts.length - 1]
               ?.applicationDetails?.studentDetails;
 
@@ -510,6 +512,7 @@ const ApplicationDetailsForm: React.FC = () => {
           } else {
             setIsSaved(false);
           }
+
           if (
             student?.appliedCohorts[student.appliedCohorts.length - 1]
               ?.applicationDetails?.applicationFee === "paid"
@@ -526,13 +529,6 @@ const ApplicationDetailsForm: React.FC = () => {
             existingData = JSON.parse(existingDataJSON);
           }
 
-          const isExistingDataEmpty =
-            existingData &&
-            existingData.studentData &&
-            Object.keys(existingData.studentData).length === 0 &&
-            existingData.applicationData &&
-            existingData.applicationData?.duration === "";
-
           setApplicationFees(
             fetchedStudentData?.appliedCohorts?.[
               fetchedStudentData?.appliedCohorts.length - 1
@@ -540,47 +536,46 @@ const ApplicationDetailsForm: React.FC = () => {
           );
           // 3. Decide how to build mergedForm
           let mergedForm;
-          if (isExistingDataEmpty) {
-            // If everything in local storage is empty, use the data from sData
             mergedForm = {
               studentData: {
-                firstName: studentData?.firstName || "",
-                lastName: studentData?.lastName || "",
-                email: studentData?.email || "",
-                contact: student?.mobileNumber || studentData?.mobileNumber,
-                dob: studentData?.dateOfBirth
-                  ? studentData.dateOfBirth.split("T")[0]
-                  : "",
-                currentStatus:
-                  studentData?.appliedCohorts[
-                    studentData?.appliedCohorts.length - 1
+                firstName: student?.firstName || studentData?.firstName || "",
+                lastName: student?.lastName || studentData?.lastName || "",
+                email: student?.email || studentData?.email || "",
+                contact: student?.mobileNumber || existingData?.studentData?.contact || studentData?.mobileNumber,
+                dob: student?.dateOfBirth
+                  ? student.dateOfBirth.split("T")[0]
+                  : existingData?.studentData?.dob ? 
+                    existingData?.studentData?.dob.split("T")[0] : "",
+                currentStatus: existingData?.studentData?.currentStatus ||
+                  student?.appliedCohorts[
+                    student?.appliedCohorts.length - 1
                   ]?.qualification || "",
-                courseOfInterest:
-                  studentData?.appliedCohorts[
-                    studentData?.appliedCohorts.length - 1
-                  ]?.cohortId?.programDetail?._id || "",
-                cohort:
-                  studentData?.appliedCohorts[
-                    studentData?.appliedCohorts.length - 1
-                  ]?.cohortId._id || "",
+                courseOfInterest: student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status !== 'dropped' ?
+                  (student?.appliedCohorts[
+                    student?.appliedCohorts.length - 1
+                  ]?.cohortId?.programDetail?._id || existingData?.studentData?.courseOfInterest) : "",
+                cohort: student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status !== 'dropped' ?
+                  student?.appliedCohorts[
+                    student?.appliedCohorts.length - 1
+                  ]?.cohortId._id || existingData?.studentData?.cohort : "",
                 isMobileVerified: student?.isMobileVerified || false,
-                linkedInUrl: studentData?.linkedInUrl || "",
-                instagramUrl: studentData?.instagramUrl || "",
-                gender: studentData?.gender || "male",
+                linkedInUrl: student?.linkedInUrl || existingData?.studentData?.linkedInUrl || "",
+                instagramUrl: student?.instagramUrl || existingData?.studentData?.instagramUrl || "",
+                gender: student?.gender || existingData?.studentData?.gender || "male",
               },
               applicationData: {
-                address: sData?.currentAddress?.streetAddress || "",
-                city: sData?.currentAddress?.city || "",
-                zipcode: sData?.currentAddress?.postalCode || "",
+                address: studentDetail?.currentAddress?.streetAddress || existingData?.applicationData?.address || "",
+                city: studentDetail?.currentAddress?.city || existingData?.applicationData?.city || "",
+                zipcode: studentDetail?.currentAddress?.postalCode || existingData?.applicationData?.zipcode || "",
                 educationLevel:
-                  sData?.previousEducation?.highestLevelOfEducation || "",
-                fieldOfStudy: sData?.previousEducation?.fieldOfStudy || "",
+                  studentDetail?.previousEducation?.highestLevelOfEducation || existingData?.applicationData?.educationLevel || "",
+                fieldOfStudy: studentDetail?.previousEducation?.fieldOfStudy || existingData?.applicationData?.fieldOfStudy || "",
                 institutionName:
-                  sData?.previousEducation?.nameOfInstitution || "",
+                  studentDetail?.previousEducation?.nameOfInstitution || existingData?.applicationData?.institutionName || "",
                 graduationYear:
-                  sData?.previousEducation?.yearOfGraduation || "",
+                  studentDetail?.previousEducation?.yearOfGraduation || existingData?.applicationData?.graduationYear || "",
                 isExperienced:
-                  sData?.workExperience?.isExperienced ||
+                  studentDetail?.workExperience?.isExperienced || existingData?.applicationData?.isExperienced ||
                   [
                     "Working Professional",
                     "Freelancer",
@@ -593,7 +588,7 @@ const ApplicationDetailsForm: React.FC = () => {
                   ) ||
                   false,
                 experienceType:
-                  sData?.workExperience?.experienceType ||
+                  studentDetail?.workExperience?.experienceType || existingData?.applicationData?.experienceType ||
                   ([
                     "Working Professional",
                     "Business Owner",
@@ -608,171 +603,42 @@ const ApplicationDetailsForm: React.FC = () => {
                         studentData?.appliedCohorts.length - 1
                       ]?.qualification
                     : ""),
-                nameOfCompany: sData?.workExperience?.nameOfCompany || "",
-                durationFrom: "",
-                durationTo: "",
-                duration: sData?.workExperience?.duration || "",
-                jobDescription: sData?.workExperience?.jobDescription || "",
-                emergencyFirstName: sData?.emergencyContact?.firstName || "",
-                emergencyLastName: sData?.emergencyContact?.lastName || "",
-                emergencyContact: sData?.emergencyContact?.contactNumber || "",
-                relationship:
-                  sData?.emergencyContact?.relationshipWithStudent || "",
-                fatherFirstName:
-                  sData?.parentInformation?.father?.firstName || "",
-                fatherLastName:
-                  sData?.parentInformation?.father?.lastName || "",
-                fatherContact:
-                  sData?.parentInformation?.father?.contactNumber || "",
-                fatherOccupation:
-                  sData?.parentInformation?.father?.occupation || "",
-                fatherEmail: sData?.parentInformation?.father?.email || "",
-                motherFirstName:
-                  sData?.parentInformation?.mother?.firstName || "",
-                motherLastName:
-                  sData?.parentInformation?.mother?.lastName || "",
-                motherContact:
-                  sData?.parentInformation?.mother?.contactNumber || "",
-                motherOccupation:
-                  sData?.parentInformation?.mother?.occupation || "",
-                motherEmail: sData?.parentInformation?.mother?.email || "",
-                financiallyDependent:
-                  !sData?.financialInformation?.isFinanciallyIndependent ||
-                  false,
-                appliedForFinancialAid:
-                  sData?.financialInformation?.hasAppliedForFinancialAid ||
-                  false,
-              },
-            };
-          } else {
-            mergedForm = {
-              studentData: {
-                // Default to your known fields first
-                firstName: studentData?.firstName || "",
-                lastName: studentData?.lastName || "",
-                email: studentData?.email || "",
-                courseOfInterest:
-                  existingData?.studentData?.courseOfInterest ||
-                  studentData?.appliedCohorts[
-                    studentData?.appliedCohorts.length - 1
-                  ]?.cohortId?.programDetail?._id ||
-                  "",
-                cohort:
-                  existingData?.studentData?.cohort ||
-                  studentData?.appliedCohorts[
-                    studentData?.appliedCohorts.length - 1
-                  ]?.cohortId._id ||
-                  "",
-                isMobileVerified: student?.isMobileVerified || false,
-                contact:
-                  existingData?.studentData?.contact ||
-                  studentData?.mobileNumber ||
-                  "",
-                dob:
-                  existingData?.studentData?.dob.split("T")[0] ||
-                  studentData.dateOfBirth.split("T")[0],
-                currentStatus:
-                  existingData?.studentData?.currentStatus ||
-                  studentData?.appliedCohorts[
-                    studentData?.appliedCohorts.length - 1
-                  ]?.qualification ||
-                  "",
-                linkedInUrl:
-                  existingData?.studentData?.linkedInUrl ||
-                  studentData?.linkedInUrl ||
-                  "",
-                instagramUrl:
-                  existingData?.studentData?.instagramUrl ||
-                  studentData?.instagramUrl ||
-                  "",
-                gender:
-                  existingData?.studentData?.gender ||
-                  studentData?.gender ||
-                  "male",
-              },
-
-              applicationData: {
-                // Use existingData first if it's relevant, otherwise fallback to sData or defaults
-                address: existingData?.applicationData?.address || "",
-                city: existingData?.applicationData?.city || "",
-                zipcode: existingData?.applicationData?.zipcode || "",
-                educationLevel:
-                  existingData?.applicationData?.educationLevel || "",
-                fieldOfStudy: existingData?.applicationData?.fieldOfStudy || "",
-                institutionName:
-                  existingData?.applicationData?.institutionName || "",
-                graduationYear:
-                  existingData?.applicationData?.graduationYear || "",
-                isExperienced:
-                  existingData?.applicationData?.isExperienced ||
-                  [
-                    "Working Professional",
-                    "Freelancer",
-                    "Business Owner",
-                    "Consultant",
-                  ].includes(
-                    studentData?.appliedCohorts[
-                      studentData?.appliedCohorts.length - 1
-                    ]?.qualification
-                  ) ||
-                  false,
-                experienceType:
-                  existingData?.applicationData?.experienceType ||
-                  ([
-                    "Working Professional",
-                    "Business Owner",
-                    "Freelancer",
-                    "Consultant",
-                  ].includes(
-                    studentData?.appliedCohorts[
-                      studentData?.appliedCohorts.length - 1
-                    ]?.qualification
-                  )
-                    ? studentData?.appliedCohorts[
-                        studentData?.appliedCohorts.length - 1
-                      ]?.qualification
-                    : ""),
-                nameOfCompany:
-                  existingData?.applicationData?.nameOfCompany || "",
+                nameOfCompany: studentDetail?.workExperience?.nameOfCompany || existingData?.applicationData?.nameOfCompany || "",
                 durationFrom: existingData?.applicationData?.durationFrom || "",
                 durationTo: existingData?.applicationData?.durationTo || "",
-                duration: existingData?.applicationData?.duration || "",
-                jobDescription:
-                  existingData?.applicationData?.jobDescription || "",
-                emergencyFirstName:
-                  existingData?.applicationData?.emergencyFirstName || "",
-                emergencyLastName:
-                  existingData?.applicationData?.emergencyLastName || "",
-                emergencyContact:
-                  existingData?.applicationData?.emergencyContact || "",
-                relationship: existingData?.applicationData?.relationship || "",
+                duration: studentDetail?.workExperience?.duration || existingData?.applicationData?.duration || "",
+                jobDescription: studentDetail?.workExperience?.jobDescription || existingData?.applicationData?.jobDescription || "",
+                emergencyFirstName: studentDetail?.emergencyContact?.firstName || existingData?.applicationData?.emergencyFirstName || "",
+                emergencyLastName: studentDetail?.emergencyContact?.lastName || existingData?.applicationData?.emergencyLastName || "",
+                emergencyContact: studentDetail?.emergencyContact?.contactNumber || existingData?.applicationData?.emergencyContact || "",
+                relationship:
+                  studentDetail?.emergencyContact?.relationshipWithStudent || existingData?.applicationData?.relationship || "",
                 fatherFirstName:
-                  existingData?.applicationData?.fatherFirstName || "",
+                  studentDetail?.parentInformation?.father?.firstName || existingData?.applicationData?.fatherFirstName || "",
                 fatherLastName:
-                  existingData?.applicationData?.fatherLastName || "",
+                  studentDetail?.parentInformation?.father?.lastName || existingData?.applicationData?.fatherLastName || "",
                 fatherContact:
-                  existingData?.applicationData?.fatherContact || "",
+                  studentDetail?.parentInformation?.father?.contactNumber || existingData?.applicationData?.fatherContact || "",
                 fatherOccupation:
-                  existingData?.applicationData?.fatherOccupation || "",
-                fatherEmail: existingData?.applicationData?.fatherEmail || "",
+                  studentDetail?.parentInformation?.father?.occupation || existingData?.applicationData?.fatherOccupation || "",
+                fatherEmail: studentDetail?.parentInformation?.father?.email || existingData?.applicationData?.fatherEmail || "",
                 motherFirstName:
-                  existingData?.applicationData?.motherFirstName || "",
+                  studentDetail?.parentInformation?.mother?.firstName || existingData?.applicationData?.motherFirstName || "",
                 motherLastName:
-                  existingData?.applicationData?.motherLastName || "",
+                  studentDetail?.parentInformation?.mother?.lastName || existingData?.applicationData?.motherLastName || "",
                 motherContact:
-                  existingData?.applicationData?.motherContact || "",
+                  studentDetail?.parentInformation?.mother?.contactNumber || existingData?.applicationData?.motherContact || "",
                 motherOccupation:
-                  existingData?.applicationData?.motherOccupation || "",
-                motherEmail: existingData?.applicationData?.motherEmail || "",
+                  studentDetail?.parentInformation?.mother?.occupation || existingData?.applicationData?.motherOccupation || "",
+                motherEmail: studentDetail?.parentInformation?.mother?.email || existingData?.applicationData?.motherEmail || "",
                 financiallyDependent:
+                  !studentDetail?.financialInformation?.isFinanciallyIndependent ||
                   existingData?.applicationData?.financiallyDependent || false,
                 appliedForFinancialAid:
-                  existingData?.applicationData?.appliedForFinancialAid ||
-                  false,
+                  studentDetail?.financialInformation?.hasAppliedForFinancialAid ||
+                  existingData?.applicationData?.appliedForFinancialAid || false,
               },
             };
-          }
-          // Finally, reset the form with merged data
           reset(mergedForm);
         } catch (error) {
           console.error("Failed to fetch student data:", error);
@@ -780,7 +646,7 @@ const ApplicationDetailsForm: React.FC = () => {
     };
 
     fetchStudentData();
-  }, [studentData, openCohorts, reset, navigate, openCohorts, reset, navigate]);
+  }, [studentData, filteredCohorts, reset, navigate]);
 
   useEffect(() => {
     const storedFormJSON = localStorage.getItem(
@@ -820,17 +686,19 @@ const ApplicationDetailsForm: React.FC = () => {
   };
 
   useEffect(() => {
-    const durationFrom = watch("applicationData.durationFrom");
-    const durationTo = watch("applicationData.durationTo");
+    const durationFrom = watch('applicationData.durationFrom');
+    const durationTo = watch('applicationData.durationTo');
 
     if (durationFrom && durationTo) {
       const formattedFrom = formatMonthYear(durationFrom);
       const formattedTo = formatMonthYear(durationTo);
-      setValue("applicationData.duration", `${formattedFrom} - ${formattedTo}`);
+      setValue('applicationData.duration', `${formattedFrom} - ${formattedTo}`);
     } else {
-      setValue("applicationData.duration", "");
+      setValue('applicationData.duration', '');
     }
-  }, [setValue, watch]);
+  }, [watch('applicationData.durationFrom'), watch('applicationData.durationTo'), setValue]);
+
+  const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
 
   const handleVerifyClick = async (contact: string) => {
     if (typeof window === "undefined") return;
@@ -839,7 +707,11 @@ const ApplicationDetailsForm: React.FC = () => {
 
     try {
       // Clear any existing reCAPTCHA first
-      clearRecaptcha();
+      if (!recaptchaVerifierRef.current) {
+        recaptchaVerifierRef.current = new RecaptchaVerifier(auth, "recaptcha-container", {
+          size: "invisible",
+        });
+      }
 
       // Wait a bit for cleanup
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -909,17 +781,12 @@ const ApplicationDetailsForm: React.FC = () => {
         return;
       }
 
-      const sId = fetchedStudentData._id;
-      const cId =
-        fetchedStudentData.appliedCohorts[
-          fetchedStudentData.appliedCohorts.length - 1
-        ].cohortId._id;
-
       // Call the API to create an order
-
       const feePayLoad = {
-        studentId: sId,
-        cohortId: cId,
+        studentId: fetchedStudentData._id,
+        cohortId: fetchedStudentData.appliedCohorts[
+          fetchedStudentData.appliedCohorts.length - 1
+        ].cohortId._id,
       };
       console.log("Payment payload:", feePayLoad);
 
@@ -1074,9 +941,7 @@ const ApplicationDetailsForm: React.FC = () => {
       }
 
       console.log("apiPayload", apiPayload);
-      console.log("apiPayload", apiPayload);
       const response = await submitApplication(apiPayload);
-      console.log("Form submitted successfully", response);
       console.log("Form submitted successfully", response);
 
       if (isSubmit) {

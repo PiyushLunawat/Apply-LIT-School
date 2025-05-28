@@ -45,6 +45,9 @@ const { studentData } = useContext(UserContext);
           </div>
           <p className="max-w-[360px] w-full text-sm sm:text-base ">
             Maintain all your personal Identification Documents for this course.
+            <span className="text-[#00CC92]">
+              {' '}Submit a hard copy of your 12th grade TC, Marks Card and ID card to the administration personnel to get your documents verified.
+            </span>
           </p>
         </div>
       </div>

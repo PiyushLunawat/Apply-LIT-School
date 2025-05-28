@@ -1,7 +1,7 @@
 // app/components/application/ApplicationDetails.tsx
 import React, { useState } from 'react';
 import SubHeader from '~/components/organisms/SubHeader/SubHeader';
-import NewApplicationDetailsForm from '../components/NewApplicationDetailsForm';
+import ApplicationDetailsForm from '~/layout/application-layout/components/ApplicationDetailsForm';
 
 export const NewApplicationForm: React.FC = () => {
 
@@ -12,7 +12,7 @@ export const NewApplicationForm: React.FC = () => {
           
         <div className="w-full px-4 justify-center items-center">
           <div className='max-w-[1000px] mx-auto'> 
-            <NewApplicationDetailsForm />
+            <ApplicationDetailsForm />
           </div>
         </div>
     </>
