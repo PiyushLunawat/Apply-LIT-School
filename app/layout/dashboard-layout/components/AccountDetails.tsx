@@ -226,11 +226,11 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
           <div className="flex md:flex-row flex-col items-center gap-4 sm:gap-6">
             <div className="w-full sm:w-[250px] h-[285px] bg-[#1F1F1F] flex flex-col items-center justify-center rounded-xl text-sm space-y-4">
               {student?.profileUrl || selectedImage ? (
-                <div className="w-full h-full relative">
+                <div className="w-full relative aspect-[4/5]">
                   <img
                     src={selectedImage || student?.profileUrl}
                     alt="id card"
-                    className="w-full h-full object-cover rounded-lg"
+                    className="w-full h-full object-contain rounded-lg"
                   />
                   {uploadCount < 3 && (
                     <label
