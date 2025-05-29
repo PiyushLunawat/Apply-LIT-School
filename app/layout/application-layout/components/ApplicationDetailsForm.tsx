@@ -35,8 +35,8 @@ import {
   PaymentSuccessDialog,
 } from "~/components/molecules/PaymentDialog/PaymentDialog";
 import { Button } from "~/components/ui/button";
-import DateSelector from "~/components/ui/date-selector";
 import { Dialog, DialogContent, DialogTitle } from "~/components/ui/dialog";
+import DOBSelector from "~/components/ui/dob-selector";
 import {
   Form,
   FormControl,
@@ -44,6 +44,7 @@ import {
   FormItem,
   FormMessage,
 } from "~/components/ui/form";
+import GraduationSelector from "~/components/ui/graduation-selector";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group";
@@ -322,12 +323,35 @@ const ApplicationDetailsForm: React.FC = () => {
   const [filteredCohorts, setFilteredCohorts] = useState<any[]>([]);
 
   // Use Firebase Auth Hook
-  const { initializeRecaptcha, sendOTP, isReady } =
-    useFirebaseAuth();
+  const { initializeRecaptcha, sendOTP, isReady } = useFirebaseAuth();
+
+  const maxGraduationDate = new Date().toISOString().split("T")[0];
+  const minGraduationDate = new Date(
+    new Date().getFullYear() - 50,
+    new Date().getMonth(),
+    new Date().getDate()
+  )
+    .toISOString()
+    .split("T")[0];
+
+  const maxDobDate = new Date(
+    new Date().getFullYear() - 16,
+    new Date().getMonth(),
+    new Date().getDate()
+  )
+    .toISOString()
+    .split("T")[0];
+  const minDobDate = new Date(
+    new Date().getFullYear() - 100,
+    new Date().getMonth(),
+    new Date().getDate()
+  )
+    .toISOString()
+    .split("T")[0];
 
   useEffect(() => {
     if (!fetchedStudentData) return;
-    
+
     const topObserver = new IntersectionObserver(
       ([entry]) => setIsTopVisible(entry.isIntersecting),
       { threshold: 0.1 }
@@ -533,115 +557,198 @@ const ApplicationDetailsForm: React.FC = () => {
           }
 
           setApplicationFees(
-            student?.appliedCohorts?.[
-              student?.appliedCohorts.length - 1
-            ]?.cohortId?.cohortFeesDetail?.applicationFee
+            student?.appliedCohorts?.[student?.appliedCohorts.length - 1]
+              ?.cohortId?.cohortFeesDetail?.applicationFee
           );
           // 3. Decide how to build mergedForm
           let mergedForm;
-            mergedForm = {
-              studentData: {
-                firstName: student?.firstName || studentData?.firstName || "",
-                lastName: student?.lastName || studentData?.lastName || "",
-                email: student?.email || studentData?.email || "",
-                contact: student?.mobileNumber || existingData?.studentData?.contact || studentData?.mobileNumber,
-                dob: student?.dateOfBirth
-                  ? student.dateOfBirth.split("T")[0]
-                  : existingData?.studentData?.dob ? 
-                    existingData?.studentData?.dob.split("T")[0] : "",
-                currentStatus: existingData?.studentData?.currentStatus ||
-                  student?.appliedCohorts[
-                    student?.appliedCohorts.length - 1
-                  ]?.qualification || "",
-                courseOfInterest: student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status !== 'dropped' ?
-                  (student?.appliedCohorts[
-                    student?.appliedCohorts.length - 1
-                  ]?.cohortId?.programDetail?._id || existingData?.studentData?.courseOfInterest) : "",
-                cohort: student?.appliedCohorts[student?.appliedCohorts.length - 1]?.status !== 'dropped' ?
-                  student?.appliedCohorts[
-                    student?.appliedCohorts.length - 1
-                  ]?.cohortId._id || existingData?.studentData?.cohort : "",
-                isMobileVerified: student?.isMobileVerified || false,
-                linkedInUrl: student?.linkedInUrl || existingData?.studentData?.linkedInUrl || "",
-                instagramUrl: student?.instagramUrl || existingData?.studentData?.instagramUrl || "",
-                gender: student?.gender || existingData?.studentData?.gender || "male",
-              },
-              applicationData: {
-                address: studentDetail?.currentAddress?.streetAddress || existingData?.applicationData?.address || "",
-                city: studentDetail?.currentAddress?.city || existingData?.applicationData?.city || "",
-                zipcode: studentDetail?.currentAddress?.postalCode || existingData?.applicationData?.zipcode || "",
-                educationLevel:
-                  studentDetail?.previousEducation?.highestLevelOfEducation || existingData?.applicationData?.educationLevel || "",
-                fieldOfStudy: studentDetail?.previousEducation?.fieldOfStudy || existingData?.applicationData?.fieldOfStudy || "",
-                institutionName:
-                  studentDetail?.previousEducation?.nameOfInstitution || existingData?.applicationData?.institutionName || "",
-                graduationYear:
-                  studentDetail?.previousEducation?.yearOfGraduation || existingData?.applicationData?.graduationYear || "",
-                isExperienced:
-                  studentDetail?.workExperience?.isExperienced || existingData?.applicationData?.isExperienced ||
-                  [
-                    "Working Professional",
-                    "Freelancer",
-                    "Business Owner",
-                    "Consultant",
-                  ].includes(
-                    studentData?.appliedCohorts[
+          // eslint-disable-next-line prefer-const
+          mergedForm = {
+            studentData: {
+              firstName: student?.firstName || studentData?.firstName || "",
+              lastName: student?.lastName || studentData?.lastName || "",
+              email: student?.email || studentData?.email || "",
+              contact:
+                student?.mobileNumber ||
+                existingData?.studentData?.contact ||
+                studentData?.mobileNumber,
+              dob: student?.dateOfBirth
+                ? student.dateOfBirth.split("T")[0]
+                : existingData?.studentData?.dob
+                ? existingData?.studentData?.dob.split("T")[0]
+                : "",
+              currentStatus:
+                existingData?.studentData?.currentStatus ||
+                student?.appliedCohorts[student?.appliedCohorts.length - 1]
+                  ?.qualification ||
+                "",
+              courseOfInterest:
+                student?.appliedCohorts[student?.appliedCohorts.length - 1]
+                  ?.status !== "dropped"
+                  ? student?.appliedCohorts[student?.appliedCohorts.length - 1]
+                      ?.cohortId?.programDetail?._id ||
+                    existingData?.studentData?.courseOfInterest
+                  : "",
+              cohort:
+                student?.appliedCohorts[student?.appliedCohorts.length - 1]
+                  ?.status !== "dropped"
+                  ? student?.appliedCohorts[student?.appliedCohorts.length - 1]
+                      ?.cohortId._id || existingData?.studentData?.cohort
+                  : "",
+              isMobileVerified: student?.isMobileVerified || false,
+              linkedInUrl:
+                student?.linkedInUrl ||
+                existingData?.studentData?.linkedInUrl ||
+                "",
+              instagramUrl:
+                student?.instagramUrl ||
+                existingData?.studentData?.instagramUrl ||
+                "",
+              gender:
+                student?.gender || existingData?.studentData?.gender || "male",
+            },
+            applicationData: {
+              address:
+                studentDetail?.currentAddress?.streetAddress ||
+                existingData?.applicationData?.address ||
+                "",
+              city:
+                studentDetail?.currentAddress?.city ||
+                existingData?.applicationData?.city ||
+                "",
+              zipcode:
+                studentDetail?.currentAddress?.postalCode ||
+                existingData?.applicationData?.zipcode ||
+                "",
+              educationLevel:
+                studentDetail?.previousEducation?.highestLevelOfEducation ||
+                existingData?.applicationData?.educationLevel ||
+                "",
+              fieldOfStudy:
+                studentDetail?.previousEducation?.fieldOfStudy ||
+                existingData?.applicationData?.fieldOfStudy ||
+                "",
+              institutionName:
+                studentDetail?.previousEducation?.nameOfInstitution ||
+                existingData?.applicationData?.institutionName ||
+                "",
+              graduationYear:
+                studentDetail?.previousEducation?.yearOfGraduation ||
+                existingData?.applicationData?.graduationYear ||
+                "",
+              isExperienced:
+                studentDetail?.workExperience?.isExperienced ||
+                existingData?.applicationData?.isExperienced ||
+                [
+                  "Working Professional",
+                  "Freelancer",
+                  "Business Owner",
+                  "Consultant",
+                ].includes(
+                  studentData?.appliedCohorts[
+                    studentData?.appliedCohorts.length - 1
+                  ]?.qualification
+                ) ||
+                false,
+              experienceType:
+                studentDetail?.workExperience?.experienceType ||
+                existingData?.applicationData?.experienceType ||
+                ([
+                  "Working Professional",
+                  "Business Owner",
+                  "Freelancer",
+                  "Consultant",
+                ].includes(
+                  studentData?.appliedCohorts[
+                    studentData?.appliedCohorts.length - 1
+                  ]?.qualification
+                )
+                  ? studentData?.appliedCohorts[
                       studentData?.appliedCohorts.length - 1
                     ]?.qualification
-                  ) ||
-                  false,
-                experienceType:
-                  studentDetail?.workExperience?.experienceType || existingData?.applicationData?.experienceType ||
-                  ([
-                    "Working Professional",
-                    "Business Owner",
-                    "Freelancer",
-                    "Consultant",
-                  ].includes(
-                    studentData?.appliedCohorts[
-                      studentData?.appliedCohorts.length - 1
-                    ]?.qualification
-                  )
-                    ? studentData?.appliedCohorts[
-                        studentData?.appliedCohorts.length - 1
-                      ]?.qualification
-                    : ""),
-                nameOfCompany: studentDetail?.workExperience?.nameOfCompany || existingData?.applicationData?.nameOfCompany || "",
-                durationFrom: existingData?.applicationData?.durationFrom || "",
-                durationTo: existingData?.applicationData?.durationTo || "",
-                duration: studentDetail?.workExperience?.duration || existingData?.applicationData?.duration || "",
-                jobDescription: studentDetail?.workExperience?.jobDescription || existingData?.applicationData?.jobDescription || "",
-                emergencyFirstName: studentDetail?.emergencyContact?.firstName || existingData?.applicationData?.emergencyFirstName || "",
-                emergencyLastName: studentDetail?.emergencyContact?.lastName || existingData?.applicationData?.emergencyLastName || "",
-                emergencyContact: studentDetail?.emergencyContact?.contactNumber || existingData?.applicationData?.emergencyContact || "",
-                relationship:
-                  studentDetail?.emergencyContact?.relationshipWithStudent || existingData?.applicationData?.relationship || "",
-                fatherFirstName:
-                  studentDetail?.parentInformation?.father?.firstName || existingData?.applicationData?.fatherFirstName || "",
-                fatherLastName:
-                  studentDetail?.parentInformation?.father?.lastName || existingData?.applicationData?.fatherLastName || "",
-                fatherContact:
-                  studentDetail?.parentInformation?.father?.contactNumber || existingData?.applicationData?.fatherContact || "",
-                fatherOccupation:
-                  studentDetail?.parentInformation?.father?.occupation || existingData?.applicationData?.fatherOccupation || "",
-                fatherEmail: studentDetail?.parentInformation?.father?.email || existingData?.applicationData?.fatherEmail || "",
-                motherFirstName:
-                  studentDetail?.parentInformation?.mother?.firstName || existingData?.applicationData?.motherFirstName || "",
-                motherLastName:
-                  studentDetail?.parentInformation?.mother?.lastName || existingData?.applicationData?.motherLastName || "",
-                motherContact:
-                  studentDetail?.parentInformation?.mother?.contactNumber || existingData?.applicationData?.motherContact || "",
-                motherOccupation:
-                  studentDetail?.parentInformation?.mother?.occupation || existingData?.applicationData?.motherOccupation || "",
-                motherEmail: studentDetail?.parentInformation?.mother?.email || existingData?.applicationData?.motherEmail || "",
-                financiallyDependent:
-                  !studentDetail?.financialInformation?.isFinanciallyIndependent ||
-                  existingData?.applicationData?.financiallyDependent || false,
-                appliedForFinancialAid:
-                  studentDetail?.financialInformation?.hasAppliedForFinancialAid ||
-                  existingData?.applicationData?.appliedForFinancialAid || false,
-              },
-            };
+                  : ""),
+              nameOfCompany:
+                studentDetail?.workExperience?.nameOfCompany ||
+                existingData?.applicationData?.nameOfCompany ||
+                "",
+              durationFrom: existingData?.applicationData?.durationFrom || "",
+              durationTo: existingData?.applicationData?.durationTo || "",
+              duration:
+                studentDetail?.workExperience?.duration ||
+                existingData?.applicationData?.duration ||
+                "",
+              jobDescription:
+                studentDetail?.workExperience?.jobDescription ||
+                existingData?.applicationData?.jobDescription ||
+                "",
+              emergencyFirstName:
+                studentDetail?.emergencyContact?.firstName ||
+                existingData?.applicationData?.emergencyFirstName ||
+                "",
+              emergencyLastName:
+                studentDetail?.emergencyContact?.lastName ||
+                existingData?.applicationData?.emergencyLastName ||
+                "",
+              emergencyContact:
+                studentDetail?.emergencyContact?.contactNumber ||
+                existingData?.applicationData?.emergencyContact ||
+                "",
+              relationship:
+                studentDetail?.emergencyContact?.relationshipWithStudent ||
+                existingData?.applicationData?.relationship ||
+                "",
+              fatherFirstName:
+                studentDetail?.parentInformation?.father?.firstName ||
+                existingData?.applicationData?.fatherFirstName ||
+                "",
+              fatherLastName:
+                studentDetail?.parentInformation?.father?.lastName ||
+                existingData?.applicationData?.fatherLastName ||
+                "",
+              fatherContact:
+                studentDetail?.parentInformation?.father?.contactNumber ||
+                existingData?.applicationData?.fatherContact ||
+                "",
+              fatherOccupation:
+                studentDetail?.parentInformation?.father?.occupation ||
+                existingData?.applicationData?.fatherOccupation ||
+                "",
+              fatherEmail:
+                studentDetail?.parentInformation?.father?.email ||
+                existingData?.applicationData?.fatherEmail ||
+                "",
+              motherFirstName:
+                studentDetail?.parentInformation?.mother?.firstName ||
+                existingData?.applicationData?.motherFirstName ||
+                "",
+              motherLastName:
+                studentDetail?.parentInformation?.mother?.lastName ||
+                existingData?.applicationData?.motherLastName ||
+                "",
+              motherContact:
+                studentDetail?.parentInformation?.mother?.contactNumber ||
+                existingData?.applicationData?.motherContact ||
+                "",
+              motherOccupation:
+                studentDetail?.parentInformation?.mother?.occupation ||
+                existingData?.applicationData?.motherOccupation ||
+                "",
+              motherEmail:
+                studentDetail?.parentInformation?.mother?.email ||
+                existingData?.applicationData?.motherEmail ||
+                "",
+              financiallyDependent:
+                !studentDetail?.financialInformation
+                  ?.isFinanciallyIndependent ||
+                existingData?.applicationData?.financiallyDependent ||
+                false,
+              appliedForFinancialAid:
+                studentDetail?.financialInformation
+                  ?.hasAppliedForFinancialAid ||
+                existingData?.applicationData?.appliedForFinancialAid ||
+                false,
+            },
+          };
           reset(mergedForm);
         } catch (error) {
           console.error("Failed to fetch student data:", error);
@@ -689,17 +796,21 @@ const ApplicationDetailsForm: React.FC = () => {
   };
 
   useEffect(() => {
-    const durationFrom = watch('applicationData.durationFrom');
-    const durationTo = watch('applicationData.durationTo');
+    const durationFrom = watch("applicationData.durationFrom");
+    const durationTo = watch("applicationData.durationTo");
 
     if (durationFrom && durationTo) {
       const formattedFrom = formatMonthYear(durationFrom);
       const formattedTo = formatMonthYear(durationTo);
-      setValue('applicationData.duration', `${formattedFrom} - ${formattedTo}`);
+      setValue("applicationData.duration", `${formattedFrom} - ${formattedTo}`);
     } else {
-      setValue('applicationData.duration', '');
+      setValue("applicationData.duration", "");
     }
-  }, [watch('applicationData.durationFrom'), watch('applicationData.durationTo'), setValue]);
+  }, [
+    watch("applicationData.durationFrom"),
+    watch("applicationData.durationTo"),
+    setValue,
+  ]);
 
   const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
 
@@ -711,9 +822,13 @@ const ApplicationDetailsForm: React.FC = () => {
     try {
       // Clear any existing reCAPTCHA first
       if (!recaptchaVerifierRef.current) {
-        recaptchaVerifierRef.current = new RecaptchaVerifier(auth, "recaptcha-container", {
-          size: "invisible",
-        });
+        recaptchaVerifierRef.current = new RecaptchaVerifier(
+          auth,
+          "recaptcha-container",
+          {
+            size: "invisible",
+          }
+        );
       }
 
       // clearRecaptcha();
@@ -789,9 +904,10 @@ const ApplicationDetailsForm: React.FC = () => {
       // Call the API to create an order
       const feePayLoad = {
         studentId: fetchedStudentData._id,
-        cohortId: fetchedStudentData.appliedCohorts[
-          fetchedStudentData.appliedCohorts.length - 1
-        ].cohortId._id,
+        cohortId:
+          fetchedStudentData.appliedCohorts[
+            fetchedStudentData.appliedCohorts.length - 1
+          ].cohortId._id,
       };
       console.log("Payment payload:", feePayLoad);
 
@@ -984,13 +1100,14 @@ const ApplicationDetailsForm: React.FC = () => {
 
   return (
     <>
-      {!fetchedStudentData ? 
+      {!fetchedStudentData ? (
         <div className="flex flex-col gap-6 mt-8">
           <Skeleton className="w-full bg-white/10 h-16 rounded-full" />
           <Skeleton className="w-full bg-white/10 h-[200px] " />
           <Skeleton className="w-full bg-white/10 h-16 rounded-full" />
           <Skeleton className="w-full bg-white/10 h-[200px] " />
-        </div> :
+        </div>
+      ) : (
         <Form {...form}>
           <form
             onSubmit={handleSubmit(onSubmit)}
@@ -1007,7 +1124,9 @@ const ApplicationDetailsForm: React.FC = () => {
                 name="studentData.firstName"
                 render={({ field }) => (
                   <FormItem className="flex-1 space-y-1">
-                    <Label className="text-sm font-normal pl-3">Full Name</Label>
+                    <Label className="text-sm font-normal pl-3">
+                      Full Name
+                    </Label>
                     <FormControl>
                       <Input
                         id="fullName"
@@ -1120,13 +1239,12 @@ const ApplicationDetailsForm: React.FC = () => {
                           Date of Birth
                         </Label>
                         <FormControl>
-                          <DateSelector
-                            id="dob"
-                            name="dateOfBirth"
-                            disabled={isSaved}
-                            value={field.value || ""}
-                            maxDate={maxDateString}
-                            onChange={(date) => field.onChange(date)} // Correct onChange
+                          <DOBSelector
+                            value={field.value}
+                            onChange={field.onChange}
+                            maxDate={maxDobDate}
+                            minDate={minDobDate}
+                            className="w-full md:w-fit"
                           />
                         </FormControl>
                         <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
@@ -1164,11 +1282,15 @@ const ApplicationDetailsForm: React.FC = () => {
                             <SelectItem value="Working Professional">
                               Working Professional
                             </SelectItem>
-                            <SelectItem value="Freelancer">Freelancer</SelectItem>
+                            <SelectItem value="Freelancer">
+                              Freelancer
+                            </SelectItem>
                             <SelectItem value="Business Owner">
                               Business Owner
                             </SelectItem>
-                            <SelectItem value="Consultant">Consultant</SelectItem>
+                            <SelectItem value="Consultant">
+                              Consultant
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                       </FormControl>
@@ -1398,13 +1520,19 @@ const ApplicationDetailsForm: React.FC = () => {
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="female" id="female" />
-                        <Label htmlFor="female" className="text-base font-normal">
+                        <Label
+                          htmlFor="female"
+                          className="text-base font-normal"
+                        >
                           Female
                         </Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="other" id="other" />
-                        <Label htmlFor="other" className="text-base font-normal">
+                        <Label
+                          htmlFor="other"
+                          className="text-base font-normal"
+                        >
                           Other
                         </Label>
                       </div>
@@ -1466,7 +1594,10 @@ const ApplicationDetailsForm: React.FC = () => {
                 name="applicationData.zipcode"
                 render={({ field }) => (
                   <FormItem className="flex-1 space-y-1">
-                    <Label htmlFor="zipcode" className="text-sm font-normal pl-3">
+                    <Label
+                      htmlFor="zipcode"
+                      className="text-sm font-normal pl-3"
+                    >
                       Postal/Zip Code
                     </Label>
                     <FormControl>
@@ -1587,28 +1718,24 @@ const ApplicationDetailsForm: React.FC = () => {
                 />
                 {/* Graduation Year */}
                 <FormField
-                  control={control}
+                  control={form.control}
                   name="applicationData.graduationYear"
                   render={({ field }) => (
-                    <FormItem className="flex-1 flex flex-col space-y-1">
-                      <Label
-                        htmlFor="graduationYear"
-                        className="text-sm font-normal pl-3"
-                      >
-                        Year of Graduation
-                      </Label>
+                    <FormItem>
+                      <Label>Graduation Date</Label>
                       <FormControl>
-                        <input
-                          placeholder="MM YYYY"
-                          type="month"
-                          className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border"
-                          id="graduationYear"
-                          {...field}
-                          max={new Date().toISOString().slice(0, 7)}
-                          disabled={isSaved}
+                        <GraduationSelector
+                          value={field.value}
+                          onChange={field.onChange}
+                          maxDate={maxGraduationDate}
+                          minDate={minGraduationDate}
+                          className="w-full md:w-fit"
                         />
                       </FormControl>
-                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                      <FormMessage />
+                      <p className="text-xs text-muted-foreground">
+                        Select your graduation date (month and year)
+                      </p>
                     </FormItem>
                   )}
                 />
@@ -1636,7 +1763,10 @@ const ApplicationDetailsForm: React.FC = () => {
                           value={field.value ? "yes" : "no"}
                         >
                           <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="yes" id="yesWorkExperience" />
+                            <RadioGroupItem
+                              value="yes"
+                              id="yesWorkExperience"
+                            />
                             <Label
                               htmlFor="yesWorkExperience"
                               className="text-base font-normal"
@@ -1825,7 +1955,10 @@ const ApplicationDetailsForm: React.FC = () => {
                                 <FormMessage className="text-xs sm:text-sm font-normal pl-3">
                                   {errors.applicationData?.durationTo && (
                                     <span className="text-red-500">
-                                      {errors.applicationData.durationTo.message}
+                                      {
+                                        errors.applicationData.durationTo
+                                          .message
+                                      }
                                     </span>
                                   )}
                                 </FormMessage>
@@ -1957,7 +2090,10 @@ const ApplicationDetailsForm: React.FC = () => {
                                 <FormMessage className="text-xs sm:text-sm font-normal pl-3">
                                   {errors.applicationData?.durationTo && (
                                     <span className="text-red-500">
-                                      {errors.applicationData.durationTo.message}
+                                      {
+                                        errors.applicationData.durationTo
+                                          .message
+                                      }
                                     </span>
                                   )}
                                 </FormMessage>
@@ -2056,7 +2192,10 @@ const ApplicationDetailsForm: React.FC = () => {
                                 <FormMessage className="text-xs sm:text-sm font-normal pl-3">
                                   {errors.applicationData?.durationTo && (
                                     <span className="text-red-500">
-                                      {errors.applicationData.durationTo.message}
+                                      {
+                                        errors.applicationData.durationTo
+                                          .message
+                                      }
                                     </span>
                                   )}
                                 </FormMessage>
@@ -2484,7 +2623,9 @@ const ApplicationDetailsForm: React.FC = () => {
                       <RadioGroup
                         disabled={isSaved}
                         className="flex space-x-6 mt-2"
-                        onValueChange={(value) => field.onChange(value === "yes")}
+                        onValueChange={(value) =>
+                          field.onChange(value === "yes")
+                        }
                         value={field.value ? "yes" : "no"}
                       >
                         <div className="flex items-center space-x-2">
@@ -2530,7 +2671,9 @@ const ApplicationDetailsForm: React.FC = () => {
                       <RadioGroup
                         disabled={isSaved}
                         className="flex space-x-6 mt-2"
-                        onValueChange={(value) => field.onChange(value === "yes")}
+                        onValueChange={(value) =>
+                          field.onChange(value === "yes")
+                        }
                         value={field.value ? "yes" : "no"}
                       >
                         <div className="flex items-center space-x-2">
@@ -2642,7 +2785,7 @@ const ApplicationDetailsForm: React.FC = () => {
             <div ref={bottomRef} />
           </form>
         </Form>
-      }
+      )}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogTitle></DialogTitle>
         <DialogContent className="flex flex-col bg-[#1C1C1C] gap-6 sm:gap rounded-3xl max-h-[70vh] sm:max-h-[90vh] overflow-y-auto max-w-[90vw] sm:max-w-2xl lg:max-w-4xl mx-auto !p-0">
