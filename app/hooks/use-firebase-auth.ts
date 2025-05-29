@@ -128,29 +128,29 @@ export function useFirebaseAuth() {
       console.log("Attempting to send OTP to:", phoneNumber);
 
       // Ensure reCAPTCHA is initialized and ready
-      let verifier = recaptchaVerifier;
+      // let verifier = recaptchaVerifier;
 
-      if (!verifier || !isReady) {
-        console.log("reCAPTCHA not ready, initializing...");
-        verifier = await initializeRecaptcha(containerId);
+      // if (!verifier || !isReady) {
+      //   console.log("reCAPTCHA not ready, initializing...");
+      //   verifier = await initializeRecaptcha(containerId);
 
-        if (!verifier) {
-          throw new Error("Failed to initialize reCAPTCHA. Please try again.");
-        }
+      //   if (!verifier) {
+      //     throw new Error("Failed to initialize reCAPTCHA. Please try again.");
+      //   }
 
-        // Wait a bit more to ensure it's fully ready
-        await new Promise((resolve) => setTimeout(resolve, 300));
-      }
+      //   // Wait a bit more to ensure it's fully ready
+      //   await new Promise((resolve) => setTimeout(resolve, 300));
+      // }
 
       const { signInWithPhoneNumber } = await import("firebase/auth");
 
       console.log("Using auth instance:", auth);
-      console.log("Using reCAPTCHA verifier:", verifier);
+      // console.log("Using reCAPTCHA verifier:", verifier);
 
       const confirmationResult = await signInWithPhoneNumber(
         auth,
-        phoneNumber,
-        verifier
+        phoneNumber
+        // verifier
       );
       console.log(
         "OTP sent successfully, confirmation result:",
