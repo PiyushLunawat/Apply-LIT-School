@@ -121,7 +121,9 @@ const Feedback: React.FC<FeedbackProps> = ({
         <div className="space-y-4">
           {applicationDetails?.applicationTasks[0]?.applicationTasks[0].tasks?.map(
             (task: any, index: any) =>
-              task?.feedback.length > 0 && (
+              task?.feedback?.[
+                    task?.feedback.length - 1
+                  ]?.feedbackData.length > 0 && (
                 <div key={task._id}>
                   <div className="text-sm sm:text-base font-semibold text-[#00A3FF]">
                     Task 0{index + 1}

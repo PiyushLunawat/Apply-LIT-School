@@ -44,11 +44,11 @@ const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({ open, setOpen, 
   const [uploadError, setUploadError] = useState<string | null>(null);
 
   const handleEditImage = () => {
-    const fileInput = document.getElementById('image-upload') as HTMLInputElement;
-    if (fileInput) {
-      fileInput.click();
-    }
-  };
+  const fileInput = document.getElementById('image-upload') as HTMLInputElement;
+  if (fileInput) {
+    fileInput.click();
+  }
+};
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (receiptUrl) {
@@ -99,19 +99,21 @@ const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({ open, setOpen, 
         return;
       }
       // Check if fileKey is actually a string before trying to use includes
-      if (typeof fileKey === "string") {
-        // Proceed with your file deletion logic here
-        const deleteCommand = new DeleteObjectCommand({
-          Bucket: "dev-application-portal", // Replace with your bucket name
-          Key: fileKey, // Key extracted from file URL
-        });
-        await s3Client.send(deleteCommand);
-        console.log("File deleted successfully from S3:", fileKey);
-        // Remove from UI
+      // if (typeof fileKey === "string") {
+      //   // Proceed with your file deletion logic here
+      //   const deleteCommand = new DeleteObjectCommand({
+      //     Bucket: "dev-application-portal", // Replace with your bucket name
+      //     Key: fileKey, // Key extracted from file URL
+      //   });
+      //   await s3Client.send(deleteCommand);
+      //   console.log("File deleted successfully from S3:", fileKey);
+      //   // Remove from UI
+      //   setReceiptUrl("");
+      // } else {
+      //   console.error("The file URL is not valid or does not contain the expected condition:", fileKey);
+      // }
         setReceiptUrl("");
-      } else {
-        console.error("The file URL is not valid or does not contain the expected condition:", fileKey);
-      }
+
     } catch (error) {
       console.error("Error deleting file:", error);
       setUploadError("Failed to delete file. Try again.");
@@ -325,20 +327,29 @@ const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({ open, setOpen, 
                     alt="Uploaded receipt"
                     className="mx-auto h-full"
                   />
-                  {/* <div className="absolute top-3 right-3 flex space-x-2">
-                    <Button variant="outline" size="icon"
+                  <div className="absolute top-3 right-3 flex space-x-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
                       className="w-8 h-8 bg-white/[0.2] border border-white rounded-full shadow hover:bg-white/[0.4]"
-                      onClick={() => handleEditImage()}
+                      onClick={handleEditImage}
                     >
                       <Pencil className="w-4 h-4" />
                     </Button>
+                    <input
+                      id="image-upload"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageChange}
+                    />
                     <Button variant="outline" size="icon"
                       className="w-8 h-8 bg-white/[0.2] border border-white rounded-full shadow hover:bg-white/[0.4]"
                       onClick={() => handleDeleteImage(fileName)}
                     >
                       <X className="w-5 h-5" />
                     </Button>
-                  </div> */}
+                  </div>
                 </div>
               ) : (
                 <label

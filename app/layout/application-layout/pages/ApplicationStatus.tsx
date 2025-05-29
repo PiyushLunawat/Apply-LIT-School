@@ -81,7 +81,7 @@ export const ApplicationStatus: React.FC = () => {
                 setSubtitle('Your Payment is being verified');
                 setSubmessage(`You may access your dashboard once your payment has been verified.`);
               } else if(isVerified === 'verification pending') {
-                  setSubtitle('Your Payment verification failed');
+                  setSubtitle('Your Payment is being verified');
                   setSubmessage(`You may access your dashboard once your payment has been verified.`);
               } else if(isVerified === 'flagged') {
                 setSubtitle('Your Payment verification failed');

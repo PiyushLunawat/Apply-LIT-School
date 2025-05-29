@@ -164,7 +164,7 @@ const BookYourSeat: React.FC<FeedbackProps> = ({ cohortId, booked, tokenFee, set
             <span className="text-sm sm:text-base">Available</span>
           </div>
         </div>
-<div className="sm:relative h-[250px] sm:h-[460px] perspective-1000 -mt-16 sm:mt-0">
+<div className="sm:hidden sm:relative h-[250px] sm:h-[460px] perspective-1000 -mt-16 sm:mt-0">
       {(isMobile ? 
         [
           { row: 0, seats: 12 },
@@ -207,7 +207,7 @@ const BookYourSeat: React.FC<FeedbackProps> = ({ cohortId, booked, tokenFee, set
         </div>
       ))}
     </div>
-        <div className="hidden relative h-[460px] perspective-1000 -mt-48">
+        <div className="hidden sm:block relative h-[460px] perspective-1000 -mt-48">
         {ROW_CONFIG.map((rowConfig) => (
           <div
             key={rowConfig.row}
