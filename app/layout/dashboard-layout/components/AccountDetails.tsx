@@ -70,21 +70,12 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
     }
   }, [student]);
 
-  const handleImageChange = async (
+   const handleImageChange = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     if (event.target.files && event.target.files[0]) {
-      // Check upload limit
-      if (uploadCount >= 3) {
-        setUploadError(
-          "You have reached the maximum limit of 3 profile picture uploads."
-        );
-        return;
-      }
-
       const file = event.target.files[0];
       setLoading(true);
-      setUploadError("");
 
       try {
         const formData = new FormData();
@@ -93,27 +84,12 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
 
         if (response.status) {
           setStudentData(response.data);
-          // Increment upload count
-          const newCount = uploadCount + 1;
-          setUploadCount(newCount);
-          // Store count in localStorage as backup
-          localStorage.setItem(
-            `uploadCount_${student._id}`,
-            newCount.toString()
-          );
-
-          // Optionally, you can also send the count to the server
-          const countFormData = new FormData();
-          countFormData.append("profileUploadCount", newCount.toString());
-          await updateStudentData(countFormData);
         }
       } catch (error) {
         console.error("Error uploading image:", error);
-        setUploadError("An error occurred while uploading the image.");
+        // alert("An error occurred while uploading the image.");
       } finally {
         setLoading(false);
-        // Clear the file input
-        event.target.value = "";
       }
     }
   };
@@ -232,37 +208,17 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                     alt="id card"
                     className="w-full h-full object-cover rounded-lg"
                   />
-                  {uploadCount < 3 && (
-                    <label
-                      htmlFor="passport-input"
-                      className="absolute bottom-2 right-2 bg-black/70 text-white p-2 rounded-full cursor-pointer hover:bg-black/90 transition-colors"
-                    >
-                      <Camera className="w-4 h-4" />
-                      <input
-                        id="passport-input"
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleImageChange}
-                        disabled={uploadCount >= 3}
-                      />
-                    </label>
-                  )}
                 </div>
               ) : (
                 <label
                   htmlFor="passport-input"
-                  className={`cursor-pointer flex flex-col items-center justify-center bg-[#1F1F1F] px-6 rounded-xl border-[#2C2C2C] w-full h-[220px] ${
-                    uploadCount >= 3 ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
+                  className="cursor-pointer flex flex-col items-center justify-center bg-[#1F1F1F] px-6 rounded-xl border-[#2C2C2C] w-full h-[220px]"
                 >
                   <div className="text-center my-auto text-muted-foreground">
                     <Camera className="mx-auto mb-2 w-8 h-8" />
                     <div className="text-wrap">
                       {loading
                         ? "Uploading your Profile Image..."
-                        : uploadCount >= 3
-                        ? "Upload limit reached (3/3)"
                         : "Upload a Passport size Image of Yourself. Ensure that your face covers 60% of this picture."}
                     </div>
                   </div>
@@ -272,25 +228,9 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                     accept="image/*"
                     className="hidden"
                     onChange={handleImageChange}
-                    disabled={uploadCount >= 3}
                   />
                 </label>
               )}
-
-              {/* Upload count and error display */}
-              <div className="w-full px-4 text-center">
-                <div className="text-xs text-gray-400">
-                  Profile uploads: {uploadCount}/3
-                </div>
-                {uploadError && (
-                  <div className="text-xs text-red-400 mt-1">{uploadError}</div>
-                )}
-                {uploadCount >= 3 && (
-                  <div className="text-xs text-yellow-400 mt-1">
-                    Upload limit reached
-                  </div>
-                )}
-              </div>
             </div>
             <div className="w-full">
               {/* Full Name */}
