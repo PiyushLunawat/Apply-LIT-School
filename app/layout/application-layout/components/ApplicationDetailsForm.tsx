@@ -322,12 +322,12 @@ const ApplicationDetailsForm: React.FC = () => {
   const [filteredCohorts, setFilteredCohorts] = useState<any[]>([]);
 
   // Use Firebase Auth Hook
-  const { sendOTP } =
+  const { initializeRecaptcha, sendOTP, isReady } =
     useFirebaseAuth();
 
   useEffect(() => {
     if (!fetchedStudentData) return;
-
+    
     const topObserver = new IntersectionObserver(
       ([entry]) => setIsTopVisible(entry.isIntersecting),
       { threshold: 0.1 }
@@ -710,13 +710,13 @@ const ApplicationDetailsForm: React.FC = () => {
 
     try {
       // Clear any existing reCAPTCHA first
-      console.log("Send");
-      
       if (!recaptchaVerifierRef.current) {
         recaptchaVerifierRef.current = new RecaptchaVerifier(auth, "recaptcha-container", {
           size: "invisible",
         });
       }
+
+      // clearRecaptcha();
 
       // Wait a bit for cleanup
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -1090,7 +1090,7 @@ const ApplicationDetailsForm: React.FC = () => {
                           disabled={otpLoading}
                           onClick={() =>
                             handleVerifyClick(
-                              field.value || studentData?.mobileNumber
+                              field.value || fetchedStudentData?.mobileNumber
                             )
                           }
                           type="button"
@@ -2652,7 +2652,7 @@ const ApplicationDetailsForm: React.FC = () => {
             errorMessage="Oops! Looks like you got the OTP wrong, Please Retry."
             setIsDialogOpen={setIsDialogOpen}
             verificationId={verificationId}
-            onResendOtp={handleVerifyClick}
+            onResendOtp={() => handleVerifyClick(contactInfo)}
           />
         </DialogContent>
       </Dialog>

@@ -42,7 +42,7 @@ interface VerifyOTPProps {
   setIsDialogOpen?: (isOpen: boolean) => void;
   onVerificationSuccess?: () => void;
   verificationId?: string;
-  onResendOtp?: (contact: string) => Promise<void>;
+  onResendOtp?: (contact: string) => void;
 }
 
 export const VerifyOTP: React.FC<VerifyOTPProps> = ({
@@ -214,9 +214,14 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
   const handleResendOtp = async () => {
     try {
       setLoading(true);
-      if (verificationType === "contact" && onResendOtp) {
+      if (verificationType === "contact") {
         // Use the same logic as send OTP function
-        sendOTP(contactInfo);
+        
+        if (onResendOtp) {
+        onResendOtp(contactInfo);
+      } else {
+        console.warn("onResendOtp handler not provided for contact verification.");
+      }
         form.clearErrors("otp");
         reset({ otp: "" });
         setTimer(59); // Reset timer to 59 to match the initial timer
