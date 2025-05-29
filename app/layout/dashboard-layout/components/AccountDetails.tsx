@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { UserContext } from "~/context/UserContext";
+import { generateIDCardPDF } from "~/utils/pdf-generator";
 
 interface AccountDetailsProps {
   student: any;
@@ -70,7 +71,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
     }
   }, [student]);
 
-   const handleImageChange = async (
+  const handleImageChange = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     if (event.target.files && event.target.files[0]) {
@@ -184,11 +185,30 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
     setIsGeneratingPDF(true);
 
     try {
-      // TODO add generate PDF logic here
-      console.log("Generating PDF for student:", student._id);
+      console.log("Starting PDF generation...", details);
+
+      // Try the main method first
+      await generateIDCardPDF(student || details);
+      console.log("PDF generated successfully!");
     } catch (error) {
-      console.error("PDF generation failed:", error);
-      alert("Failed to generate PDF. Please try again.");
+      console.error(
+        "Main PDF generation failed, trying simple fallback:",
+        error
+      );
+
+      try {
+        // Import the simple fallback
+        const { generateSimpleIDCardPDF } = await import(
+          "~/utils/pdf-generator"
+        );
+        await generateSimpleIDCardPDF(student || details);
+        console.log("Fallback PDF generated successfully!");
+      } catch (fallbackError) {
+        console.error("Fallback PDF generation also failed:", fallbackError);
+        alert(
+          "Failed to generate PDF. Please check the console for details and try again."
+        );
+      }
     } finally {
       setIsGeneratingPDF(false);
     }
