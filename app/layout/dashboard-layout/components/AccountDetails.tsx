@@ -1,23 +1,20 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-
-import type React from "react";
 
 import {
   Camera,
   CheckCircle,
   Download,
-  Eye,
   FileLock,
   Plus,
   SquarePen,
 } from "lucide-react";
+import type React from "react";
 import { useContext, useEffect, useState } from "react";
 import { updateStudentData } from "~/api/studentAPI";
-import LitIdBack from "~/components/molecules/LitId/LitIdBack";
-import LitIdFront from "~/components/molecules/LitId/LitIdFront";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
-import { Dialog, DialogContent, DialogTitle } from "~/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -29,19 +26,15 @@ import { UserContext } from "~/context/UserContext";
 import { generateIDCardPDF } from "~/utils/pdf-generator";
 
 interface AccountDetailsProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   student: any;
 }
 
 export default function AccountDetails({ student }: AccountDetailsProps) {
-  const [open, setOpen] = useState(false);
   const { studentData, setStudentData } = useContext(UserContext);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [details, setDetails] = useState<any>();
   const [loading, setLoading] = useState(false);
-  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   const [bloodGroupInput, setBloodGroupInput] = useState<string>("");
   const [bloodGroupError, setBloodGroupError] = useState<string>("");
@@ -57,6 +50,9 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
   );
   const [addSocials, setAddSocials] = useState<boolean>(false);
 
+  const [uploadCount, setUploadCount] = useState<number>(0);
+  const [uploadError, setUploadError] = useState<string>("");
+
   useEffect(() => {
     if (student) {
       setDetails(student);
@@ -66,43 +62,14 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
       setInstagramInput(student?.instagramUrl || "");
       setEditInstagramInput(!student?.instagramUrl);
       setAddSocials(student?.linkedInUrl && student?.instagramUrl);
+      // Initialize upload count from student data or localStorage
+      const storedCount =
+        localStorage.getItem(`uploadCount_${student._id}`) ||
+        student.profileUploadCount ||
+        0;
+      setUploadCount(Number(storedCount));
     }
   }, [student]);
-
-  const handleDownloadPDF = async () => {
-    if (isGeneratingPDF) return;
-
-    setIsGeneratingPDF(true);
-
-    try {
-      console.log("Starting PDF generation...", details);
-
-      // Try the main method first
-      await generateIDCardPDF(student || details);
-      console.log("PDF generated successfully!");
-    } catch (error) {
-      console.error(
-        "Main PDF generation failed, trying simple fallback:",
-        error
-      );
-
-      try {
-        // Import the simple fallback
-        const { generateSimpleIDCardPDF } = await import(
-          "~/utils/pdf-generator"
-        );
-        await generateSimpleIDCardPDF(student || details);
-        console.log("Fallback PDF generated successfully!");
-      } catch (fallbackError) {
-        console.error("Fallback PDF generation also failed:", fallbackError);
-        alert(
-          "Failed to generate PDF. Please check the console for details and try again."
-        );
-      }
-    } finally {
-      setIsGeneratingPDF(false);
-    }
-  };
 
   const handleImageChange = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -118,10 +85,10 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
 
         if (response.status) {
           setStudentData(response.data);
-          setDetails(response.data);
         }
       } catch (error) {
         console.error("Error uploading image:", error);
+        // alert("An error occurred while uploading the image.");
       } finally {
         setLoading(false);
       }
@@ -181,7 +148,6 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
 
       if (response.status) {
         setStudentData({ ...studentData, linkedInUrl: linkedInInput });
-        setDetails({ ...details, linkedInUrl: linkedInInput });
         setEditLinkedInInput(false);
         setLinkedInError("");
       }
@@ -202,7 +168,6 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
 
       if (response.status) {
         setStudentData({ ...studentData, instagramUrl: instagramInput });
-        setDetails({ ...details, instagramUrl: instagramInput });
         setEditInstagramInput(false);
         setInstagramError("");
       }
@@ -214,9 +179,44 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
     }
   };
 
+  const handleDownloadPDF = async () => {
+    if (isGeneratingPDF) return;
+
+    setIsGeneratingPDF(true);
+
+    try {
+      console.log("Starting PDF generation...", details);
+
+      // Try the main method first
+      await generateIDCardPDF(student || details);
+      console.log("PDF generated successfully!");
+    } catch (error) {
+      console.error(
+        "Main PDF generation failed, trying simple fallback:",
+        error
+      );
+
+      try {
+        // Import the simple fallback
+        const { generateSimpleIDCardPDF } = await import(
+          "~/utils/pdf-generator"
+        );
+        await generateSimpleIDCardPDF(student || details);
+        console.log("Fallback PDF generated successfully!");
+      } catch (fallbackError) {
+        console.error("Fallback PDF generation also failed:", fallbackError);
+        alert(
+          "Failed to generate PDF. Please check the console for details and try again."
+        );
+      }
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
   return (
     <div className="px-4 sm:px-8 py-8 space-y-6">
-      {/* User Details Card - keeping your existing code */}
+      {/* User Details Card */}
       <Card className="bg-[#64748B1F] rounded-xl text-white">
         <CardContent className="p-6 ">
           <div className="flex md:flex-row flex-col items-center gap-4 sm:gap-6">
@@ -225,23 +225,9 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                 <div className="w-full h-full relative">
                   <img
                     src={selectedImage || student?.profileUrl}
-                    alt="Profile"
+                    alt="id card"
                     className="w-full h-full object-cover rounded-lg"
                   />
-                  <label
-                    htmlFor="passport-input"
-                    className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer rounded-lg"
-                  >
-                    <Camera className="w-8 h-8 text-white" />
-                    <input
-                      id="passport-input"
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleImageChange}
-                      disabled={loading}
-                    />
-                  </label>
                 </div>
               ) : (
                 <label
@@ -262,7 +248,6 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                     accept="image/*"
                     className="hidden"
                     onChange={handleImageChange}
-                    disabled={loading}
                   />
                 </label>
               )}
@@ -351,7 +336,6 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                   <Select
                     value={bloodGroupInput}
                     onValueChange={setBloodGroupInput}
-                    disabled={loading}
                   >
                     <SelectTrigger className="bg-transparent border-none text-base sm:text-xl focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0">
                       <SelectValue placeholder="Select blood group" />
@@ -379,9 +363,8 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                   size={"lg"}
                   className="rounded-lg"
                   onClick={handleBloodGroup}
-                  disabled={loading}
                 >
-                  {loading ? "Saving..." : "Save"}
+                  Save
                 </Button>
               )}
             </div>
@@ -402,7 +385,6 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                     onChange={(e) => setLinkedInInput(e.target.value)}
                     placeholder="Enter LinkedIn URL"
                     className="bg-transparent text-white text-base sm:text-xl focus-visible:none border-none focus-visible:outline-none focus-border-none w-full"
-                    disabled={loading}
                   />
                   {linkedInError && (
                     <div className="text-sm text-[#FF503D]">
@@ -422,14 +404,9 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                       setEditLinkedInInput(true);
                     }
                   }}
-                  disabled={loading}
                 >
                   {editLinkedInInput ? (
-                    loading ? (
-                      "Saving..."
-                    ) : (
-                      "Save"
-                    )
+                    "Save"
                   ) : (
                     <SquarePen className="h-4 w-4" />
                   )}
@@ -450,7 +427,6 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                     onChange={(e) => setInstagramInput(e.target.value)}
                     placeholder="Enter Instagram URL"
                     className="bg-transparent text-base sm:text-xl focus-visible:none border-none focus-visible:outline-none focus-border-none w-full"
-                    disabled={loading}
                   />
                   {instagramError && (
                     <div className="text-sm text-[#FF503D]">
@@ -472,14 +448,9 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                       setEditInstagramInput(true);
                     }
                   }}
-                  disabled={loading}
                 >
                   {editInstagramInput ? (
-                    loading ? (
-                      "Saving..."
-                    ) : (
-                      "Save"
-                    )
+                    "Save"
                   ) : (
                     <SquarePen className="flex-1 h-4 w-4" />
                   )}
@@ -499,7 +470,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
         </CardContent>
       </Card>
 
-      {/* 2) LIT ID Card Section */}
+      {/* LIT ID Card Section - SIMPLIFIED */}
       <div className="space-y-6">
         <Card className="relative flex flex-col lg:flex-row gap-3 items-center justify-between border p-4 bg-[#64748B1F]">
           <div className="relative flex items-center gap-4">
@@ -508,23 +479,9 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                 src={student?.profileUrl || `/assets/images/lit-id-front.svg`}
                 alt="LIT ID Card"
                 className="w-16 h-16 rounded-xl bg-white py-1"
+                crossOrigin="anonymous"
               />
-              {student?.bloodGroup ? (
-                <div
-                  className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                  onClick={() => setOpen(true)}
-                  role="button"
-                  tabIndex={0}
-                  aria-label="View LIT ID Card"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      setOpen(true);
-                    }
-                  }}
-                >
-                  <Eye className="text-white w-6 h-6" />
-                </div>
-              ) : (
+              {!student?.bloodGroup && (
                 <div className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                   <FileLock className="text-white w-6 h-6" />
                 </div>
@@ -549,37 +506,10 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
               disabled={isGeneratingPDF}
             >
               <Download className="h-4 w-4" />
-              {isGeneratingPDF ? "Generating PDF..." : "Download"}
+              {isGeneratingPDF ? "Generating PDF..." : "Download ID Card"}
             </Button>
           )}
         </Card>
-
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTitle></DialogTitle>
-          <DialogContent className="flex justify-center items-start max-w-[90vw] sm:max-w-4xl py-2 px-6 max-h-[70vh] sm:max-h-[90vh] overflow-y-auto">
-            <div className="flex flex-col justify-center">
-              <div className="flex flex-col sm:flex-row mx-auto gap-4 items-center justify-center">
-                <div className="w-1/2 sm:w-full" data-testid="front">
-                  <LitIdFront data={student} />
-                </div>
-                <div className="w-1/2 sm:w-full" data-testid="back">
-                  <LitIdBack data={student} />
-                </div>
-              </div>
-
-              <Button
-                size="xl"
-                variant="outline"
-                className="w-fit flex items-center gap-2 mx-auto mt-4"
-                onClick={handleDownloadPDF}
-                disabled={isGeneratingPDF}
-              >
-                <Download className="h-4 w-4" />
-                {isGeneratingPDF ? "Generating PDF..." : "Download"}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
     </div>
   );
