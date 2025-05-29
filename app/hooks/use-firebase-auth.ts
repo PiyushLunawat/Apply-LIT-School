@@ -10,24 +10,24 @@ export function useFirebaseAuth() {
   const [isInitializing, setIsInitializing] = useState(false);
   const [isReady, setIsReady] = useState(false);
 
-  const clearRecaptcha = useCallback(() => {
-    if (recaptchaVerifier) {
-      try {
-        console.log("Clearing reCAPTCHA...");
-        recaptchaVerifier.clear();
-      } catch (error) {
-        console.error("Error clearing reCAPTCHA:", error);
-      }
-    }
-    setRecaptchaVerifier(null);
-    setIsReady(false);
+  // const clearRecaptcha = useCallback(() => {
+  //   if (recaptchaVerifier) {
+  //     try {
+  //       console.log("Clearing reCAPTCHA...");
+  //       recaptchaVerifier.clear();
+  //     } catch (error) {
+  //       console.error("Error clearing reCAPTCHA:", error);
+  //     }
+  //   }
+  //   setRecaptchaVerifier(null);
+  //   setIsReady(false);
 
-    // Clear the container
-    const container = document.getElementById("recaptcha-container");
-    if (container) {
-      container.innerHTML = "";
-    }
-  }, [recaptchaVerifier]);
+  //   // Clear the container
+  //   const container = document.getElementById("recaptcha-container");
+  //   if (container) {
+  //     container.innerHTML = "";
+  //   }
+  // }, [recaptchaVerifier]);
 
   const initializeRecaptcha = useCallback(
     async (containerId: string): Promise<RecaptchaVerifier | null> => {
@@ -62,7 +62,7 @@ export function useFirebaseAuth() {
 
       try {
         // Clear any existing reCAPTCHA first
-        clearRecaptcha();
+        // clearRecaptcha();
 
         // Wait a bit for cleanup
         await new Promise((resolve) => setTimeout(resolve, 200));
@@ -115,7 +115,7 @@ export function useFirebaseAuth() {
         return null;
       }
     },
-    [isInitializing, isReady, recaptchaVerifier, clearRecaptcha]
+    [isInitializing, isReady, recaptchaVerifier]
   );
 
   const sendOTP = async (
@@ -162,7 +162,7 @@ export function useFirebaseAuth() {
       console.error("Error sending OTP:", error);
 
       // Clear verifier on error and reset state
-      clearRecaptcha();
+      // clearRecaptcha();
 
       // Provide more specific error messages
       if (error instanceof Error) {
@@ -194,7 +194,7 @@ export function useFirebaseAuth() {
   return {
     initializeRecaptcha,
     sendOTP,
-    clearRecaptcha,
+    // clearRecaptcha,
     recaptchaVerifier,
     isInitializing,
     isReady,

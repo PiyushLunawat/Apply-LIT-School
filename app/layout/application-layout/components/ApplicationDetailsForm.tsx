@@ -322,12 +322,12 @@ const ApplicationDetailsForm: React.FC = () => {
   const [filteredCohorts, setFilteredCohorts] = useState<any[]>([]);
 
   // Use Firebase Auth Hook
-  const { initializeRecaptcha, sendOTP, clearRecaptcha, isReady } =
+  const { sendOTP } =
     useFirebaseAuth();
 
   useEffect(() => {
     if (!fetchedStudentData) return;
-    
+
     const topObserver = new IntersectionObserver(
       ([entry]) => setIsTopVisible(entry.isIntersecting),
       { threshold: 0.1 }
@@ -710,6 +710,8 @@ const ApplicationDetailsForm: React.FC = () => {
 
     try {
       // Clear any existing reCAPTCHA first
+      console.log("Send");
+      
       if (!recaptchaVerifierRef.current) {
         recaptchaVerifierRef.current = new RecaptchaVerifier(auth, "recaptcha-container", {
           size: "invisible",
