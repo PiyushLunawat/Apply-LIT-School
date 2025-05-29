@@ -710,6 +710,8 @@ const ApplicationDetailsForm: React.FC = () => {
 
     try {
       // Clear any existing reCAPTCHA first
+      console.log("Send");
+      
       if (!recaptchaVerifierRef.current) {
         recaptchaVerifierRef.current = new RecaptchaVerifier(auth, "recaptcha-container", {
           size: "invisible",
