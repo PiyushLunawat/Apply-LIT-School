@@ -314,7 +314,16 @@ export default function ApplicationDashboard({ student }: ApplicationDashboardPr
                 </div>
               </div>
             }
-            {true &&
+            {![
+              "aadharDocument",
+              "secondarySchoolMarksheet",
+              "higherSecondaryMarkSheet",
+              "higherSecondaryTC",
+              "fatherIdProof",
+              "motherIdProof",
+            ].every((name) =>
+              latestCohort?.personalDocs?.documents.some((doc: any) => doc.name === name)
+            ) &&
               <div className="bg-[#64748B1A] p-4 sm:p-6 rounded-xl border">
                 <div className="flex flex-col lg:flex-row gap-2 justify-between items-start lg:items-center">
                   <div className="spcae-y-2">
