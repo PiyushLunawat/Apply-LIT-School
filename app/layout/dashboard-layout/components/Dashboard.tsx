@@ -92,6 +92,10 @@ export default function ApplicationDashboard({ student }: ApplicationDashboardPr
     navigate('/dashboard/fee-payment');
   };
 
+  const handleDocumentsClick = () => {
+    navigate('/dashboard/personal-documents');
+  };
+
   const handleScheduleInterview = async () => {
     const data = {
       cohortId:
@@ -209,11 +213,11 @@ export default function ApplicationDashboard({ student }: ApplicationDashboardPr
     <div className="flex md:flex-row flex-col gap-4 justify-between md:items-end py-8 sm:py-[52px] px-[52px] bg-[#64748B1A] border-b">
       <div className="flex flex-row md:flex-col gap-4 md:gap-8 items-center md:items-start">
         <Avatar className="w-16 h-16 sm:w-32 sm:h-32">
-          <AvatarImage src={studentData?.profileUrl} className="object-cover" alt="@shadcn" />
+          <AvatarImage src={student?.profileUrl || studentData?.profileUrl} className="object-cover" alt="@shadcn" />
           <AvatarFallback className="uppercase text-2xl">{studentData?.firstName[0]}{studentData?.lastName[0]}</AvatarFallback>
         </Avatar>
         <h1 className="text-xl sm:text-4xl font-normal">
-          👋 Hey {studentData?.firstName+' '+studentData?.lastName},
+          👋 Hey {(student?.firstName || studentData?.firstName)+' '+(student?.lastName || studentData?.lastName)},
           <div className="">welcome to your LIT portal</div>
         </h1>
       </div>
@@ -295,7 +299,7 @@ export default function ApplicationDashboard({ student }: ApplicationDashboardPr
             </div>
             {!latestCohort?.paymentDetails &&
               <div className="bg-[#64748B1A] p-4 sm:p-6 rounded-xl border">
-                <div className="flex flex-col md:flex-row gap-2 justify-between items-center">
+                <div className="flex flex-col lg:flex-row gap-2 justify-between items-start lg:items-center">
                   <div className="spcae-y-2">
                     <div className="flex sm:flex-row flex-col items-start sm:items-center gap-2 sm:gap-4">
                       <h2 className="text-lg sm:text-xl font-semibold">Fee Payment Setup</h2>
@@ -306,6 +310,23 @@ export default function ApplicationDashboard({ student }: ApplicationDashboardPr
                   </div>
                     <Button size={'xl'} className="w-full md:w-fit" onClick={handleFeePaymentClick}>
                       Setup Fee Payment
+                    </Button>
+                </div>
+              </div>
+            }
+            {true &&
+              <div className="bg-[#64748B1A] p-4 sm:p-6 rounded-xl border">
+                <div className="flex flex-col lg:flex-row gap-2 justify-between items-start lg:items-center">
+                  <div className="spcae-y-2">
+                    <div className="flex sm:flex-row flex-col items-start sm:items-center gap-2 sm:gap-4">
+                      <h2 className="text-lg sm:text-xl font-semibold">Important Documents</h2>
+                    </div>
+                    <p className="sm:w-7/8 text-xs sm:text-base">
+                      Kindly upload your ID and educational documents to complete onboarding.
+                    </p>
+                  </div>
+                    <Button size={'xl'} className="w-full md:w-fit" onClick={handleDocumentsClick}>
+                      Setup Documents
                     </Button>
                 </div>
               </div>

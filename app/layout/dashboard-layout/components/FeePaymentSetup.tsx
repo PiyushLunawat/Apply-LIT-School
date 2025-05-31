@@ -60,6 +60,7 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
   const [paymentDetails, setPaymentDetails] = useState<any>(latestCohort?.paymentDetails);
 
   const [open, setOpen] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [receipt, setReceipt] = useState("");
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -213,6 +214,33 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
     setReceipt(url);
     setOpen(true);
   }
+
+  const handleFileDownload = async (url: string, docName: string) => {
+    setDownloading(true);
+    try {
+      // 1. Fetch the file as Blob
+      const response = await fetch(url);
+      const blob = await response.blob();
+
+      // 2. Create a temporary object URL for that Blob
+      const blobUrl = URL.createObjectURL(blob);
+
+      // 3. Create a hidden <a> and force download
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `${docName}.png`; // or "myImage.png"
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error("Download failed", err);
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   let lastStatus = '';
 
@@ -414,8 +442,8 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
         </div>
       </div>
 
-      <div className="bg-[#64748B1A] p-4 sm:p-6 rounded-xl mb-8">
-        <div className="flex flex-col sm:flex-row sm:gap-2 sm:justify-between">
+      <div className="flex gap-3 justify-between items-center bg-[#64748B1A] p-4 sm:p-6 rounded-xl mb-8">
+        <div className="flex flex-col flex-1 sm:flex-row sm:gap-2 sm:justify-between items-start sm:items-center">
           <h2 className="flex gap-2.5 text-lg sm:text-xl items-center font-semibold">
             <CircleCheck className="w-4 sm:w-6 h-4 sm:h-6 text-[#00AB7B]" />
             INR {(formatAmount(cohortDetails?.cohortFeesDetail?.tokenFee))}
@@ -424,6 +452,20 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
             <div>Admission Fee paid</div>
             <Separator orientation="vertical" />
             <div>{new Date(tokenFeeDetails?.createdAt).toLocaleDateString()}</div>
+          </div>
+        </div>
+        <div className="relative group w-10 h-10">
+          <img
+            src={tokenFeeDetails?.receipts?.[tokenFeeDetails?.receipts.length - 1]?.url}
+            alt="Fee_Receipt"
+            className="w-10 h-10 rounded-lg object-contain bg-white py-1"
+          />
+          {/* Eye icon overlay to open modal */}
+          <div
+            className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+            onClick={() => handleViewReciept(tokenFeeDetails?.receipts?.[tokenFeeDetails?.receipts.length - 1]?.url)}
+          >
+            <Eye className="text-white w-4 h-4" />
           </div>
         </div>
       </div>
@@ -736,8 +778,22 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
       </div>}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTitle></DialogTitle>
-        <DialogContent className="max-w-2xl max-h-[70vh] sm:max-h-[90vh] overflow-y-auto">
-          <img src={receipt} className="w-full h-[400px]"/>
+        <DialogContent className="max-w-[90vw] sm:max-w-2xl max-h-[70vh] sm:max-h-[90vh] overflow-y-auto">
+          <div className="relative bg-[#64748B33] border border-[#2C2C2C] w-full h-[300px]">
+            <img
+              src={receipt}
+              alt="Uploaded receipt"
+              className="mx-auto h-full object-contain"
+              />
+          </div>
+          {/* <img src={receipt} className="w-full h-[400px]"/> */}
+          <Button size={'xl'} variant={'outline'} className="mx-auto"
+            onClick={() =>
+              handleFileDownload(receipt, 'reciept')
+            }
+            disabled={downloading}>
+            Download
+          </Button>
         </DialogContent>
       </Dialog>
     </div>

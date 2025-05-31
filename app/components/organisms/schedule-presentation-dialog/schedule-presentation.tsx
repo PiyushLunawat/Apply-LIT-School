@@ -77,7 +77,9 @@ export function SchedulePresentation({ student, interviewer, eventCategory, redi
                 <div className="flex flex-col items-start space-y-2">
                 {interviewer.length > 0 ? (
                     <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {interviewer.map((interviewer: any, index: any) => (
+                        {interviewer
+                          .filter((interviewer: any) => interviewer?.events?.length > 0)
+                          .map((interviewer: any, index: any) => (
                             <div key={interviewer?._id}
                                 className={`flex flex-col bg-[#09090B] ${
                                     selectedInterviewer?._id === interviewer?._id ? 'border-white text-white' : 'text-muted-foreground'
