@@ -35,8 +35,8 @@ import {
   PaymentSuccessDialog,
 } from "~/components/molecules/PaymentDialog/PaymentDialog";
 import { Button } from "~/components/ui/button";
+import DateSelector from "~/components/ui/date-selector";
 import { Dialog, DialogContent, DialogTitle } from "~/components/ui/dialog";
-import DobSelector from "~/components/ui/dob-selector";
 import {
   Form,
   FormControl,
@@ -44,7 +44,6 @@ import {
   FormItem,
   FormMessage,
 } from "~/components/ui/form";
-import GraduationSelector from "~/components/ui/graduation-selector";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group";
@@ -81,7 +80,6 @@ const formSchema = z
       linkedInUrl: z.string().optional(),
       instagramUrl: z.string().optional(),
       gender: z.enum(["male", "female", "other"]),
-      graduationDate: z.string().nonempty("Graduation year is required"),
     }),
     profileUrl: z.any().optional(),
     applicationData: z.object({
@@ -323,31 +321,6 @@ const ApplicationDetailsForm: React.FC = () => {
   // Cohorts filtered by the user's chosen program
   const [filteredCohorts, setFilteredCohorts] = useState<any[]>([]);
 
-  const today = new Date();
-  const maxDobDate = new Date(
-    today.getFullYear() - 16,
-    today.getMonth(),
-    today.getDate()
-  )
-    .toISOString()
-    .split("T")[0];
-  const minDobDate = new Date(
-    today.getFullYear() - 100,
-    today.getMonth(),
-    today.getDate()
-  )
-    .toISOString()
-    .split("T")[0];
-
-  const maxGraduationDate = today.toISOString().split("T")[0];
-  const minGraduationDate = new Date(
-    today.getFullYear() - 50,
-    today.getMonth(),
-    today.getDate()
-  )
-    .toISOString()
-    .split("T")[0];
-
   // Use Firebase Auth Hook
   const { initializeRecaptcha, sendOTP, isReady } = useFirebaseAuth();
 
@@ -571,7 +544,6 @@ const ApplicationDetailsForm: React.FC = () => {
           );
           // 3. Decide how to build mergedForm
           let mergedForm;
-          // eslint-disable-next-line prefer-const
           mergedForm = {
             studentData: {
               firstName: student?.firstName || studentData?.firstName || "",
@@ -1248,12 +1220,13 @@ const ApplicationDetailsForm: React.FC = () => {
                           Date of Birth
                         </Label>
                         <FormControl>
-                          <DobSelector
-                            value={field.value}
-                            onChange={field.onChange}
-                            maxDate={maxDobDate}
-                            minDate={minDobDate}
-                            className="w-full"
+                          <DateSelector
+                            id="dob"
+                            name="dateOfBirth"
+                            disabled={isSaved}
+                            value={field.value || ""}
+                            maxDate={maxDateString}
+                            onChange={(date) => field.onChange(date)} // Correct onChange
                           />
                         </FormControl>
                         <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
@@ -1458,7 +1431,7 @@ const ApplicationDetailsForm: React.FC = () => {
                 render={({ field }) => (
                   <FormItem className="flex-1 space-y-1 relative">
                     <Label className="text-sm font-normal pl-3">
-                      Your LinkedIn Profile Link (Optional)
+                      Your LinkedIn Profile Link (Not Compulsory)
                     </Label>
                     <FormControl>
                       <Input
@@ -1485,7 +1458,7 @@ const ApplicationDetailsForm: React.FC = () => {
                 render={({ field }) => (
                   <FormItem className="flex-1 space-y-1 relative">
                     <Label className="text-sm font-normal pl-3">
-                      Your Instagram ID (Optional)
+                      Your Instagram ID (Not Compulsory)
                     </Label>
                     <FormControl>
                       <Input
@@ -1740,12 +1713,14 @@ const ApplicationDetailsForm: React.FC = () => {
                         Year of Graduation
                       </Label>
                       <FormControl>
-                        <GraduationSelector
-                          value={field.value}
-                          onChange={field.onChange}
-                          maxDate={maxGraduationDate}
-                          minDate={minGraduationDate}
-                          className="w-full"
+                        <input
+                          placeholder="MM YYYY"
+                          type="month"
+                          className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border"
+                          id="graduationYear"
+                          {...field}
+                          max={new Date().toISOString().slice(0, 7)}
+                          disabled={isSaved}
                         />
                       </FormControl>
                       <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
