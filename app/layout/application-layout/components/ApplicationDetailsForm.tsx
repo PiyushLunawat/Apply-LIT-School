@@ -35,7 +35,8 @@ import {
   PaymentSuccessDialog,
 } from "~/components/molecules/PaymentDialog/PaymentDialog";
 import { Button } from "~/components/ui/button";
-import DateSelector from "~/components/ui/date-selector";
+import DobSelector from "~/components/ui/dob-selector";
+import GraduationSelector from '~/components/ui/graduation-selector';
 import { Dialog, DialogContent, DialogTitle } from "~/components/ui/dialog";
 import {
   Form,
@@ -58,6 +59,7 @@ import { Skeleton } from "~/components/ui/skeleton";
 import { UserContext } from "~/context/UserContext";
 import { useFirebaseAuth } from "~/hooks/use-firebase-auth";
 import { VerifyOTP } from "~/layout/auth-layout/components/VerifyOTP";
+import AverageDurationSelector from "~/components/ui/average-duration-selector";
 
 type ExperienceType =
   | "Working Professional"
@@ -323,6 +325,16 @@ const ApplicationDetailsForm: React.FC = () => {
 
   // Use Firebase Auth Hook
   const { initializeRecaptcha, sendOTP, isReady } = useFirebaseAuth();
+
+  const today=new Date();
+  const maxGraduationDate = today.toISOString().split("T")[0];
+  const minGraduationDate = new Date(
+      today.getFullYear() - 50,
+      today.getMonth(),
+      today.getDate()
+  )
+      .toISOString()
+      .split("T")[0];
 
   useEffect(() => {
     if (!fetchedStudentData) return;
@@ -1220,7 +1232,7 @@ const ApplicationDetailsForm: React.FC = () => {
                           Date of Birth
                         </Label>
                         <FormControl>
-                          <DateSelector
+                          <DobSelector
                             id="dob"
                             name="dateOfBirth"
                             disabled={isSaved}
@@ -1431,7 +1443,7 @@ const ApplicationDetailsForm: React.FC = () => {
                 render={({ field }) => (
                   <FormItem className="flex-1 space-y-1 relative">
                     <Label className="text-sm font-normal pl-3">
-                      Your LinkedIn Profile Link (Not Compulsory)
+                      Your LinkedIn Profile Link (Optional)
                     </Label>
                     <FormControl>
                       <Input
@@ -1458,7 +1470,7 @@ const ApplicationDetailsForm: React.FC = () => {
                 render={({ field }) => (
                   <FormItem className="flex-1 space-y-1 relative">
                     <Label className="text-sm font-normal pl-3">
-                      Your Instagram ID (Not Compulsory)
+                      Your Instagram ID (Optional)
                     </Label>
                     <FormControl>
                       <Input
@@ -1713,14 +1725,12 @@ const ApplicationDetailsForm: React.FC = () => {
                         Year of Graduation
                       </Label>
                       <FormControl>
-                        <input
-                          placeholder="MM YYYY"
-                          type="month"
-                          className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border"
-                          id="graduationYear"
-                          {...field}
-                          max={new Date().toISOString().slice(0, 7)}
-                          disabled={isSaved}
+                        <GraduationSelector
+                            value={field.value}
+                            onChange={field.onChange}
+                            maxDate={maxGraduationDate}
+                            minDate={minGraduationDate}
+                            className="w-full"
                         />
                       </FormControl>
                       <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
@@ -1896,14 +1906,7 @@ const ApplicationDetailsForm: React.FC = () => {
                             render={({ field }) => (
                               <FormItem className="flex-1 flex flex-col space-y-1">
                                 <FormControl>
-                                  <Input
-                                    type="month"
-                                    id="durationFrom"
-                                    {...field}
-                                    disabled={isSaved}
-                                    max={new Date().toISOString().slice(0, 7)}
-                                    className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border"
-                                  />
+                                  <AverageDurationSelector id='durationFrom' className='w-full !h-[64px] px-3 rounded-xl' disabled={isSaved} {...field} />
                                 </FormControl>
                                 <FormMessage className="text-xs sm:text-sm font-normal pl-3">
                                   {errors.applicationData?.durationFrom && (
@@ -1927,18 +1930,7 @@ const ApplicationDetailsForm: React.FC = () => {
                             render={({ field }) => (
                               <FormItem className="flex-1 flex flex-col space-y-1">
                                 <FormControl>
-                                  <Input
-                                    type="month"
-                                    id="durationTo"
-                                    {...field}
-                                    disabled={isSaved}
-                                    min={
-                                      watch("applicationData.durationFrom") ||
-                                      undefined
-                                    }
-                                    max={new Date().toISOString().slice(0, 7)}
-                                    className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border"
-                                  />
+                                  <AverageDurationSelector id='durationTo' className='w-full !h-[64px] px-3 rounded-xl' disabled={isSaved} {...field} />
                                 </FormControl>
                                 <FormMessage className="text-xs sm:text-sm font-normal pl-3">
                                   {errors.applicationData?.durationTo && (

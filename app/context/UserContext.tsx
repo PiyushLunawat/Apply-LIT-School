@@ -1,17 +1,23 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useCallback } from 'react';
+import { getCurrentStudent } from '~/api/studentAPI';
 
 interface UserContextType {
   studentData: any;
   setStudentData: (data: any) => void;
+  refreshStudentData: () => Promise<void>;
+  isRefreshing: boolean;
 }
 
 export const UserContext = createContext<UserContextType>({
   studentData: {},
   setStudentData: () => {},
+  refreshStudentData: async () => {},
+  isRefreshing: false,
 });
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [studentData, setStudentData] = useState<any>(null);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
   // Initialize from localStorage when the component mounts
   useEffect(() => {
@@ -21,6 +27,32 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setStudentData(JSON.parse(storedData));
     }
   }, []);
+
+  // Function to refresh student data from the API
+  const refreshStudentData = useCallback(async () => {
+    if (!studentData || !studentData._id) {
+      console.log("Cannot refresh: No student ID available");
+      return;
+    }
+
+    try {
+      setIsRefreshing(true);
+      console.log("Refreshing student data...");
+      const freshData = await getCurrentStudent(studentData._id);
+
+      if (freshData) {
+        // Update localStorage
+        localStorage.setItem('studentData', JSON.stringify(freshData));
+        // Update context
+        setStudentData(freshData);
+        console.log("Student data refreshed successfully");
+      }
+    } catch (error) {
+      console.error("Error refreshing student data:", error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [studentData]);
 
   // Listen for localStorage changes
   useEffect(() => {
@@ -40,7 +72,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   return (
-    <UserContext.Provider value={{ studentData, setStudentData }}>
+    <UserContext.Provider value={{ 
+      studentData, 
+      setStudentData, 
+      refreshStudentData,
+      isRefreshing
+    }}>
       {children}
     </UserContext.Provider>
   );

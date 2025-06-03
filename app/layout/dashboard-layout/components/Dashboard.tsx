@@ -49,24 +49,19 @@ interface ApplicationDashboardProps {
 
 export default function ApplicationDashboard({ student }: ApplicationDashboardProps) {
 
-  const { studentData, setStudentData } = useContext(UserContext);
+  const { studentData, setStudentData, refreshStudentData, isRefreshing } = useContext(UserContext);
   const [interviewOpen, setInterviewOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [interviewer, setInterviewer] = useState<any>([]);
   const navigate = useNavigate();
 
+  // Effect for initial data load
   useEffect(() => {
-    const fetchStudentData = async () => {
-      try {
-        const student = await getCurrentStudent(studentData._id);  
-        console.log("dtid", student);
-        setStudentData(student); 
-      } catch (error) {
-        console.error("Failed to fetch student data:", error);
-      }
-    };
-    fetchStudentData();
-  }, []);
+    // Use the refreshStudentData function from UserContext for initial data load
+    if (studentData?._id) {
+      refreshStudentData();
+    }
+  }, [studentData?._id, refreshStudentData]);
 
   const latestCohort = student?.appliedCohorts?.[student?.appliedCohorts.length - 1];
   const cohortDetails = latestCohort?.cohortId;
@@ -79,7 +74,7 @@ export default function ApplicationDashboard({ student }: ApplicationDashboardPr
     month: 'long',    // Full month name (e.g., "October")
     day: 'numeric'    // Day of the month (e.g., "14")
   });
-  
+
   const handleExploreClick = () => {
     navigate('/dashboard/litmus-task');
   };
@@ -207,24 +202,49 @@ export default function ApplicationDashboard({ student }: ApplicationDashboardPr
   });
 
   const avgTaskScore = totalPercentage / taskScores.length;
-  
+
   return (
   <>
     <div className="flex md:flex-row flex-col gap-4 justify-between md:items-end py-8 sm:py-[52px] px-[52px] bg-[#64748B1A] border-b">
       <div className="flex flex-row md:flex-col gap-4 md:gap-8 items-center md:items-start">
-        <Avatar className="w-16 h-16 sm:w-32 sm:h-32">
-          <AvatarImage src={student?.profileUrl || studentData?.profileUrl} className="object-cover" alt="@shadcn" />
-          <AvatarFallback className="uppercase text-2xl">{studentData?.firstName[0]}{studentData?.lastName[0]}</AvatarFallback>
-        </Avatar>
+        <div className="relative">
+          <Avatar className="w-16 h-16 sm:w-32 sm:h-32">
+            <AvatarImage src={student?.profileUrl || studentData?.profileUrl} className="object-cover" alt="@shadcn" />
+            <AvatarFallback className="uppercase text-2xl">{studentData?.firstName?.[0]}{studentData?.lastName?.[0]}</AvatarFallback>
+          </Avatar>
+          <Button 
+            variant="outline" 
+            size="icon" 
+            className="absolute -bottom-2 -right-2 rounded-full bg-white hover:bg-gray-100"
+            onClick={refreshStudentData}
+            disabled={isRefreshing}
+          >
+            <ClockArrowUp className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </Button>
+        </div>
         <h1 className="text-xl sm:text-4xl font-normal">
           👋 Hey {(student?.firstName || studentData?.firstName)+' '+(student?.lastName || studentData?.lastName)},
           <div className="">welcome to your LIT portal</div>
         </h1>
       </div>
-      <p className="max-w-[400px] w-full text-sm sm:text-base ">
-        Here, you can access all your important details in one place, including your application status, account info,
-        payment portal, and wallet transactions. Stay organized and easily manage your journey with LIT School.
-      </p>
+      <div className="flex flex-col gap-2">
+        <p className="max-w-[400px] w-full text-sm sm:text-base ">
+          Here, you can access all your important details in one place, including your application status, account info,
+          payment portal, and wallet transactions. Stay organized and easily manage your journey with LIT School.
+        </p>
+        <div className="flex justify-end">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="flex items-center gap-2"
+            onClick={refreshStudentData}
+            disabled={isRefreshing}
+          >
+            <ClockArrowUp className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
+          </Button>
+        </div>
+      </div>
     </div>
 
       {/* LITMUS Test Submission Card */}

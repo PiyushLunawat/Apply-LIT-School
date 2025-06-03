@@ -1,3 +1,7 @@
+import QRCode from "qrcode";
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 interface StudentData {
   firstName?: string;
   lastName?: string;
@@ -7,7 +11,6 @@ interface StudentData {
   bloodGroup?: string;
   gender?: string;
   dateOfBirth?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   appliedCohorts?: any[];
   linkedInUrl?: string;
   instagramUrl?: string;
@@ -16,7 +19,6 @@ interface StudentData {
   emergencyContact?: string;
   address?: string;
   _id?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   program?: any;
 }
 
@@ -58,7 +60,16 @@ export const generateIDCardPDF = async (student: StudentData) => {
 
     // Import and render components using innerHTML approach
     const frontHTML = `
-    <div id="lit-id-front" style="width: 400px; height: 590px; background: white; border: 1px solid #d9d9d9; border-radius: 12px; overflow: hidden; margin-bottom: 20px; page-break-after: always;">
+    <div id="lit-id-front" style="width: 400px; 
+    height: 590px; 
+    background: white; 
+    border: 1px solid #d9d9d9; 
+    border-radius: 12px; 
+    overflow: hidden; 
+    margin-bottom: 20px; 
+    page-break-after: always; 
+    display: inline-block;
+    vertical-align: top;">
     <div style="width: 100%; height: 355px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #d9d9d9;">
       <img src="${student?.profileUrl || "https://github.com/shadcn.png"}" 
          style="width: 100%; height: 100%; object-fit: cover;" 
@@ -66,23 +77,23 @@ export const generateIDCardPDF = async (student: StudentData) => {
     </div>
     <div style="padding: 16px; background: white; height: 219px; display: flex; flex-direction: column; justify-content: space-between;">
       <div style="margin-left: 0;">
-      <div style="text-align: left; margin-bottom: 12px; padding-left: 4px; display: flex; justify-content: center;">
+      <div style="text-align: left; margin-bottom: 12px; padding-left: 4px; display: flex; justify-content: flex-start;">
         <div style="padding: 8px 16px; background: white; border: 1px solid #d9d9d9; border-radius: 50px; display: inline-block;">
         <span style="color: #000; font-size: 16px; font-weight: 500;">LIT${
-          student?.program?.prefix || "NBA"
-        }085</span>
+        student?.program?.prefix || "NBA"
+    }085</span>
         </div>
       </div>
       <div style="text-align: left; margin-bottom: 12px; padding-left: 4px;">
         <h2 style="color: #000; font-size: 24px; font-weight: 600; margin: 0 0 8px 0;">${
-          student?.firstName || ""
-        } ${student?.lastName || ""}</h2>
+        student?.firstName || ""
+    } ${student?.lastName || ""}</h2>
         <p style="color: #4f4f4f; font-size: 14px; margin: 0 0 4px 0;">${
-          student?.email || ""
-        }</p>
+        student?.email || ""
+    }</p>
         <p style="color: #4f4f4f; font-size: 14px; margin: 0;">${
-          student?.mobileNumber || ""
-        }</p>
+        student?.mobileNumber || ""
+    }</p>
       </div>
       </div>
       <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 4px; border-top: 1px solid #f0f0f0; padding-top: 8px;">
@@ -100,11 +111,20 @@ export const generateIDCardPDF = async (student: StudentData) => {
   `;
 
     const backHTML = `
-  <div id="lit-id-back" style="width: 400px; height: 590px; background: white; border: 1px solid #d9d9d9; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;">
+  <div id="lit-id-back" style="width: 400px; 
+    height: 590px; 
+    background: white; 
+    border: 1px solid #d9d9d9; 
+    border-radius: 12px; 
+    overflow: hidden; 
+    margin-bottom: 20px; 
+    page-break-after: always; 
+    display: inline-block;
+    vertical-align: top;">
     <div style="height: 288px; display: flex; justify-content: center; align-items: center; border-bottom: 1px solid #d9d9d9;">
       <div style="width: 168px; height: 168px; background: #ededed; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
         <div style="font-size: 12px; color: #666; text-align: center;">
-        <img src={localStorage.getItem("vCardURL")} alt="" />
+          <div id="qr-placeholder"></div>
         </div>
       </div>
     </div>
@@ -117,31 +137,31 @@ export const generateIDCardPDF = async (student: StudentData) => {
         </div>
         <div style="text-align: left; margin-bottom: 16px;">
           <p style="color: #4f4f4f; font-size: 14px; margin: 0 0 8px 0;">Mother's Name: ${
-            student?.motherName || "John Doe"
-          }</p>
+        student?.motherName || "John Doe"
+    }</p>
           <p style="color: #4f4f4f; font-size: 14px; margin: 0 0 8px 0;">Emergency Contact: ${
-            student?.emergencyContact ||
-            student?.appliedCohorts?.[0]?.applicationDetails?.studentDetails
-              ?.emergencyContact?.contactNumber ||
-            student?.mobileNumber ||
-            "--"
-          }</p>
+        student?.emergencyContact ||
+        student?.appliedCohorts?.[0]?.applicationDetails?.studentDetails
+            ?.emergencyContact?.contactNumber ||
+        student?.mobileNumber ||
+        "--"
+    }</p>
           <p style="color: #4f4f4f; font-size: 14px; margin: 0 0 8px 0;">Blood Group: ${
-            student?.bloodGroup || "B+"
-          }</p>
+        student?.bloodGroup || "B+"
+    }</p>
         </div>
-        <div style="text-align: left; margin-bottom: 16px;">
+        <div style="text-align: left; margin-bottom: 13px;">
           <p style="color: #4f4f4f; font-size: 14px; margin: 0 0 8px 0;">Address: ${
-            student?.address ||
-            "Jaya Nagar 1st Block, Jayanagar 3rd Block East, Bengaluru, Karnataka 560011"
-          }</p>
+        student?.address ||
+        "Jaya Nagar 1st Block, Jayanagar 3rd Block East, Bengaluru, Karnataka 560011"
+    }</p>
         </div>
       </div>
-      <div style="text-align: left; border-top: 1px solid #f0f0f0; padding-top: 12px;">
+      <div style="text-align: left; border-top: 1px solid #f0f0f0; padding-top: 10px;">
         <p style="color: #4f4f4f; font-size: 14px; margin: 0 0 4px 0;">Issued On: ${new Date().toLocaleDateString()}</p>
         <p style="color: #4f4f4f; font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">Expiry Date: ${new Date(
-          Date.now() + 365 * 24 * 60 * 60 * 1000
-        ).toLocaleDateString()}</p>
+        Date.now() + 365 * 24 * 60 * 60 * 1000
+    ).toLocaleDateString()}</p>
         <div style="display: flex; align-items: center; line-height: 1;">
           <span style="color: #000; font-size: 12px;">www.litschool.in</span>
           <span style="color: #4361ee; font-size: 12px; margin: 0 8px;">•</span>
@@ -154,6 +174,37 @@ export const generateIDCardPDF = async (student: StudentData) => {
 
     frontContainer.innerHTML = frontHTML;
     backContainer.innerHTML = backHTML;
+
+    // Generate the QR code canvas
+    const qrCanvas = document.createElement("canvas");
+    const vCardParams = new URLSearchParams({
+      firstName: student?.firstName || "",
+      lastName: student?.lastName || "",
+      phone: student?.mobileNumber || "",
+      email: student?.email || "",
+      profileUrl: student?.profileUrl || "",
+      linkedIn: student?.linkedInUrl || "",
+      instagram: student?.instagramUrl || "",
+    });
+
+    const baseUrl =
+        typeof window !== "undefined"
+            ? window.location.origin
+            : "https://apply-lit-school.vercel.app";
+    // Construct the dynamic vCard URL with the user ID and query params
+    const vCardURL = `${baseUrl}/id/${student?._id}?${vCardParams.toString()}`;
+    await QRCode.toCanvas(qrCanvas, vCardURL?.toString() || "id", {
+      width: 168,
+    });
+
+    // Now select the placeholder and append the QR
+    const qrPlaceholder = backContainer.querySelector("#qr-placeholder");
+    if (qrPlaceholder) {
+      qrPlaceholder.innerHTML = ""; // Clear any placeholder text
+      qrPlaceholder.appendChild(qrCanvas);
+    } else {
+      console.warn("QR placeholder not found");
+    }
 
     // Wait for images to load
     const images = container.querySelectorAll("img");
@@ -208,14 +259,14 @@ export const generateIDCardPDF = async (student: StudentData) => {
     document.body.removeChild(container);
 
     const fileName = `LIT_ID_Card_${student?.firstName || "Student"}_${
-      student?.lastName || "Card"
+        student?.lastName || "Card"
     }.pdf`;
     pdfInstance.save(fileName);
   } catch (error) {
     console.error("Detailed error in PDF generation:", error);
 
     const existingContainer = document.getElementById(
-      "pdf-generation-container"
+        "pdf-generation-container"
     );
     if (existingContainer) {
       document.body.removeChild(existingContainer);
@@ -242,9 +293,9 @@ export const generateSimpleIDCardPDF = async (student: StudentData) => {
 
     pdf.setFontSize(16);
     pdf.text(
-      `Name: ${student?.firstName || ""} ${student?.lastName || ""}`,
-      20,
-      50
+        `Name: ${student?.firstName || ""} ${student?.lastName || ""}`,
+        20,
+        50
     );
     pdf.text(`Email: ${student?.email || ""}`, 20, 65);
     pdf.text(`Phone: ${student?.mobileNumber || ""}`, 20, 80);
@@ -275,7 +326,7 @@ export const generateIDCardPDFFromDialog = async (student: StudentData) => {
 
     // Find the dialog content
     const dialogContent = document.querySelector(
-      '[role="dialog"]'
+        '[role="dialog"]'
     ) as HTMLElement;
     if (!dialogContent) {
       throw new Error("Please open the ID card preview dialog first");
@@ -310,7 +361,7 @@ export const generateIDCardPDFFromDialog = async (student: StudentData) => {
 
     // Save PDF
     pdfInstance.save(
-      `LIT_ID_Card_${student.firstName}_${student.lastName}.pdf`
+        `LIT_ID_Card_${student.firstName}_${student.lastName}.pdf`
     );
 
     console.log("PDF generated from dialog successfully!");

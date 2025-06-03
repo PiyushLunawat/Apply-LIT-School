@@ -42,6 +42,7 @@ export const links: LinksFunction = () => [
   },
   { rel: 'preload', href: '/assets/fonts/geist.css', as: 'style' },
   { href: '/assets/fonts/geist.css', rel: 'stylesheet' },
+  { rel: "stylesheet", href: '/tailwind.css' }
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {

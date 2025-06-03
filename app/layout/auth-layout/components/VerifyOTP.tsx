@@ -109,6 +109,8 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
           if (result.success) {
             // Optionally store student data in context or local storage
             localStorage.setItem("studentData", JSON.stringify(res.user));
+            localStorage.setItem('accessToken', res.accessToken);
+            localStorage.setItem("refreshToken", res.refreshToken);
             setStudentData(res.user);
           } else {
             form.setError("otp", { type: "manual", message: result.message });

@@ -23,6 +23,7 @@ import { signUp } from '~/api/authAPI';
 import { getCentres, getCohorts, getPrograms } from '~/api/studentAPI';
 import VerifyOTP from './VerifyOTP';
 import { Dialog, DialogContent, DialogTitle } from '~/components/ui/dialog';
+import DobSelector from '~/components/ui/dob-selector';
 
 
 interface Program {
@@ -243,34 +244,56 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({}) => {
             />
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-4 sm:gap-2">
-            <FormField
-              control={form.control}
-              name="dateOfBirth"
-              render={({ field }) => {
-                const maxDate = new Date();
-                maxDate.setFullYear(maxDate.getFullYear() - 16); // Subtract 16 years from today's date
-                const maxDateString = maxDate.toISOString().split('T')[0];
-                return (
-                  <FormItem className="flex-1 flex flex-col space-y-1 relative">
-                    <Label className="text-sm font-normal pl-3">Date of Birth</Label>
-                    <input
-                      type="date"
-                      className="!h-[64px] bg-[#09090B] px-3 uppercase rounded-xl border w-full"
-                      id="dateOfBirth"
-                      name="dateOfBirth"
-                      value={field.value ? format(new Date(field.value), 'yyyy-MM-dd') : ''}
-                      onChange={(e) => {
-                        const date = e.target.value;
-                        field.onChange(date);
-                      }}
-                      max={maxDateString}
-                    />
-                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                  </FormItem>
-                );
-              }}
-            />
+          <div className="grid sm:grid-cols-2 gap-4 sm:gap-2">
+              <FormField
+                  control={form.control}
+                  name="dateOfBirth"
+                  render={({ field }) => {
+                      const maxDate = new Date();
+                      maxDate.setFullYear(maxDate.getFullYear() - 16); // Subtract 16 years from today's date
+
+                      const today = new Date();
+                      const maxDobDate = new Date(
+                          today.getFullYear() - 16,
+                          today.getMonth(),
+                          today.getDate()
+                      )
+                          .toISOString()
+                          .split("T")[0];
+                      const minDobDate = new Date(
+                          today.getFullYear() - 100,
+                          today.getMonth(),
+                          today.getDate()
+                      )
+                          .toISOString()
+                          .split("T")[0];
+                      return (
+                          <FormItem className="flex-1 flex flex-col space-y-1 relative">
+                              <Label className="text-sm font-normal pl-3">
+                                  Date of Birth
+                              </Label>
+
+                              <DobSelector
+                                  value={
+                                      field.value
+                                          ? field.value.toISOString().split("T")[0]
+                                          : undefined
+                                  }
+                                  onChange={(dateString) =>
+                                      field.onChange(
+                                          dateString ? new Date(dateString) : undefined
+                                      )
+                                  }
+                                  maxDate={maxDobDate}
+                                  minDate={minDobDate}
+                                  className="w-full"
+                              />
+
+                              <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                          </FormItem>
+                      );
+                  }}
+              />
 
             <FormField
               control={form.control}
