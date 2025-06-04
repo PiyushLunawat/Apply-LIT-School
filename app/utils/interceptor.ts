@@ -3,13 +3,20 @@ import { getRefreshToken } from "~/api/authAPI";
 
 // Modify RegisterInterceptor to refresh the token if only accessToken is available
 let refreshingToken = false; // Flag to prevent infinite refresh loop
+let unregister: () => void; // Store the unregister function
 
 export const RegisterInterceptor = (
-  accessToken?: string,
-  refreshToken?: string,
-  setIsUnauthorized?: (state: boolean) => void
+    accessToken?: string,
+    refreshToken?: string,
+    setIsUnauthorized?: (state: boolean) => void
 ) => {
-  fetchIntercept.register({
+  // Unregister previous interceptor if exists
+  if (unregister) {
+    unregister();
+  }
+
+  // Register new interceptor
+  unregister = fetchIntercept.register({
     request: async (url, config = {}) => {
       if (typeof url !== "string" || !url.trim()) {
         console.log("Invalid URL: Expected a string, but got:", url);
@@ -18,9 +25,9 @@ export const RegisterInterceptor = (
 
       // Skip Firebase endpoints
       if (
-        url.includes("googleapis.com") ||
-        url.includes("firebase") ||
-        url.includes("firebaseapp.com")
+          url.includes("googleapis.com") ||
+          url.includes("firebase") ||
+          url.includes("firebaseapp.com")
       ) {
         console.log("Skipping Firebase or Google API endpoints.");
         return [url, config];
@@ -48,7 +55,7 @@ export const RegisterInterceptor = (
       ];
 
       const isPublic = publicEndpoints.some((endpoint) =>
-        url.includes(endpoint)
+          url.includes(endpoint)
       );
 
       // console.log("isPublic", !!isPublic, accessToken, refreshToken);
@@ -57,59 +64,65 @@ export const RegisterInterceptor = (
       if (!isPublic && !accessToken && !refreshToken) {
         console.log("No Access Token or Refresh Token");
 
-        // if (setIsUnauthorized) {
-        //   setIsUnauthorized(true); // Set unauthorized state to show login dialog
-        // }
+        if (setIsUnauthorized) {
+          setIsUnauthorized(true); // Set unauthorized state to show login dialog
+        }
 
         return [url, config];
       }
 
       // If accessToken is missing but refreshToken is available, call the refresh-token API
       if (!isPublic && !accessToken && refreshToken && !refreshingToken) {
-        console.log(
-          "Access Token is missing, using Refresh Token to get new Access Token",
-          refreshToken
-        );
+        try {
+          refreshingToken = true; // Set flag to prevent concurrent refresh attempts
 
-        const x = refreshToken;
+          console.log(
+              "Access Token is missing, using Refresh Token to get new Access Token",
+              refreshToken
+          );
 
-        const refPayload = {
-          refreshToken: x,
-        };
-
-        console.log("int I", refPayload);
-        const result = await getRefreshToken(refPayload); // Already parsed
-        console.log("int json", result);
-
-        if (result?.success) {
-          // Update cookies with new tokens
-          const response = await fetch("/set-cookies", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              accessToken: result.accessToken,
-              refreshToken: result.refreshToken,
-              userId: result.user.id,
-            }),
-          });
-
-          RegisterInterceptor(result.accessToken, result.refreshToken);
-
-          // Attach the new accessToken to the request headers
-          config.headers = {
-            ...config.headers,
-            authorization: `Bearer ${result?.accessToken}`,
+          const refPayload = {
+            refreshToken: refreshToken,
           };
-        } else {
-          console.error("Failed to refresh tokens.");
-          // if (setIsUnauthorized) setIsUnauthorized(true);
-        }
 
-        // Prevent multiple refreshes for the same request
-        refreshingToken = true;
-        return [url, config];
+          console.log("int I", refPayload);
+          const result = await getRefreshToken(refPayload); // Already parsed
+          console.log("int json", result);
+
+          if (result?.success) {
+            // Update cookies with new tokens
+            const response = await fetch("/set-cookies", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                accessToken: result.accessToken,
+                refreshToken: result.refreshToken,
+                userId: result.user.id,
+              }),
+            });
+
+            RegisterInterceptor(result.accessToken, result.refreshToken);
+
+            // Attach the new accessToken to the request headers
+            config.headers = {
+              ...config.headers,
+              authorization: `Bearer ${result?.accessToken}`,
+            };
+          } else {
+            console.error("Failed to refresh tokens.");
+            if (setIsUnauthorized) setIsUnauthorized(true);
+          }
+
+          return [url, config];
+        } catch (error) {
+          console.error("Error refreshing token:", error);
+          if (setIsUnauthorized) setIsUnauthorized(true);
+          return [url, config];
+        } finally {
+          refreshingToken = false; // Reset flag regardless of success or failure
+        }
       }
 
       // If both tokens are available, attach accessToken to the request header
