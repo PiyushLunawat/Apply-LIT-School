@@ -749,7 +749,7 @@ const ApplicationDetailsForm: React.FC = () => {
     };
 
     fetchStudentData();
-  }, [studentData, filteredCohorts, reset, navigate]);
+  }, [studentData, openCohorts, reset, navigate]);
 
   useEffect(() => {
     const storedFormJSON = localStorage.getItem(
@@ -2747,12 +2747,20 @@ const ApplicationDetailsForm: React.FC = () => {
               <Button
                 size="xl"
                 variant="outline"
-                className="fixed bottom-24 right-44 bg-[#09090b] hover:bg-[#09090b]/80"
+                className="fixed bottom-24 right-4 sm:right-44 bg-[#09090b] hover:bg-[#09090b]/80"
                 type="button"
                 disabled={saveLoading || saved}
                 onClick={() => submitData(form.getValues())}
               >
-                <div className="flex items-center gap-2">
+                <div className="sm:hidden flex items-center gap-2">
+                  {saved ? (
+                    <ClipboardCheck className="w-4 h-4" />
+                  ) : (
+                    <Clipboard className="h-4 w-4" />
+                  )}
+                  {saved ? "Saved" : "Save"}
+                </div>
+                <div className="hidden sm:flex items-center gap-2">
                   {saved ? (
                     <ClipboardCheck className="w-4 h-4" />
                   ) : (

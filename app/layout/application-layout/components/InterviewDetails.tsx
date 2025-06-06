@@ -70,7 +70,7 @@ export default function InterviewDetailsCard({
   // Enable the Join Meeting button if the current time is at least 10 minutes before the meeting start time.
   // That is, current time must be >= (meetingStart - 10 minutes).
   const joinMeetingEnabled = meetingStart
-    ? new Date().getTime() >= meetingStart.getTime() - 10 * 60000
+    ? new Date().getTime() >= meetingStart.getTime() - 5 * 60000
     : false;
 
   let durationMin = "";
@@ -293,14 +293,16 @@ export default function InterviewDetailsCard({
                           IST ({formattedTime})
                         </span>
                       </p>
-                      <Button
-                        variant="link"
-                        className="underline "
-                        disabled={joinMeetingEnabled}
-                        onClick={() => handleCancel(interview?.bookingId)}
-                      >
-                        Cancel Meeting
-                      </Button>
+                      {!joinMeetingEnabled && (
+                        <Button
+                          variant="link"
+                          className="underline "
+                          disabled={joinMeetingEnabled}
+                          onClick={() => handleCancel(interview?.bookingId)}
+                        >
+                          Cancel Meeting
+                        </Button>
+                      )}
                     </div>
                   </div>
                 )
