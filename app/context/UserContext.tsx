@@ -1,5 +1,5 @@
-import React, { createContext, useState, useEffect, useCallback } from 'react';
-import { getCurrentStudent } from '~/api/studentAPI';
+import React, { createContext, useCallback, useEffect, useState } from "react";
+import { getCurrentStudent } from "~/api/studentAPI";
 
 interface UserContextType {
   studentData: any;
@@ -15,13 +15,15 @@ export const UserContext = createContext<UserContextType>({
   isRefreshing: false,
 });
 
-export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [studentData, setStudentData] = useState<any>(null);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
   // Initialize from localStorage when the component mounts
   useEffect(() => {
-    const storedData = localStorage.getItem('studentData');
+    const storedData = localStorage.getItem("studentData");
 
     if (storedData) {
       setStudentData(JSON.parse(storedData));
@@ -42,7 +44,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (freshData) {
         // Update localStorage
-        localStorage.setItem('studentData', JSON.stringify(freshData));
+        localStorage.setItem("studentData", JSON.stringify(freshData));
         // Update context
         setStudentData(freshData);
         console.log("Student data refreshed successfully");
@@ -52,12 +54,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsRefreshing(false);
     }
-  }, [studentData]);
+  }, []);
 
   // Listen for localStorage changes
   useEffect(() => {
     const handleStorageChange = () => {
-      const updatedData = localStorage.getItem('studentData');
+      const updatedData = localStorage.getItem("studentData");
       if (updatedData) {
         setStudentData(JSON.parse(updatedData));
       } else {
@@ -65,19 +67,21 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener("storage", handleStorageChange);
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener("storage", handleStorageChange);
     };
   }, []);
 
   return (
-    <UserContext.Provider value={{ 
-      studentData, 
-      setStudentData, 
-      refreshStudentData,
-      isRefreshing
-    }}>
+    <UserContext.Provider
+      value={{
+        studentData,
+        setStudentData,
+        refreshStudentData,
+        isRefreshing,
+      }}
+    >
       {children}
     </UserContext.Provider>
   );
