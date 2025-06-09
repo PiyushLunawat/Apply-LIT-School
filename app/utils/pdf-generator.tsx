@@ -57,10 +57,7 @@ export const generateIDCardPDF = async (student: StudentData) => {
       instagram: student?.instagramUrl || "",
     });
 
-    const baseUrl =
-      typeof window !== "undefined"
-        ? window.location.origin
-        : "https://litschool.in";
+    const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://apply-lit-school.vercel.app";
     const vCardURL = `${baseUrl}/id/${student?._id}?${vCardParams.toString()}`;
 
     await QRCode.toCanvas(qrCanvas, vCardURL, {
@@ -76,15 +73,24 @@ export const generateIDCardPDF = async (student: StudentData) => {
     <div style="height: 288px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #e5e7eb;">
       <img src="${
         student?.profileUrl || "https://github.com/shadcn.png"
-      }" style="width: 100%; height: 100%; object-fit: cover;" crossorigin="anonymous" />
+      }" style="width: 100%; height: 100%; object-fit: cover;" alt="profile_pic" crossorigin="anonymous" />
     </div>
 
     <div style="padding: 16px; flex: 1;">
-      <div style="margin-bottom: 12px;">
-        <div style="padding: 8px 16px; background: white; border: 1px solid #e5e7eb; border-radius: 9999px; display: inline-block; align-items: center; text-align: center; justify-content: center;">
-          <span style="font-size: 14px; font-weight: 500; color: #111827; text-align: center;">LIT${
-            student?.program?.prefix || "NBA"
-          }085</span>
+      <div style="margin-bottom: 12px; display: flex;">
+        <div style="
+            padding: 8px 16px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        ">
+            <span style="font-size: 14px; font-weight: 500; color: #111827; align-items: center;
+            justify-content: center; display: flex">
+                LIT${student?.program?.prefix || "NBA"}085
+            </span>
         </div>
       </div>
       <div>
@@ -140,25 +146,26 @@ export const generateIDCardPDF = async (student: StudentData) => {
             student?.bloodGroup || "N/A"
           }</p>
           <p style="color: #6b7280; font-size: 12px; margin: 0 0 8px 0;"><span style="font-weight: 500;">Address:</span> ${
-            student?.address || "N/A"
+            student?.address || "Jayanagar, Bengaluru"
           }</p>
         </div>
       </div>
     </div>
 
-    <div style="padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
-      <div style="font-size: 12px; color: #6b7280;">
-        <p style="margin: 0 0 0 0;"><span style="font-weight: 500;">Issued On:</span> ${new Date().toLocaleDateString()}</p>
-        <p style="margin: 0;"><span style="font-weight: 700;">Expiry Date:</span> ${new Date(
-          Date.now() + 365 * 24 * 60 * 60 * 1000
-        ).toLocaleDateString()}</p>
-      </div>
-      <div style="display: flex; align-items: center; font-size: 12px;">
-        <span style="color: #111827;">www.litschool.in</span>
-        <span style="color: #3b82f6; margin: 0 8px;">•</span>
-        <span style="color: #111827;">info@litschool.in</span>
-      </div>
-    </div>
+    <div style="padding: 12px 16px; font-size: 12px; color: #6b7280;">
+  <div>
+    <p style="margin: 0 0 4px 0;"><span style="font-weight: 500;">Issued On:</span> ${new Date().toLocaleDateString()}</p>
+    <p style="margin: 0 0 8px 0;"><span style="font-weight: 700;">Expiry Date:</span> ${new Date(
+        Date.now() + 365 * 24 * 60 * 60 * 1000
+    ).toLocaleDateString()}</p>
+  </div>
+  <div style="display: flex; align-items: center;">
+    <span style="color: #111827;">www.litschool.in</span>
+    <span style="color: #3b82f6; margin: 0 8px;">•</span>
+    <span style="color: #111827;">info@litschool.in</span>
+  </div>
+</div>
+
 
   </div>
 `;
