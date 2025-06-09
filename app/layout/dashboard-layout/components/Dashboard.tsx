@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@remix-run/react";
-import { Clock, ClockArrowUp } from "lucide-react";
-import { useContext, useEffect, useState } from "react";
+import { Clock } from "lucide-react";
+import React, { useContext, useEffect, useState } from "react";
 import { GetInterviewers } from "~/api/studentAPI";
 import { SchedulePresentation } from "~/components/organisms/schedule-presentation-dialog/schedule-presentation";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
@@ -13,7 +13,7 @@ import { UserContext } from "~/context/UserContext";
 interface DashboardCardProps {
   title: string;
   description: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
   to: string;
   bgColor: string;
   border: string;
@@ -267,20 +267,6 @@ export default function ApplicationDashboard({
             wallet transactions. Stay organized and easily manage your journey
             with LIT School.
           </p>
-          <div className="flex justify-end">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex items-center gap-2"
-              onClick={refreshStudentData}
-              disabled={isRefreshing}
-            >
-              <ClockArrowUp
-                className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
-              />
-              {isRefreshing ? "Refreshing..." : "Refresh Data"}
-            </Button>
-          </div>
         </div>
       </div>
 
