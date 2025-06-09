@@ -9,15 +9,6 @@ dotenv.config();
 installGlobals();
 
 export default defineConfig({
-  experimental: {
-    renderBuiltUrl(filename) {
-      return {
-        runtime: `import.meta.env.VITE_PUBLIC_URL + ${JSON.stringify(
-          filename
-        )}`,
-      };
-    },
-  },
   assetsInclude: ["**/*.woff", "**/*.woff2"],
   plugins: [
     remix({ ignoredRouteFiles: ["**/*.css", "**/*.spec.ts", "**/*.spec.tsx"] }),

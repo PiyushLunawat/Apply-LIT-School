@@ -18,7 +18,7 @@ import {
   SaveIcon,
 } from "lucide-react";
 import type React from "react";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import {
@@ -34,10 +34,11 @@ import {
   PaymentFailedDialog,
   PaymentSuccessDialog,
 } from "~/components/molecules/PaymentDialog/PaymentDialog";
+import AverageDurationSelector from "~/components/ui/average-duration-selector";
 import { Button } from "~/components/ui/button";
-import DobSelector from "~/components/ui/dob-selector";
-import GraduationSelector from '~/components/ui/graduation-selector';
 import { Dialog, DialogContent, DialogTitle } from "~/components/ui/dialog";
+import DobSelector from "~/components/ui/dob-selector";
+import DurationSelector from "~/components/ui/duration-selector";
 import {
   Form,
   FormControl,
@@ -45,6 +46,7 @@ import {
   FormItem,
   FormMessage,
 } from "~/components/ui/form";
+import GraduationSelector from "~/components/ui/graduation-selector";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group";
@@ -59,7 +61,6 @@ import { Skeleton } from "~/components/ui/skeleton";
 import { UserContext } from "~/context/UserContext";
 import { useFirebaseAuth } from "~/hooks/use-firebase-auth";
 import { VerifyOTP } from "~/layout/auth-layout/components/VerifyOTP";
-import AverageDurationSelector from "~/components/ui/average-duration-selector";
 
 type ExperienceType =
   | "Working Professional"
@@ -137,7 +138,7 @@ const formSchema = z
   })
   .refine((data) => data.studentData.isMobileVerified, {
     message: "Mobile number needs to be verified.",
-    path: ["studentData.contact"], // Attach error to contact field
+    path: ["studentData.contact"],
   })
   .refine(
     (data) => {
@@ -207,7 +208,6 @@ const formSchema = z
   )
   .refine(
     (data) =>
-      // Ensure at least one parent's details are filled
       (data.applicationData.fatherFirstName &&
         data.applicationData.fatherLastName &&
         data.applicationData.fatherContact &&
@@ -220,7 +220,7 @@ const formSchema = z
         data.applicationData.motherEmail),
     {
       message: "Either mother's or father's details must be provided.",
-      path: ["applicationData.motherOccupation"], // Add error to the root of applicationData
+      path: ["applicationData.motherOccupation"],
     }
   )
   .refine(
@@ -228,21 +228,21 @@ const formSchema = z
       data.applicationData.emergencyContact !== data.studentData.contact,
     {
       message: "Emergency contact and your contact must be different.",
-      path: ["applicationData.emergencyContact"], // Error for emergencyContact
+      path: ["applicationData.emergencyContact"],
     }
   )
   .refine(
     (data) => data.applicationData.fatherContact !== data.studentData.contact,
     {
       message: "Father's contact and your contact must be different.",
-      path: ["applicationData.fatherContact"], // Error for fatherContact
+      path: ["applicationData.fatherContact"],
     }
   )
   .refine(
     (data) => data.applicationData.motherContact !== data.studentData.contact,
     {
       message: "Mother's contact and your contact must be different.",
-      path: ["applicationData.motherContact"], // Error for motherContact
+      path: ["applicationData.motherContact"],
     }
   )
   .refine(
@@ -252,21 +252,21 @@ const formSchema = z
       !data.applicationData.fatherContact,
     {
       message: "Father's contact and mother's contact must be different.",
-      path: ["applicationData.motherContact"], // Error for motherContact
+      path: ["applicationData.motherContact"],
     }
   )
   .refine(
     (data) => data.applicationData.fatherEmail !== data.studentData.email,
     {
       message: "Father's email and your email must be different.",
-      path: ["applicationData.fatherEmail"], // Error for Father's email
+      path: ["applicationData.fatherEmail"],
     }
   )
   .refine(
     (data) => data.studentData.email !== data.applicationData.motherEmail,
     {
       message: "Mother's email and your email must be different.",
-      path: ["applicationData.motherEmail"], // Error for mother's email
+      path: ["applicationData.motherEmail"],
     }
   )
   .refine(
@@ -275,7 +275,7 @@ const formSchema = z
       !data.applicationData.fatherEmail,
     {
       message: "Father's email and mother's email must be different.",
-      path: ["applicationData.motherEmail"], // Error for mother's email
+      path: ["applicationData.motherEmail"],
     }
   );
 
@@ -313,28 +313,142 @@ const ApplicationDetailsForm: React.FC = () => {
 
   const [programs, setPrograms] = useState<any[]>([]);
   const [centres, setCentres] = useState<any[]>([]);
-
-  // All open cohorts from the server
   const [openCohorts, setOpenCohorts] = useState<any[]>([]);
-
-  // Unique Program IDs extracted from openCohorts for the "Course of Interest" dropdown
   const [availablePrograms, setAvailablePrograms] = useState<any[]>([]);
-
-  // Cohorts filtered by the user's chosen program
   const [filteredCohorts, setFilteredCohorts] = useState<any[]>([]);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
-  // Use Firebase Auth Hook
   const { initializeRecaptcha, sendOTP, isReady } = useFirebaseAuth();
 
-  const today=new Date();
+  const today = new Date();
   const maxGraduationDate = today.toISOString().split("T")[0];
   const minGraduationDate = new Date(
-      today.getFullYear() - 50,
-      today.getMonth(),
-      today.getDate()
+    today.getFullYear() - 50,
+    today.getMonth(),
+    today.getDate()
   )
-      .toISOString()
-      .split("T")[0];
+    .toISOString()
+    .split("T")[0];
+
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+  });
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    setValue,
+    watch,
+  } = form;
+
+  // Watch the course of interest field
+  const selectedProgram = watch("studentData.courseOfInterest");
+
+  // FIXED: Memoized cohort filtering function to prevent unnecessary re-renders
+  const updateFilteredCohorts = useCallback(
+    (programId: string) => {
+      if (!programId || !openCohorts.length) {
+        setFilteredCohorts([]);
+        return;
+      }
+
+      const matching = openCohorts.filter(
+        (cohort) => cohort.programDetail === programId
+      );
+
+      console.log(
+        "Filtered cohorts for program",
+        programId,
+        ":",
+        matching.length
+      );
+      setFilteredCohorts(matching);
+    },
+    [openCohorts]
+  );
+
+  // FIXED: Single data fetching effect
+  useEffect(() => {
+    let isMounted = true;
+
+    async function fetchData() {
+      try {
+        console.log("Fetching programs, centres, and cohorts...");
+
+        const [programsData, centresData, cohortsData] = await Promise.all([
+          getPrograms(),
+          getCentres(),
+          getCohorts(),
+        ]);
+
+        if (!isMounted) return;
+
+        setPrograms(programsData.data);
+        setCentres(centresData.data);
+
+        const open = cohortsData.data.filter(
+          (cohort: any) => cohort.status === "Open"
+        );
+        setOpenCohorts(open);
+
+        const uniquePrograms = Array.from(
+          new Set(open.map((cohort: any) => cohort.programDetail))
+        );
+        setAvailablePrograms(uniquePrograms);
+        setDataLoaded(true);
+
+        console.log("Data fetched successfully:", {
+          programs: programsData.data.length,
+          centres: centresData.data.length,
+          openCohorts: open.length,
+          availablePrograms: uniquePrograms.length,
+        });
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    }
+
+    fetchData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // FIXED: Separate effect for cohort filtering with debouncing
+  useEffect(() => {
+    if (!dataLoaded) return;
+
+    const timeoutId = setTimeout(() => {
+      updateFilteredCohorts(selectedProgram || "");
+    }, 100); // Small delay to prevent rapid updates
+
+    return () => clearTimeout(timeoutId);
+  }, [selectedProgram, dataLoaded, updateFilteredCohorts]);
+
+  // Handle course selection change
+  const handleCourseChange = useCallback(
+    (value: string) => {
+      console.log("Course of interest changed to:", value);
+
+      // Update the course field
+      setValue("studentData.courseOfInterest", value, { shouldValidate: true });
+
+      // Clear cohort selection only if it's a different program
+      const currentCohort = watch("studentData.cohort");
+      if (currentCohort) {
+        const currentCohortData = openCohorts.find(
+          (c) => c._id === currentCohort
+        );
+        if (!currentCohortData || currentCohortData.programDetail !== value) {
+          setValue("studentData.cohort", "", { shouldValidate: false });
+        }
+      }
+    },
+    [setValue, watch, openCohorts]
+  );
 
   useEffect(() => {
     if (!fetchedStudentData) return;
@@ -363,92 +477,6 @@ const ApplicationDetailsForm: React.FC = () => {
     };
   }, [fetchedStudentData]);
 
-  // FIXED: Single data fetching useEffect
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        console.log("Fetching programs, centres, and cohorts...");
-
-        const programsData = await getPrograms();
-        setPrograms(programsData.data);
-
-        const centresData = await getCentres();
-        setCentres(centresData.data);
-
-        const cohortsData = await getCohorts();
-
-        // Filter only OPEN cohorts
-        const open = cohortsData.data.filter(
-          (cohort: any) => cohort.status === "Open"
-        );
-        setOpenCohorts(open);
-
-        // Extract unique program IDs from openCohorts
-        const uniquePrograms = Array.from(
-          new Set(open.map((cohort: any) => cohort.programDetail))
-        );
-        setAvailablePrograms(uniquePrograms);
-
-        console.log("Data fetched successfully:", {
-          programs: programsData.data.length,
-          centres: centresData.data.length,
-          openCohorts: open.length,
-          availablePrograms: uniquePrograms.length,
-        });
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    }
-
-    fetchData();
-  }, []);
-
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-  });
-
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-    reset,
-    setValue,
-    watch,
-  } = form;
-
-  // Watch the course of interest field
-  const selectedProgram = watch("studentData.courseOfInterest");
-
-  // FIXED: Single filtering useEffect with proper dependencies and cohort clearing
-  useEffect(() => {
-    console.log("Selected program changed:", selectedProgram);
-
-    if (!selectedProgram) {
-      // No program chosen yet—empty the "Select Cohort" list
-      setFilteredCohorts([]);
-      // Also clear the cohort selection
-      setValue("studentData.cohort", "");
-      return;
-    }
-
-    // Filter openCohorts by the chosen program ID
-    const matching = openCohorts.filter(
-      (cohort) => cohort.programDetail === selectedProgram
-    );
-
-    console.log(
-      "Filtered cohorts for program",
-      selectedProgram,
-      ":",
-      matching.length
-    );
-    setFilteredCohorts(matching);
-
-    // Clear cohort selection when program changes
-    setValue("studentData.cohort", "");
-  }, [selectedProgram, openCohorts, setValue]);
-
-  // Move the watched value outside the useEffect
   const currentStatus = form.watch("studentData.currentStatus");
 
   useEffect(() => {
@@ -482,7 +510,7 @@ const ApplicationDetailsForm: React.FC = () => {
 
   useEffect(() => {
     const fetchStudentData = async () => {
-      if (studentData._id && openCohorts.length > 0)
+      if (studentData._id && dataLoaded) {
         try {
           const student = await getCurrentStudent(studentData._id);
           console.log("Student data fetched:", student);
@@ -522,7 +550,6 @@ const ApplicationDetailsForm: React.FC = () => {
             student?.appliedCohorts[student.appliedCohorts.length - 1]
               ?.applicationDetails?.studentDetails;
 
-          // Payment or "isSaved" checks
           if (
             student?.appliedCohorts[student.appliedCohorts.length - 1]
               ?.applicationDetails?.studentDetails !== undefined &&
@@ -541,7 +568,6 @@ const ApplicationDetailsForm: React.FC = () => {
             setIsPaymentDone(true);
           }
 
-          // Read existing localStorage data, if any
           const existingDataJSON = localStorage.getItem(
             `applicationDetailsForm-${studentData?.email}`
           );
@@ -554,9 +580,8 @@ const ApplicationDetailsForm: React.FC = () => {
             student?.appliedCohorts?.[student?.appliedCohorts.length - 1]
               ?.cohortId?.cohortFeesDetail?.applicationFee
           );
-          // 3. Decide how to build mergedForm
-          let mergedForm;
-          mergedForm = {
+
+          const mergedForm = {
             studentData: {
               firstName: student?.firstName || studentData?.firstName || "",
               lastName: student?.lastName || studentData?.lastName || "",
@@ -742,14 +767,16 @@ const ApplicationDetailsForm: React.FC = () => {
                 false,
             },
           };
+
           reset(mergedForm);
         } catch (error) {
           console.error("Failed to fetch student data:", error);
         }
+      }
     };
 
     fetchStudentData();
-  }, [studentData, openCohorts, reset, navigate]);
+  }, [studentData, dataLoaded, reset, navigate]);
 
   useEffect(() => {
     const storedFormJSON = localStorage.getItem(
@@ -765,9 +792,7 @@ const ApplicationDetailsForm: React.FC = () => {
     }
   }, [reset, studentData?.email]);
 
-  // 2) Whenever the form data changes, update Local Storage in real time
   useEffect(() => {
-    // .watch() returns the entire form state on every change
     const subscription = watch((value) => {
       if (studentData?.email)
         localStorage.setItem(
@@ -775,11 +800,9 @@ const ApplicationDetailsForm: React.FC = () => {
           JSON.stringify(value)
         );
     });
-    // unsubscribe on unmount
     return () => subscription.unsubscribe();
   }, [watch, studentData?.email]);
 
-  // Watch fields for conditional rendering
   const watchHasWorkExperience = watch("applicationData.isExperienced");
   const watchExperienceType = watch("applicationData.experienceType");
 
@@ -813,7 +836,6 @@ const ApplicationDetailsForm: React.FC = () => {
     setOtpLoading(true);
 
     try {
-      // Clear any existing reCAPTCHA first
       if (!recaptchaVerifierRef.current) {
         recaptchaVerifierRef.current = new RecaptchaVerifier(
           auth,
@@ -824,12 +846,8 @@ const ApplicationDetailsForm: React.FC = () => {
         );
       }
 
-      // clearRecaptcha();
-
-      // Wait a bit for cleanup
       await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Send OTP - the hook will handle initialization automatically
       const confirmationResult = await sendOTP(contact, "recaptcha-container");
 
       if (confirmationResult) {
@@ -879,13 +897,11 @@ const ApplicationDetailsForm: React.FC = () => {
     });
   };
 
-  // Handle payment process
   const handlePayment = async () => {
     try {
-      // Show loading
       setLoading(true);
       setIsPaymentDialogOpen(false);
-      // Load the Razorpay script
+
       const razorpayLoaded = await loadScript(
         "https://checkout.razorpay.com/v1/checkout.js"
       );
@@ -894,7 +910,6 @@ const ApplicationDetailsForm: React.FC = () => {
         return;
       }
 
-      // Call the API to create an order
       const feePayLoad = {
         studentId: fetchedStudentData._id,
         cohortId:
@@ -907,17 +922,15 @@ const ApplicationDetailsForm: React.FC = () => {
       const feeResponse = await payApplicationFee(feePayLoad);
       console.log("Fee payment response:", feeResponse);
 
-      // Configure Razorpay options
       const options = {
-        key: "rzp_test_1wAgBK19fS5nhr", // Replace with your Razorpay API key
-        amount: feeResponse.data.amount, // Amount in currency subunits
+        key: "rzp_test_1wAgBK19fS5nhr",
+        amount: feeResponse.data.amount,
         currency: feeResponse.data.currency,
         name: "The LIT School",
         description: "Application Fee",
-        image: "https://example.com/your_logo", // Replace with your logo URL
-        order_id: feeResponse.data.orderId, // Use the order ID returned from the server
+        image: "https://example.com/your_logo",
+        order_id: feeResponse.data.orderId,
         handler: async () => {
-          // Verify the payment on the server
           try {
             const verifyResponse = await verifyApplicationFeePayment(
               feeResponse.data.orderId
@@ -948,15 +961,13 @@ const ApplicationDetailsForm: React.FC = () => {
         },
       };
 
-      // Stop loading and open Razorpay payment popup
       setLoading(false);
       const paymentObject = new (window as any).Razorpay(options);
       paymentObject.open();
 
-      // Handle payment failure
       paymentObject.on("payment.failed", (response: any) => {
         console.error("Payment failed:", response);
-        setFailedDialogOpen(true); // Open failed dialog
+        setFailedDialogOpen(true);
       });
     } catch (error) {
       console.error("Error during payment:", error);
@@ -965,7 +976,6 @@ const ApplicationDetailsForm: React.FC = () => {
     }
   };
 
-  // Handle form submission
   const submitData = async (data: FormData, isSubmit?: boolean) => {
     const apiPayload = {
       cohortId: data.studentData?.cohort,
@@ -1001,7 +1011,7 @@ const ApplicationDetailsForm: React.FC = () => {
         currentAddress: {
           streetAddress: data.applicationData.address,
           city: data.applicationData.city,
-          state: "", // Optional: Add state if available
+          state: "",
           postalCode: data.applicationData.zipcode,
         },
         previousEducation: {
@@ -1111,7 +1121,6 @@ const ApplicationDetailsForm: React.FC = () => {
               Personal Details
             </div>
             <div className="flex flex-col gap-4 sm:gap-6">
-              {/* Full Name */}
               <FormField
                 control={control}
                 name="studentData.firstName"
@@ -1138,7 +1147,6 @@ const ApplicationDetailsForm: React.FC = () => {
               />
 
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                {/* Email */}
                 <FormField
                   control={control}
                   name="studentData.email"
@@ -1161,7 +1169,6 @@ const ApplicationDetailsForm: React.FC = () => {
                     </FormItem>
                   )}
                 />
-                {/* Contact */}
                 <FormField
                   control={control}
                   name="studentData.contact"
@@ -1217,13 +1224,12 @@ const ApplicationDetailsForm: React.FC = () => {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                {/* Date of Birth */}
                 <FormField
                   control={control}
                   name="studentData.dob"
                   render={({ field }) => {
                     const maxDate = new Date();
-                    maxDate.setFullYear(maxDate.getFullYear() - 16); // Subtract 16 years
+                    maxDate.setFullYear(maxDate.getFullYear() - 16);
                     const maxDateString = maxDate.toISOString().split("T")[0];
 
                     return (
@@ -1238,7 +1244,7 @@ const ApplicationDetailsForm: React.FC = () => {
                             disabled={isSaved}
                             value={field.value || ""}
                             maxDate={maxDateString}
-                            onChange={(date) => field.onChange(date)} // Correct onChange
+                            onChange={(date) => field.onChange(date)}
                           />
                         </FormControl>
                         <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
@@ -1247,7 +1253,6 @@ const ApplicationDetailsForm: React.FC = () => {
                   }}
                 />
 
-                {/* Currently a */}
                 <FormField
                   control={control}
                   name="studentData.currentStatus"
@@ -1296,7 +1301,7 @@ const ApplicationDetailsForm: React.FC = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-              {/* Course of Interest */}
+              {/* FIXED: Course of Interest with proper change handling */}
               <FormField
                 control={control}
                 name="studentData.courseOfInterest"
@@ -1308,36 +1313,35 @@ const ApplicationDetailsForm: React.FC = () => {
                     <FormControl>
                       <Select
                         disabled={isSaved}
-                        onValueChange={(value) => {
-                          console.log("Course of interest changed to:", value);
-                          field.onChange(value);
-                          // Force clear the cohort selection immediately
-                          setValue("studentData.cohort", "");
-                        }}
+                        onValueChange={handleCourseChange}
                         value={field.value}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select a Program" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem
-                            key={
-                              fetchedStudentData?.appliedCohorts?.[
-                                fetchedStudentData?.appliedCohorts.length - 1
-                              ]?.cohortId?.programDetail?._id
-                            }
-                            value={
-                              fetchedStudentData?.appliedCohorts?.[
-                                fetchedStudentData?.appliedCohorts.length - 1
-                              ]?.cohortId?.programDetail?._id
-                            }
-                          >
-                            {
-                              fetchedStudentData?.appliedCohorts?.[
-                                fetchedStudentData?.appliedCohorts.length - 1
-                              ]?.cohortId?.programDetail?.name
-                            }
-                          </SelectItem>
+                          {fetchedStudentData?.appliedCohorts?.[
+                            fetchedStudentData?.appliedCohorts.length - 1
+                          ]?.cohortId?.programDetail?._id && (
+                            <SelectItem
+                              key={
+                                fetchedStudentData?.appliedCohorts?.[
+                                  fetchedStudentData?.appliedCohorts.length - 1
+                                ]?.cohortId?.programDetail?._id
+                              }
+                              value={
+                                fetchedStudentData?.appliedCohorts?.[
+                                  fetchedStudentData?.appliedCohorts.length - 1
+                                ]?.cohortId?.programDetail?._id
+                              }
+                            >
+                              {
+                                fetchedStudentData?.appliedCohorts?.[
+                                  fetchedStudentData?.appliedCohorts.length - 1
+                                ]?.cohortId?.programDetail?.name
+                              }
+                            </SelectItem>
+                          )}
                           {availablePrograms
                             .filter(
                               (programId) =>
@@ -1359,7 +1363,7 @@ const ApplicationDetailsForm: React.FC = () => {
                 )}
               />
 
-              {/* Select Cohort */}
+              {/* FIXED: Select Cohort with proper filtering */}
               <FormField
                 control={control}
                 name="studentData.cohort"
@@ -1370,7 +1374,7 @@ const ApplicationDetailsForm: React.FC = () => {
                     </Label>
                     <FormControl>
                       <Select
-                        disabled={isSaved}
+                        disabled={isSaved || !selectedProgram}
                         onValueChange={(value) => {
                           console.log("Cohort changed to:", value);
                           field.onChange(value);
@@ -1378,46 +1382,65 @@ const ApplicationDetailsForm: React.FC = () => {
                         value={field.value}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select" />
+                          <SelectValue
+                            placeholder={
+                              !selectedProgram
+                                ? "Select a course first"
+                                : "Select"
+                            }
+                          />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem
-                            key={
-                              fetchedStudentData?.appliedCohorts?.[
-                                fetchedStudentData?.appliedCohorts.length - 1
-                              ]?.cohortId._id
-                            }
-                            value={
-                              fetchedStudentData?.appliedCohorts?.[
-                                fetchedStudentData?.appliedCohorts.length - 1
-                              ]?.cohortId._id
-                            }
-                          >
-                            {formatDateToMonthYear(
-                              fetchedStudentData?.appliedCohorts?.[
-                                fetchedStudentData?.appliedCohorts.length - 1
-                              ]?.cohortId.startDate
-                            )}{" "}
-                            (
-                            {
-                              fetchedStudentData?.appliedCohorts?.[
-                                fetchedStudentData?.appliedCohorts.length - 1
-                              ]?.cohortId.timeSlot
-                            }
-                            ),{" "}
-                            {getCenterName(
-                              fetchedStudentData?.appliedCohorts?.[
-                                fetchedStudentData?.appliedCohorts.length - 1
-                              ]?.cohortId.centerDetail
+                          {fetchedStudentData?.appliedCohorts?.[
+                            fetchedStudentData?.appliedCohorts.length - 1
+                          ]?.cohortId?._id &&
+                            fetchedStudentData?.appliedCohorts?.[
+                              fetchedStudentData?.appliedCohorts.length - 1
+                            ]?.cohortId?.programDetail?._id ===
+                              selectedProgram && (
+                              <SelectItem
+                                key={
+                                  fetchedStudentData?.appliedCohorts?.[
+                                    fetchedStudentData?.appliedCohorts.length -
+                                      1
+                                  ]?.cohortId._id
+                                }
+                                value={
+                                  fetchedStudentData?.appliedCohorts?.[
+                                    fetchedStudentData?.appliedCohorts.length -
+                                      1
+                                  ]?.cohortId._id
+                                }
+                              >
+                                {formatDateToMonthYear(
+                                  fetchedStudentData?.appliedCohorts?.[
+                                    fetchedStudentData?.appliedCohorts.length -
+                                      1
+                                  ]?.cohortId.startDate
+                                )}{" "}
+                                (
+                                {
+                                  fetchedStudentData?.appliedCohorts?.[
+                                    fetchedStudentData?.appliedCohorts.length -
+                                      1
+                                  ]?.cohortId.timeSlot
+                                }
+                                ),{" "}
+                                {getCenterName(
+                                  fetchedStudentData?.appliedCohorts?.[
+                                    fetchedStudentData?.appliedCohorts.length -
+                                      1
+                                  ]?.cohortId.centerDetail
+                                )}
+                              </SelectItem>
                             )}
-                          </SelectItem>
                           {filteredCohorts
                             .filter(
                               (cohort) =>
                                 cohort._id !==
                                 fetchedStudentData?.appliedCohorts?.[
                                   fetchedStudentData?.appliedCohorts.length - 1
-                                ]?.cohortId._id
+                                ]?.cohortId?._id
                             )
                             .map((cohort) => (
                               <SelectItem key={cohort._id} value={cohort._id}>
@@ -1436,7 +1459,6 @@ const ApplicationDetailsForm: React.FC = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-              {/* LinkedIn ID */}
               <FormField
                 control={control}
                 name="studentData.linkedInUrl"
@@ -1463,7 +1485,6 @@ const ApplicationDetailsForm: React.FC = () => {
                   </FormItem>
                 )}
               />
-              {/* Instagram ID */}
               <FormField
                 control={control}
                 name="studentData.instagramUrl"
@@ -1492,7 +1513,6 @@ const ApplicationDetailsForm: React.FC = () => {
               />
             </div>
 
-            {/* Gender Selection */}
             <FormField
               control={control}
               name="studentData.gender"
@@ -1539,7 +1559,6 @@ const ApplicationDetailsForm: React.FC = () => {
               )}
             />
 
-            {/* Current Address */}
             <FormField
               control={control}
               name="applicationData.address"
@@ -1561,9 +1580,7 @@ const ApplicationDetailsForm: React.FC = () => {
               )}
             />
 
-            {/* City and Zip Code */}
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-              {/* City */}
               <FormField
                 control={control}
                 name="applicationData.city"
@@ -1584,7 +1601,6 @@ const ApplicationDetailsForm: React.FC = () => {
                   </FormItem>
                 )}
               />
-              {/* Zip Code */}
               <FormField
                 control={control}
                 name="applicationData.zipcode"
@@ -1616,13 +1632,11 @@ const ApplicationDetailsForm: React.FC = () => {
               />
             </div>
 
-            {/* Previous Education */}
             <div className="flex-1 bg-[#FF791F]/[0.2] text-[#FF791F] text-center py-4 mt-10 text-2xl rounded-full">
               Previous Education
             </div>
             <div className="flex flex-col gap-4 sm:gap-6">
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                {/* Education Level */}
                 <FormField
                   control={control}
                   name="applicationData.educationLevel"
@@ -1660,7 +1674,6 @@ const ApplicationDetailsForm: React.FC = () => {
                     </FormItem>
                   )}
                 />
-                {/* Field of Study */}
                 <FormField
                   control={control}
                   name="applicationData.fieldOfStudy"
@@ -1686,9 +1699,7 @@ const ApplicationDetailsForm: React.FC = () => {
                 />
               </div>
 
-              {/* Institution Name and Graduation Year */}
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                {/* Institution Name */}
                 <FormField
                   control={control}
                   name="applicationData.institutionName"
@@ -1712,7 +1723,6 @@ const ApplicationDetailsForm: React.FC = () => {
                     </FormItem>
                   )}
                 />
-                {/* Graduation Year */}
                 <FormField
                   control={control}
                   name="applicationData.graduationYear"
@@ -1726,11 +1736,11 @@ const ApplicationDetailsForm: React.FC = () => {
                       </Label>
                       <FormControl>
                         <GraduationSelector
-                            value={field.value}
-                            onChange={field.onChange}
-                            maxDate={maxGraduationDate}
-                            minDate={minGraduationDate}
-                            className="w-full"
+                          value={field.value}
+                          onChange={field.onChange}
+                          maxDate={maxGraduationDate}
+                          minDate={minGraduationDate}
+                          className="w-full"
                         />
                       </FormControl>
                       <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
@@ -1739,7 +1749,6 @@ const ApplicationDetailsForm: React.FC = () => {
                 />
               </div>
 
-              {/* Work Experience */}
               <FormField
                 control={control}
                 name="applicationData.isExperienced"
@@ -1789,12 +1798,9 @@ const ApplicationDetailsForm: React.FC = () => {
                 )}
               />
 
-              {/* Conditional Work Experience Section */}
               {watchHasWorkExperience && (
                 <>
-                  {/* Experience Type and Job Description */}
                   <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                    {/* Experience Type */}
                     <FormField
                       control={control}
                       name="applicationData.experienceType"
@@ -1838,7 +1844,6 @@ const ApplicationDetailsForm: React.FC = () => {
                         </FormItem>
                       )}
                     />
-                    {/* Job Description */}
                     <FormField
                       control={control}
                       name="applicationData.jobDescription"
@@ -1864,10 +1869,8 @@ const ApplicationDetailsForm: React.FC = () => {
                     />
                   </div>
 
-                  {/* Conditional Fields Based on Experience Type */}
                   {watchExperienceType === "Working Professional" && (
                     <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                      {/* Company Name */}
                       <FormField
                         control={control}
                         name="applicationData.nameOfCompany"
@@ -1891,7 +1894,6 @@ const ApplicationDetailsForm: React.FC = () => {
                           </FormItem>
                         )}
                       />
-                      {/* Work Duration */}
                       <div className="flex-1 space-y-1">
                         <Label
                           htmlFor="duration"
@@ -1906,7 +1908,12 @@ const ApplicationDetailsForm: React.FC = () => {
                             render={({ field }) => (
                               <FormItem className="flex-1 flex flex-col space-y-1">
                                 <FormControl>
-                                  <AverageDurationSelector id='durationFrom' className='w-full !h-[64px] px-3 rounded-xl' disabled={isSaved} {...field} />
+                                  <AverageDurationSelector
+                                    id="durationFrom"
+                                    className="w-full !h-[64px] px-3 rounded-xl"
+                                    disabled={isSaved}
+                                    {...field}
+                                  />
                                 </FormControl>
                                 <FormMessage className="text-xs sm:text-sm font-normal pl-3">
                                   {errors.applicationData?.durationFrom && (
@@ -1930,7 +1937,12 @@ const ApplicationDetailsForm: React.FC = () => {
                             render={({ field }) => (
                               <FormItem className="flex-1 flex flex-col space-y-1">
                                 <FormControl>
-                                  <AverageDurationSelector id='durationTo' className='w-full !h-[64px] px-3 rounded-xl' disabled={isSaved} {...field} />
+                                  <AverageDurationSelector
+                                    id="durationTo"
+                                    className="w-full !h-[64px] px-3 rounded-xl"
+                                    disabled={isSaved}
+                                    {...field}
+                                  />
                                 </FormControl>
                                 <FormMessage className="text-xs sm:text-sm font-normal pl-3">
                                   {errors.applicationData?.durationTo && (
@@ -1952,7 +1964,6 @@ const ApplicationDetailsForm: React.FC = () => {
 
                   {watchExperienceType === "Business Owner" && (
                     <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                      {/* Company Name */}
                       <FormField
                         control={control}
                         name="applicationData.nameOfCompany"
@@ -1976,7 +1987,6 @@ const ApplicationDetailsForm: React.FC = () => {
                           </FormItem>
                         )}
                       />
-                      {/* Company Start Date */}
                       <FormField
                         control={control}
                         name="applicationData.duration"
@@ -1989,15 +1999,18 @@ const ApplicationDetailsForm: React.FC = () => {
                               When Did You Start Your Company?
                             </Label>
                             <FormControl>
-                              <input
-                                placeholder="MM/YYYY"
-                                type="month"
-                                className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border"
-                                id="companyStartDate"
-                                {...field}
-                                max={new Date().toISOString().slice(0, 7)}
-                                disabled={isSaved}
-                              />
+                              <FormControl>
+                                <DurationSelector
+                                  id="companyStartDate"
+                                  name={field.name}
+                                  value={field.value}
+                                  onChange={field.onChange}
+                                  maxDate={
+                                    new Date().toISOString().split("T")[0]
+                                  } // YYYY-MM-DD
+                                  disabled={isSaved}
+                                />
+                              </FormControl>
                             </FormControl>
                             <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
                           </FormItem>
@@ -2008,7 +2021,6 @@ const ApplicationDetailsForm: React.FC = () => {
 
                   {watchExperienceType === "Freelancer" && (
                     <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                      {/* Duration of Work */}
                       <div className="flex-1 space-y-1">
                         <Label
                           htmlFor="duration"
@@ -2110,7 +2122,6 @@ const ApplicationDetailsForm: React.FC = () => {
                           </FormItem>
                         )}
                       />
-                      {/* Duration of Work */}
                       <div className="flex-1 space-y-1">
                         <Label
                           htmlFor="duration"
@@ -2190,13 +2201,11 @@ const ApplicationDetailsForm: React.FC = () => {
               )}
             </div>
 
-            {/* Emergency Contact Details */}
             <div className="flex-1 bg-[#00AB7B]/[0.2] text-[#00AB7B] text-center py-4 mt-10 text-2xl rounded-full">
               Emergency Contact Details
             </div>
             <div className="flex flex-col gap-4 sm:gap-6">
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                {/* Emergency Contact First Name */}
                 <FormField
                   control={control}
                   name="applicationData.emergencyFirstName"
@@ -2220,7 +2229,6 @@ const ApplicationDetailsForm: React.FC = () => {
                     </FormItem>
                   )}
                 />
-                {/* Emergency Contact Last Name */}
                 <FormField
                   control={control}
                   name="applicationData.emergencyLastName"
@@ -2247,7 +2255,6 @@ const ApplicationDetailsForm: React.FC = () => {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                {/* Emergency Contact Number */}
                 <FormField
                   control={control}
                   name="applicationData.emergencyContact"
@@ -2281,7 +2288,6 @@ const ApplicationDetailsForm: React.FC = () => {
                     </FormItem>
                   )}
                 />
-                {/* Relationship */}
                 <FormField
                   control={control}
                   name="applicationData.relationship"
@@ -2308,13 +2314,11 @@ const ApplicationDetailsForm: React.FC = () => {
               </div>
             </div>
 
-            {/* Parental Information */}
             <div className="flex-1 bg-[#FA69E5]/[0.2] text-[#FA69E5] text-center py-4 mt-10 text-2xl rounded-full">
               Parental Information
             </div>
             <div className="flex flex-col gap-4 sm:gap-6">
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                {/* Father's First Name */}
                 <FormField
                   control={control}
                   name="applicationData.fatherFirstName"
@@ -2338,7 +2342,6 @@ const ApplicationDetailsForm: React.FC = () => {
                     </FormItem>
                   )}
                 />
-                {/* Father's Last Name */}
                 <FormField
                   control={control}
                   name="applicationData.fatherLastName"
@@ -2365,7 +2368,6 @@ const ApplicationDetailsForm: React.FC = () => {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                {/* Father's Contact Number */}
                 <FormField
                   control={control}
                   name="applicationData.fatherContact"
@@ -2399,7 +2401,6 @@ const ApplicationDetailsForm: React.FC = () => {
                     </FormItem>
                   )}
                 />
-                {/* Father's Occupation */}
                 <FormField
                   control={control}
                   name="applicationData.fatherOccupation"
@@ -2426,7 +2427,6 @@ const ApplicationDetailsForm: React.FC = () => {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                {/* Father's Email */}
                 <FormField
                   control={control}
                   name="applicationData.fatherEmail"
@@ -2450,7 +2450,6 @@ const ApplicationDetailsForm: React.FC = () => {
                     </FormItem>
                   )}
                 />
-                {/* Mother's First Name */}
                 <FormField
                   control={control}
                   name="applicationData.motherFirstName"
@@ -2477,7 +2476,6 @@ const ApplicationDetailsForm: React.FC = () => {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                {/* Mother's Last Name */}
                 <FormField
                   control={control}
                   name="applicationData.motherLastName"
@@ -2501,7 +2499,6 @@ const ApplicationDetailsForm: React.FC = () => {
                     </FormItem>
                   )}
                 />
-                {/* Mother's Contact Number */}
                 <FormField
                   control={control}
                   name="applicationData.motherContact"
@@ -2538,7 +2535,6 @@ const ApplicationDetailsForm: React.FC = () => {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                {/* Mother's Occupation */}
                 <FormField
                   control={control}
                   name="applicationData.motherOccupation"
@@ -2562,7 +2558,6 @@ const ApplicationDetailsForm: React.FC = () => {
                     </FormItem>
                   )}
                 />
-                {/* Mother's Email */}
                 <FormField
                   control={control}
                   name="applicationData.motherEmail"
@@ -2590,7 +2585,6 @@ const ApplicationDetailsForm: React.FC = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-              {/* Financially Dependent */}
               <FormField
                 control={control}
                 name="applicationData.financiallyDependent"
@@ -2638,7 +2632,6 @@ const ApplicationDetailsForm: React.FC = () => {
                   </FormItem>
                 )}
               />
-              {/* Applied for Financial Aid */}
               <FormField
                 control={control}
                 name="applicationData.appliedForFinancialAid"
@@ -2687,7 +2680,6 @@ const ApplicationDetailsForm: React.FC = () => {
                 isSaved ? "justify-end" : "justify-between"
               } items-center mt-10 space-y-4 sm:space-y-0 sm:space-x-4`}
             >
-              {/* Submit/Payment Button */}
               {isPaymentDone ? (
                 <Button
                   size="xl"
@@ -2726,7 +2718,6 @@ const ApplicationDetailsForm: React.FC = () => {
                 </Button>
               )}
 
-              {/* "Clear Form" Button */}
               {!isSaved && (
                 <Button
                   variant="link"
@@ -2747,20 +2738,12 @@ const ApplicationDetailsForm: React.FC = () => {
               <Button
                 size="xl"
                 variant="outline"
-                className="fixed bottom-24 right-4 sm:right-44 bg-[#09090b] hover:bg-[#09090b]/80"
+                className="fixed bottom-24 right-44 bg-[#09090b] hover:bg-[#09090b]/80"
                 type="button"
                 disabled={saveLoading || saved}
                 onClick={() => submitData(form.getValues())}
               >
-                <div className="sm:hidden flex items-center gap-2">
-                  {saved ? (
-                    <ClipboardCheck className="w-4 h-4" />
-                  ) : (
-                    <Clipboard className="h-4 w-4" />
-                  )}
-                  {saved ? "Saved" : "Save"}
-                </div>
-                <div className="hidden sm:flex items-center gap-2">
+                <div className="flex items-center gap-2">
                   {saved ? (
                     <ClipboardCheck className="w-4 h-4" />
                   ) : (
