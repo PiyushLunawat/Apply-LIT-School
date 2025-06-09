@@ -88,10 +88,10 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
 
       try {
         // Import the simple fallback
-        const { generateSimpleIDCardPDF } = await import(
+        const { generateIDCardPDF } = await import(
             "~/utils/pdf-generator"
             );
-        await generateSimpleIDCardPDF(student || details);
+        await generateIDCardPDF(student || details);
         console.log("Fallback PDF generated successfully!");
       } catch (fallbackError) {
         console.error("Fallback PDF generation also failed:", fallbackError);
