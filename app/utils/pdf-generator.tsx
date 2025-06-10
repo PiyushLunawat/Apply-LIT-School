@@ -19,6 +19,7 @@ interface StudentData {
   program?: {
     prefix: string;
   };
+  appliedCohorts: any;
 }
 
 export const generateIDCardPDF = async (student: StudentData) => {
@@ -57,7 +58,13 @@ export const generateIDCardPDF = async (student: StudentData) => {
       instagram: student?.instagramUrl || "",
     });
 
-    const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://apply-lit-school.vercel.app";
+    const latestCohort =
+      student?.appliedCohorts?.[student?.appliedCohorts.length - 1];
+
+    const baseUrl =
+      typeof window !== "undefined"
+        ? window.location.origin
+        : "https://apply-lit-school.vercel.app";
     const vCardURL = `${baseUrl}/id/${student?._id}?${vCardParams.toString()}`;
 
     await QRCode.toCanvas(qrCanvas, vCardURL, {
@@ -79,7 +86,7 @@ export const generateIDCardPDF = async (student: StudentData) => {
     <div style="padding: 16px; flex: 1;">
       <div style="margin-bottom: 12px; display: flex;">
         <div style="
-            padding: 8px 16px;
+            padding: 8px;
             background: white;
             border: 1px solid #e5e7eb;
             border-radius: 9999px;
@@ -89,7 +96,7 @@ export const generateIDCardPDF = async (student: StudentData) => {
         ">
             <span style="font-size: 14px; font-weight: 500; color: #111827; align-items: center;
             justify-content: center; display: flex">
-                LIT${student?.program?.prefix || "NBA"}085
+                ${latestCohort?.applicationDetails?.applicationId || "LITXX01"}
             </span>
         </div>
       </div>
@@ -156,7 +163,7 @@ export const generateIDCardPDF = async (student: StudentData) => {
   <div>
     <p style="margin: 0 0 4px 0;"><span style="font-weight: 500;">Issued On:</span> ${new Date().toLocaleDateString()}</p>
     <p style="margin: 0 0 8px 0;"><span style="font-weight: 700;">Expiry Date:</span> ${new Date(
-        Date.now() + 365 * 24 * 60 * 60 * 1000
+      Date.now() + 365 * 24 * 60 * 60 * 1000
     ).toLocaleDateString()}</p>
   </div>
   <div style="display: flex; align-items: center;">

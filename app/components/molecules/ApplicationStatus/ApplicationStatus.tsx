@@ -6,7 +6,6 @@ import { Button } from "~/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "~/components/ui/dialog";
 import { Skeleton } from "~/components/ui/skeleton";
 
-
 interface StatusMessageProps {
   student: any;
 }
@@ -180,7 +179,7 @@ const StatusMessage: React.FC<StatusMessageProps> = ({ student }) => {
     setInterviewLoading(true);
     const data = {
       cohortId: latestCohort?.cohortId?._id,
-      role: "interviewer",
+      role: "application_reviewer",
     };
 
     console.log("liffffst", data);
@@ -197,7 +196,7 @@ const StatusMessage: React.FC<StatusMessageProps> = ({ student }) => {
 
     try {
       const response = await fetch(
-        "https://dev.cal.litschool.in/api/application-portal/get-all-users",
+        "https://cal.litschool.in/api/application-portal/get-all-users",
         {
           method: "POST",
           headers: {

@@ -70,7 +70,7 @@ export default function InterviewDetailsCard({
   // Enable the Join Meeting button if the current time is at least 10 minutes before the meeting start time.
   // That is, current time must be >= (meetingStart - 10 minutes).
   const joinMeetingEnabled = meetingStart
-    ? new Date().getTime() >= meetingStart.getTime() - 10 * 60000
+    ? new Date().getTime() >= meetingStart.getTime() - 5 * 60000
     : false;
 
   let durationMin = "";
@@ -91,7 +91,7 @@ export default function InterviewDetailsCard({
     setInterviewLoading(true);
     const data = {
       cohortId: latestCohort?.cohortId?._id,
-      role: "interviewer",
+      role: "application_reviewer",
     };
 
     const response = await GetInterviewers(data);
@@ -102,7 +102,7 @@ export default function InterviewDetailsCard({
     };
     try {
       const response = await fetch(
-        "https://dev.cal.litschool.in/api/application-portal/get-all-users",
+        "https://cal.litschool.in/api/application-portal/get-all-users",
         {
           method: "POST",
           headers: {
@@ -134,7 +134,7 @@ export default function InterviewDetailsCard({
       : "https://apply-lit-school.vercel.app";
 
   const handleCancel = (bookingId: string) => {
-    const url = `https://dev.cal.litschool.in/meetings/cancel/${bookingId}?redirectUrl=${baseUrl}/application/status`;
+    const url = `https://cal.litschool.in/meetings/cancel/${bookingId}?redirectUrl=${baseUrl}/application/status`;
     window.location.href = url;
   };
 
@@ -293,14 +293,16 @@ export default function InterviewDetailsCard({
                           IST ({formattedTime})
                         </span>
                       </p>
-                      <Button
-                        variant="link"
-                        className="underline "
-                        disabled={joinMeetingEnabled}
-                        onClick={() => handleCancel(interview?.bookingId)}
-                      >
-                        Cancel Meeting
-                      </Button>
+                      {!joinMeetingEnabled && (
+                        <Button
+                          variant="link"
+                          className="underline "
+                          disabled={joinMeetingEnabled}
+                          onClick={() => handleCancel(interview?.bookingId)}
+                        >
+                          Cancel Meeting
+                        </Button>
+                      )}
                     </div>
                   </div>
                 )

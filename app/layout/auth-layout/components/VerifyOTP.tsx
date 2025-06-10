@@ -109,7 +109,7 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
           if (result.success) {
             // Optionally store student data in context or local storage
             localStorage.setItem("studentData", JSON.stringify(res.user));
-            localStorage.setItem('accessToken', res.accessToken);
+            localStorage.setItem("accessToken", res.accessToken);
             localStorage.setItem("refreshToken", res.refreshToken);
             setStudentData(res.user);
           } else {
@@ -218,12 +218,14 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
       setLoading(true);
       if (verificationType === "contact") {
         // Use the same logic as send OTP function
-        
+
         if (onResendOtp) {
-        onResendOtp(contactInfo);
-      } else {
-        console.warn("onResendOtp handler not provided for contact verification.");
-      }
+          onResendOtp(contactInfo);
+        } else {
+          console.warn(
+            "onResendOtp handler not provided for contact verification."
+          );
+        }
         form.clearErrors("otp");
         reset({ otp: "" });
         setTimer(59); // Reset timer to 59 to match the initial timer

@@ -35,7 +35,7 @@ const Feedback: React.FC<FeedbackProps> = ({
       cohortId:
         student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.cohortId
           ?._id,
-      role: "interviewer",
+      role: "application_reviewer",
     };
 
     const response = await GetInterviewers(data);
@@ -50,7 +50,7 @@ const Feedback: React.FC<FeedbackProps> = ({
 
     try {
       const response = await fetch(
-        "https://dev.cal.litschool.in/api/application-portal/get-all-users",
+        "https://cal.litschool.in/api/application-portal/get-all-users",
         {
           method: "POST",
           headers: {
@@ -121,9 +121,8 @@ const Feedback: React.FC<FeedbackProps> = ({
         <div className="space-y-4">
           {applicationDetails?.applicationTasks[0]?.applicationTasks[0].tasks?.map(
             (task: any, index: any) =>
-              task?.feedback?.[
-                    task?.feedback.length - 1
-                  ]?.feedbackData.length > 0 && (
+              task?.feedback?.[task?.feedback.length - 1]?.feedbackData.length >
+                0 && (
                 <div key={task._id}>
                   <div className="text-sm sm:text-base font-semibold text-[#00A3FF]">
                     Task 0{index + 1}

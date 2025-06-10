@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@remix-run/react";
 import { Clock } from "lucide-react";
-import React, { useContext, useEffect, useState } from "react";
+import { ReactNode, useContext, useEffect, useState } from "react";
 import { GetInterviewers } from "~/api/studentAPI";
 import { SchedulePresentation } from "~/components/organisms/schedule-presentation-dialog/schedule-presentation";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
@@ -123,7 +123,7 @@ export default function ApplicationDashboard({
     };
     try {
       const response = await fetch(
-        "https://dev.cal.litschool.in/api/application-portal/get-all-users",
+        "https://cal.litschool.in/api/application-portal/get-all-users",
         {
           method: "POST",
           headers: {
