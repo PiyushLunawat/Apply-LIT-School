@@ -1,152 +1,97 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigate } from "@remix-run/react";
-import { Mail } from "lucide-react";
-import React, { useState } from "react";
-import { SubmitHandler, useForm } from "react-hook-form";
-import { z } from "zod";
-import { loginOTP } from "~/api/authAPI";
-import { Button } from "~/components/ui/button";
-import { Dialog, DialogContent, DialogTitle } from "~/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem } from "~/components/ui/form";
-import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
-import VerifyOTP from "./VerifyOTP";
+"use client"
 
-interface LoginFormProps {}
+import type React from "react"
 
-// Define the Zod schema
-const formSchema = z.object({
-  email: z
-    .string({ required_error: "Email is required" })
-    .nonempty("Email is required")
-    .email("Please enter a valid email address"),
-});
+import { useState } from "react"
+import { useNavigate } from "@remix-run/react"
+import { Button } from "~/components/ui/button"
+import { Input } from "~/components/ui/input"
+import { Label } from "~/components/ui/label"
+import { useToast } from "~/hooks/use-toast"
+import { useAuth } from "~/hooks/use-auth"
+import { loginOTP } from "~/api/authAPI"
 
-type FormValues = z.infer<typeof formSchema>;
+export default function LoginForm() {
+  const [email, setEmail] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const navigate = useNavigate()
+  const { toast } = useToast()
+  const { login } = useAuth()
 
-export const LoginForm: React.FC<LoginFormProps> = ({}) => {
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [showOtp, setShowOtp] = useState(false);
-  const [email, setEmail] = useState<string>("");
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: "",
-    },
-  });
-
-  const {
-    handleSubmit,
-    formState: { errors },
-    setError,
-    control,
-  } = form;
-
-  const handleRegisterClick = () => {
-    const values = form.getValues();
-
-    const result = formSchema.safeParse(values);
-    if (result.success) {
-      navigate(`../sign-up?email=${values.email}`);
-    } else navigate("../sign-up");
-  };
-
-  const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    try {
-      setLoading(true);
-      console.log("Submitted data:", data);
-      const res = await loginOTP(data);
-      // console.log("Error:", res);
-      setEmail(data.email);
-      setShowOtp(true);
-    } catch (error: any) {
-      console.log("noooo", error.message);
-      setError("email", {
-        type: "manual",
-        message: error.message || "An unexpected error occurred", // Display the error message
-      });
-      if (error.message === "Account not found. Please sign up.")
-        navigate(`../sign-up?email=${data.email}`);
-    } finally {
-      setLoading(false);
+    if (!email) {
+      toast({
+        title: "Error",
+        description: "Please enter your email address",
+        variant: "destructive",
+      })
+      return
     }
-  };
+
+    setIsLoading(true)
+
+    try {
+      const response = await loginOTP({ email })
+
+      if (response.success) {
+        // If login returns tokens and user data immediately
+        if (response.accessToken && response.refreshToken) {
+          login(
+              {
+                accessToken: response.accessToken,
+                refreshToken: response.refreshToken,
+              },
+              response.user || response.student,
+          )
+
+          toast({
+            title: "Success",
+            description: "Login successful!",
+          })
+
+          navigate("/dashboard")
+        } else {
+          // If OTP needs to be verified
+          toast({
+            title: "OTP Sent",
+            description: "Please check your email for the OTP",
+          })
+
+          // Navigate to OTP verification with email
+          navigate(`/auth/verify-otp?email=${encodeURIComponent(email)}`)
+        }
+      }
+    } catch (error) {
+      console.error("Login error:", error)
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Login failed",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
-    <>
-      <div className="gap-1 sm:gap-4 flex flex-col text-center">
-        <div className="text-2xl sm:text-3xl font-semibold ">
-          Join the Education Revolution!
-        </div>
-        <div className="text-sm sm:text-base font-light sm:font-normal ">
-          Access your dashboard by verifying your Email
-        </div>
-      </div>
-      <Form {...form}>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
-          <FormField
-            control={control}
-            name="email"
-            render={({ field }) => (
-              <FormItem className="flex-1 space-y-1 relative">
-                <Label htmlFor="email" className="text-sm font-normal pl-3">
-                  Enter your Email
-                </Label>
-                <FormControl>
-                  <Input
-                    id="email"
-                    type="email"
-                    className="pr-10"
-                    placeholder="john@gmail.com"
-                    {...field}
-                  />
-                </FormControl>
-                <Mail className="absolute right-3 top-[42px] w-5 h-5" />
-                {errors.email && (
-                  <Label className="flex gap-1 items-center text-[#FF503D] text-xs sm:text-sm font-normal pl-3">
-                    {errors.email.message}
-                  </Label>
-                )}
-              </FormItem>
-            )}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+              id="email"
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
           />
+        </div>
 
-          <div className="flex gap-2 justify-between items-center mt-6">
-            <Button
-              onClick={handleRegisterClick}
-              type="button"
-              size="xl"
-              variant="ghost"
-              className="bg-[#27272A] hidden sm:block"
-            >
-              Register
-            </Button>
-            <Button
-              type="submit"
-              className="flex-1 space-y-1"
-              size="xl"
-              disabled={loading}
-            >
-              {loading ? "Sending OTP..." : "Send OTP"}
-            </Button>
-          </div>
-        </form>
-      </Form>
-
-      <Dialog open={showOtp} onOpenChange={setShowOtp}>
-        <DialogTitle></DialogTitle>
-        <DialogContent className="flex flex-col gap-6 sm:gap-8 bg-[#1C1C1C] rounded-3xl max-w-[90vw] sm:max-w-2xl lg:max-w-4xl overflow-y-auto mx-auto !p-0">
-          <VerifyOTP
-            verificationType="email"
-            contactInfo={email}
-            errorMessage="Oops! Looks like you got the OTP wrong, Please Retry."
-          />
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-};
-
-export default LoginForm;
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? "Sending OTP..." : "Send OTP"}
+        </Button>
+      </form>
+  )
+}

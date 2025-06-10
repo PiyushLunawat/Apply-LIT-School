@@ -1,490 +1,216 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigate, useSearchParams } from "@remix-run/react";
-import { format } from "date-fns";
-import { Mail, Phone } from "lucide-react";
-import React, { useEffect, useState } from "react";
-import { SubmitHandler, useForm } from "react-hook-form";
-import { z } from "zod";
-import { signUp } from "~/api/authAPI";
-import { getCentres, getCohorts, getPrograms } from "~/api/studentAPI";
-import { Button } from "~/components/ui/button";
-import { Dialog, DialogContent, DialogTitle } from "~/components/ui/dialog";
-import DobSelector from "~/components/ui/dob-selector";
-import { Form, FormField, FormItem, FormMessage } from "~/components/ui/form";
-import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
-import VerifyOTP from "./VerifyOTP";
+"use client"
 
-interface Program {
-  _id: string;
-  name: string;
-  description: string;
-  duration: number;
-  prefix: string;
-  status: boolean;
-}
-interface Cohort {
-  _id: string;
-  cohortId: string;
-  programDetail: string;
-  centerDetail: string;
-  startDate: string;
-  endDate: string;
-  schedule: string;
-  totalSeats: number;
-  timeSlot: string;
-  filled: number;
-  status: string;
-  baseFee: string;
-  isComplete: boolean;
-}
+import type React from "react"
 
-const formSchema = z.object({
-  firstName: z.string().nonempty("First name is required"),
-  lastName: z.string().nonempty("Last name is required"),
-  email: z
-    .string({ required_error: "Email is required" })
-    .nonempty("Email is required")
-    .email("Invalid email address"),
-  mobileNumber: z
-    .string()
-    .nonempty("Mobile No. is required")
-    .min(10, "Mobile No. should be 10 digits"),
-  dateOfBirth: z.preprocess(
-    (arg) => {
-      if (typeof arg === "string" || arg instanceof Date) {
-        const date = new Date(arg);
-        return isNaN(date.getTime()) ? undefined : date;
-      }
-      return undefined;
-    },
-    z
-      .date({
-        required_error: "Date of Birth is required",
-        invalid_type_error: "Date of Birth is required",
-      })
-      .max(
-        new Date(new Date().setFullYear(new Date().getFullYear() - 16)),
-        "You must be at least 16 years old"
-      )
-  ),
-  qualification: z.string().nonempty("Qualification is required"),
-  program: z.string().nonempty("Please select a program"),
-  cohort: z.string().nonempty("Please select a cohort"),
-});
+import { useState } from "react"
+import { useNavigate } from "@remix-run/react"
+import { Button } from "~/components/ui/button"
+import { Input } from "~/components/ui/input"
+import { Label } from "~/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select"
+import { useToast } from "~/hooks/use-toast"
+import { useAuth } from "~/hooks/use-auth"
+import { signUp } from "~/api/authAPI"
 
-type FormValues = z.infer<typeof formSchema>;
+export default function SignUpForm() {
+    const [formData, setFormData] = useState({
+        firstName: "",
+        lastName: "",
+        email: "",
+        mobileNumber: "",
+        program: "",
+        cohort: "",
+        dateOfBirth: "",
+        qualification: "",
+    })
+    const [isLoading, setIsLoading] = useState(false)
+    const navigate = useNavigate()
+    const { toast } = useToast()
+    const { login } = useAuth()
 
-interface SignUpFormProps {}
-
-export const SignUpForm: React.FC<SignUpFormProps> = ({}) => {
-  const navigate = useNavigate();
-  const [date, setDate] = useState<Date>();
-  const [showOtp, setShowOtp] = useState(false);
-  const [email, setEmail] = useState<string>("");
-  const [programs, setPrograms] = useState<Program[]>([]);
-  const [centres, setCentres] = useState<any[]>([]);
-  const [interest, setInterest] = useState<Cohort[]>([]);
-  const [cohorts, setCohorts] = useState<Cohort[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  const [searchParams] = useSearchParams();
-  const emailParam = searchParams.get("email");
-
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      firstName: "",
-      lastName: "",
-      email: emailParam || "",
-      mobileNumber: "",
-      dateOfBirth: undefined,
-      qualification: "",
-      program: "",
-      cohort: "",
-    },
-  });
-
-  const {
-    formState: { errors },
-    setError,
-    control,
-  } = form;
-
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const cohortsData = await getCohorts();
-        const programsData = await getPrograms();
-        setPrograms(programsData.data);
-        const centresData = await getCentres();
-        setCentres(centresData.data);
-        const openCohorts = cohortsData.data.filter(
-          (cohort: Cohort) => cohort.status === "Open"
-        );
-        setInterest(openCohorts);
-        setCohorts(cohortsData.data);
-      } catch (error) {
-        console.error("Error fetching programs:", error);
-      }
+    const handleInputChange = (field: string, value: string) => {
+        setFormData((prev) => ({
+            ...prev,
+            [field]: value,
+        }))
     }
-    fetchData();
-  }, []);
 
-  useEffect(() => {
-    // Filter cohorts by selected program
-    if (form.watch("program")) {
-      const filteredCohorts = interest.filter(
-        (cohort) => cohort.programDetail === form.watch("program")
-      );
-      setCohorts(filteredCohorts);
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+
+        // Basic validation
+        const requiredFields = [
+            "firstName",
+            "lastName",
+            "email",
+            "mobileNumber",
+            "program",
+            "cohort",
+            "dateOfBirth",
+            "qualification",
+        ]
+        const missingFields = requiredFields.filter((field) => !formData[field as keyof typeof formData])
+
+        if (missingFields.length > 0) {
+            toast({
+                title: "Error",
+                description: "Please fill in all required fields",
+                variant: "destructive",
+            })
+            return
+        }
+
+        setIsLoading(true)
+
+        try {
+            const response = await signUp(formData)
+
+            if (response.success) {
+                // If signup returns tokens and user data immediately
+                if (response.accessToken && response.refreshToken) {
+                    login(
+                        {
+                            accessToken: response.accessToken,
+                            refreshToken: response.refreshToken,
+                        },
+                        response.user || response.student,
+                    )
+
+                    toast({
+                        title: "Success",
+                        description: "Account created successfully!",
+                    })
+
+                    navigate("/dashboard")
+                } else {
+                    // If OTP verification is required
+                    toast({
+                        title: "Success",
+                        description: "Account created! Please verify your email.",
+                    })
+
+                    navigate(`/auth/verify-otp?email=${encodeURIComponent(formData.email)}`)
+                }
+            }
+        } catch (error) {
+            console.error("Signup error:", error)
+            toast({
+                title: "Error",
+                description: error instanceof Error ? error.message : "Signup failed",
+                variant: "destructive",
+            })
+        } finally {
+            setIsLoading(false)
+        }
     }
-  }, [form.watch("program"), interest]);
 
-  const getProgramName = (programId: string) => {
-    const program = programs.find((p) => p._id === programId);
-    return program ? program.name : "Unknown Program";
-  };
-
-  const getCenterName = (centerId: string) => {
-    const center = centres.find((c) => c._id === centerId);
-    return center ? center.name : "--";
-  };
-
-  const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    try {
-      setLoading(true);
-
-      const transformedData = {
-        ...data,
-        dateOfBirth: data.dateOfBirth.toISOString().split("T")[0], // ISO format (YYYY-MM-DD)
-      };
-
-      console.log("Transformed Data:", transformedData);
-
-      const response = await signUp(transformedData);
-      console.log("Response from Sign-Up:", response);
-
-      setEmail(data.email);
-      setShowOtp(true);
-    } catch (error: any) {
-      setError("email", {
-        type: "manual",
-        message: error.message || "An unexpected error occurred", // Display the error message
-      });
-      console.log("Sign-up failed efaefa", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDateSelect = (selectedDate: Date | undefined) => {
-    if (selectedDate) {
-      setDate(selectedDate);
-      form.setValue("dateOfBirth", selectedDate); // Store Date object
-    }
-  };
-
-  function formatDateToMonthYear(dateString: string): string {
-    const date = new Date(dateString);
-    return format(date, "MMMM, yyyy");
-  }
-
-  return (
-    <>
-      <div className="gap-1 sm:gap-4 flex flex-col text-center">
-        <div className="text-2xl sm:text-3xl font-semibold ">
-          Join the Education Revolution!
-        </div>
-        <div className=" text-sm sm:text-base font-light sm:font-normal ">
-          Register with us to begin your application process
-        </div>
-      </div>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
-          <div className="grid sm:grid-cols-2 gap-4 sm:gap-2">
-            <FormField
-              control={form.control}
-              name="firstName"
-              render={({ field }) => (
-                <FormItem className="flex-1 space-y-1 relative">
-                  <Label className="text-sm font-normal pl-3">First Name</Label>
-                  <Input placeholder="John" {...field} />
-                  <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="lastName"
-              render={({ field }) => (
-                <FormItem className="flex-1 space-y-1 relative">
-                  <Label className="text-sm font-normal pl-3">Last Name</Label>
-                  <Input placeholder="Doe" {...field} />
-                  <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className="grid sm:grid-cols-2 gap-4 sm:gap-2">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem className="flex-1 space-y-1 relative">
-                  <Label className="text-sm font-normal pl-3">Email</Label>
-                  <Input
-                    type="email"
-                    placeholder="john@gmail.com"
-                    className="pr-10"
-                    {...field}
-                  />
-                  <Mail className="absolute right-3 top-[42px] w-5 h-5" />
-                  <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="mobileNumber"
-              render={({ field }) => (
-                <FormItem className="flex-1 space-y-1 relative">
-                  <Label className="text-sm font-normal pl-3">
-                    Contact No.
-                  </Label>
-                  <div className="absolute left-3 top-[40.5px]">+91</div>
-                  <Input
-                    type="tel"
-                    maxLength={10}
-                    placeholder="00000 00000"
-                    className="px-10"
-                    {...field}
-                    value={field.value}
-                    onInput={(e) => {
-                      const target = e.target as HTMLInputElement;
-                      target.value = target.value.replace(/[^0-9+ ]/g, "");
-                      field.onChange(target.value);
-                    }}
-                  />
-                  <Phone className="absolute right-3 top-[42px] w-5 h-5" />
-                  <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className="grid sm:grid-cols-2 gap-4 sm:gap-2">
-            <FormField
-              control={form.control}
-              name="dateOfBirth"
-              render={({ field }) => {
-                const maxDate = new Date();
-                maxDate.setFullYear(maxDate.getFullYear() - 16); // Subtract 16 years from today's date
-
-                const today = new Date();
-                const maxDobDate = new Date(
-                  today.getFullYear() - 16,
-                  today.getMonth(),
-                  today.getDate()
-                )
-                  .toISOString()
-                  .split("T")[0];
-                const minDobDate = new Date(
-                  today.getFullYear() - 100,
-                  today.getMonth(),
-                  today.getDate()
-                )
-                  .toISOString()
-                  .split("T")[0];
-                return (
-                  <FormItem className="flex-1 flex flex-col space-y-1 relative">
-                    <Label className="text-sm font-normal pl-3">
-                      Date of Birth
-                    </Label>
-
-                    <DobSelector
-                      value={
-                        field.value
-                          ? field.value.toISOString().split("T")[0]
-                          : undefined
-                      }
-                      onChange={(dateString) =>
-                        field.onChange(
-                          dateString ? new Date(dateString) : undefined
-                        )
-                      }
-                      maxDate={maxDobDate}
-                      minDate={minDobDate}
-                      className="w-full"
+    return (
+        <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <Label htmlFor="firstName">First Name</Label>
+                    <Input
+                        id="firstName"
+                        type="text"
+                        placeholder="Enter first name"
+                        value={formData.firstName}
+                        onChange={(e) => handleInputChange("firstName", e.target.value)}
+                        required
                     />
+                </div>
 
-                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                  </FormItem>
-                );
-              }}
-            />
+                <div className="space-y-2">
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input
+                        id="lastName"
+                        type="text"
+                        placeholder="Enter last name"
+                        value={formData.lastName}
+                        onChange={(e) => handleInputChange("lastName", e.target.value)}
+                        required
+                    />
+                </div>
+            </div>
 
-            <FormField
-              control={form.control}
-              name="qualification"
-              render={({ field }) => (
-                <FormItem className="flex-1 flex flex-col space-y-1 relative">
-                  <Label className="text-sm font-normal pl-3">
-                    Qualification
-                  </Label>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
+            <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                    id="email"
+                    type="email"
+                    placeholder="Enter your email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    required
+                />
+            </div>
+
+            <div className="space-y-2">
+                <Label htmlFor="mobileNumber">Mobile Number</Label>
+                <Input
+                    id="mobileNumber"
+                    type="tel"
+                    placeholder="Enter mobile number"
+                    value={formData.mobileNumber}
+                    onChange={(e) => handleInputChange("mobileNumber", e.target.value)}
+                    required
+                />
+            </div>
+
+            <div className="space-y-2">
+                <Label htmlFor="program">Program</Label>
+                <Select onValueChange={(value) => handleInputChange("program", value)}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select" />
+                        <SelectValue placeholder="Select program" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Student">Student</SelectItem>
-                      <SelectItem value="College Graduate">
-                        College Graduate
-                      </SelectItem>
-                      <SelectItem value="Working Professional">
-                        Working Professional
-                      </SelectItem>
-                      <SelectItem value="Freelancer">Freelancer</SelectItem>
-                      <SelectItem value="Business Owner">
-                        Business Owner
-                      </SelectItem>
-                      <SelectItem value="Consultant">Consultant</SelectItem>
+                        <SelectItem value="web-development">Web Development</SelectItem>
+                        <SelectItem value="data-science">Data Science</SelectItem>
+                        <SelectItem value="mobile-development">Mobile Development</SelectItem>
                     </SelectContent>
-                  </Select>
-                  <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <div className="grid sm:grid-cols-2 gap-4 sm:gap-2">
-              <FormField
-                control={form.control}
-                name="program"
-                render={({ field }) => (
-                  <FormItem className="flex-1 space-y-1 relative">
-                    <Label className="text-sm font-normal pl-3">
-                      Course of Interest
-                    </Label>
-                    <Select
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        value;
-                      }}
-                      defaultValue={field.value}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from(
-                          new Map(
-                            interest.map((int) => [int.programDetail, int])
-                          ).values()
-                        ).map((int) => (
-                          <SelectItem
-                            key={int.programDetail}
-                            value={int.programDetail}
-                          >
-                            {getProgramName(int.programDetail)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="cohort"
-                render={({ field }) => (
-                  <FormItem className="flex-1 space-y-1 relative">
-                    <Label className="text-sm font-normal pl-3">
-                      Select Cohort
-                    </Label>
-                    <Select
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        value;
-                      }}
-                      defaultValue={field.value}
-                      disabled={!form.watch("program")}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {cohorts.map((cohort) => (
-                          <SelectItem key={cohort._id} value={cohort._id}>
-                            {formatDateToMonthYear(cohort.startDate)} (
-                            {cohort.timeSlot}),{" "}
-                            {getCenterName(cohort?.centerDetail)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                  </FormItem>
-                )}
-              />
+                </Select>
             </div>
-            <Label
-              htmlFor="form-alert"
-              className="flex gap-1 items-center text-xs sm:text-sm font-normal text-[#00A3FF] font-normal mt-1 pl-3"
-            >
-              Your application form will be in line with the course of your
-              choice.
-            </Label>
-          </div>
 
-          <div className="flex gap-2 mt-6">
-            <Button
-              type="button"
-              onClick={() => navigate("../login")}
-              size="xl"
-              variant="ghost"
-              className="bg-[#27272A] hidden sm:block"
-            >
-              Login to Dashboard
+            <div className="space-y-2">
+                <Label htmlFor="cohort">Cohort</Label>
+                <Select onValueChange={(value) => handleInputChange("cohort", value)}>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Select cohort" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="2024-q1">2024 Q1</SelectItem>
+                        <SelectItem value="2024-q2">2024 Q2</SelectItem>
+                        <SelectItem value="2024-q3">2024 Q3</SelectItem>
+                        <SelectItem value="2024-q4">2024 Q4</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+
+            <div className="space-y-2">
+                <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                <Input
+                    id="dateOfBirth"
+                    type="date"
+                    value={formData.dateOfBirth}
+                    onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
+                    required
+                />
+            </div>
+
+            <div className="space-y-2">
+                <Label htmlFor="qualification">Qualification</Label>
+                <Input
+                    id="qualification"
+                    type="text"
+                    placeholder="Enter your qualification"
+                    value={formData.qualification}
+                    onChange={(e) => handleInputChange("qualification", e.target.value)}
+                    required
+                />
+            </div>
+
+            <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Creating Account..." : "Create Account"}
             </Button>
-            <Button
-              type="submit"
-              size="xl"
-              className="flex-1"
-              disabled={loading}
-            >
-              {loading ? "Sending OTP..." : "Verify Account"}
-            </Button>
-          </div>
         </form>
-      </Form>
-
-      <Dialog open={showOtp} onOpenChange={setShowOtp}>
-        <DialogTitle></DialogTitle>
-        <DialogContent className="flex flex-col gap-6 sm:gap-8 bg-[#1C1C1C] rounded-3xl max-w-[90vw] sm:max-w-2xl lg:max-w-4xl overflow-y-auto mx-auto !p-0">
-          <VerifyOTP
-            verificationType="email"
-            contactInfo={email}
-            errorMessage="Oops! Looks like you got the OTP wrong, Please Retry."
-          />
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-};
-
-export default SignUpForm;
+    )
+}
