@@ -60,7 +60,7 @@ import {
 import { Skeleton } from "~/components/ui/skeleton";
 import { UserContext } from "~/context/UserContext";
 import { useFirebaseAuth } from "~/hooks/use-firebase-auth";
-import { VerifyOTP } from "~/layout/auth-layout/components/VerifyOTP";
+import VerifyOTP from "~/layout/auth-layout/components/VerifyOTP";
 
 type ExperienceType =
   | "Working Professional"

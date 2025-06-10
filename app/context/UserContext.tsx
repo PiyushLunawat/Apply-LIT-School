@@ -1,8 +1,9 @@
 "use client"
 
 import type React from "react"
-import { createContext, useCallback, useEffect, useState } from "react"
+import { createContext, useState, useEffect, type ReactNode } from "react"
 import { getCurrentStudent } from "~/api/studentAPI"
+import { InitializeInterceptor } from "~/utils/interceptor"
 
 interface UserContextType {
   studentData: any
@@ -15,81 +16,78 @@ interface UserContextType {
   clearTokens: () => void
 }
 
-export const UserContext = createContext<UserContextType>({
-  studentData: {},
-  setStudentData: () => {},
-  refreshStudentData: async () => {},
-  isRefreshing: false,
-  accessToken: null,
-  refreshToken: null,
-  setTokens: () => {},
-  clearTokens: () => {},
-})
+export const UserContext = createContext<UserContextType | undefined>(undefined)
 
-export const UserProvider: React.FC<{
-  children: React.ReactNode
-  accessToken?: string
-  refreshToken?: string
-}> = ({ children, accessToken: initialAccessToken, refreshToken: initialRefreshToken }) => {
+export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [studentData, setStudentData] = useState<any>(null)
-  const [isRefreshing, setIsRefreshing] = useState<boolean>(false)
-  const [accessToken, setAccessToken] = useState<string | null>(initialAccessToken || null)
-  const [refreshToken, setRefreshToken] = useState<string | null>(initialRefreshToken || null)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [accessToken, setAccessToken] = useState<string | null>(null)
+  const [refreshToken, setRefreshToken] = useState<string | null>(null)
 
-  // Initialize from localStorage when the component mounts
+  // Initialize tokens from localStorage on mount
   useEffect(() => {
-    const storedData = localStorage.getItem("studentData")
-    const storedAccessToken = localStorage.getItem("accessToken")
-    const storedRefreshToken = localStorage.getItem("refreshToken")
+    if (typeof window !== "undefined") {
+      const storedAccessToken = localStorage.getItem("accessToken")
+      const storedRefreshToken = localStorage.getItem("refreshToken")
+      const storedStudentData = localStorage.getItem("studentData")
 
-    if (storedData) {
-      setStudentData(JSON.parse(storedData))
-    }
+      if (storedAccessToken) setAccessToken(storedAccessToken)
+      if (storedRefreshToken) setRefreshToken(storedRefreshToken)
+      if (storedStudentData) {
+        try {
+          setStudentData(JSON.parse(storedStudentData))
+        } catch (error) {
+          console.error("Failed to parse stored student data:", error)
+          localStorage.removeItem("studentData")
+        }
+      }
 
-    // Use stored tokens if no initial tokens provided
-    if (!initialAccessToken && storedAccessToken) {
-      setAccessToken(storedAccessToken)
+      // Initialize the interceptor with current tokens
+      InitializeInterceptor((isUnauthorized) => {
+        if (isUnauthorized) {
+          clearTokens()
+        }
+      })
     }
-    if (!initialRefreshToken && storedRefreshToken) {
-      setRefreshToken(storedRefreshToken)
-    }
-  }, [initialAccessToken, initialRefreshToken])
+  }, [])
 
-  // Update localStorage when tokens change
-  useEffect(() => {
-    if (accessToken) {
-      localStorage.setItem("accessToken", accessToken)
-    }
-    if (refreshToken) {
-      localStorage.setItem("refreshToken", refreshToken)
-    }
-  }, [accessToken, refreshToken])
-
-  const setTokens = useCallback((newAccessToken: string, newRefreshToken: string) => {
+  const setTokens = (newAccessToken: string, newRefreshToken: string) => {
     setAccessToken(newAccessToken)
     setRefreshToken(newRefreshToken)
-    localStorage.setItem("accessToken", newAccessToken)
-    localStorage.setItem("refreshToken", newRefreshToken)
-  }, [])
 
-  const clearTokens = useCallback(() => {
-    setAccessToken(null)
-    setRefreshToken(null)
-    localStorage.removeItem("accessToken")
-    localStorage.removeItem("refreshToken")
-    localStorage.removeItem("studentData")
-    setStudentData(null)
-  }, [])
-
-  // Function to refresh student data from the API
-  const refreshStudentData = useCallback(async () => {
-    if (!studentData || !studentData._id) {
-      console.log("Cannot refresh: No student ID available")
-      return
+    if (typeof window !== "undefined") {
+      localStorage.setItem("accessToken", newAccessToken)
+      localStorage.setItem("refreshToken", newRefreshToken)
     }
 
+    // Re-initialize interceptor with new tokens
+    InitializeInterceptor((isUnauthorized) => {
+      if (isUnauthorized) {
+        clearTokens()
+      }
+    })
+  }
+
+  const clearTokens = () => {
+    setAccessToken(null)
+    setRefreshToken(null)
+    setStudentData(null)
+
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("accessToken")
+      localStorage.removeItem("refreshToken")
+      localStorage.removeItem("studentData")
+    }
+  }
+
+  const refreshStudentData = async () => {
+    setIsRefreshing(true)
     try {
-      setIsRefreshing(true)
+      if (!studentData || !studentData._id) {
+        console.log("Cannot refresh: No student ID available")
+        return
+      }
+
       console.log("Refreshing student data...")
       const freshData = await getCurrentStudent(studentData._id)
 
@@ -101,28 +99,11 @@ export const UserProvider: React.FC<{
         console.log("Student data refreshed successfully")
       }
     } catch (error) {
-      console.error("Error refreshing student data:", error)
+      console.error("Failed to refresh student data:", error)
     } finally {
       setIsRefreshing(false)
     }
-  }, [studentData])
-
-  // Listen for localStorage changes
-  useEffect(() => {
-    const handleStorageChange = () => {
-      const updatedData = localStorage.getItem("studentData")
-      if (updatedData) {
-        setStudentData(JSON.parse(updatedData))
-      } else {
-        setStudentData(null)
-      }
-    }
-
-    window.addEventListener("storage", handleStorageChange)
-    return () => {
-      window.removeEventListener("storage", handleStorageChange)
-    }
-  }, [])
+  }
 
   return (
       <UserContext.Provider
