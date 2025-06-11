@@ -67,24 +67,61 @@ const getBgColor = (index: number) => {
   return colors[index % 4];
 };
 
+const validateLinks = (values: LitmusTestFormValues) => {
+  let errors: Record<string, string> = {};
+
+  values.tasks.forEach((task, taskIndex) => {
+    task.configItems.forEach((configItem, configIndex) => {
+      if (configItem.type === "link") {
+        const fieldName = `tasks.${taskIndex}.configItems.${configIndex}.answer`;
+        configItem.answer.forEach((link, linkIndex) => {
+          const result = z.string().url().safeParse(link);
+          if (!result.success) {
+            errors[`${fieldName}.${linkIndex}`] = "Please enter a valid URL";
+          }
+        });
+      }
+    });
+  });
+
+  return errors;
+};
+
 const litmusTestSchema = z.object({
   tasks: z.array(
     z.object({
       configItems: z.array(
-        z.object({
-          type: z.string(),
-          answer: z.union([
-            // for link (URL)
-            z
-              .string()
-              .nonempty("This field is required")
-              .url("Please enter a valid Link URL"),
-            // for short/long text
-            z.string().nonempty("This field is required"),
-            // for files/array
-            z.array(z.any()).nonempty("This field is required"),
-          ]),
-        })
+        z.discriminatedUnion("type", [
+          // For 'link' type: array of URLs
+          z.object({
+            type: z.literal("link"),
+            answer: z
+              .array(z.string().url("Please enter a valid URL"))
+              .nonempty("At least one link is required"),
+          }),
+          // For 'short' and 'long' types: single string
+          z.object({
+            type: z.literal("short"),
+            answer: z.string().nonempty("This field is required"),
+          }),
+          z.object({
+            type: z.literal("long"),
+            answer: z.string().nonempty("This field is required"),
+          }),
+          // For file upload types: array of files
+          z.object({
+            type: z.literal("image"),
+            answer: z.array(z.any()).nonempty("This field is required"),
+          }),
+          z.object({
+            type: z.literal("video"),
+            answer: z.array(z.any()).nonempty("This field is required"),
+          }),
+          z.object({
+            type: z.literal("file"),
+            answer: z.array(z.any()).nonempty("This field is required"),
+          }),
+        ])
       ),
     })
   ),
@@ -280,6 +317,16 @@ export default function LitmusTest({ student }: LitmusTestProps) {
   };
 
   const onSave = async (data: LitmusTestFormValues) => {
+    const linkErrors = validateLinks(data);
+
+    if (Object.keys(linkErrors).length > 0) {
+      // Apply errors to form
+      Object.entries(linkErrors).forEach(([field, message]) => {
+        form.setError(field as any, { message });
+      });
+      return;
+    }
+
     try {
       setSaveLoading(true);
 
@@ -328,6 +375,8 @@ export default function LitmusTest({ student }: LitmusTestProps) {
       // Submit the form data using the provided API function
       const response = await submitLITMUSTest(payload);
       console.log("Submission successful:", response);
+      form.clearErrors();
+
       // setLitmusTestDetails(response.data);
       // setStatus(response.data?.status);
       // handleScheduleInterview();
@@ -345,7 +394,7 @@ export default function LitmusTest({ student }: LitmusTestProps) {
       cohortId:
         student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.cohortId
           ?._id,
-      role: "Litmus_test_reviewer",
+      role: "litmus_interviewer",
     };
 
     setLoading(true);

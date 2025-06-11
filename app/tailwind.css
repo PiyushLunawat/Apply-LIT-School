@@ -4,7 +4,7 @@
 
 html,
 body {
-  font-family: 'Geist', Arial, sans-serif !important;
+  font-family: "Geist", Arial, sans-serif !important;
   @apply bg-background dark:bg-background;
 
   @media (prefers-color-scheme: dark) {
@@ -93,13 +93,11 @@ body {
   ::-webkit-scrollbar {
     display: none;
   }
-  
+
   html {
-    scrollbar-width: thin; 
-  } 
+    scrollbar-width: thin;
+  }
 }
-
-
 
 @layer base {
   * {

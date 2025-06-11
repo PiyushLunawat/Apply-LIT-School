@@ -35,7 +35,7 @@ const Feedback: React.FC<FeedbackProps> = ({
       cohortId:
         student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.cohortId
           ?._id,
-      role: "application_reviewer",
+      role: "application_interviewer",
     };
 
     const response = await GetInterviewers(data);

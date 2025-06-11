@@ -35,6 +35,26 @@ import { UserContext } from "~/context/UserContext";
 
 const s3Client = new S3Client({});
 
+const validateLinks = (values: FormSchema) => {
+  let errors: Record<string, string> = {};
+
+  values.tasks.forEach((task, taskIndex) => {
+    task.configItems.forEach((configItem, configIndex) => {
+      if (configItem.type === "link") {
+        const fieldName = `tasks.${taskIndex}.configItems.${configIndex}.answer`;
+        configItem.answer.forEach((link, linkIndex) => {
+          const result = z.string().url().safeParse(link);
+          if (!result.success) {
+            errors[`${fieldName}.${linkIndex}`] = "Please enter a valid URL";
+          }
+        });
+      }
+    });
+  });
+
+  return errors;
+};
+
 // ------------------ ZOD Schema ------------------
 const formSchema = z.object({
   courseDive: z.object({
@@ -366,6 +386,16 @@ export default function ApplicationTaskForm({
   };
 
   const onSave = async (data: FormSchema) => {
+    const linkErrors = validateLinks(data);
+
+    if (Object.keys(linkErrors).length > 0) {
+      // Apply errors to form
+      Object.entries(linkErrors).forEach(([field, message]) => {
+        form.setError(field as any, { message });
+      });
+      return;
+    }
+
     try {
       setSaveLoading(true);
 
@@ -418,6 +448,8 @@ export default function ApplicationTaskForm({
       console.log("Submitting Payload:", payload);
       const res = await submitApplicationTask(payload);
       console.log("Submission success => ", res);
+      form.clearErrors();
+
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (err) {

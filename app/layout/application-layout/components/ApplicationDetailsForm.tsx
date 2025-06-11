@@ -68,6 +68,32 @@ type ExperienceType =
   | "Freelancer"
   | "Consultant";
 
+const saveSchema = z.object({
+  studentData: z.object({
+    email: z.string().nonempty("Email is required"),
+    cohort: z.string().nonempty("Cohort is required"),
+    linkedInUrl: z
+      .string()
+      .refine(
+        (url) => !url || /^https:\/\/(www\.)?linkedin\.com\/.+$/.test(url),
+        {
+          message: "Please enter a valid LinkedIn URL.",
+        }
+      ),
+  }),
+  applicationData: z.object({
+    emergencyContact: z
+      .string()
+      .min(10, "Emergency contact number is required"),
+    fatherEmail: z
+      .union([z.string().email("Invalid email address"), z.literal("")])
+      .optional(),
+    motherEmail: z
+      .union([z.string().email("Invalid email address"), z.literal("")])
+      .optional(),
+  }),
+});
+
 const formSchema = z
   .object({
     studentData: z.object({
@@ -1061,9 +1087,23 @@ const ApplicationDetailsForm: React.FC = () => {
       if (isSubmit) {
         setLoading(true);
       } else {
+        await saveSchema.parseAsync({
+          studentData: {
+            email: form.getValues("studentData.email"),
+            cohort: form.getValues("studentData.cohort"),
+            linkedInUrl: form.getValues("studentData.linkedInUrl"),
+          },
+          applicationData: {
+            emergencyContact: form.getValues(
+              "applicationData.emergencyContact"
+            ),
+            fatherEmail: form.getValues("applicationData.fatherEmail"),
+            motherEmail: form.getValues("applicationData.motherEmail"),
+          },
+        });
         setSaveLoading(true);
       }
-
+      form.clearErrors();
       console.log("apiPayload", apiPayload);
       const response = await submitApplication(apiPayload);
       console.log("Form submitted successfully", response);
@@ -1075,9 +1115,14 @@ const ApplicationDetailsForm: React.FC = () => {
         setSaved(true);
         setTimeout(() => setSaved(false), 2000);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error submitting application:", error);
-      if (isSubmit) setFailedDialogOpen(true);
+      if (error instanceof z.ZodError) {
+        error.errors.forEach((err) => {
+          const path = err.path.join(".");
+          form.setError(path as any, { message: err.message });
+        });
+      } else if (isSubmit) setFailedDialogOpen(true);
     } finally {
       if (isSubmit) {
         setLoading(false);
@@ -2584,8 +2629,8 @@ const ApplicationDetailsForm: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-              <FormField
+            <div className="flex flex-col gap-4 sm:gap-6">
+              {/* <FormField
                 control={control}
                 name="applicationData.financiallyDependent"
                 render={({ field }) => (
@@ -2631,12 +2676,12 @@ const ApplicationDetailsForm: React.FC = () => {
                     <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
                   </FormItem>
                 )}
-              />
+              /> */}
               <FormField
                 control={control}
                 name="applicationData.appliedForFinancialAid"
                 render={({ field }) => (
-                  <FormItem className="flex-1 space-y-1 p-4 sm:p-6 bg-[#27272A]/[0.6] rounded-2xl">
+                  <FormItem className="w-full flex-1 space-y-1 p-4 sm:p-6 bg-[#27272A]/[0.6] rounded-2xl">
                     <Label className="text-sm font-normal">
                       Have you tried applying for financial aid earlier?
                     </Label>
@@ -2673,6 +2718,174 @@ const ApplicationDetailsForm: React.FC = () => {
                   </FormItem>
                 )}
               />
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
+                <FormField
+                  control={control}
+                  name="applicationData.emergencyFirstName"
+                  render={({ field }) => (
+                    <FormItem className="flex-1 space-y-1">
+                      <Label
+                        htmlFor="WhoAppliedForThisLoan?"
+                        className="text-sm font-normal pl-3"
+                      >
+                        Who Applied For This Loan?
+                      </Label>
+                      <FormControl>
+                        <Select
+                          disabled={isSaved}
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="father">Father</SelectItem>
+                            <SelectItem value="mother">Mother</SelectItem>
+                            <SelectItem value="sibling">Sibling</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={control}
+                  name="applicationData.emergencyLastName"
+                  render={({ field }) => (
+                    <FormItem className="flex-1 space-y-1">
+                      <Label
+                        htmlFor="TypeofLoan"
+                        className="text-sm font-normal pl-3"
+                      >
+                        Type of Loan
+                      </Label>
+                      <FormControl>
+                        <Select
+                          disabled={isSaved}
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="HomeLoan">Home Loan</SelectItem>
+                            <SelectItem value="GoldLoan">Gold Loan</SelectItem>
+                            <SelectItem value="VehicleLoan">
+                              Vehicle Loan
+                            </SelectItem>
+                            <SelectItem value="PersonalLoan">
+                              Personal Loan
+                            </SelectItem>
+                            <SelectItem value="Short-termBusinessLoan">
+                              Short-term Business Loan
+                            </SelectItem>
+                            <SelectItem value="EducationLoan">
+                              Education Loan
+                            </SelectItem>
+                            <SelectItem value="other">other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
+                <FormField
+                  control={control}
+                  name="applicationData.relationship"
+                  render={({ field }) => (
+                    <FormItem className="flex-1 space-y-1">
+                      <Label
+                        htmlFor="LoanAmount"
+                        className="text-sm font-normal pl-3"
+                      >
+                        Loan Amount
+                      </Label>
+                      <div className="absolute left-3 top-[40.5px]">INR</div>
+                      <FormControl>
+                        <Input
+                          id="LoanAmount"
+                          placeholder="5,00,000"
+                          {...field}
+                          disabled={isSaved}
+                        />
+                      </FormControl>
+                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={control}
+                  name="applicationData.relationship"
+                  render={({ field }) => (
+                    <FormItem className="flex-1 space-y-1">
+                      <Label
+                        htmlFor="CBILScore"
+                        className="text-sm font-normal pl-3"
+                      >
+                        CBIL Score of the Borrower
+                      </Label>
+                      <FormControl>
+                        <Input
+                          id="CBILScore"
+                          placeholder="300 to 500"
+                          {...field}
+                          maxLength={3}
+                          disabled={isSaved}
+                        />
+                      </FormControl>
+                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
+                <FormField
+                  control={control}
+                  name="applicationData.emergencyContact"
+                  render={({ field }) => (
+                    <FormItem className="flex-1 space-y-1 relative">
+                      <Label
+                        htmlFor="combinedIncome"
+                        className="text-sm font-normal pl-3"
+                      >
+                        Combined Family Income Per Annum
+                      </Label>
+                      <div className="absolute left-3 top-[40.5px]">INR</div>
+                      <FormControl>
+                        <Select
+                          disabled={isSaved}
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Below5L">Below 5L</SelectItem>
+                            <SelectItem value="5-10">5-10L</SelectItem>
+                            <SelectItem value="10-25">10-25L</SelectItem>
+                            <SelectItem value="25-50">25-50L</SelectItem>
+                            <SelectItem value="50-75">50-75L</SelectItem>
+                            <SelectItem value="75-100">75L-1Cr</SelectItem>
+
+                            <SelectItem value="AboveCr.">
+                              Above 1 Cr.
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
             <div

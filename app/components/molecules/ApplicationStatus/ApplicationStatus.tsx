@@ -179,7 +179,7 @@ const StatusMessage: React.FC<StatusMessageProps> = ({ student }) => {
     setInterviewLoading(true);
     const data = {
       cohortId: latestCohort?.cohortId?._id,
-      role: "application_reviewer",
+      role: "application_interviewer",
     };
 
     console.log("liffffst", data);
