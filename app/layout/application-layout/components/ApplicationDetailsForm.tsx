@@ -158,8 +158,30 @@ const formSchema = z
       motherEmail: z
         .union([z.string().email("Invalid email address"), z.literal("")])
         .optional(),
-      financiallyDependent: z.boolean(),
       appliedForFinancialAid: z.boolean(),
+      loanApplicant: z.enum(["", "father", "mother", "sibling"]),
+      loanType: z.enum([
+        "",
+        "home",
+        "gold",
+        "vehicle",
+        "personal",
+        "short-term business",
+        "education",
+        "other",
+      ]),
+      requestedLoanAmount: z.string().optional(),
+      cibilScore: z.string().optional(),
+      annualFamilyIncome: z.enum([
+        "",
+        "below5L",
+        "5-10L",
+        "10-25L",
+        "25-50L",
+        "50-75L",
+        "75-100L",
+        "above1Cr",
+      ]),
     }),
   })
   .refine((data) => data.studentData.isMobileVerified, {
@@ -302,6 +324,51 @@ const formSchema = z
     {
       message: "Father's email and mother's email must be different.",
       path: ["applicationData.motherEmail"],
+    }
+  )
+  .refine(
+    (data) =>
+      !data.applicationData.appliedForFinancialAid ||
+      data.applicationData.loanApplicant,
+    {
+      message: "Loan Applicant is required.",
+      path: ["applicationData.loanApplicant"],
+    }
+  )
+  .refine(
+    (data) =>
+      !data.applicationData.appliedForFinancialAid ||
+      data.applicationData.loanType,
+    {
+      message: "Type of loan is required.",
+      path: ["applicationData.loanType"],
+    }
+  )
+  .refine(
+    (data) =>
+      !data.applicationData.appliedForFinancialAid ||
+      data.applicationData.requestedLoanAmount,
+    {
+      message: "Loan amount is required.",
+      path: ["applicationData.requestedLoanAmount"],
+    }
+  )
+  .refine(
+    (data) =>
+      !data.applicationData.appliedForFinancialAid ||
+      data.applicationData.cibilScore,
+    {
+      message: "CIBIL Score is required.",
+      path: ["applicationData.cibilScore"],
+    }
+  )
+  .refine(
+    (data) =>
+      !data.applicationData.appliedForFinancialAid ||
+      data.applicationData.annualFamilyIncome,
+    {
+      message: "Annual Family Income is required.",
+      path: ["applicationData.annualFamilyIncome"],
     }
   );
 
@@ -481,7 +548,9 @@ const ApplicationDetailsForm: React.FC = () => {
 
     const topObserver = new IntersectionObserver(
       ([entry]) => setIsTopVisible(entry.isIntersecting),
-      { threshold: 0.1 }
+      {
+        threshold: 0.1,
+      }
     );
 
     const bottomObserver = new IntersectionObserver(
@@ -781,16 +850,31 @@ const ApplicationDetailsForm: React.FC = () => {
                 studentDetail?.parentInformation?.mother?.email ||
                 existingData?.applicationData?.motherEmail ||
                 "",
-              financiallyDependent:
-                !studentDetail?.financialInformation
-                  ?.isFinanciallyIndependent ||
-                existingData?.applicationData?.financiallyDependent ||
-                false,
               appliedForFinancialAid:
                 studentDetail?.financialInformation
                   ?.hasAppliedForFinancialAid ||
                 existingData?.applicationData?.appliedForFinancialAid ||
                 false,
+              loanApplicant:
+                studentDetail?.financialInformation?.loanApplicant ||
+                existingData?.applicationData?.loanApplicant ||
+                "",
+              loanType:
+                studentDetail?.financialInformation?.loanType ||
+                existingData?.applicationData?.loanType ||
+                "",
+              requestedLoanAmount:
+                studentDetail?.financialInformation?.requestedLoanAmount ||
+                existingData?.applicationData?.requestedLoanAmount ||
+                "",
+              cibilScore:
+                studentDetail?.financialInformation?.cibilScore ||
+                existingData?.applicationData?.cibilScore ||
+                "",
+              annualFamilyIncome:
+                studentDetail?.financialInformation?.annualFamilyIncome ||
+                existingData?.applicationData?.annualFamilyIncome ||
+                "",
             },
           };
 
@@ -1076,9 +1160,13 @@ const ApplicationDetailsForm: React.FC = () => {
           },
         },
         financialInformation: {
-          isFinanciallyIndependent: !data.applicationData.financiallyDependent,
           hasAppliedForFinancialAid:
             data.applicationData.appliedForFinancialAid,
+          loanApplicant: data.applicationData.loanApplicant,
+          loanType: data.applicationData.loanType,
+          requestedLoanAmount: data.applicationData.requestedLoanAmount,
+          cibilScore: data.applicationData.cibilScore,
+          annualFamilyIncome: data.applicationData.annualFamilyIncome,
         },
       },
     };
@@ -2630,53 +2718,6 @@ const ApplicationDetailsForm: React.FC = () => {
             </div>
 
             <div className="flex flex-col gap-4 sm:gap-6">
-              {/* <FormField
-                control={control}
-                name="applicationData.financiallyDependent"
-                render={({ field }) => (
-                  <FormItem className="flex-1 space-y-1 p-4 sm:p-6 bg-[#27272A]/[0.6] rounded-2xl">
-                    <Label className="text-sm font-normal">
-                      Are you financially dependent on your Parents?
-                    </Label>
-                    <FormControl>
-                      <RadioGroup
-                        disabled={isSaved}
-                        className="flex space-x-6 mt-2"
-                        onValueChange={(value) =>
-                          field.onChange(value === "yes")
-                        }
-                        value={field.value ? "yes" : "no"}
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem
-                            value="yes"
-                            id="yesFinanciallyDependent"
-                          />
-                          <Label
-                            htmlFor="yesFinanciallyDependent"
-                            className="text-base font-normal"
-                          >
-                            Yes
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem
-                            value="no"
-                            id="noFinanciallyDependent"
-                          />
-                          <Label
-                            htmlFor="noFinanciallyDependent"
-                            className="text-base font-normal"
-                          >
-                            No
-                          </Label>
-                        </div>
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                  </FormItem>
-                )}
-              /> */}
               <FormField
                 control={control}
                 name="applicationData.appliedForFinancialAid"
@@ -2721,11 +2762,11 @@ const ApplicationDetailsForm: React.FC = () => {
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
                 <FormField
                   control={control}
-                  name="applicationData.emergencyFirstName"
+                  name="applicationData.loanApplicant"
                   render={({ field }) => (
                     <FormItem className="flex-1 space-y-1">
                       <Label
-                        htmlFor="WhoAppliedForThisLoan?"
+                        htmlFor="loanApplicant"
                         className="text-sm font-normal pl-3"
                       >
                         Who Applied For This Loan?
@@ -2752,11 +2793,11 @@ const ApplicationDetailsForm: React.FC = () => {
                 />
                 <FormField
                   control={control}
-                  name="applicationData.emergencyLastName"
+                  name="applicationData.loanType"
                   render={({ field }) => (
                     <FormItem className="flex-1 space-y-1">
                       <Label
-                        htmlFor="TypeofLoan"
+                        htmlFor="loanType"
                         className="text-sm font-normal pl-3"
                       >
                         Type of Loan
@@ -2771,18 +2812,18 @@ const ApplicationDetailsForm: React.FC = () => {
                             <SelectValue placeholder="Select" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="HomeLoan">Home Loan</SelectItem>
-                            <SelectItem value="GoldLoan">Gold Loan</SelectItem>
-                            <SelectItem value="VehicleLoan">
+                            <SelectItem value="home">Home Loan</SelectItem>
+                            <SelectItem value="gold">Gold Loan</SelectItem>
+                            <SelectItem value="vehicle">
                               Vehicle Loan
                             </SelectItem>
-                            <SelectItem value="PersonalLoan">
+                            <SelectItem value="personal">
                               Personal Loan
                             </SelectItem>
-                            <SelectItem value="Short-termBusinessLoan">
+                            <SelectItem value="short-term business">
                               Short-term Business Loan
                             </SelectItem>
-                            <SelectItem value="EducationLoan">
+                            <SelectItem value="education">
                               Education Loan
                             </SelectItem>
                             <SelectItem value="other">other</SelectItem>
@@ -2798,11 +2839,11 @@ const ApplicationDetailsForm: React.FC = () => {
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
                 <FormField
                   control={control}
-                  name="applicationData.relationship"
+                  name="applicationData.requestedLoanAmount"
                   render={({ field }) => (
                     <FormItem className="flex-1 space-y-1">
                       <Label
-                        htmlFor="LoanAmount"
+                        htmlFor="requestedLoanAmount"
                         className="text-sm font-normal pl-3"
                       >
                         Loan Amount
@@ -2810,7 +2851,7 @@ const ApplicationDetailsForm: React.FC = () => {
                       <div className="absolute left-3 top-[40.5px]">INR</div>
                       <FormControl>
                         <Input
-                          id="LoanAmount"
+                          id="requestedLoanAmount"
                           placeholder="5,00,000"
                           {...field}
                           disabled={isSaved}
@@ -2822,18 +2863,18 @@ const ApplicationDetailsForm: React.FC = () => {
                 />
                 <FormField
                   control={control}
-                  name="applicationData.relationship"
+                  name="applicationData.cibilScore"
                   render={({ field }) => (
                     <FormItem className="flex-1 space-y-1">
                       <Label
-                        htmlFor="CBILScore"
+                        htmlFor="cibilScore"
                         className="text-sm font-normal pl-3"
                       >
                         CBIL Score of the Borrower
                       </Label>
                       <FormControl>
                         <Input
-                          id="CBILScore"
+                          id="cibilScore"
                           placeholder="300 to 500"
                           {...field}
                           maxLength={3}
@@ -2848,11 +2889,11 @@ const ApplicationDetailsForm: React.FC = () => {
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
                 <FormField
                   control={control}
-                  name="applicationData.emergencyContact"
+                  name="applicationData.annualFamilyIncome"
                   render={({ field }) => (
                     <FormItem className="flex-1 space-y-1 relative">
                       <Label
-                        htmlFor="combinedIncome"
+                        htmlFor="annualFamilyIncome"
                         className="text-sm font-normal pl-3"
                       >
                         Combined Family Income Per Annum
@@ -2868,14 +2909,13 @@ const ApplicationDetailsForm: React.FC = () => {
                             <SelectValue placeholder="Select" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Below5L">Below 5L</SelectItem>
-                            <SelectItem value="5-10">5-10L</SelectItem>
-                            <SelectItem value="10-25">10-25L</SelectItem>
-                            <SelectItem value="25-50">25-50L</SelectItem>
-                            <SelectItem value="50-75">50-75L</SelectItem>
-                            <SelectItem value="75-100">75L-1Cr</SelectItem>
-
-                            <SelectItem value="AboveCr.">
+                            <SelectItem value="below5L">Below 5L</SelectItem>
+                            <SelectItem value="5-10L">5-10L</SelectItem>
+                            <SelectItem value="10-25L">10-25L</SelectItem>
+                            <SelectItem value="25-50L">25-50L</SelectItem>
+                            <SelectItem value="50-75L">50-75L</SelectItem>
+                            <SelectItem value="75-100L">75L-1Cr</SelectItem>
+                            <SelectItem value="above1Cr">
                               Above 1 Cr.
                             </SelectItem>
                           </SelectContent>
@@ -2913,7 +2953,7 @@ const ApplicationDetailsForm: React.FC = () => {
                 >
                   {loading
                     ? "Initializing Payment..."
-                    : `Pay INR ₹${applicationFees || 0}.00`}
+                    : `Pay INR â‚¹${applicationFees || 0}.00`}
                 </Button>
               ) : (
                 <Button
@@ -2926,7 +2966,7 @@ const ApplicationDetailsForm: React.FC = () => {
                     <SaveIcon className="w-5 h-5" />
                     {loading
                       ? "Submitting..."
-                      : `Submit and Pay INR ₹${applicationFees || 0}.00`}
+                      : `Submit and Pay INR â‚¹${applicationFees || 0}.00`}
                   </div>
                 </Button>
               )}
@@ -3002,8 +3042,8 @@ const ApplicationDetailsForm: React.FC = () => {
           <div>
             <div className="text-2xl font-semibold ">Admission Fee Payment</div>
             <div className="mt-2 text-xs sm:text-sm font-normal text-center">
-              Make an admission fee payment of INR ₹{applicationFees || 0}.00 to
-              move to the next step of your admission process
+              Make an admission fee payment of INR â‚¹{applicationFees || 0}.00
+              to move to the next step of your admission process
             </div>
           </div>
           <div className="flex flex-col gap-3">
