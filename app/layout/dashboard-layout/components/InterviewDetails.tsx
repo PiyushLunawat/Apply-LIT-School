@@ -129,7 +129,7 @@ export default function InterviewDetailsCard({
   const handleScheduleInterview = async () => {
     const data = {
       cohortId: latestCohort?.cohortId?._id,
-      role: "Litmus_test_reviewer",
+      role: "litmus_interviewer",
     };
 
     const response = await GetInterviewers(data);

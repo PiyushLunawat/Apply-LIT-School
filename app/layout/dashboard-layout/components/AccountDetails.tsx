@@ -343,7 +343,11 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                     value={bloodGroupInput}
                     onValueChange={setBloodGroupInput}
                   >
-                    <SelectTrigger className="bg-transparent border-none text-base sm:text-xl focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 h-8 pl-0">
+                    <SelectTrigger
+                      className={`${
+                        bloodGroupInput ? "text-white" : "text-muted-foreground"
+                      } bg-transparent border-none text-base sm:text-xl focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 h-8 pl-0`}
+                    >
                       <SelectValue placeholder="Select blood group" />
                     </SelectTrigger>
                     <SelectContent>

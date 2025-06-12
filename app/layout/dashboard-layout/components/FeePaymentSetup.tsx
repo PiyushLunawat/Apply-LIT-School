@@ -336,7 +336,13 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                   }
                   value={formData.paymentMethod}
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger
+                    className={`w-full ${
+                      formData.paymentMethod
+                        ? "text-white"
+                        : "text-muted-foreground"
+                    }`}
+                  >
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
                   <SelectContent>
@@ -360,7 +366,13 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                   }
                   value={formData.paymentPlan}
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger
+                    className={`w-full ${
+                      formData.paymentPlan
+                        ? "text-white"
+                        : "text-muted-foreground"
+                    }`}
+                  >
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
                   <SelectContent>

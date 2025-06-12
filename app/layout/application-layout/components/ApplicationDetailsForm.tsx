@@ -365,6 +365,17 @@ const formSchema = z
   .refine(
     (data) =>
       !data.applicationData.appliedForFinancialAid ||
+      (data.applicationData.cibilScore !== undefined &&
+        Number(data.applicationData.cibilScore) >= 300 &&
+        Number(data.applicationData.cibilScore) <= 900),
+    {
+      message: "CIBIL Score must be between 300 and 900.",
+      path: ["applicationData", "cibilScore"],
+    }
+  )
+  .refine(
+    (data) =>
+      !data.applicationData.appliedForFinancialAid ||
       data.applicationData.annualFamilyIncome,
     {
       message: "Annual Family Income is required.",
@@ -915,6 +926,7 @@ const ApplicationDetailsForm: React.FC = () => {
 
   const watchHasWorkExperience = watch("applicationData.isExperienced");
   const watchExperienceType = watch("applicationData.experienceType");
+  const watchFinancialAid = watch("applicationData.appliedForFinancialAid");
 
   const formatMonthYear = (dateStr: any) => {
     const [year, month] = dateStr.split("-");
@@ -990,6 +1002,20 @@ const ApplicationDetailsForm: React.FC = () => {
     const date = new Date(dateString);
     return date.toLocaleString("default", { month: "long", year: "numeric" });
   };
+
+  function formatIndianCurrency(value: string | number | undefined): string {
+    if (!value) return "";
+    const numStr = value.toString();
+    const lastThreeDigits = numStr.slice(-3);
+    const otherDigits = numStr.slice(0, -3);
+    const formattedOtherDigits = otherDigits.replace(
+      /\B(?=(\d{2})+(?!\d))/g,
+      ","
+    );
+    return otherDigits
+      ? `${formattedOtherDigits},${lastThreeDigits}`
+      : lastThreeDigits;
+  }
 
   const handleContinueToDashboard = () => {
     window.location.href = "/application/task";
@@ -1400,7 +1426,13 @@ const ApplicationDetailsForm: React.FC = () => {
                           value={field.value}
                           onValueChange={field.onChange}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger
+                            className={`${
+                              field.value
+                                ? "text-white"
+                                : "text-muted-foreground"
+                            }`}
+                          >
                             <SelectValue placeholder="Select" />
                           </SelectTrigger>
                           <SelectContent>
@@ -1449,7 +1481,11 @@ const ApplicationDetailsForm: React.FC = () => {
                         onValueChange={handleCourseChange}
                         value={field.value}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger
+                          className={`${
+                            field.value ? "text-white" : "text-muted-foreground"
+                          }`}
+                        >
                           <SelectValue placeholder="Select a Program" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1514,7 +1550,11 @@ const ApplicationDetailsForm: React.FC = () => {
                         }}
                         value={field.value}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger
+                          className={`${
+                            field.value ? "text-white" : "text-muted-foreground"
+                          }`}
+                        >
                           <SelectValue
                             placeholder={
                               !selectedProgram
@@ -1787,7 +1827,13 @@ const ApplicationDetailsForm: React.FC = () => {
                           onValueChange={field.onChange}
                           value={field.value}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger
+                            className={`${
+                              field.value
+                                ? "text-white"
+                                : "text-muted-foreground"
+                            }`}
+                          >
                             <SelectValue placeholder="Select" />
                           </SelectTrigger>
                           <SelectContent>
@@ -1954,7 +2000,13 @@ const ApplicationDetailsForm: React.FC = () => {
                                 setExperienceType(value as ExperienceType);
                               }}
                             >
-                              <SelectTrigger>
+                              <SelectTrigger
+                                className={`${
+                                  field.value
+                                    ? "text-white"
+                                    : "text-muted-foreground"
+                                }`}
+                              >
                                 <SelectValue placeholder="Select" />
                               </SelectTrigger>
                               <SelectContent>
@@ -2759,173 +2811,229 @@ const ApplicationDetailsForm: React.FC = () => {
                   </FormItem>
                 )}
               />
-              <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                <FormField
-                  control={control}
-                  name="applicationData.loanApplicant"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1">
-                      <Label
-                        htmlFor="loanApplicant"
-                        className="text-sm font-normal pl-3"
-                      >
-                        Who Applied For This Loan?
-                      </Label>
-                      <FormControl>
-                        <Select
-                          disabled={isSaved}
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="father">Father</SelectItem>
-                            <SelectItem value="mother">Mother</SelectItem>
-                            <SelectItem value="sibling">Sibling</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={control}
-                  name="applicationData.loanType"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1">
-                      <Label
-                        htmlFor="loanType"
-                        className="text-sm font-normal pl-3"
-                      >
-                        Type of Loan
-                      </Label>
-                      <FormControl>
-                        <Select
-                          disabled={isSaved}
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="home">Home Loan</SelectItem>
-                            <SelectItem value="gold">Gold Loan</SelectItem>
-                            <SelectItem value="vehicle">
-                              Vehicle Loan
-                            </SelectItem>
-                            <SelectItem value="personal">
-                              Personal Loan
-                            </SelectItem>
-                            <SelectItem value="short-term business">
-                              Short-term Business Loan
-                            </SelectItem>
-                            <SelectItem value="education">
-                              Education Loan
-                            </SelectItem>
-                            <SelectItem value="other">other</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              {watchFinancialAid && (
+                <>
+                  <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
+                    <FormField
+                      control={control}
+                      name="applicationData.loanApplicant"
+                      render={({ field }) => (
+                        <FormItem className="flex-1 space-y-1">
+                          <Label
+                            htmlFor="loanApplicant"
+                            className="text-sm font-normal pl-3"
+                          >
+                            Who Applied For This Loan?
+                          </Label>
+                          <FormControl>
+                            <Select
+                              disabled={isSaved}
+                              onValueChange={field.onChange}
+                              value={field.value}
+                            >
+                              <SelectTrigger
+                                className={`${
+                                  field.value
+                                    ? "text-white"
+                                    : "text-muted-foreground"
+                                }`}
+                              >
+                                <SelectValue placeholder="Select" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="father">Father</SelectItem>
+                                <SelectItem value="mother">Mother</SelectItem>
+                                <SelectItem value="sibling">Sibling</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={control}
+                      name="applicationData.loanType"
+                      render={({ field }) => (
+                        <FormItem className="flex-1 space-y-1">
+                          <Label
+                            htmlFor="loanType"
+                            className="text-sm font-normal pl-3"
+                          >
+                            Type of Loan
+                          </Label>
+                          <FormControl>
+                            <Select
+                              disabled={isSaved}
+                              onValueChange={field.onChange}
+                              value={field.value}
+                            >
+                              <SelectTrigger
+                                className={`${
+                                  field.value
+                                    ? "text-white"
+                                    : "text-muted-foreground"
+                                }`}
+                              >
+                                <SelectValue
+                                  placeholder="Select"
+                                  className={`${
+                                    field.value
+                                      ? "text-white"
+                                      : "text-muted-foreground"
+                                  }`}
+                                />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="home">Home Loan</SelectItem>
+                                <SelectItem value="gold">Gold Loan</SelectItem>
+                                <SelectItem value="vehicle">
+                                  Vehicle Loan
+                                </SelectItem>
+                                <SelectItem value="personal">
+                                  Personal Loan
+                                </SelectItem>
+                                <SelectItem value="short-term business">
+                                  Short-term Business Loan
+                                </SelectItem>
+                                <SelectItem value="education">
+                                  Education Loan
+                                </SelectItem>
+                                <SelectItem value="other">other</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-              <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                <FormField
-                  control={control}
-                  name="applicationData.requestedLoanAmount"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1">
-                      <Label
-                        htmlFor="requestedLoanAmount"
-                        className="text-sm font-normal pl-3"
-                      >
-                        Loan Amount
-                      </Label>
-                      <div className="absolute left-3 top-[40.5px]">INR</div>
-                      <FormControl>
-                        <Input
-                          id="requestedLoanAmount"
-                          placeholder="5,00,000"
-                          {...field}
-                          disabled={isSaved}
-                        />
-                      </FormControl>
-                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={control}
-                  name="applicationData.cibilScore"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1">
-                      <Label
-                        htmlFor="cibilScore"
-                        className="text-sm font-normal pl-3"
-                      >
-                        CBIL Score of the Borrower
-                      </Label>
-                      <FormControl>
-                        <Input
-                          id="cibilScore"
-                          placeholder="300 to 500"
-                          {...field}
-                          maxLength={3}
-                          disabled={isSaved}
-                        />
-                      </FormControl>
-                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
-                <FormField
-                  control={control}
-                  name="applicationData.annualFamilyIncome"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 space-y-1 relative">
-                      <Label
-                        htmlFor="annualFamilyIncome"
-                        className="text-sm font-normal pl-3"
-                      >
-                        Combined Family Income Per Annum
-                      </Label>
-                      <div className="absolute left-3 top-[40.5px]">INR</div>
-                      <FormControl>
-                        <Select
-                          disabled={isSaved}
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="below5L">Below 5L</SelectItem>
-                            <SelectItem value="5-10L">5-10L</SelectItem>
-                            <SelectItem value="10-25L">10-25L</SelectItem>
-                            <SelectItem value="25-50L">25-50L</SelectItem>
-                            <SelectItem value="50-75L">50-75L</SelectItem>
-                            <SelectItem value="75-100L">75L-1Cr</SelectItem>
-                            <SelectItem value="above1Cr">
-                              Above 1 Cr.
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                  <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
+                    <FormField
+                      control={control}
+                      name="applicationData.requestedLoanAmount"
+                      render={({ field }) => (
+                        <FormItem className="flex-1 space-y-1 relative">
+                          <Label
+                            htmlFor="requestedLoanAmount"
+                            className="text-sm font-normal pl-3"
+                          >
+                            Loan Amount
+                          </Label>
+                          <div className="absolute left-3 top-[40px]">INR</div>
+                          <FormControl>
+                            <Input
+                              className="pl-11"
+                              id="requestedLoanAmount"
+                              placeholder="5,00,000"
+                              maxLength={12}
+                              value={formatIndianCurrency(field.value)}
+                              onInput={(e) => {
+                                const target = e.target as HTMLInputElement;
+                                target.value = target.value.replace(
+                                  /[^0-9]/g,
+                                  ""
+                                );
+                                field.onChange(target.value);
+                              }}
+                              disabled={isSaved}
+                            />
+                          </FormControl>
+
+                          <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={control}
+                      name="applicationData.cibilScore"
+                      render={({ field }) => (
+                        <FormItem className="flex-1 space-y-1">
+                          <Label
+                            htmlFor="cibilScore"
+                            className="text-sm font-normal pl-3"
+                          >
+                            CBIL Score of the Borrower
+                          </Label>
+                          <FormControl>
+                            <Input
+                              id="cibilScore"
+                              placeholder="300 to 900"
+                              value={field.value}
+                              onInput={(e) => {
+                                const target = e.target as HTMLInputElement;
+                                target.value = target.value.replace(
+                                  /[^0-9]/g,
+                                  ""
+                                );
+                                field.onChange(target.value);
+                              }}
+                              maxLength={3}
+                              minLength={3}
+                              disabled={isSaved}
+                            />
+                          </FormControl>
+                          <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
+                    <FormField
+                      control={control}
+                      name="applicationData.annualFamilyIncome"
+                      render={({ field }) => (
+                        <FormItem className="flex-1 space-y-1 relative">
+                          <Label
+                            htmlFor="annualFamilyIncome"
+                            className="text-sm font-normal pl-3"
+                          >
+                            Combined Family Income Per Annum
+                          </Label>
+                          <FormControl>
+                            <Select
+                              disabled={isSaved}
+                              onValueChange={field.onChange}
+                              value={field.value}
+                            >
+                              <SelectTrigger
+                                className={`pl-11 relative ${
+                                  field.value
+                                    ? "text-white"
+                                    : "text-muted-foreground"
+                                }`}
+                              >
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-white">
+                                  INR
+                                </span>
+                                <SelectValue
+                                  placeholder="5,00,000–10,00,000"
+                                  className="pl-0"
+                                />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="below5L">
+                                  Below 5L
+                                </SelectItem>
+                                <SelectItem value="5-10L">5-10L</SelectItem>
+                                <SelectItem value="10-25L">10-25L</SelectItem>
+                                <SelectItem value="25-50L">25-50L</SelectItem>
+                                <SelectItem value="50-75L">50-75L</SelectItem>
+                                <SelectItem value="75-100L">75L–1Cr</SelectItem>
+                                <SelectItem value="above1Cr">
+                                  Above 1 Cr.
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </>
+              )}
             </div>
 
             <div

@@ -110,7 +110,7 @@ export default function ApplicationDashboard({
       cohortId:
         student?.appliedCohorts?.[student?.appliedCohorts.length - 1]?.cohortId
           ?._id,
-      role: "Litmus_test_reviewer",
+      role: "litmus_interviewer",
     };
 
     setLoading(true);

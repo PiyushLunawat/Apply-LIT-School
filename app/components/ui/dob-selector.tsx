@@ -22,15 +22,15 @@ interface DOBSelectorProps {
 }
 
 export default function DOBSelector({
-                                      value,
-                                      onChange,
-                                      disabled,
-                                      maxDate,
-                                      minDate,
-                                      id,
-                                      className,
-                                      name,
-                                    }: DOBSelectorProps) {
+  value,
+  onChange,
+  disabled,
+  maxDate,
+  minDate,
+  id,
+  className,
+  name,
+}: DOBSelectorProps) {
   const parseDate = (dateString?: string) => {
     if (!dateString) return { day: "", month: "", year: "" };
     const [year, month, day] = dateString.split("-");
@@ -64,11 +64,11 @@ export default function DOBSelector({
   const getDateConstraints = () => {
     const currentYear = new Date().getFullYear();
     const maxYear = maxDate
-        ? Number.parseInt(maxDate.split("-")[0])
-        : currentYear;
+      ? Number.parseInt(maxDate.split("-")[0])
+      : currentYear;
     const minYear = minDate
-        ? Number.parseInt(minDate.split("-")[0])
-        : currentYear - 100;
+      ? Number.parseInt(minDate.split("-")[0])
+      : currentYear - 100;
     return { maxYear, minYear };
   };
 
@@ -76,16 +76,16 @@ export default function DOBSelector({
 
   const daysInCurrentMonth = getDaysInMonth(month, year);
   const days = Array.from({ length: daysInCurrentMonth }, (_, i) =>
-      (i + 1).toString().padStart(2, "0")
+    (i + 1).toString().padStart(2, "0")
   );
 
   // Month numbers (01-12)
   const months = Array.from({ length: 12 }, (_, i) =>
-      (i + 1).toString().padStart(2, "0")
+    (i + 1).toString().padStart(2, "0")
   );
 
   const years = Array.from({ length: maxYear - minYear + 1 }, (_, i) =>
-      (maxYear - i).toString()
+    (maxYear - i).toString()
   );
 
   const isDateValid = (d: string, m: string, y: string) => {
@@ -110,19 +110,19 @@ export default function DOBSelector({
     setMonth(newMonth);
     const maxDaysInNewMonth = getDaysInMonth(newMonth, year);
     const adjustedDay =
-        day && Number.parseInt(day) > maxDaysInNewMonth
-            ? maxDaysInNewMonth.toString().padStart(2, "0")
-            : day;
+      day && Number.parseInt(day) > maxDaysInNewMonth
+        ? maxDaysInNewMonth.toString().padStart(2, "0")
+        : day;
 
     if (adjustedDay !== day) {
       setDay(adjustedDay);
     }
 
     if (
-        adjustedDay &&
-        newMonth &&
-        year &&
-        isDateValid(adjustedDay, newMonth, year)
+      adjustedDay &&
+      newMonth &&
+      year &&
+      isDateValid(adjustedDay, newMonth, year)
     ) {
       const formattedDate = `${year}-${newMonth}-${adjustedDay}`;
       onChange?.(formattedDate);
@@ -133,19 +133,19 @@ export default function DOBSelector({
     setYear(newYear);
     const maxDaysInMonth = getDaysInMonth(month, newYear);
     const adjustedDay =
-        day && Number.parseInt(day) > maxDaysInMonth
-            ? maxDaysInMonth.toString().padStart(2, "0")
-            : day;
+      day && Number.parseInt(day) > maxDaysInMonth
+        ? maxDaysInMonth.toString().padStart(2, "0")
+        : day;
 
     if (adjustedDay !== day) {
       setDay(adjustedDay);
     }
 
     if (
-        adjustedDay &&
-        month &&
-        newYear &&
-        isDateValid(adjustedDay, month, newYear)
+      adjustedDay &&
+      month &&
+      newYear &&
+      isDateValid(adjustedDay, month, newYear)
     ) {
       const formattedDate = `${newYear}-${month}-${adjustedDay}`;
       onChange?.(formattedDate);
@@ -153,57 +153,69 @@ export default function DOBSelector({
   };
 
   return (
-      <div id={id} className={cn("flex gap-2", className)}>
-        {/* Day (DD) */}
-        <Select
-            name={name}
-            onValueChange={handleDayChange}
-            value={day}
-            disabled={disabled}
+    <div id={id} className={cn("flex gap-2", className)}>
+      {/* Day (DD) */}
+      <Select
+        name={name}
+        onValueChange={handleDayChange}
+        value={day}
+        disabled={disabled}
+      >
+        <SelectTrigger
+          className={`${
+            day ? "text-white" : "text-muted-foreground"
+          } w-14 flex-1`}
         >
-          <SelectTrigger className="w-14 flex-1">
-            <SelectValue placeholder="DD" />
-          </SelectTrigger>
-          <SelectContent>
-            {days.map((d) => (
-                <SelectItem key={d} value={d}>
-                  {d}
-                </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <SelectValue placeholder="DD" />
+        </SelectTrigger>
+        <SelectContent>
+          {days.map((d) => (
+            <SelectItem key={d} value={d}>
+              {d}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
-        {/* Month (MM) */}
-        <Select
-            onValueChange={handleMonthChange}
-            value={month}
-            disabled={disabled}
+      {/* Month (MM) */}
+      <Select
+        onValueChange={handleMonthChange}
+        value={month}
+        disabled={disabled}
+      >
+        <SelectTrigger
+          className={`${
+            month ? "text-white" : "text-muted-foreground"
+          } w-14 flex-1`}
         >
-          <SelectTrigger className="w-14 flex-1">
-            <SelectValue placeholder="MM" />
-          </SelectTrigger>
-          <SelectContent>
-            {months.map((m) => (
-                <SelectItem key={m} value={m}>
-                  {m}
-                </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <SelectValue placeholder="MM" />
+        </SelectTrigger>
+        <SelectContent>
+          {months.map((m) => (
+            <SelectItem key={m} value={m}>
+              {m}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
-        {/* Year (YYYY) */}
-        <Select onValueChange={handleYearChange} value={year} disabled={disabled}>
-          <SelectTrigger className="w-32 flex-1">
-            <SelectValue placeholder="YYYY" />
-          </SelectTrigger>
-          <SelectContent>
-            {years.map((y) => (
-                <SelectItem key={y} value={y}>
-                  {y}
-                </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Year (YYYY) */}
+      <Select onValueChange={handleYearChange} value={year} disabled={disabled}>
+        <SelectTrigger
+          className={`${
+            year ? "text-white" : "text-muted-foreground"
+          } w-32 flex-1`}
+        >
+          <SelectValue placeholder="YYYY" />
+        </SelectTrigger>
+        <SelectContent>
+          {years.map((y) => (
+            <SelectItem key={y} value={y}>
+              {y}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   );
 }

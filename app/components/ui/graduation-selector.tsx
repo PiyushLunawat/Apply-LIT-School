@@ -116,7 +116,11 @@ export default function GraduationSelector({
         value={month}
         disabled={disabled}
       >
-        <SelectTrigger className="w-40 flex-1">
+        <SelectTrigger
+          className={`${
+            month ? "text-white" : "text-muted-foreground"
+          } w-40 flex-1`}
+        >
           <SelectValue placeholder="Month" />
         </SelectTrigger>
         <SelectContent>
@@ -135,7 +139,11 @@ export default function GraduationSelector({
         value={year}
         disabled={disabled}
       >
-        <SelectTrigger className="w-24 flex-1">
+        <SelectTrigger
+          className={`${
+            year ? "text-white" : "text-muted-foreground"
+          } w-24 flex-1`}
+        >
           <SelectValue placeholder="Year" />
         </SelectTrigger>
         <SelectContent>

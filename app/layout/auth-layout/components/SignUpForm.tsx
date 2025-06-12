@@ -344,7 +344,11 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({}) => {
                     onValueChange={field.onChange}
                     defaultValue={field.value}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger
+                      className={`${
+                        field.value ? "text-white" : "text-muted-foreground"
+                      }`}
+                    >
                       <SelectValue placeholder="Select" />
                     </SelectTrigger>
                     <SelectContent>
@@ -385,7 +389,11 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({}) => {
                       }}
                       defaultValue={field.value}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger
+                        className={`${
+                          field.value ? "text-white" : "text-muted-foreground"
+                        }`}
+                      >
                         <SelectValue placeholder="Select" />
                       </SelectTrigger>
                       <SelectContent>
@@ -424,7 +432,11 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({}) => {
                       defaultValue={field.value}
                       disabled={!form.watch("program")}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger
+                        className={`${
+                          field.value ? "text-white" : "text-muted-foreground"
+                        }`}
+                      >
                         <SelectValue placeholder="Select" />
                       </SelectTrigger>
                       <SelectContent>

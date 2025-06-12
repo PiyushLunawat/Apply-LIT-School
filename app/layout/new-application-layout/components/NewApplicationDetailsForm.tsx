@@ -1305,7 +1305,11 @@ const NewApplicationDetailsForm: React.FC = () => {
                         value={field.value}
                         onValueChange={field.onChange}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger
+                          className={`${
+                            field.value ? "text-white" : "text-muted-foreground"
+                          }`}
+                        >
                           <SelectValue placeholder="Select" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1349,7 +1353,11 @@ const NewApplicationDetailsForm: React.FC = () => {
                         onValueChange={(value) => field.onChange(value)}
                         value={field.value}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger
+                          className={`${
+                            field.value ? "text-white" : "text-muted-foreground"
+                          }`}
+                        >
                           <SelectValue placeholder="Select a Program" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1407,7 +1415,11 @@ const NewApplicationDetailsForm: React.FC = () => {
                         onValueChange={(value) => field.onChange(value)}
                         value={field.value}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger
+                          className={`${
+                            field.value ? "text-white" : "text-muted-foreground"
+                          }`}
+                        >
                           <SelectValue placeholder="Select" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1662,7 +1674,11 @@ const NewApplicationDetailsForm: React.FC = () => {
                         onValueChange={field.onChange}
                         value={field.value}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger
+                          className={`${
+                            field.value ? "text-white" : "text-muted-foreground"
+                          }`}
+                        >
                           <SelectValue placeholder="Select" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1836,7 +1852,13 @@ const NewApplicationDetailsForm: React.FC = () => {
                               setExperienceType(value as ExperienceType);
                             }}
                           >
-                            <SelectTrigger>
+                            <SelectTrigger
+                              className={`${
+                                field.value
+                                  ? "text-white"
+                                  : "text-muted-foreground"
+                              }`}
+                            >
                               <SelectValue placeholder="Select" />
                             </SelectTrigger>
                             <SelectContent>
