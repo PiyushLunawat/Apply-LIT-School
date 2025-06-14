@@ -753,18 +753,26 @@ export default function ApplicationTaskForm({
             <div className="sm:hidden flex items-center gap-2">
               {saved ? (
                 <ClipboardCheck className="w-4 h-4" />
+              ) : saveLoading ? (
+                <LoaderCircle className="w-4 h-4 animate-spin" />
               ) : (
                 <Clipboard className="h-4 w-4" />
               )}
-              {saved ? "Saved" : "Save"}
+              {saved ? "Saved" : saveLoading ? "Saving" : "Save"}
             </div>
             <div className="hidden sm:flex items-center gap-2">
               {saved ? (
                 <ClipboardCheck className="w-4 h-4" />
+              ) : saveLoading ? (
+                <LoaderCircle className="w-4 h-4 animate-spin" />
               ) : (
                 <Clipboard className="h-4 w-4" />
               )}
-              {saved ? "Updates Saved" : "Save Updates"}
+              {saved
+                ? "Updates Saved"
+                : saveLoading
+                ? "Saving Updates"
+                : "Save Updates"}
             </div>
           </Button>
         )}

@@ -12,6 +12,7 @@ import {
   ClipboardCheck,
   Instagram,
   Linkedin,
+  LoaderCircle,
   Mail,
   Minus,
   Phone,
@@ -84,7 +85,9 @@ const saveSchema = z.object({
   applicationData: z.object({
     emergencyContact: z
       .string()
-      .min(10, "Emergency contact number is required"),
+      .refine((val) => val.length === 0 || val.length >= 10, {
+        message: "Emergency contact must be at least 10 digits if provided.",
+      }),
     fatherEmail: z
       .union([z.string().email("Invalid email address"), z.literal("")])
       .optional(),
@@ -709,15 +712,16 @@ const ApplicationDetailsForm: React.FC = () => {
               courseOfInterest:
                 student?.appliedCohorts[student?.appliedCohorts.length - 1]
                   ?.status !== "dropped"
-                  ? student?.appliedCohorts[student?.appliedCohorts.length - 1]
-                      ?.cohortId?.programDetail?._id ||
-                    existingData?.studentData?.courseOfInterest
+                  ? existingData?.studentData?.courseOfInterest ||
+                    student?.appliedCohorts[student?.appliedCohorts.length - 1]
+                      ?.cohortId?.programDetail?._id
                   : "",
               cohort:
                 student?.appliedCohorts[student?.appliedCohorts.length - 1]
                   ?.status !== "dropped"
-                  ? student?.appliedCohorts[student?.appliedCohorts.length - 1]
-                      ?.cohortId._id || existingData?.studentData?.cohort
+                  ? existingData?.studentData?.cohort ||
+                    student?.appliedCohorts[student?.appliedCohorts.length - 1]
+                      ?.cohortId._id
                   : "",
               isMobileVerified: student?.isMobileVerified || false,
               linkedInUrl:
@@ -2213,25 +2217,23 @@ const ApplicationDetailsForm: React.FC = () => {
                         >
                           Apx. Duration of Work
                         </Label>
-                        <div className="grid sm:flex flex-1 items-start gap-2">
+                        <div className="grid sm:flex flex-1 items-center gap-4 sm:gap-2">
                           <FormField
                             control={control}
                             name="applicationData.durationFrom"
                             render={({ field }) => (
                               <FormItem className="flex-1 flex flex-col space-y-1">
                                 <FormControl>
-                                  <Input
-                                    type="month"
+                                  <AverageDurationSelector
                                     id="durationFrom"
-                                    {...field}
+                                    className="w-full !h-[64px] px-3 rounded-xl"
                                     disabled={isSaved}
-                                    max={new Date().toISOString().slice(0, 7)}
-                                    className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border"
+                                    {...field}
                                   />
                                 </FormControl>
                                 <FormMessage className="text-xs sm:text-sm font-normal pl-3">
                                   {errors.applicationData?.durationFrom && (
-                                    <span className="text-red-500">
+                                    <span className="text-red-500 text-sm">
                                       {
                                         errors.applicationData.durationFrom
                                           .message
@@ -2243,7 +2245,7 @@ const ApplicationDetailsForm: React.FC = () => {
                             )}
                           />
 
-                          <Minus className="w-4 h-16 mx-auto" />
+                          <Minus className="w-4 h-4 mx-auto" />
 
                           <FormField
                             control={control}
@@ -2251,17 +2253,11 @@ const ApplicationDetailsForm: React.FC = () => {
                             render={({ field }) => (
                               <FormItem className="flex-1 flex flex-col space-y-1">
                                 <FormControl>
-                                  <Input
-                                    type="month"
+                                  <AverageDurationSelector
                                     id="durationTo"
-                                    {...field}
+                                    className="w-full !h-[64px] px-3 rounded-xl"
                                     disabled={isSaved}
-                                    min={
-                                      watch("applicationData.durationFrom") ||
-                                      undefined
-                                    }
-                                    max={new Date().toISOString().slice(0, 7)}
-                                    className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border"
+                                    {...field}
                                   />
                                 </FormControl>
                                 <FormMessage className="text-xs sm:text-sm font-normal pl-3">
@@ -2314,25 +2310,23 @@ const ApplicationDetailsForm: React.FC = () => {
                         >
                           Apx. Duration of Work
                         </Label>
-                        <div className="grid sm:flex flex-1 items-center gap-2">
+                        <div className="grid sm:flex flex-1 items-center gap-4 sm:gap-2">
                           <FormField
                             control={control}
                             name="applicationData.durationFrom"
                             render={({ field }) => (
                               <FormItem className="flex-1 flex flex-col space-y-1">
                                 <FormControl>
-                                  <Input
-                                    type="month"
+                                  <AverageDurationSelector
                                     id="durationFrom"
-                                    {...field}
+                                    className="w-full !h-[64px] px-3 rounded-xl"
                                     disabled={isSaved}
-                                    max={new Date().toISOString().slice(0, 7)}
-                                    className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border text-white"
+                                    {...field}
                                   />
                                 </FormControl>
                                 <FormMessage className="text-xs sm:text-sm font-normal pl-3">
                                   {errors.applicationData?.durationFrom && (
-                                    <span className="text-red-500">
+                                    <span className="text-red-500 text-sm">
                                       {
                                         errors.applicationData.durationFrom
                                           .message
@@ -2352,17 +2346,11 @@ const ApplicationDetailsForm: React.FC = () => {
                             render={({ field }) => (
                               <FormItem className="flex-1 flex flex-col space-y-1">
                                 <FormControl>
-                                  <Input
-                                    type="month"
+                                  <AverageDurationSelector
                                     id="durationTo"
-                                    {...field}
+                                    className="w-full !h-[64px] px-3 rounded-xl"
                                     disabled={isSaved}
-                                    min={
-                                      watch("applicationData.durationFrom") ||
-                                      undefined
-                                    }
-                                    max={new Date().toISOString().slice(0, 7)}
-                                    className="w-full !h-[64px] bg-[#09090B] px-3 rounded-xl border text-white"
+                                    {...field}
                                   />
                                 </FormControl>
                                 <FormMessage className="text-xs sm:text-sm font-normal pl-3">
@@ -3061,7 +3049,7 @@ const ApplicationDetailsForm: React.FC = () => {
                 >
                   {loading
                     ? "Initializing Payment..."
-                    : `Pay INR â‚¹${applicationFees || 0}.00`}
+                    : `Pay INR ${applicationFees || 0}.00`}
                 </Button>
               ) : (
                 <Button
@@ -3074,7 +3062,7 @@ const ApplicationDetailsForm: React.FC = () => {
                     <SaveIcon className="w-5 h-5" />
                     {loading
                       ? "Submitting..."
-                      : `Submit and Pay INR â‚¹${applicationFees || 0}.00`}
+                      : `Submit and Pay INR ${applicationFees || 0}.00`}
                   </div>
                 </Button>
               )}
@@ -3107,18 +3095,26 @@ const ApplicationDetailsForm: React.FC = () => {
                 <div className="sm:hidden flex items-center gap-2">
                   {saved ? (
                     <ClipboardCheck className="w-4 h-4" />
+                  ) : saveLoading ? (
+                    <LoaderCircle className="w-4 h-4 animate-spin" />
                   ) : (
                     <Clipboard className="h-4 w-4" />
                   )}
-                  {saved ? "Saved" : "Save"}
+                  {saved ? "Saved" : saveLoading ? "Saving" : "Save"}
                 </div>
                 <div className="hidden sm:flex items-center gap-2">
                   {saved ? (
                     <ClipboardCheck className="w-4 h-4" />
+                  ) : saveLoading ? (
+                    <LoaderCircle className="w-4 h-4 animate-spin" />
                   ) : (
                     <Clipboard className="h-4 w-4" />
                   )}
-                  {saved ? "Updates Saved" : "Save Updates"}
+                  {saved
+                    ? "Updates Saved"
+                    : saveLoading
+                    ? "Saving Updates"
+                    : "Save Updates"}
                 </div>
               </Button>
             )}
@@ -3150,8 +3146,8 @@ const ApplicationDetailsForm: React.FC = () => {
           <div>
             <div className="text-2xl font-semibold ">Admission Fee Payment</div>
             <div className="mt-2 text-xs sm:text-sm font-normal text-center">
-              Make an admission fee payment of INR â‚¹{applicationFees || 0}.00
-              to move to the next step of your admission process
+              Make an admission fee payment of INR {applicationFees || 0}.00 to
+              move to the next step of your admission process
             </div>
           </div>
           <div className="flex flex-col gap-3">
