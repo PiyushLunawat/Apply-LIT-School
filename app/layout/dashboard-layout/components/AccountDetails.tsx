@@ -2,12 +2,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+import axios from "axios";
 import {
   Camera,
   CheckCircle,
   Download,
   Eye,
   FileLock,
+  LoaderCircle,
   Plus,
   SquarePen,
 } from "lucide-react";
@@ -28,6 +30,11 @@ import {
 import { UserContext } from "~/context/UserContext";
 import { generateIDCardPDF } from "~/utils/pdf-generator";
 
+interface UploadState {
+  uploading: boolean;
+  uploadProgress: number;
+  fileName: string;
+}
 interface AccountDetailsProps {
   student: any;
 }
@@ -38,6 +45,10 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
   const [details, setDetails] = useState<any>();
   const [loading, setLoading] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+
+  const [uploadStates, setUploadStates] = useState<{
+    profilePic?: UploadState;
+  }>({});
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const [bloodGroupInput, setBloodGroupInput] = useState<string>("");
@@ -101,6 +112,38 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
     }
   };
 
+  const generateUniqueFileName = (originalName: string) => {
+    const timestamp = Date.now();
+    const sanitizedName = originalName.replace(/\s+/g, "-");
+    return `${timestamp}-${sanitizedName}`;
+  };
+
+  const uploadDirect = async (file: File, fileKey: string) => {
+    const { data } = await axios.post(
+      `https://dev.apply.litschool.in/student/generate-presigned-url`,
+      {
+        bucketName: "dev-application-portal",
+        key: fileKey,
+      }
+    );
+    const { url } = data;
+    await axios.put(url, file, {
+      headers: { "Content-Type": file.type },
+      onUploadProgress: (evt: any) => {
+        if (!evt.total) return;
+        const percentComplete = Math.round((evt.loaded / evt.total) * 100);
+        setUploadStates((prev) => ({
+          ...prev,
+          profilePic: {
+            ...prev.profilePic!,
+            uploadProgress: Math.min(percentComplete, 100),
+          },
+        }));
+      },
+    });
+    return `${url.split("?")[0]}`;
+  };
+
   const handleEditImage = () => {
     document.getElementById("passport-input")?.click();
   };
@@ -110,11 +153,20 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
   ) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
-      setLoading(true);
+      const fileKey = generateUniqueFileName(file.name);
 
       try {
         const formData = new FormData();
-        formData.append("profileImage", file);
+        setUploadStates((prev) => ({
+          ...prev,
+          profilePic: {
+            uploading: true,
+            uploadProgress: 0,
+            fileName: file.name,
+          },
+        }));
+        const fileUrl = await uploadDirect(file, fileKey);
+        formData.append("profileUrl", fileUrl);
         const response = await updateStudentData(formData);
 
         if (response.status) {
@@ -124,7 +176,13 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
         console.error("Error uploading image:", error);
         // alert("An error occurred while uploading the image.");
       } finally {
-        setLoading(false);
+        setUploadStates((prev) => ({
+          ...prev,
+          profilePic: {
+            ...prev.profilePic!,
+            uploading: false,
+          },
+        }));
       }
     }
   };
@@ -241,10 +299,14 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                   className="cursor-pointer flex flex-col items-center justify-center bg-[#1F1F1F] px-6 rounded-xl border-[#2C2C2C] w-full h-[220px]"
                 >
                   <div className="text-center my-auto text-muted-foreground">
-                    <Camera className="mx-auto mb-2 w-8 h-8" />
+                    {uploadStates.profilePic?.uploading ? (
+                      <LoaderCircle className="mx-auto animate-spin mb-2 w-8 h-8" />
+                    ) : (
+                      <Camera className="mx-auto mb-2 w-8 h-8" />
+                    )}
                     <div className="text-wrap">
-                      {loading
-                        ? "Uploading your Profile Image..."
+                      {uploadStates.profilePic?.uploading
+                        ? `Uploading... ${uploadStates.profilePic.uploadProgress}%`
                         : "Upload a Passport size Image of Yourself. Ensure that your face covers 60% of this picture."}
                     </div>
                   </div>

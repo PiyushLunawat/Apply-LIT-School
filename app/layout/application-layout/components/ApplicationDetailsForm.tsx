@@ -163,29 +163,33 @@ const formSchema = z
         .union([z.string().email("Invalid email address"), z.literal("")])
         .optional(),
       appliedForFinancialAid: z.boolean(),
-      loanApplicant: z.enum(["", "father", "mother", "sibling"]),
-      loanType: z.enum([
-        "",
-        "home",
-        "gold",
-        "vehicle",
-        "personal",
-        "short-term business",
-        "education",
-        "other",
-      ]),
+      loanApplicant: z.enum(["", "father", "mother", "sibling"]).optional(),
+      loanType: z
+        .enum([
+          "",
+          "home",
+          "gold",
+          "vehicle",
+          "personal",
+          "short-term business",
+          "education",
+          "other",
+        ])
+        .optional(),
       requestedLoanAmount: z.number().optional(),
       cibilScore: z.number().optional(),
-      annualFamilyIncome: z.enum([
-        "",
-        "below5L",
-        "5-10L",
-        "10-25L",
-        "25-50L",
-        "50-75L",
-        "75-100L",
-        "above1Cr",
-      ]),
+      annualFamilyIncome: z
+        .enum([
+          "",
+          "below5L",
+          "5-10L",
+          "10-25L",
+          "25-50L",
+          "50-75L",
+          "75-100L",
+          "above1Cr",
+        ])
+        .optional(),
     }),
   })
   .refine((data) => data.studentData.isMobileVerified, {
@@ -959,11 +963,11 @@ const ApplicationDetailsForm: React.FC = () => {
               requestedLoanAmount:
                 studentDetail?.financialInformation?.requestedLoanAmount ||
                 existingData?.applicationData?.requestedLoanAmount ||
-                "",
+                undefined,
               cibilScore:
                 studentDetail?.financialInformation?.cibilScore ||
                 existingData?.applicationData?.cibilScore ||
-                "",
+                undefined,
               annualFamilyIncome:
                 studentDetail?.financialInformation?.annualFamilyIncome ||
                 existingData?.applicationData?.annualFamilyIncome ||
@@ -1271,11 +1275,21 @@ const ApplicationDetailsForm: React.FC = () => {
         financialInformation: {
           hasAppliedForFinancialAid:
             data.applicationData.appliedForFinancialAid,
-          loanApplicant: data.applicationData.loanApplicant,
-          loanType: data.applicationData.loanType,
-          requestedLoanAmount: data.applicationData.requestedLoanAmount,
-          cibilScore: data.applicationData.cibilScore,
-          annualFamilyIncome: data.applicationData.annualFamilyIncome,
+          loanApplicant: data.applicationData.appliedForFinancialAid
+            ? data.applicationData.loanApplicant
+            : "",
+          loanType: data.applicationData.appliedForFinancialAid
+            ? data.applicationData.loanType
+            : "",
+          requestedLoanAmount: data.applicationData.appliedForFinancialAid
+            ? data.applicationData.requestedLoanAmount
+            : undefined,
+          cibilScore: data.applicationData.appliedForFinancialAid
+            ? data.applicationData.cibilScore
+            : undefined,
+          annualFamilyIncome: data.applicationData.appliedForFinancialAid
+            ? data.applicationData.annualFamilyIncome
+            : "",
         },
       },
     };

@@ -312,7 +312,7 @@ export default function AdmissionFee({ student }: AdmissionFeeProps) {
     <div className="space-y-6">
       {tokenFeeDetails?.verificationStatus === "flagged" ? (
         <Card className="max-w-4xl mx-auto px-1 sm:px-6 py-6 sm:py-8">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row gap-2 justify:start sm:justify-between items-center">
             <div>
               <input
                 type="file"
