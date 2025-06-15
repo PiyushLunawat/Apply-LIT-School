@@ -1,3 +1,5 @@
+/* eslint-disable jsx-a11y/click-events-have-key-events */
+/* eslint-disable jsx-a11y/no-static-element-interactions */
 "use client";
 
 import axios from "axios";
@@ -358,7 +360,8 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                 {docDetail ? (
                   <div className="relative group h-16 w-16 justify-center flex items-center rounded-full bg-[#00CC921F] overflow-hidden">
                     <iframe
-                      src={docDetail?.url}
+                      title="doc"
+                      src={`${process.env.NEXT_PUBLIC_AWS_RESOURCE_URL}/${docDetail?.url}`}
                       className="w-full h-full"
                       style={{ border: "none" }}
                     ></iframe>
@@ -485,7 +488,11 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                         variant="ghost"
                         className="flex gap-2 items-center border bg-[#1B1B1C] flex-1"
                         onClick={() =>
-                          handleFileDownload(docDetail.url || "", doc.docType)
+                          handleFileDownload(
+                            `${process.env.NEXT_PUBLIC_AWS_RESOURCE_URL}/${docDetail.url}` ||
+                              "",
+                            doc.docType
+                          )
                         }
                         disabled={downloadStates[doc.docType]?.uploading}
                       >
@@ -605,7 +612,8 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                 {docDetail ? (
                   <div className="relative group h-16 w-16 justify-center flex items-center rounded-full bg-[#00CC921F] overflow-hidden">
                     <iframe
-                      src={docDetail?.url}
+                      title="doc"
+                      src={`${process.env.NEXT_PUBLIC_AWS_RESOURCE_URL}/${docDetail?.url}`}
                       className="w-full h-full"
                       style={{ border: "none" }}
                     ></iframe>
@@ -732,7 +740,11 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                         variant="ghost"
                         className="flex gap-2 items-center border bg-[#1B1B1C] flex-1"
                         onClick={() =>
-                          handleFileDownload(docDetail.url || "", doc.docType)
+                          handleFileDownload(
+                            `${process.env.NEXT_PUBLIC_AWS_RESOURCE_URL}/${docDetail.url}` ||
+                              "",
+                            doc.docType
+                          )
                         }
                         disabled={downloadStates[doc.docType]?.uploading}
                       >
@@ -869,7 +881,8 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                 <div className="flex items-center gap-4">
                   <div className="relative group h-16 w-16 justify-center flex items-center rounded-full bg-[#00CC921F] overflow-hidden">
                     <iframe
-                      src={doc?.url}
+                      title="doc"
+                      src={`${process.env.NEXT_PUBLIC_AWS_RESOURCE_URL}/${doc?.url}`}
                       className="w-full h-full"
                       style={{ border: "none" }}
                     ></iframe>
@@ -900,7 +913,11 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                     variant="ghost"
                     className="flex gap-2 items-center border bg-[#1B1B1C] flex-1"
                     onClick={() =>
-                      handleFileDownload(doc?.url || "", doc?.documentName)
+                      handleFileDownload(
+                        `${process.env.NEXT_PUBLIC_AWS_RESOURCE_URL}/${doc?.url}` ||
+                          "",
+                        doc?.documentName
+                      )
                     }
                     disabled={downloadStates[doc.documentName]?.uploading}
                   >
@@ -920,7 +937,8 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
               <p className="pl-3">Preview for {selectedDocName}</p>
               <div className="max-w-5xl h-[70vh] justify-center flex items-center rounded-2xl bg-[#09090b] border ">
                 <iframe
-                  src={selectedDoc?.url}
+                  title="selected_doc"
+                  src={`${process.env.NEXT_PUBLIC_AWS_RESOURCE_URL}/${selectedDoc?.url}`}
                   className="mx-auto w-[70%] h-full"
                   style={{ border: "none" }}
                 ></iframe>
@@ -941,7 +959,11 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                   variant="ghost"
                   className="w-full sm:w-fit mx-auto border bg-[#1B1B1C]"
                   onClick={() =>
-                    handleFileDownload(selectedDoc?.url || "", selectedDocName)
+                    handleFileDownload(
+                      `${process.env.NEXT_PUBLIC_AWS_RESOURCE_URL}/${selectedDoc?.url}` ||
+                        "",
+                      selectedDocName
+                    )
                   }
                   disabled={downloadStates[selectedDocName]?.uploading}
                 >
