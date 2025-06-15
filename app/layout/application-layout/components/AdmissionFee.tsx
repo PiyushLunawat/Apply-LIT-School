@@ -397,11 +397,11 @@ export default function AdmissionFee({ student }: AdmissionFeeProps) {
             {tokenFeeDetails?.verificationStatus !== "flagged" ? (
               <div className="relative bg-[#64748B33] rounded-xl border border-[#2C2C2C] w-full h-[220px]">
                 <img
-                  src={
+                  src={`${process.env.NEXT_PUBLIC_AWS_RESOURCE_URL}/${
                     tokenFeeDetails?.receipts?.[
                       tokenFeeDetails?.receipts.length - 1
                     ]?.url
-                  }
+                  }`}
                   alt="Uploaded receipt"
                   className="mx-auto h-full object-contain"
                 />

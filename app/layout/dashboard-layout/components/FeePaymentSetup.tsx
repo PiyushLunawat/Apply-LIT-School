@@ -1,3 +1,5 @@
+/* eslint-disable jsx-a11y/no-static-element-interactions */
+/* eslint-disable jsx-a11y/click-events-have-key-events */
 "use client";
 
 import axios from "axios";
@@ -545,10 +547,10 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
         </div>
         <div className="relative group w-10 h-10">
           <img
-            src={
+            src={`${process.env.NEXT_PUBLIC_AWS_RESOURCE_URL}/${
               tokenFeeDetails?.receipts?.[tokenFeeDetails?.receipts.length - 1]
                 ?.url
-            }
+            }`}
             alt="Fee_Receipt"
             className="w-10 h-10 rounded-lg object-contain bg-white py-1"
           />
@@ -557,9 +559,11 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
             className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
             onClick={() =>
               handleViewReciept(
-                tokenFeeDetails?.receipts?.[
-                  tokenFeeDetails?.receipts.length - 1
-                ]?.url
+                `${process.env.NEXT_PUBLIC_AWS_RESOURCE_URL}/${
+                  tokenFeeDetails?.receipts?.[
+                    tokenFeeDetails?.receipts.length - 1
+                  ]?.url
+                }`
               )
             }
           >
@@ -670,12 +674,12 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                   ) && (
                     <div className="relative group w-10 h-10">
                       <img
-                        src={
+                        src={`${process.env.NEXT_PUBLIC_AWS_RESOURCE_URL}/${
                           paymentDetails?.oneShotPayment?.receiptUrls?.[
                             paymentDetails?.oneShotPayment?.receiptUrls.length -
                               1
                           ]?.url
-                        }
+                        }`}
                         alt="Fee_Receipt"
                         className="w-10 h-10 rounded-lg object-contain bg-white py-1"
                       />
@@ -722,7 +726,9 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                         <div className="flex gap-2 items-center">
                           <div className="relative group w-[90px] h-[90px]">
                             <img
-                              src={
+                              src={`${
+                                process.env.NEXT_PUBLIC_AWS_RESOURCE_URL
+                              }/${
                                 paymentDetails?.oneShotPayment?.receiptUrls?.[
                                   paymentDetails?.oneShotPayment.feedback
                                     .length -
@@ -730,6 +736,7 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                                     index
                                 ]?.url
                               }
+                              `}
                               alt="Fee_Receipt"
                               className="w-[90px] h-[90px] rounded-lg object-contain bg-white py-1"
                             />
@@ -737,12 +744,17 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                               className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                               onClick={() =>
                                 handleViewReciept(
-                                  paymentDetails?.oneShotPayment?.receiptUrls?.[
-                                    paymentDetails?.oneShotPayment.feedback
-                                      .length -
-                                      1 -
-                                      index
-                                  ]?.url
+                                  `${
+                                    process.env.NEXT_PUBLIC_AWS_RESOURCE_URL
+                                  }/${
+                                    paymentDetails?.oneShotPayment
+                                      ?.receiptUrls?.[
+                                      paymentDetails?.oneShotPayment.feedback
+                                        .length -
+                                        1 -
+                                        index
+                                    ]?.url
+                                  }`
                                 )
                               }
                             >
@@ -959,11 +971,13 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                             ) && (
                               <div className="relative group w-10 h-10">
                                 <img
-                                  src={
+                                  src={`${
+                                    process.env.NEXT_PUBLIC_AWS_RESOURCE_URL
+                                  }/${
                                     instalment?.receiptUrls?.[
                                       instalment?.receiptUrls.length - 1
                                     ]?.url
-                                  }
+                                  }`}
                                   alt="Fee_Receipt"
                                   className="w-10 h-10 rounded-lg object-contain bg-white py-1"
                                 />
@@ -972,9 +986,13 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                                   className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                                   onClick={() =>
                                     handleViewReciept(
-                                      instalment?.receiptUrls?.[
-                                        instalment?.receiptUrls.length - 1
-                                      ]?.url
+                                      `${
+                                        process.env.NEXT_PUBLIC_AWS_RESOURCE_URL
+                                      }/${
+                                        instalment?.receiptUrls?.[
+                                          instalment?.receiptUrls.length - 1
+                                        ]?.url
+                                      }`
                                     )
                                   }
                                 >
@@ -1014,13 +1032,16 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                                     <div className="flex gap-2 items-center">
                                       <div className="relative group w-[90px] h-[90px]">
                                         <img
-                                          src={
+                                          src={`${
+                                            process.env
+                                              .NEXT_PUBLIC_AWS_RESOURCE_URL
+                                          }/${
                                             instalment?.receiptUrls?.[
                                               instalment.feedback.length -
                                                 1 -
                                                 index
                                             ]?.url
-                                          }
+                                          }`}
                                           alt="Fee_Receipt"
                                           className="w-[90px] h-[90px] rounded-lg object-contain bg-white py-1"
                                         />
@@ -1028,11 +1049,16 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                                           className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                                           onClick={() =>
                                             handleViewReciept(
-                                              instalment?.receiptUrls?.[
-                                                instalment.feedback.length -
-                                                  1 -
-                                                  index
-                                              ]?.url
+                                              `${
+                                                process.env
+                                                  .NEXT_PUBLIC_AWS_RESOURCE_URL
+                                              }/${
+                                                instalment?.receiptUrls?.[
+                                                  instalment.feedback.length -
+                                                    1 -
+                                                    index
+                                                ]?.url
+                                              }`
                                             )
                                           }
                                         >
