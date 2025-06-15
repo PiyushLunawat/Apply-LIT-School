@@ -4,6 +4,7 @@
 
 import axios from "axios";
 import {
+  AlertCircle,
   Camera,
   CheckCircle,
   Download,
@@ -50,6 +51,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
     profilePic?: UploadState;
   }>({});
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [imageError, setImageError] = useState("");
 
   const [bloodGroupInput, setBloodGroupInput] = useState<string>("");
   const [bloodGroupError, setBloodGroupError] = useState<string>("");
@@ -151,8 +153,13 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
   const handleImageChange = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
+    setImageError("");
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
+      if (file.size > 5 * 1024 * 1024) {
+        setImageError("Image size exceeds 5 MB");
+        return;
+      }
       const fileKey = generateUniqueFileName(file.name);
 
       try {
@@ -298,14 +305,22 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                   htmlFor="passport-input"
                   className="cursor-pointer flex flex-col items-center justify-center bg-[#1F1F1F] px-6 rounded-xl border-[#2C2C2C] w-full h-[220px]"
                 >
-                  <div className="text-center my-auto text-muted-foreground">
-                    {uploadStates.profilePic?.uploading ? (
+                  <div
+                    className={`text-center my-auto ${
+                      imageError ? "text-[#FF503D]" : "text-muted-foreground"
+                    } `}
+                  >
+                    {imageError ? (
+                      <AlertCircle className="mx-auto mb-2 w-8 h-8" />
+                    ) : uploadStates.profilePic?.uploading ? (
                       <LoaderCircle className="mx-auto animate-spin mb-2 w-8 h-8" />
                     ) : (
                       <Camera className="mx-auto mb-2 w-8 h-8" />
                     )}
                     <div className="text-wrap">
-                      {uploadStates.profilePic?.uploading
+                      {imageError
+                        ? `${imageError}`
+                        : uploadStates.profilePic?.uploading
                         ? `Uploading... ${uploadStates.profilePic.uploadProgress}%`
                         : "Upload a Passport size Image of Yourself. Ensure that your face covers 60% of this picture."}
                     </div>
@@ -313,6 +328,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
                   <input
                     id="passport-input"
                     type="file"
+                    disabled={uploadStates.profilePic?.uploading}
                     accept="image/*"
                     className="hidden"
                     onChange={handleImageChange}
