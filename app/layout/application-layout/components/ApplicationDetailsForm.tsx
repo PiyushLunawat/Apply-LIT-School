@@ -116,7 +116,8 @@ const formSchema = z
     profileUrl: z.any().optional(),
     applicationData: z.object({
       address: z.string().nonempty("Address is required"),
-      city: z.string().nonempty("City & State is required"),
+      city: z.string().nonempty("City is required"),
+      state: z.string().nonempty("State is required"),
       zipcode: z.string().nonempty("Postal/Zip Code is required"),
       educationLevel: z.string().nonempty("Education level is required"),
       fieldOfStudy: z.string().nonempty("Field of study is required"),
@@ -173,8 +174,8 @@ const formSchema = z
         "education",
         "other",
       ]),
-      requestedLoanAmount: z.string().optional(),
-      cibilScore: z.string().optional(),
+      requestedLoanAmount: z.number().optional(),
+      cibilScore: z.number().optional(),
       annualFamilyIncome: z.enum([
         "",
         "below5L",
@@ -369,8 +370,8 @@ const formSchema = z
     (data) =>
       !data.applicationData.appliedForFinancialAid ||
       (data.applicationData.cibilScore !== undefined &&
-        Number(data.applicationData.cibilScore) >= 300 &&
-        Number(data.applicationData.cibilScore) <= 900),
+        data.applicationData.cibilScore >= 300 &&
+        data.applicationData.cibilScore <= 900),
     {
       message: "CIBIL Score must be between 300 and 900.",
       path: ["applicationData", "cibilScore"],
@@ -410,6 +411,7 @@ const ApplicationDetailsForm: React.FC = () => {
   const [verificationId, setVerificationId] = useState("");
   const [fetchedStudentData, setFetchedStudentData] = useState<any>(null);
   const [applicationFees, setApplicationFees] = useState(0);
+  const [isFetchingLocation, setIsFetchingLocation] = useState(false);
 
   const topRef = useRef<HTMLDivElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
@@ -446,12 +448,68 @@ const ApplicationDetailsForm: React.FC = () => {
     handleSubmit,
     formState: { errors },
     reset,
+    clearErrors,
     setValue,
     watch,
   } = form;
 
+  // Watch zipcode for location lookup
+  const zipcode = watch("applicationData.zipcode");
+
+  // Watch state for display
+  const stateValue = watch("applicationData.state");
+
   // Watch the course of interest field
   const selectedProgram = watch("studentData.courseOfInterest");
+
+  // Fetch city/state based on zipcode
+  useEffect(() => {
+    const fetchCityState = async () => {
+      if (zipcode && zipcode.length === 6) {
+        setIsFetchingLocation(true);
+        try {
+          const response = await fetch(
+            `https://api.postalpincode.in/pincode/${zipcode}`
+          );
+          const data = await response.json();
+
+          if (
+            data[0]?.Status === "Success" &&
+            data[0]?.PostOffice?.length > 0
+          ) {
+            const firstPostOffice = data[0].PostOffice[0];
+
+            // Set city and state separately
+            setValue("applicationData.city", firstPostOffice.District, {
+              shouldValidate: true,
+            });
+            setValue("applicationData.state", firstPostOffice.State, {
+              shouldValidate: true,
+            });
+            clearErrors("applicationData.zipcode");
+          } else {
+            setValue("applicationData.city", "", {
+              shouldValidate: true,
+            });
+            setValue("applicationData.state", "", {
+              shouldValidate: true,
+            });
+            form.setError("applicationData.zipcode", {
+              type: "manual",
+              message: "Invalid ZIP Code. Please enter a valid ZIP Code.",
+            });
+          }
+        } catch (error) {
+          console.error("Failed to fetch city/state", error);
+        } finally {
+          setIsFetchingLocation(false);
+        }
+      }
+    };
+
+    const handler = setTimeout(fetchCityState, 500);
+    return () => clearTimeout(handler);
+  }, [zipcode, setValue]);
 
   // FIXED: Memoized cohort filtering function to prevent unnecessary re-renders
   const updateFilteredCohorts = useCallback(
@@ -690,6 +748,28 @@ const ApplicationDetailsForm: React.FC = () => {
               ?.cohortId?.cohortFeesDetail?.applicationFee
           );
 
+          // Handle existing city/state data (split if needed)
+          const existingCity =
+            studentDetail?.currentAddress?.city ||
+            existingData?.applicationData?.city ||
+            "";
+          const existingState =
+            studentDetail?.currentAddress?.state ||
+            existingData?.applicationData?.state ||
+            "";
+
+          let cityValue = existingCity;
+          let stateValue = existingState;
+
+          // If existing data has combined city/state format
+          if (existingCity.includes(",") && !stateValue) {
+            const [cityPart, statePart] = existingCity
+              .split(",")
+              .map((p: any) => p.trim());
+            cityValue = cityPart;
+            stateValue = statePart;
+          }
+
           const mergedForm = {
             studentData: {
               firstName: student?.firstName || studentData?.firstName || "",
@@ -740,10 +820,8 @@ const ApplicationDetailsForm: React.FC = () => {
                 studentDetail?.currentAddress?.streetAddress ||
                 existingData?.applicationData?.address ||
                 "",
-              city:
-                studentDetail?.currentAddress?.city ||
-                existingData?.applicationData?.city ||
-                "",
+              city: cityValue,
+              state: stateValue,
               zipcode:
                 studentDetail?.currentAddress?.postalCode ||
                 existingData?.applicationData?.zipcode ||
@@ -1078,6 +1156,7 @@ const ApplicationDetailsForm: React.FC = () => {
             console.log("Payment verification response:", verifyResponse);
 
             if (verifyResponse.data.latestStatus === "paid") {
+              setIsSaved(true);
               setIsPaymentDone(true);
               setSuccessDialogOpen(true);
             } else {
@@ -1151,7 +1230,7 @@ const ApplicationDetailsForm: React.FC = () => {
         currentAddress: {
           streetAddress: data.applicationData.address,
           city: data.applicationData.city,
-          state: "",
+          state: data.applicationData.state,
           postalCode: data.applicationData.zipcode,
         },
         previousEducation: {
@@ -1228,7 +1307,7 @@ const ApplicationDetailsForm: React.FC = () => {
 
       if (isSubmit) {
         setIsPaymentDialogOpen(true);
-        setIsSaved(true);
+        // setIsSaved(true);
       } else {
         setSaved(true);
         setTimeout(() => setSaved(false), 2000);
@@ -1767,12 +1846,28 @@ const ApplicationDetailsForm: React.FC = () => {
                       City, State
                     </Label>
                     <FormControl>
-                      <Input
-                        id="city"
-                        placeholder="City, State"
-                        {...field}
-                        disabled={isSaved}
-                      />
+                      <div className="relative">
+                        <Input
+                          id="city"
+                          placeholder="City"
+                          {...field}
+                          disabled={isSaved}
+                          value={
+                            stateValue
+                              ? `${field.value}, ${stateValue}`
+                              : field.value || ""
+                          }
+                          onChange={(e) => {
+                            // Allow manual editing
+                            const value = e.target.value;
+                            const [cityPart, statePart] = value
+                              .split(",")
+                              .map((p) => p.trim());
+                            setValue("applicationData.city", cityPart || "");
+                            setValue("applicationData.state", statePart || "");
+                          }}
+                        />
+                      </div>
                     </FormControl>
                     <FormMessage className="text-xs sm:text-sm font-normal pl-3" />
                   </FormItem>
@@ -1787,7 +1882,8 @@ const ApplicationDetailsForm: React.FC = () => {
                       htmlFor="zipcode"
                       className="text-sm font-normal pl-3"
                     >
-                      Postal/Zip Code
+                      Postal/Zip Code{" "}
+                      {isFetchingLocation && " (Fetching location...)"}
                     </Label>
                     <FormControl>
                       <Input
@@ -1808,6 +1904,19 @@ const ApplicationDetailsForm: React.FC = () => {
                 )}
               />
             </div>
+
+            {/* Hidden state field for payload */}
+            <FormField
+              control={control}
+              name="applicationData.state"
+              render={({ field }) => (
+                <FormItem className="hidden">
+                  <FormControl>
+                    <Input type="hidden" {...field} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
 
             <div className="flex-1 bg-[#FF791F]/[0.2] text-[#FF791F] text-center py-4 mt-10 text-2xl rounded-full">
               Previous Education
@@ -2916,14 +3025,26 @@ const ApplicationDetailsForm: React.FC = () => {
                               id="requestedLoanAmount"
                               placeholder="5,00,000"
                               maxLength={12}
-                              value={formatIndianCurrency(field.value)}
+                              value={
+                                field.value === undefined
+                                  ? ""
+                                  : formatIndianCurrency(field.value)
+                              }
                               onInput={(e) => {
                                 const target = e.target as HTMLInputElement;
-                                target.value = target.value.replace(
-                                  /[^0-9]/g,
+                                // Remove non-numeric characters except decimal point
+                                let value = target.value.replace(
+                                  /[^0-9.]/g,
                                   ""
                                 );
-                                field.onChange(target.value);
+                                // Remove multiple decimal points
+                                if ((value.match(/\./g) || []).length > 1) {
+                                  value = value.slice(0, -1);
+                                }
+                                // Convert to number
+                                const numericValue =
+                                  value === "" ? undefined : Number(value);
+                                field.onChange(numericValue);
                               }}
                               disabled={isSaved}
                             />
@@ -2942,20 +3063,30 @@ const ApplicationDetailsForm: React.FC = () => {
                             htmlFor="cibilScore"
                             className="text-sm font-normal pl-3"
                           >
-                            CBIL Score of the Borrower
+                            CIBIL Score of the Borrower
                           </Label>
                           <FormControl>
                             <Input
                               id="cibilScore"
                               placeholder="300 to 900"
-                              value={field.value}
+                              value={
+                                field.value === undefined
+                                  ? ""
+                                  : field.value.toString()
+                              }
                               onInput={(e) => {
                                 const target = e.target as HTMLInputElement;
-                                target.value = target.value.replace(
+                                // Only allow numbers
+                                const numericValue = target.value.replace(
                                   /[^0-9]/g,
                                   ""
                                 );
-                                field.onChange(target.value);
+                                // Convert to number
+                                const value =
+                                  numericValue === ""
+                                    ? undefined
+                                    : Number(numericValue);
+                                field.onChange(value);
                               }}
                               maxLength={3}
                               minLength={3}

@@ -6,9 +6,9 @@ let refreshingToken = false; // Flag to prevent infinite refresh loop
 let unregister: () => void; // Store the unregister function
 
 export const RegisterInterceptor = (
-    accessToken?: string,
-    refreshToken?: string,
-    setIsUnauthorized?: (state: boolean) => void
+  accessToken?: string,
+  refreshToken?: string,
+  setIsUnauthorized?: (state: boolean) => void
 ) => {
   // Unregister previous interceptor if exists
   if (unregister) {
@@ -25,9 +25,9 @@ export const RegisterInterceptor = (
 
       // Skip Firebase endpoints
       if (
-          url.includes("googleapis.com") ||
-          url.includes("firebase") ||
-          url.includes("firebaseapp.com")
+        url.includes("googleapis.com") ||
+        url.includes("firebase") ||
+        url.includes("firebaseapp.com")
       ) {
         console.log("Skipping Firebase or Google API endpoints.");
         return [url, config];
@@ -52,10 +52,11 @@ export const RegisterInterceptor = (
         "/refresh-token",
         "/application",
         "/dashboard",
+        "https://api.postalpincode.in/pincode",
       ];
 
       const isPublic = publicEndpoints.some((endpoint) =>
-          url.includes(endpoint)
+        url.includes(endpoint)
       );
 
       // console.log("isPublic", !!isPublic, accessToken, refreshToken);
@@ -77,8 +78,8 @@ export const RegisterInterceptor = (
           refreshingToken = true; // Set flag to prevent concurrent refresh attempts
 
           console.log(
-              "Access Token is missing, using Refresh Token to get new Access Token",
-              refreshToken
+            "Access Token is missing, using Refresh Token to get new Access Token",
+            refreshToken
           );
 
           const refPayload = {

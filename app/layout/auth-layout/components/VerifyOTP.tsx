@@ -200,7 +200,7 @@ export const VerifyOTP: React.FC<VerifyOTPProps> = ({
         } catch (error) {
           form.setError("otp", {
             type: "manual",
-            message: `${error || `OTP verification failed`}`,
+            message: `${`The OTP entered is incorrect, Please try again or request a new OTP`}`,
           });
           console.error("Error verifying OTP:", error);
         }
