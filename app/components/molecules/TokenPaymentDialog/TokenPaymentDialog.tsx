@@ -70,7 +70,7 @@ const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({
     if (!selectedFiles || selectedFiles.length === 0) return;
 
     const file = selectedFiles[0];
-    const fileKey = generateUniqueFileName(file.name);
+    const fileKey = generateUniqueFileName(file.name, "admission_fee_receipt");
 
     setFileName(fileKey);
 
@@ -140,7 +140,7 @@ const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({
         setUploadProgress(percentComplete);
       },
     });
-    return url.split("?")[0];
+    return fileKey;
   };
 
   const uploadMultipart = async (
@@ -205,13 +205,13 @@ const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({
       }
     );
 
-    return `https://dev-application-portal.s3.amazonaws.com/${uniqueKey}`;
+    return uniqueKey;
   };
 
-  const generateUniqueFileName = (originalName: string) => {
+  const generateUniqueFileName = (originalName: string, folder?: string) => {
     const timestamp = Date.now();
     const sanitizedName = originalName.replace(/\s+/g, "-");
-    return `${timestamp}-${sanitizedName}`;
+    return `${folder}/${timestamp}-${sanitizedName}`;
   };
 
   const handleSubmitImage = async () => {

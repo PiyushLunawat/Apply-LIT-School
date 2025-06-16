@@ -31,6 +31,7 @@ interface Document {
   uploadDate?: string;
   fileUrl?: string;
   docType: string;
+  folder: string;
 }
 
 interface UploadState {
@@ -72,6 +73,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
       isMandatory: true,
       description: "Mandatory",
       docType: "aadharDocument",
+      folder: "student_identity_proof",
     },
     {
       id: "2",
@@ -79,6 +81,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
       isMandatory: true,
       description: "Mandatory",
       docType: "secondarySchoolMarksheet",
+      folder: "10th-grade-marksheet",
     },
     {
       id: "3",
@@ -86,6 +89,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
       isMandatory: true,
       description: "Mandatory",
       docType: "higherSecondaryMarkSheet",
+      folder: "12th-grade-marksheet",
     },
     {
       id: "4",
@@ -93,6 +97,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
       isMandatory: true,
       description: "",
       docType: "higherSecondaryTC",
+      folder: "12th-grade-transfer-certificate",
     },
     {
       id: "5",
@@ -100,6 +105,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
       isMandatory: false,
       description: "If you hold a UG Degree",
       docType: "graduationMarkSheet",
+      folder: "graduation_marksheet",
     },
   ]);
   const [parentDocuments, setParentDocuments] = useState<Document[]>([
@@ -109,6 +115,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
       isMandatory: true,
       description: "Mandatory",
       docType: "fatherIdProof",
+      folder: "parent-id-proof",
     },
     {
       id: "7",
@@ -116,6 +123,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
       isMandatory: true,
       description: "Mandatory",
       docType: "motherIdProof",
+      folder: "parent-id-proof",
     },
   ]);
 
@@ -174,6 +182,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
     e: React.ChangeEvent<HTMLInputElement>,
     docId: string,
     docType: string,
+    folder: string,
     editId?: string
   ) => {
     setError(null);
@@ -196,7 +205,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
       }));
       return;
     }
-    const fileKey = generateUniqueFileName(file.name);
+    const fileKey = generateUniqueFileName(file.name, folder);
 
     // Update fileName for this document
     setUploadStates((prev) => ({
@@ -264,7 +273,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
         }));
       },
     });
-    return `${url.split("?")[0]}`;
+    return fileKey;
   };
 
   const uploadMultipart = async (
@@ -323,13 +332,13 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
         parts,
       }
     );
-    return `https://dev-application-portal.s3.amazonaws.com/${uniqueKey}`;
+    return uniqueKey;
   };
 
-  const generateUniqueFileName = (originalName: string) => {
+  const generateUniqueFileName = (originalName: string, folder?: string) => {
     const timestamp = Date.now();
     const sanitizedName = originalName.replace(/\s+/g, "-");
-    return `${timestamp}-${sanitizedName}`;
+    return `${folder}/${timestamp}-${sanitizedName}`;
   };
 
   const handleOpenDoc = (doc: string, name: string) => {
@@ -505,6 +514,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                                 e,
                                 doc.id,
                                 doc.docType,
+                                doc.folder,
                                 docDetail?._id
                               )
                             }
@@ -536,6 +546,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                             e,
                             doc.id,
                             doc.docType,
+                            doc.folder,
                             docDetail?._id
                           )
                         }
@@ -562,7 +573,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                         className="hidden"
                         id={`file-input-${doc.id}`}
                         onChange={(e) =>
-                          handleFileChange(e, doc.id, doc.docType)
+                          handleFileChange(e, doc.id, doc.docType, doc.folder)
                         }
                       />
                       <Button
@@ -752,6 +763,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                                 e,
                                 doc.id,
                                 doc.docType,
+                                doc.folder,
                                 docDetail?._id
                               )
                             }
@@ -783,6 +795,7 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                             e,
                             doc.id,
                             doc.docType,
+                            doc.folder,
                             docDetail?._id
                           )
                         }
@@ -809,7 +822,13 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
                         className="hidden"
                         id={`file-input-${doc.id}`}
                         onChange={(e) =>
-                          handleFileChange(e, doc.id, doc.docType)
+                          handleFileChange(
+                            e,
+                            doc.id,
+                            doc.docType,
+                            doc.folder,
+                            doc.folder
+                          )
                         }
                       />
                       <Button

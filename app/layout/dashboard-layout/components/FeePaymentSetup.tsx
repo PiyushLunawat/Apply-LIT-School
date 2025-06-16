@@ -1192,7 +1192,7 @@ function FileUploadField({
 
       reader.readAsDataURL(file);
 
-      const fileKey = generateUniqueFileName(file.name);
+      const fileKey = generateUniqueFileName(file.name, "fee_receipt");
 
       setReceiptFile(fileKey);
 
@@ -1273,7 +1273,7 @@ function FileUploadField({
         setUploadProgress(percentComplete);
       },
     });
-    return `${url.split("?")[0]}`;
+    return fileKey;
   };
 
   const uploadMultipart = async (
@@ -1328,7 +1328,7 @@ function FileUploadField({
         parts,
       }
     );
-    return `https://dev-application-portal.s3.amazonaws.com/${uniqueKey}`;
+    return uniqueKey;
   };
 
   const removeFile = (index: number) => {
@@ -1372,10 +1372,10 @@ function FileUploadField({
     }
   };
 
-  const generateUniqueFileName = (originalName: string) => {
+  const generateUniqueFileName = (originalName: string, folder?: string) => {
     const timestamp = Date.now();
     const sanitizedName = originalName.replace(/\s+/g, "-");
-    return `${timestamp}-${sanitizedName}`;
+    return `${folder}/${timestamp}-${sanitizedName}`;
   };
 
   return (

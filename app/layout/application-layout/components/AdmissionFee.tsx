@@ -104,7 +104,7 @@ export default function AdmissionFee({ student }: AdmissionFeeProps) {
     if (!selectedFiles || selectedFiles.length === 0) return;
 
     const file = selectedFiles[0];
-    const fileKey = generateUniqueFileName(file.name);
+    const fileKey = generateUniqueFileName(file.name, "admission_fee_receipt");
 
     setFileName(fileKey);
 
@@ -186,7 +186,7 @@ export default function AdmissionFee({ student }: AdmissionFeeProps) {
         setUploadProgress(percentComplete);
       },
     });
-    return url.split("?")[0];
+    return fileKey;
   };
 
   const uploadMultipart = async (
@@ -251,13 +251,13 @@ export default function AdmissionFee({ student }: AdmissionFeeProps) {
       }
     );
 
-    return `https://dev-application-portal.s3.amazonaws.com/${uniqueKey}`;
+    return uniqueKey;
   };
 
-  const generateUniqueFileName = (originalName: string) => {
+  const generateUniqueFileName = (originalName: string, folder?: string) => {
     const timestamp = Date.now();
     const sanitizedName = originalName.replace(/\s+/g, "-");
-    return `${timestamp}-${sanitizedName}`;
+    return `${folder}/${timestamp}-${sanitizedName}`;
   };
 
   const formatAmount = (value: number | undefined) =>

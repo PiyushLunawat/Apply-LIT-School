@@ -114,10 +114,10 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
     }
   };
 
-  const generateUniqueFileName = (originalName: string) => {
+  const generateUniqueFileName = (originalName: string, folder?: string) => {
     const timestamp = Date.now();
     const sanitizedName = originalName.replace(/\s+/g, "-");
-    return `${timestamp}-${sanitizedName}`;
+    return `${folder}/${timestamp}-${sanitizedName}`;
   };
 
   const uploadDirect = async (file: File, fileKey: string) => {
@@ -143,7 +143,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
         }));
       },
     });
-    return `${url.split("?")[0]}`;
+    return fileKey;
   };
 
   const handleEditImage = () => {
@@ -160,7 +160,7 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
         setImageError("Image size exceeds 5 MB");
         return;
       }
-      const fileKey = generateUniqueFileName(file.name);
+      const fileKey = generateUniqueFileName(file.name, "student_profile_pic");
 
       try {
         const formData = new FormData();

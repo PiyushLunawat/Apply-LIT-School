@@ -960,7 +960,10 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({
     if (!selectedFiles || selectedFiles.length === 0) return;
 
     const file = selectedFiles[0];
-    const fileKey = generateUniqueFileName(file.name);
+    const fileKey = generateUniqueFileName(
+      file.name,
+      "application_task_resource"
+    );
 
     if (file.size > configItem.maxFileSize * 1024 * 1024) {
       setError(`${configItem.type} size exeeds ${configItem.maxFileSize} MB`);
@@ -1008,7 +1011,7 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({
         setUploadProgress(percentComplete);
       },
     });
-    return url.split("?")[0];
+    return fileKey;
   };
 
   const uploadMultipart = async (
@@ -1073,7 +1076,7 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({
       }
     );
 
-    return `https://dev-application-portal.s3.amazonaws.com/${uniqueKey}`;
+    return uniqueKey;
   };
 
   const handleDeleteFile = async (fileKey: string, index?: number) => {
@@ -1105,10 +1108,10 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({
     // }
   };
 
-  const generateUniqueFileName = (originalName: string) => {
+  const generateUniqueFileName = (originalName: string, folder?: string) => {
     const timestamp = Date.now();
     const sanitizedName = originalName.replace(/\s+/g, "-");
-    return `${timestamp}-${sanitizedName}`;
+    return `${folder}/${timestamp}-${sanitizedName}`;
   };
 
   return (
