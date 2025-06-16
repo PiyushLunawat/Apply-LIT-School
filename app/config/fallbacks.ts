@@ -5,7 +5,7 @@
  * These are critical for early application initialization before React is ready
  */
 export const ENV_FALLBACKS = {
-  REMIX_PUBLIC_API_BASE_URL: "https://dev.apply.litschool.in",
+  REMIX_PUBLIC_API_BASE_URL: "https://applyone.litschool.in/api",
   // REMIX_PUBLIC_API_BASE_URL: "http://localhost:4000",
   REMIX_AWS_BASE_URL:
     "https://dev-application-portal.s3.eu-north-1.amazonaws.com",

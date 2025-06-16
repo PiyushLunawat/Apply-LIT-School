@@ -124,7 +124,9 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
 
   const uploadDirect = async (file: File, fileKey: string) => {
     const { data } = await axios.post(
-      `https://dev.apply.litschool.in/student/generate-presigned-url`,
+      `${getEnvValue(
+        "REMIX_PUBLIC_API_BASE_URL"
+      )}/student/generate-presigned-url`,
       {
         bucketName: "dev-application-portal",
         key: fileKey,

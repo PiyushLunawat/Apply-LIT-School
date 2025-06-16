@@ -1499,7 +1499,9 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({
 
   const uploadDirect = async (file: File, fileKey: string) => {
     const { data } = await axios.post(
-      "https://dev.apply.litschool.in/student/generate-presigned-url",
+      `${getEnvValue(
+        "REMIX_PUBLIC_API_BASE_URL"
+      )}/student/generate-presigned-url`,
       {
         bucketName: "dev-application-portal",
         key: fileKey,
@@ -1527,7 +1529,9 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({
 
     // Initiate
     const initiateRes = await axios.post(
-      "https://dev.apply.litschool.in/student/initiate-multipart-upload",
+      `${getEnvValue(
+        "REMIX_PUBLIC_API_BASE_URL"
+      )}/student/initiate-multipart-upload`,
       {
         bucketName: "dev-application-portal",
         key: uniqueKey,
@@ -1546,7 +1550,9 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({
       const chunk = file.slice(start, end);
 
       const partRes = await axios.post(
-        "https://dev.apply.litschool.in/student/generate-presigned-url-part",
+        `${getEnvValue(
+          "REMIX_PUBLIC_API_BASE_URL"
+        )}/student/generate-presigned-url-part`,
         {
           bucketName: "dev-application-portal",
           key: uniqueKey,
@@ -1571,7 +1577,9 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({
 
     // Complete
     await axios.post(
-      "https://dev.apply.litschool.in/student/complete-multipart-upload",
+      `${getEnvValue(
+        "REMIX_PUBLIC_API_BASE_URL"
+      )}/student/complete-multipart-upload`,
       {
         bucketName: "dev-application-portal",
         key: uniqueKey,

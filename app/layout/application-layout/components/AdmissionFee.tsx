@@ -139,7 +139,9 @@ export default function AdmissionFee({ student }: AdmissionFeeProps) {
 
   const uploadDirect = async (file: File, fileKey: string) => {
     const { data } = await axios.post(
-      "https://dev.apply.litschool.in/student/generate-presigned-url",
+      `${getEnvValue(
+        "REMIX_PUBLIC_API_BASE_URL"
+      )}/student/generate-presigned-url`,
       {
         bucketName: "dev-application-portal",
         key: fileKey,
@@ -167,7 +169,9 @@ export default function AdmissionFee({ student }: AdmissionFeeProps) {
 
     // Initiate
     const initiateRes = await axios.post(
-      "https://dev.apply.litschool.in/student/initiate-multipart-upload",
+      `${getEnvValue(
+        "REMIX_PUBLIC_API_BASE_URL"
+      )}/student/initiate-multipart-upload`,
       {
         bucketName: "dev-application-portal",
         key: uniqueKey,
@@ -186,7 +190,9 @@ export default function AdmissionFee({ student }: AdmissionFeeProps) {
       const chunk = file.slice(start, end);
 
       const partRes = await axios.post(
-        "https://dev.apply.litschool.in/student/generate-presigned-url-part",
+        `${getEnvValue(
+          "REMIX_PUBLIC_API_BASE_URL"
+        )}/student/generate-presigned-url-part`,
         {
           bucketName: "dev-application-portal",
           key: uniqueKey,
@@ -211,7 +217,9 @@ export default function AdmissionFee({ student }: AdmissionFeeProps) {
 
     // Complete
     await axios.post(
-      "https://dev.apply.litschool.in/student/complete-multipart-upload",
+      `${getEnvValue(
+        "REMIX_PUBLIC_API_BASE_URL"
+      )}/student/complete-multipart-upload`,
       {
         bucketName: "dev-application-portal",
         key: uniqueKey,
@@ -306,7 +314,7 @@ export default function AdmissionFee({ student }: AdmissionFeeProps) {
             <div
               className={`w-fit flex justify-center items-center gap-2 px-4 py-2.5 border ${
                 remainingTime === 0 ? "border-[#FF503D]" : "border-[#00A3FF]"
-              } bg-[#FFFFFF33] rounded-full text-sm sm:text-2xl text-medium`}
+              } bg-[#00A3FF33] rounded-full text-sm sm:text-xl font-medium`}
             >
               {remainingTime === 0 ? (
                 <CirclePause className="w-4 h-4 sm:w-6 sm:h-6 text-[#FF503D]" />

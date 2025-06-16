@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { uploadStudentDocuments } from "~/api/studentAPI";
+import { getEnvValue } from "~/atoms/envAtoms";
 import { Button } from "~/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "~/components/ui/dialog";
 import { Progress } from "~/components/ui/progress";
@@ -252,7 +253,9 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
 
   const uploadDirect = async (file: File, fileKey: string, docId: string) => {
     const { data } = await axios.post(
-      `https://dev.apply.litschool.in/student/generate-presigned-url`,
+      `${getEnvValue(
+        "REMIX_PUBLIC_API_BASE_URL"
+      )}/student/generate-presigned-url`,
       {
         bucketName: "dev-application-portal",
         key: fileKey,
@@ -285,7 +288,9 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
     const uniqueKey = fileKey;
 
     const initiateRes = await axios.post(
-      `https://dev.apply.litschool.in/student/initiate-multipart-upload`,
+      `${getEnvValue(
+        "REMIX_PUBLIC_API_BASE_URL"
+      )}/student/initiate-multipart-upload`,
       {
         bucketName: "dev-application-portal",
         key: uniqueKey,
@@ -300,7 +305,9 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
       const end = Math.min(start + chunkSize, file.size);
       const chunk = file.slice(start, end);
       const partRes = await axios.post(
-        `https://dev.apply.litschool.in/student/generate-presigned-url-part`,
+        `${getEnvValue(
+          "REMIX_PUBLIC_API_BASE_URL"
+        )}/student/generate-presigned-url-part`,
         {
           bucketName: "dev-application-portal",
           key: uniqueKey,
@@ -324,7 +331,9 @@ export default function PersonalDocuments({ student }: PersonalDocumentsProps) {
       parts.push({ PartNumber: i + 1, ETag: uploadRes.headers.etag });
     }
     await axios.post(
-      `https://dev.apply.litschool.in/student/complete-multipart-upload`,
+      `${getEnvValue(
+        "REMIX_PUBLIC_API_BASE_URL"
+      )}/student/complete-multipart-upload`,
       {
         bucketName: "dev-application-portal",
         key: uniqueKey,
