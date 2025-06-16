@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useContext, useEffect, useRef, useState } from "react";
 import { updateStudentData } from "~/api/studentAPI";
+import { getEnvValue } from "~/atoms/envAtoms";
 import LitIdBack from "~/components/molecules/LitId/LitIdBack";
 import LitIdFront from "~/components/molecules/LitId/LitIdFront";
 import { Button } from "~/components/ui/button";
@@ -30,6 +31,8 @@ import {
 } from "~/components/ui/select";
 import { UserContext } from "~/context/UserContext";
 import { generateIDCardPDF } from "~/utils/pdf-generator";
+
+const awsUrl = getEnvValue("REMIX_AWS_BASE_URL");
 
 interface UploadState {
   uploading: boolean;
@@ -50,7 +53,6 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
   const [uploadStates, setUploadStates] = useState<{
     profilePic?: UploadState;
   }>({});
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imageError, setImageError] = useState("");
 
   const [bloodGroupInput, setBloodGroupInput] = useState<string>("");
@@ -292,10 +294,10 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
         <CardContent className="p-6 ">
           <div className="flex md:flex-row flex-col items-center gap-4 sm:gap-6">
             <div className="w-full sm:w-[285px] h-[285px] bg-[#1F1F1F] flex flex-col items-center justify-center rounded-xl text-sm space-y-4">
-              {student?.profileUrl || selectedImage ? (
+              {student?.profileUrl ? (
                 <div className="w-full h-full relative">
                   <img
-                    src={selectedImage || student?.profileUrl}
+                    src={`${awsUrl}/${student?.profileUrl}`}
                     alt="profile_img"
                     className="w-full h-full object-cover rounded-lg"
                   />
@@ -564,7 +566,10 @@ export default function AccountDetails({ student }: AccountDetailsProps) {
           <div className="relative flex items-center gap-4">
             <div className="relative rounded-xl bg-white group w-16 h-16">
               <img
-                src={student?.profileUrl || `/assets/images/lit-id-front.svg`}
+                src={
+                  `${awsUrl}/${student?.profileUrl}` ||
+                  `/assets/images/lit-id-front.svg`
+                }
                 alt="LIT ID Card"
                 className={`${
                   student?.profileUrl ? "w-8 h-12" : "w-16 h-16 rounded-xl"

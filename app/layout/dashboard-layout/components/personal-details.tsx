@@ -4,10 +4,12 @@ import {
   CircleCheckBig,
   CircleMinus,
 } from "lucide-react";
+import { getEnvValue } from "~/atoms/envAtoms";
 import { Card, CardContent, CardTitle } from "~/components/ui/card";
 import { Separator } from "~/components/ui/separator";
 import { Badge } from "../../../components/ui/badge";
 
+const awsUrl = getEnvValue("REMIX_AWS_BASE_URL");
 interface PersonalDetailsProps {
   student: any;
   onSelectTab: (path: string) => void;
@@ -49,7 +51,7 @@ export default function PersonalDetailsTab({
               {student?.profileUrl && (
                 <div className="w-12 h-12 relative">
                   <img
-                    src={student?.profileUrl}
+                    src={`${awsUrl}/${student?.profileUrl}`}
                     alt="Profile Image"
                     className="w-full h-full object-cover rounded-lg"
                   />

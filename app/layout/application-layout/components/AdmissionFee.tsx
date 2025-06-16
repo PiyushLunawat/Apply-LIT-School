@@ -4,10 +4,13 @@ import axios from "axios";
 import { AlertCircle, CirclePause, Clock, Pencil, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { submitTokenReceipt } from "~/api/studentAPI";
+import { getEnvValue } from "~/atoms/envAtoms";
 import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
 
 const s3Client = new S3Client({});
+
+const awsUrl = getEnvValue("REMIX_AWS_BASE_URL");
 
 interface AdmissionFeeProps {
   student: any;
@@ -53,40 +56,6 @@ export default function AdmissionFee({ student }: AdmissionFeeProps) {
   const handleEditImage = () => {
     document.getElementById("image-upload")?.click();
   };
-
-  //  const handleSubmitImage = async () => {
-  //    if (!receiptUrl) {
-  //      return;
-  //    }
-
-  //    setUploadError(null)
-
-  //    const feePayload = {
-  //     cohortId: tokenFeeDetails?.cohortId,
-  //     paymentType: tokenFeeDetails?.paymentType,
-  //     fileUrl: receiptUrl,
-  //    }
-
-  //    try {
-  //      setLoading(true);
-
-  //      const response = await submitTokenReceipt(feePayload);
-  //      setTokenFeeDetails(response.data)
-  //    } catch (error) {
-  //      setUploadError('Error uploading receipt. Please try again.');
-  //      console.error('Error uploading receipt:', error);
-  //    } finally {
-  //      setLoading(false);
-  //    }
-  //  };
-
-  //  if (error) {
-  //    return (
-  //      <div className="w-full flex items-center justify-center min-h-screen">
-  //        <div>{error}</div>
-  //      </div>
-  //    );
-  //  }
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (receiptUrl) {
@@ -397,11 +366,11 @@ export default function AdmissionFee({ student }: AdmissionFeeProps) {
             {tokenFeeDetails?.verificationStatus !== "flagged" ? (
               <div className="relative bg-[#64748B33] rounded-xl border border-[#2C2C2C] w-full h-[220px]">
                 <img
-                  src={
+                  src={`${awsUrl}/${
                     tokenFeeDetails?.receipts?.[
                       tokenFeeDetails?.receipts.length - 1
                     ]?.url
-                  }
+                  }`}
                   alt="Uploaded receipt"
                   className="mx-auto h-full object-contain"
                 />
@@ -412,7 +381,7 @@ export default function AdmissionFee({ student }: AdmissionFeeProps) {
                   {receiptUrl && (
                     <div className="relative bg-[#64748B33] rounded-xl border border-[#2C2C2C] w-full h-[220px]">
                       <img
-                        src={receiptUrl}
+                        src={`${awsUrl}/${receiptUrl}`}
                         alt="Uploaded receipt"
                         className="mx-auto h-full"
                       />
@@ -494,11 +463,11 @@ export default function AdmissionFee({ student }: AdmissionFeeProps) {
 
                 <div className="relative bg-[#64748B33] rounded-xl border border-[#2C2C2C] w-full h-[220px]">
                   <img
-                    src={
+                    src={`${awsUrl}/${
                       tokenFeeDetails?.receipts?.[
                         tokenFeeDetails?.feedback.length - 1 - index
                       ]?.url
-                    }
+                    }`}
                     alt="Uploaded receipt"
                     className="mx-auto h-full object-contain"
                   />

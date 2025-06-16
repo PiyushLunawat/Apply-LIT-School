@@ -36,10 +36,13 @@ import {
 import { Separator } from "../../../components/ui/separator";
 
 import { S3Client } from "@aws-sdk/client-s3";
+import { getEnvValue } from "~/atoms/envAtoms";
 import { Dialog, DialogContent, DialogTitle } from "~/components/ui/dialog";
 import { Skeleton } from "~/components/ui/skeleton";
 
 const s3Client = new S3Client({});
+
+const awsUrl = getEnvValue("REMIX_AWS_BASE_URL");
 
 const formatAmount = (value: number | undefined) =>
   value !== undefined
@@ -545,10 +548,10 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
         </div>
         <div className="relative group w-10 h-10">
           <img
-            src={
+            src={`${awsUrl}/${
               tokenFeeDetails?.receipts?.[tokenFeeDetails?.receipts.length - 1]
                 ?.url
-            }
+            }`}
             alt="Fee_Receipt"
             className="w-10 h-10 rounded-lg object-contain bg-white py-1"
           />
@@ -557,9 +560,11 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
             className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
             onClick={() =>
               handleViewReciept(
-                tokenFeeDetails?.receipts?.[
-                  tokenFeeDetails?.receipts.length - 1
-                ]?.url
+                `${awsUrl}/${
+                  tokenFeeDetails?.receipts?.[
+                    tokenFeeDetails?.receipts.length - 1
+                  ]?.url
+                }`
               )
             }
           >
@@ -670,12 +675,12 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                   ) && (
                     <div className="relative group w-10 h-10">
                       <img
-                        src={
+                        src={`${awsUrl}/${
                           paymentDetails?.oneShotPayment?.receiptUrls?.[
                             paymentDetails?.oneShotPayment?.receiptUrls.length -
                               1
                           ]?.url
-                        }
+                        }`}
                         alt="Fee_Receipt"
                         className="w-10 h-10 rounded-lg object-contain bg-white py-1"
                       />
@@ -684,10 +689,12 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                         className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                         onClick={() =>
                           handleViewReciept(
-                            paymentDetails?.oneShotPayment?.receiptUrls?.[
-                              paymentDetails?.oneShotPayment?.receiptUrls
-                                .length - 1
-                            ]?.url
+                            `${awsUrl}/${
+                              paymentDetails?.oneShotPayment?.receiptUrls?.[
+                                paymentDetails?.oneShotPayment?.receiptUrls
+                                  .length - 1
+                              ]?.url
+                            }`
                           )
                         }
                       >
@@ -722,14 +729,14 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                         <div className="flex gap-2 items-center">
                           <div className="relative group w-[90px] h-[90px]">
                             <img
-                              src={
+                              src={`${awsUrl}/${
                                 paymentDetails?.oneShotPayment?.receiptUrls?.[
                                   paymentDetails?.oneShotPayment.feedback
                                     .length -
                                     1 -
                                     index
                                 ]?.url
-                              }
+                              }`}
                               alt="Fee_Receipt"
                               className="w-[90px] h-[90px] rounded-lg object-contain bg-white py-1"
                             />
@@ -737,12 +744,15 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                               className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                               onClick={() =>
                                 handleViewReciept(
-                                  paymentDetails?.oneShotPayment?.receiptUrls?.[
-                                    paymentDetails?.oneShotPayment.feedback
-                                      .length -
-                                      1 -
-                                      index
-                                  ]?.url
+                                  `${awsUrl}/${
+                                    paymentDetails?.oneShotPayment
+                                      ?.receiptUrls?.[
+                                      paymentDetails?.oneShotPayment.feedback
+                                        .length -
+                                        1 -
+                                        index
+                                    ]?.url
+                                  }`
                                 )
                               }
                             >
@@ -959,11 +969,11 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                             ) && (
                               <div className="relative group w-10 h-10">
                                 <img
-                                  src={
+                                  src={`${awsUrl}/${
                                     instalment?.receiptUrls?.[
                                       instalment?.receiptUrls.length - 1
                                     ]?.url
-                                  }
+                                  }`}
                                   alt="Fee_Receipt"
                                   className="w-10 h-10 rounded-lg object-contain bg-white py-1"
                                 />
@@ -972,9 +982,11 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                                   className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                                   onClick={() =>
                                     handleViewReciept(
-                                      instalment?.receiptUrls?.[
-                                        instalment?.receiptUrls.length - 1
-                                      ]?.url
+                                      `${awsUrl}/${
+                                        instalment?.receiptUrls?.[
+                                          instalment?.receiptUrls.length - 1
+                                        ]?.url
+                                      }`
                                     )
                                   }
                                 >
@@ -1014,13 +1026,13 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                                     <div className="flex gap-2 items-center">
                                       <div className="relative group w-[90px] h-[90px]">
                                         <img
-                                          src={
+                                          src={`${awsUrl}/${
                                             instalment?.receiptUrls?.[
                                               instalment.feedback.length -
                                                 1 -
                                                 index
                                             ]?.url
-                                          }
+                                          }`}
                                           alt="Fee_Receipt"
                                           className="w-[90px] h-[90px] rounded-lg object-contain bg-white py-1"
                                         />
@@ -1028,11 +1040,13 @@ export default function FeePaymentSetup({ student }: FeePaymentSetupProps) {
                                           className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                                           onClick={() =>
                                             handleViewReciept(
-                                              instalment?.receiptUrls?.[
-                                                instalment.feedback.length -
-                                                  1 -
-                                                  index
-                                              ]?.url
+                                              `${awsUrl}/${
+                                                instalment?.receiptUrls?.[
+                                                  instalment.feedback.length -
+                                                    1 -
+                                                    index
+                                                ]?.url
+                                              }`
                                             )
                                           }
                                         >

@@ -2,6 +2,7 @@ import { Link, useNavigate } from "@remix-run/react";
 import { Clock } from "lucide-react";
 import { ReactNode, useContext, useEffect, useState } from "react";
 import { GetInterviewers } from "~/api/studentAPI";
+import { getEnvValue } from "~/atoms/envAtoms";
 import { SchedulePresentation } from "~/components/organisms/schedule-presentation-dialog/schedule-presentation";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Badge } from "~/components/ui/badge";
@@ -10,6 +11,7 @@ import { Dialog, DialogContent, DialogTitle } from "~/components/ui/dialog";
 import { Skeleton } from "~/components/ui/skeleton";
 import { UserContext } from "~/context/UserContext";
 
+const awsUrl = getEnvValue("REMIX_AWS_BASE_URL");
 interface DashboardCardProps {
   title: string;
   description: string;
@@ -242,7 +244,9 @@ export default function ApplicationDashboard({
           <div className="relative">
             <Avatar className="w-16 h-16 sm:w-32 sm:h-32">
               <AvatarImage
-                src={student?.profileUrl || studentData?.profileUrl}
+                src={`${awsUrl}/${
+                  student?.profileUrl || studentData?.profileUrl
+                }`}
                 className="object-cover"
                 alt="@shadcn"
               />

@@ -6,6 +6,7 @@
 export interface EnvVariables {
   REMIX_APP_MODE?: string;
   REMIX_PUBLIC_API_BASE_URL?: string;
+  REMIX_AWS_BASE_URL?: string;
   AWS_ACCESS_KEY_ID?: string;
   AWS_SECRET_ACCESS_KEY?: string;
   AWS_REGION?: string;
@@ -17,6 +18,7 @@ export interface EnvVariables {
  */
 export interface ClientEnvData {
   REMIX_PUBLIC_API_BASE_URL: string;
+  REMIX_AWS_BASE_URL: string;
   AWS_ACCESS_KEY_ID: string;
   AWS_SECRET_ACCESS_KEY: string;
   AWS_REGION: string;

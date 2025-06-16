@@ -17,6 +17,7 @@ import React, { useContext, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { submitApplicationTask } from "~/api/studentAPI";
+import { getEnvValue } from "~/atoms/envAtoms";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import {
@@ -34,6 +35,8 @@ import { Textarea } from "~/components/ui/textarea";
 import { UserContext } from "~/context/UserContext";
 
 const s3Client = new S3Client({});
+
+const awsUrl = getEnvValue("REMIX_AWS_BASE_URL");
 
 const validateLinks = (values: FormSchema) => {
   let errors: Record<string, string> = {};
@@ -581,7 +584,7 @@ export default function ApplicationTaskForm({
                           return (
                             <div className="w-full min-h-[400px] max-h-[400px] sm:min-h-[500px] sm:max-h-[600px] justify-center flex items-center rounded-xl">
                               <iframe
-                                src={file}
+                                src={`${awsUrl}/${file}`}
                                 className="mx-auto w-full min-h-[400px] max-h-[400px] sm:min-h-[500px] sm:max-h-[600px] rounded-xl"
                                 style={{ border: "none" }}
                               />
@@ -595,12 +598,14 @@ export default function ApplicationTaskForm({
                                 size="icon"
                                 type="button"
                                 className="text-white rounded-xl hover:bg-[#1a1a1d] absolute top-[6px] right-[6px] z-10"
-                                onClick={() => window.open(file, "_blank")}
+                                onClick={() =>
+                                  window.open(`${awsUrl}/${file}`, "_blank")
+                                }
                               >
                                 <ArrowUpRight className="w-5 h-5" />
                               </Button>
                               <img
-                                src={file}
+                                src={`${awsUrl}/${file}`}
                                 alt={file.split("/").pop()}
                                 className="min-h-[400px] max-h-[500px] object-contain rounded-xl"
                               />
@@ -614,7 +619,9 @@ export default function ApplicationTaskForm({
                                 size="icon"
                                 type="button"
                                 className="text-white rounded-xl hover:bg-[#1a1a1d] absolute top-[6px] right-[6px] z-10"
-                                onClick={() => window.open(file, "_blank")}
+                                onClick={() =>
+                                  window.open(`${awsUrl}/${file}`, "_blank")
+                                }
                               >
                                 <ArrowUpRight className="w-5 h-5" />
                               </Button>
@@ -624,7 +631,10 @@ export default function ApplicationTaskForm({
                                 preload="none"
                                 className="min-h-[400px] max-h-[500px] w-full rounded-xl "
                               >
-                                <source src={file} type="video/mp4" />
+                                <source
+                                  src={`${awsUrl}/${file}`}
+                                  type="video/mp4"
+                                />
                                 Your browser does not support the video tag.
                               </video>
                             </div>
@@ -652,7 +662,9 @@ export default function ApplicationTaskForm({
                                 size="icon"
                                 type="button"
                                 className="text-white rounded-xl hover:bg-[#1a1a1d]"
-                                onClick={() => window.open(file, "_blank")}
+                                onClick={() =>
+                                  window.open(`${awsUrl}/${file}`, "_blank")
+                                }
                               >
                                 <ArrowUpRight className="w-5 h-5" />
                               </Button>
@@ -1143,7 +1155,7 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({
                       type="button"
                       variant="ghost"
                       className="bg-white/20 hover:bg-white/30 rounded-xl"
-                      onClick={() => window.open(file, "_blank")}
+                      onClick={() => window.open(`${awsUrl}/${file}`, "_blank")}
                     >
                       <ArrowUpRight className="w-5" />
                     </Button>

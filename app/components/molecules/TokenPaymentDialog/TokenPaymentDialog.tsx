@@ -10,9 +10,12 @@ import { Label } from "~/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group";
 
 import { S3Client } from "@aws-sdk/client-s3";
+import { getEnvValue } from "~/atoms/envAtoms";
 import { Progress } from "~/components/ui/progress";
 
 const s3Client = new S3Client({});
+
+const awsUrl = getEnvValue("REMIX_AWS_BASE_URL");
 
 interface TokenPaymentDialogProps {
   open: boolean;
@@ -403,7 +406,7 @@ const TokenPaymentDialog: React.FC<TokenPaymentDialogProps> = ({
               {receiptUrl ? (
                 <div className="relative bg-[#64748B33] rounded-xl border border-[#2C2C2C] w-full h-[200px] sm:h-[220px]">
                   <img
-                    src={receiptUrl}
+                    src={`${awsUrl}/${receiptUrl}`}
                     alt="Uploaded receipt"
                     className="mx-auto h-full"
                   />

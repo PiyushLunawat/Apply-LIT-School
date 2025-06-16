@@ -1,5 +1,7 @@
 import React from "react";
+import { getEnvValue } from "~/atoms/envAtoms";
 
+const awsUrl = getEnvValue("REMIX_AWS_BASE_URL");
 interface LitIdFrontProps {
   data: any;
 }
@@ -11,7 +13,10 @@ const LitIdFront: React.FC<LitIdFrontProps> = ({ data }) => {
     <div className="w-[400px] h-[590.11px] pb-[0.11px] bg-white flex-col justify-center items-center inline-flex">
       <div className="self-stretch w-[400px] ">
         <img
-          src={data?.profileUrl || "/assets/images/profile-placeholder.svg"}
+          src={
+            `${awsUrl}/${data?.profileUrl}` ||
+            "/assets/images/profile-placeholder.svg"
+          }
           className="object-cover w-[400px] h-[360px]"
           alt="Profile"
         />

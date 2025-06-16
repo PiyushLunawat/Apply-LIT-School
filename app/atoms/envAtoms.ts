@@ -1,6 +1,6 @@
 import { atom } from "jotai";
-import { EnvVariables } from "~/types/env";
 import { getFallbackValue } from "~/config/fallbacks";
+import { EnvVariables } from "~/types/env";
 
 // Memoized function for getting variables (for non-React code)
 let cachedEnv: EnvVariables = {};
@@ -81,6 +81,7 @@ export const getEnv = (): EnvVariables => {
     return {
       REMIX_APP_MODE: process.env.REMIX_APP_MODE,
       REMIX_PUBLIC_API_BASE_URL: process.env.REMIX_PUBLIC_API_BASE_URL,
+      REMIX_AWS_BASE_URL: process.env.REMIX_AWS_BASE_URL,
       AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
       AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
       AWS_REGION: process.env.AWS_REGION,
@@ -118,6 +119,7 @@ export const envAtom = atom<EnvVariables>(getEnv());
 export const preloadCriticalEnvAtoms = () => {
   // Load only the most critical values to speed up work
   getEnvValue("REMIX_PUBLIC_API_BASE_URL");
+  getEnvValue("REMIX_AWS_BASE_URL");
 };
 
 /**
